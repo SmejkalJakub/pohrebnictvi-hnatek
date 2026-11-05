@@ -6,11 +6,13 @@
  */
 import { Image } from "astro:assets";
 import EmergencyPhoneLink from "@core/components/EmergencyPhoneLink.astro";
+import { formatPhone } from "@core/format/phone.ts";
 import type { SiteContext } from "@core/content/view-models.ts";
 import { resolveOptionalImage } from "@core/media/resolve.ts";
 import LineIcon from "./LineIcon.astro";
 import { ui } from "../i18n/cs.ts";
 import type { TemplateOptions } from "../lib/options.ts";
+import { primaryOfficePhone } from "../lib/site.ts";
 
 interface Props {
   site: SiteContext;
@@ -21,6 +23,7 @@ const { site, options } = Astro.props;
 const logo = resolveOptionalImage(site.company.logo);
 const path = Astro.url.pathname;
 const high = options.emergencyEmphasis === "high";
+const office = primaryOfficePhone(site);
 
 function isCurrent(href: string): boolean {
   if (href === "/") {
@@ -86,6 +89,10 @@ function isCurrent(href: string): boolean {
       </EmergencyPhoneLink>
     </div>
   </div>
+  <p class="print-only container-b pb-2 text-[10pt]">
+    {site.emergency.enabled ? <span>{site.emergency.label}: {formatPhone(site.emergency.phone).display} · </span> : null}
+    <span>{office.label}: {formatPhone(office.number).display}</span>
+  </p>
 </header>
 
 <script is:inline>
@@ -177,11 +184,11 @@ function isCurrent(href: string): boolean {
     text-decoration-thickness: 2px;
   }
 
-  [aria-expanded="true"] .icon-open {
+  [aria-expanded="true"] :global(.icon-open) {
     display: none;
   }
 
-  [aria-expanded="true"] .icon-close {
+  [aria-expanded="true"] :global(.icon-close) {
     display: block;
   }
 
@@ -207,16 +214,16 @@ function isCurrent(href: string): boolean {
   }
 
   /* The number is the last child the core component renders. */
-  .header-cta-standard {
+  .header-cta :global(.header-cta-standard) {
     font-size: 0.9375rem;
     padding-inline: 0.875rem;
   }
 
-  .header-cta-standard .cta-text {
+  .header-cta :global(.header-cta-standard) .cta-text {
     flex-direction: row;
   }
 
-  .header-cta-high {
+  .header-cta :global(.header-cta-high) {
     display: grid;
     grid-template-columns: auto auto auto;
     grid-template-areas: "icon label number" "icon sub sub";
@@ -227,23 +234,23 @@ function isCurrent(href: string): boolean {
     font-size: 1rem;
   }
 
-  .header-cta-high > :global(svg) {
+  .header-cta :global(.header-cta-high) > :global(svg) {
     grid-area: icon;
   }
 
-  .header-cta-high .cta-text {
+  .header-cta :global(.header-cta-high) .cta-text {
     display: contents;
   }
 
-  .header-cta-high .cta-line {
+  .header-cta :global(.header-cta-high) .cta-line {
     grid-area: label;
   }
 
-  .header-cta-high .cta-sub {
+  .header-cta :global(.header-cta-high) .cta-sub {
     grid-area: sub;
   }
 
-  .header-cta-high > :global([data-part="number"]) {
+  .header-cta :global(.header-cta-high) > :global([data-part="number"]) {
     grid-area: number;
     font-size: 1.125rem;
   }

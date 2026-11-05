@@ -1,0 +1,26 @@
+---
+/** Rendered only when the page file exists (content-contract §5: required with form/embed/analytics, else recommended). */
+import { getPage, getSiteContext } from "@core/content/load.ts";
+import Site from "../../layouts/Site.astro";
+import PageHeading from "../../components/PageHeading.astro";
+import { pageExists, seoTitle } from "../../lib/site.ts";
+
+export async function getStaticPaths() {
+  if (!(await pageExists("ochrana-osobnich-udaju"))) {
+    return [];
+  }
+  return [{ params: { path: undefined } }];
+}
+
+const site = await getSiteContext();
+const page = await getPage("ochrana-osobnich-udaju");
+const Body = page.Content;
+---
+<Site site={site} title={seoTitle(page.data)} description={page.data.metaDescription}>
+  <PageHeading title={page.data.title} lead={page.data.lead} placeholder={page.data.placeholder} />
+  <div class="band">
+    <div class="container-b">
+      <div class="prose-b"><Body /></div>
+    </div>
+  </div>
+</Site>

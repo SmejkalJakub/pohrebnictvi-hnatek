@@ -1,0 +1,138 @@
+---
+/**
+ * Homepage. Sections render in site.config.homepage.sections order; bands alternate by
+ * position so any declared order stays legible. Default (manifest): hero → next-steps →
+ * services → contact-summary → family-story.
+ */
+import PlaceholderMark from "@core/components/PlaceholderMark.astro";
+import { getGuidance, getPage, getServices, getSiteContext } from "@core/content/load.ts";
+import Site from "../layouts/Site.astro";
+import PracticalHero from "../components/PracticalHero.astro";
+import FirstStepsStepper from "../components/FirstStepsStepper.astro";
+import ServiceIndexList from "../components/ServiceIndexList.astro";
+import InfoRow from "../components/InfoRow.astro";
+import LineIcon from "../components/LineIcon.astro";
+import { ui } from "../i18n/cs.ts";
+import { resolveOptions } from "../lib/options.ts";
+import { seoTitle } from "../lib/site.ts";
+
+const site = await getSiteContext();
+const options = resolveOptions(site.config);
+const home = await getPage("home");
+const about = await getPage("o-nas");
+const servicesPage = await getPage("sluzby");
+const coffinsPage = await getPage("rakve");
+const flowersPage = await getPage("kvetiny");
+const contactPage = await getPage("kontakt");
+const guidance = await getGuidance();
+const services = await getServices();
+let featured = services.filter((service) => service.data.featured);
+if (featured.length === 0) {
+  featured = services;
+}
+const sections = site.config.homepage.sections;
+
+function bandFor(index: number): string {
+  if (index % 2 === 0) {
+    return "band-tint";
+  }
+  return "band-surface";
+}
+
+let pageTitle: string | null = null;
+if (home.data.metaTitle !== null) {
+  pageTitle = seoTitle(home.data);
+}
+---
+<Site site={site} title={pageTitle} description={home.data.metaDescription}>
+  {
+    sections.map((section, index) => {
+      if (section === "hero") {
+        return <PracticalHero site={site} page={home.data} options={options} band={bandFor(index)} />;
+      }
+      if (section === "next-steps") {
+        return <FirstStepsStepper site={site} guidance={guidance} band={bandFor(index)} />;
+      }
+      if (section === "services") {
+        return (
+          <section class:list={["band", bandFor(index)]} aria-labelledby="sluzby-prehled" data-section="services">
+            <div class="container-b">
+              <h2 id="sluzby-prehled">{servicesPage.data.title}</h2>
+              <div class="mt-6">
+                <ServiceIndexList services={featured} headingLevel="h3" />
+              </div>
+              <p class="mt-6">
+                <a href="/sluzby/" class="text-link">
+                  {ui.allServices}
+                  <LineIcon name="chevron" />
+                </a>
+              </p>
+            </div>
+          </section>
+        );
+      }
+      if (section === "contact-summary") {
+        return (
+          <section class:list={["band", bandFor(index)]} aria-labelledby="kontakt-prehled" data-section="contact-summary">
+            <div class="container-b">
+              <h2 id="kontakt-prehled">{contactPage.data.title}</h2>
+              <div class="mt-6">
+                <InfoRow site={site} idPrefix="uvod" />
+              </div>
+              <p class="mt-6">
+                <a href="/kontakt/" class="text-link">
+                  {ui.allContacts}
+                  <LineIcon name="chevron" />
+                </a>
+              </p>
+            </div>
+          </section>
+        );
+      }
+      if (section === "family-story") {
+        return (
+          <section class:list={["band", bandFor(index)]} aria-labelledby="o-nas-prehled" data-section="family-story">
+            <div class="container-b grid gap-4 md:grid-cols-12 md:gap-x-8">
+              <h2 id="o-nas-prehled" class="md:col-span-3">{about.data.title}</h2>
+              <PlaceholderMark active={about.data.placeholder} kind="content" class="md:col-span-9">
+                {site.company.tradition.publicWording !== null ? (
+                  <p class="font-semibold">{site.company.tradition.publicWording}</p>
+                ) : null}
+                {about.data.excerpt !== null ? <p class="mt-2 max-w-[42rem] text-muted">{about.data.excerpt}</p> : null}
+                <p class="mt-3">
+                  <a href="/o-nas/" class="text-link">
+                    {ui.moreAboutUs}
+                    <LineIcon name="chevron" />
+                  </a>
+                </p>
+              </PlaceholderMark>
+            </div>
+          </section>
+        );
+      }
+      if (section === "catalogue-links") {
+        return (
+          <section class:list={["band", bandFor(index)]} aria-labelledby="katalogy-prehled" data-section="catalogue-links">
+            <div class="container-b">
+              <h2 id="katalogy-prehled">{ui.catalogueLinks}</h2>
+              <ul class="mt-6 grid gap-6 md:grid-cols-2 md:gap-0 md:divide-x md:divide-line">
+                {[
+                  { href: "/rakve/", page: coffinsPage.data },
+                  { href: "/kvetiny/", page: flowersPage.data },
+                ].map((link, linkIndex) => (
+                  <li class:list={[linkIndex === 0 ? "md:pr-8" : "md:pl-8"]}>
+                    <h3>
+                      <a href={link.href}>{link.page.title}</a>
+                    </h3>
+                    {link.page.lead !== null ? <p class="mt-1 text-muted">{link.page.lead}</p> : null}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </section>
+        );
+      }
+      return null;
+    })
+  }
+</Site>

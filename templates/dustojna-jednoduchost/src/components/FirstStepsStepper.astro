@@ -1,0 +1,124 @@
+---
+/**
+ * "Co dělat jako první": 3–4 numbered steps from guidance with phase first-hours.
+ * Horizontal stepper on desktop, vertical numbered list on mobile. Links to the full guide.
+ */
+import type { CollectionEntry } from "astro:content";
+import PlaceholderMark from "@core/components/PlaceholderMark.astro";
+import type { SiteContext } from "@core/content/view-models.ts";
+import LineIcon from "./LineIcon.astro";
+import ReviewFlag from "./ReviewFlag.astro";
+import When from "./When.astro";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  site: SiteContext;
+  guidance: CollectionEntry<"guidance">[];
+  band: string;
+}
+
+const { site, guidance, band } = Astro.props;
+let steps = guidance.filter((entry) => entry.data.phase === "first-hours");
+if (steps.length < 3) {
+  steps = [...steps, ...guidance.filter((entry) => entry.data.phase !== "first-hours")].slice(0, 3);
+}
+steps = steps.slice(0, 4);
+---
+<When if={steps.length > 0}>
+    <section class:list={["band", band]} aria-labelledby="prvni-kroky" data-section="next-steps">
+      <div class="container-b">
+        <h2 id="prvni-kroky">{ui.firstSteps}</h2>
+        <ol class:list={["stepper mt-6", `stepper-${steps.length}`]}>
+          {steps.map((entry, index) => (
+            <li class="step">
+              <span class="step-num" aria-hidden="true">{index + 1}</span>
+              <PlaceholderMark active={entry.data.placeholder} kind="content">
+                <h3>
+                  <a href={`/jak-postupovat/#${entry.id}`} class="step-link">{entry.data.title}</a>
+                </h3>
+                <p class="mt-1 text-muted">{entry.data.summary}</p>
+                <ReviewFlag site={site} reviewedAt={entry.data.review.reviewedAt} />
+              </PlaceholderMark>
+            </li>
+          ))}
+        </ol>
+        <p class="mt-6">
+          <a href="/jak-postupovat/" class="text-link">
+            {ui.fullGuide}
+            <LineIcon name="chevron" />
+          </a>
+        </p>
+      </div>
+    </section>
+</When>
+
+<style>
+  .stepper {
+    display: grid;
+    gap: 0;
+  }
+
+  .step {
+    position: relative;
+    display: grid;
+    grid-template-columns: 2.5rem 1fr;
+    column-gap: 1rem;
+    padding-block: 1rem;
+    border-top: 1px solid var(--c-hair);
+  }
+
+  .step:first-child {
+    border-top: 0;
+    padding-top: 0;
+  }
+
+  .step-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border: 2px solid var(--c-accent);
+    border-radius: 50%;
+    color: var(--c-accent);
+    font-weight: 600;
+    font-size: 1.125rem;
+    background: var(--c-surface);
+  }
+
+  .step-link {
+    display: inline-block;
+    padding-block: 0.125rem;
+    color: var(--c-ink);
+  }
+
+  @media (min-width: 64rem) {
+    .stepper {
+      grid-auto-flow: column;
+      grid-auto-columns: 1fr;
+      column-gap: 2rem;
+    }
+
+    .step {
+      grid-template-columns: 1fr;
+      align-content: start;
+      row-gap: 0.75rem;
+      padding: 0;
+      border-top: 0;
+    }
+
+    /* Connecting rule between the numbers. */
+    .step::before {
+      content: "";
+      position: absolute;
+      top: 1.25rem;
+      left: 3rem;
+      right: -1.5rem;
+      border-top: 1px solid var(--c-line);
+    }
+
+    .step:last-child::before {
+      display: none;
+    }
+  }
+</style>

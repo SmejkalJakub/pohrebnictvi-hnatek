@@ -1,0 +1,41 @@
+---
+/** Conditional route (template-contract §4): no file is emitted when pricing is hidden. */
+import DemoPricingNotice from "@core/components/DemoPricingNotice.astro";
+import { getPage, getPricing, getSiteContext } from "@core/content/load.ts";
+import Site from "../../layouts/Site.astro";
+import PageHeading from "../../components/PageHeading.astro";
+import PriceTable from "../../components/PriceTable.astro";
+import { ui } from "../../i18n/cs.ts";
+import { formatIsoDate, seoTitle } from "../../lib/site.ts";
+
+export async function getStaticPaths() {
+  const pricing = await getPricing();
+  if (pricing === null) {
+    return [];
+  }
+  return [{ params: { path: undefined } }];
+}
+
+const site = await getSiteContext();
+const page = await getPage("cenik");
+const pricing = await getPricing();
+if (pricing === null) {
+  throw new Error("unreachable: pricing hidden");
+}
+const Body = page.Content;
+---
+<Site site={site} title={seoTitle(page.data)} description={page.data.metaDescription} noindex={pricing.hasDemo}>
+  <PageHeading title={page.data.title} lead={page.data.lead} placeholder={page.data.placeholder} />
+  <div class="band">
+    <div class="container-b space-y-10">
+      <div class="space-y-3">
+        <DemoPricingNotice pricing={pricing} brandName={site.company.brandName} />
+        {pricing.generalNote !== null ? <p class="max-w-[48rem]">{pricing.generalNote}</p> : null}
+        {pricing.vatNote !== null ? <p class="text-muted">{pricing.vatNote}</p> : null}
+        {pricing.validFrom !== null ? <p class="text-muted">{ui.priceValidFrom} {formatIsoDate(pricing.validFrom)}</p> : null}
+      </div>
+      {pricing.groups.map((group) => <PriceTable group={group} />)}
+      <div class="prose-b"><Body /></div>
+    </div>
+  </div>
+</Site>

@@ -107,3 +107,12 @@ export function bodyIsEmpty(body: string | undefined): boolean {
   }
   return body.trim() === "";
 }
+
+/** "2026-12-24" → "24. 12. 2026" (non-breaking spaces). */
+export function formatIsoDate(iso: string): string {
+  const [year, month, day] = iso.split("-");
+  if (year === undefined || month === undefined || day === undefined) {
+    return iso;
+  }
+  return `${Number(day)}. ${Number(month)}. ${year}`;
+}

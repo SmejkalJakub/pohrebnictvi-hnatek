@@ -1,0 +1,108 @@
+---
+/**
+ * Every /sluzby/<slug>/ page has the same structure: breadcrumb, H1, summary, "Co zahrnuje"
+ * (body), "Související ceny" (when priceGroupId is set and pricing is visible), and a side box
+ * with office contacts. Transport services also get the separately headed emergency panel.
+ */
+import type { CollectionEntry } from "astro:content";
+import PhoneLink from "@core/components/PhoneLink.astro";
+import PlaceholderMark from "@core/components/PlaceholderMark.astro";
+import type { PricingView, SiteContext } from "@core/content/view-models.ts";
+import EmergencyPanel from "./EmergencyPanel.astro";
+import HoursTable from "./HoursTable.astro";
+import LineIcon from "./LineIcon.astro";
+import { serviceCategoryLabels, ui } from "../i18n/cs.ts";
+import { bodyHasHeadings, officePhones } from "../lib/site.ts";
+
+interface Props {
+  site: SiteContext;
+  service: CollectionEntry<"services">;
+  pricing: PricingView | null;
+  high: boolean;
+}
+
+const { site, service, pricing, high } = Astro.props;
+const data = service.data;
+let priceGroup = null;
+if (pricing !== null && data.priceGroupId !== null) {
+  priceGroup = pricing.groups.find((group) => group.id === data.priceGroupId) ?? null;
+}
+const ownHeadings = bodyHasHeadings(service.body);
+const isTransport = data.category === "transport";
+---
+<div class="band band-surface">
+  <div class="container-b">
+    <nav aria-label={ui.breadcrumb} class="text-[0.9375rem]">
+      <ol class="flex flex-wrap items-center gap-1 text-muted">
+        <li><a href="/sluzby/" class="inline-flex min-h-11 items-center">{ui.allServices}</a></li>
+        <li aria-hidden="true"><LineIcon name="chevron" size={16} /></li>
+        <li>{serviceCategoryLabels[data.category]}</li>
+      </ol>
+    </nav>
+    <PlaceholderMark active={data.placeholder} kind="content">
+      <h1 class="mt-2">{data.title}</h1>
+      <p class="mt-3 max-w-[42rem] text-lg text-muted">{data.summary}</p>
+    </PlaceholderMark>
+  </div>
+</div>
+
+<div class="band">
+  <div class="container-b grid gap-10 lg:grid-cols-12 lg:gap-x-12">
+    <div class="space-y-10 lg:col-span-8">
+      <section aria-labelledby={ownHeadings ? undefined : "co-zahrnuje"} aria-label={ownHeadings ? ui.whatItIncludes : undefined}>
+        {ownHeadings ? null : <h2 id="co-zahrnuje">{ui.whatItIncludes}</h2>}
+        <div class:list={["prose-b", ownHeadings ? null : "mt-4"]}><slot /></div>
+      </section>
+
+      {
+        priceGroup !== null ? (
+          <section aria-labelledby="souvisejici-ceny" class="border-t border-line pt-6">
+            <h2 id="souvisejici-ceny">{ui.relatedPrices}</h2>
+            <p class="mt-2">
+              <a href={`/cenik/#${priceGroup.id}`} class="text-link">
+                {priceGroup.title}: {ui.relatedPricesLink}
+                <LineIcon name="chevron" />
+              </a>
+            </p>
+          </section>
+        ) : null
+      }
+
+      {isTransport ? <EmergencyPanel emergency={site.emergency} high={high} /> : null}
+
+      <p>
+        <a href="/sluzby/" class="text-link">
+          <LineIcon name="arrow-left" />
+          {ui.backToServices}
+        </a>
+      </p>
+    </div>
+
+    <aside class="lg:col-span-4" aria-labelledby="kontakt-kancelar">
+      <div class="border border-line bg-surface p-5 lg:sticky lg:top-[calc(var(--header-h)+1.5rem)]">
+        <h2 id="kontakt-kancelar" class="text-[1.1875rem]">{ui.officeContacts}</h2>
+        <ul class="mt-3 space-y-1" data-office-phones>
+          {
+            officePhones(site).map((phone) => (
+              <li>
+                <span class="text-muted">{phone.label}</span>
+                <br />
+                <PhoneLink number={phone.number} class="num inline-flex min-h-11 items-center text-lg font-semibold" />
+              </li>
+            ))
+          }
+          {
+            site.contact.emails.map((email) => (
+              <li>
+                <a href={`mailto:${email.address}`} class="inline-flex min-h-11 items-center break-all">{email.address}</a>
+              </li>
+            ))
+          }
+        </ul>
+        <div class="mt-4 border-t border-hair pt-4">
+          <HoursTable site={site} headingLevel="h3" id="detail-hodiny" showNotes={false} />
+        </div>
+      </div>
+    </aside>
+  </div>
+</div>

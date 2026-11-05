@@ -1,0 +1,9 @@
+---
+/** Renders its slot only when `if` is true. Keeps markup free of nested ternaries (house style). */
+interface Props {
+  if: boolean;
+}
+
+const show = Astro.props.if;
+---
+{show ? <slot /> : null}

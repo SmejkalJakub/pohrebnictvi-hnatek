@@ -1,0 +1,76 @@
+---
+/**
+ * Compact three-cell info row separated by vertical rules (not cards):
+ * address + map link | office hours (own heading) | office phones and e-mail.
+ * The emergency line is intentionally not part of this row.
+ */
+import PhoneLink from "@core/components/PhoneLink.astro";
+import type { SiteContext } from "@core/content/view-models.ts";
+import { formatAddressLines } from "@core/format/address.ts";
+import HoursTable from "./HoursTable.astro";
+import LineIcon from "./LineIcon.astro";
+import { ui } from "../i18n/cs.ts";
+import { mainLocation, mapHref, officePhones } from "../lib/site.ts";
+
+interface Props {
+  site: SiteContext;
+  idPrefix: string;
+}
+
+const { site, idPrefix } = Astro.props;
+const location = mainLocation(site);
+const map = mapHref(location);
+const lines = formatAddressLines(location.address);
+---
+<div class="info-row grid gap-6 md:grid-cols-3 md:gap-0 md:divide-x md:divide-line">
+  <section class="md:pr-8" aria-labelledby={`${idPrefix}-adresa`}>
+    <h3 id={`${idPrefix}-adresa`} class="flex items-center gap-2">
+      <LineIcon name="pin" class="shrink-0 text-muted" />
+      <span>{ui.address}</span>
+    </h3>
+    <address class="mt-3 not-italic">
+      {location.name}<br />
+      {lines[0]}<br />
+      {lines[1]}
+    </address>
+    {
+      map !== null ? (
+        <p class="mt-1">
+          <a href={map} class="text-link">
+            {ui.showOnMap}
+            <LineIcon name="external" size={16} />
+          </a>
+        </p>
+      ) : null
+    }
+  </section>
+  <div class="border-t border-hair pt-6 md:border-t-0 md:px-8 md:pt-0">
+    <HoursTable site={site} headingLevel="h3" id={`${idPrefix}-hodiny`} showNotes={false} />
+  </div>
+  <section class="border-t border-hair pt-6 md:border-t-0 md:pl-8 md:pt-0" aria-labelledby={`${idPrefix}-telefony`} data-office-phones>
+    <h3 id={`${idPrefix}-telefony`} class="flex items-center gap-2">
+      <LineIcon name="phone" class="shrink-0 text-muted" />
+      <span>{ui.phonesAndEmail}</span>
+    </h3>
+    <ul class="mt-3 space-y-1">
+      {
+        officePhones(site).map((phone) => (
+          <li>
+            <span class="text-muted">{phone.label}</span>
+            <br />
+            <PhoneLink number={phone.number} class="num inline-flex min-h-11 items-center text-lg font-semibold" />
+          </li>
+        ))
+      }
+      {
+        site.contact.emails.map((email) => (
+          <li>
+            <span class="text-muted">{ui.emailLabel}</span>
+            <br />
+            <a href={`mailto:${email.address}`} class="inline-flex min-h-11 items-center break-all">{email.address}</a>
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+</div>

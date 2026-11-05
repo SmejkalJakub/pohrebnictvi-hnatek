@@ -1,0 +1,96 @@
+---
+/**
+ * Two-tier CTA: (1) the emergency call, large; (2) a secondary office line with hours and number.
+ * The two tiers are sibling blocks: office hours never sit inside the emergency block.
+ */
+import EmergencyPhoneLink from "@core/components/EmergencyPhoneLink.astro";
+import PhoneLink from "@core/components/PhoneLink.astro";
+import type { SiteContext } from "@core/content/view-models.ts";
+import LineIcon from "./LineIcon.astro";
+import When from "./When.astro";
+import { ui } from "../i18n/cs.ts";
+import { primaryOfficePhone } from "../lib/site.ts";
+
+interface Props {
+  site: SiteContext;
+  high: boolean;
+}
+
+const { site, high } = Astro.props;
+const office = primaryOfficePhone(site);
+const emergency = site.emergency;
+---
+<div class="cta-tier flex flex-col gap-4">
+  <When if={emergency.enabled}>
+      <div class="cta-primary" data-emergency-block>
+        <EmergencyPhoneLink
+          emergency={emergency}
+          variant="full"
+          class:list={["btn btn-emergency cta-xl", high ? "cta-xl-high" : null]}
+          labelClass="cta-xl-label"
+          numberClass="num cta-xl-number"
+        >
+          <LineIcon name="phone" size={24} />
+        </EmergencyPhoneLink>
+        {high ? <p class="mt-2 font-semibold text-accent">{ui.emergencyAround}</p> : null}
+        {emergency.shortNote !== null ? <p class="mt-2 text-[0.9375rem] text-muted">{emergency.shortNote}</p> : null}
+      </div>
+  </When>
+  <div class="cta-secondary border-t border-hair pt-4" data-office-hours>
+    <p class="font-semibold">{site.officeHours.label}</p>
+    <p class="mt-1 text-[0.9375rem]">
+      {
+        site.officeHoursRows.map((row, index) => (
+          <span class="inline-block mr-1">
+            <span title={row.daysLong}>{row.days}</span> <span class="num">{row.text}</span>
+            {row.note !== null ? <span class="text-muted"> ({row.note})</span> : null}
+            {index < site.officeHoursRows.length - 1 ? "," : null}
+          </span>
+        ))
+      }
+    </p>
+    <p class="mt-1">
+      <PhoneLink number={office.number} class="text-link num" />
+      <span class="text-muted"> · {office.label}</span>
+    </p>
+  </div>
+</div>
+
+<style>
+  .cta-primary :global(.cta-xl) {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    grid-template-areas: "icon label" "icon number";
+    justify-items: start;
+    column-gap: 0.75rem;
+    row-gap: 0.125rem;
+    width: 100%;
+    max-width: 26rem;
+    padding: 0.875rem 1rem;
+    text-align: left;
+  }
+
+  .cta-primary :global(.cta-xl) > :global(svg) {
+    grid-area: icon;
+  }
+
+  .cta-primary :global(.cta-xl) :global(.cta-xl-label) {
+    grid-area: label;
+    font-size: 1rem;
+  }
+
+  .cta-primary :global(.cta-xl) :global(.cta-xl-number) {
+    grid-area: number;
+    font-size: clamp(1.25rem, 0.9rem + 1.6vw, 1.5rem);
+    line-height: 1.2;
+  }
+
+  .cta-primary :global(.cta-xl-high) {
+    max-width: 30rem;
+    padding-block: 1.125rem;
+  }
+
+  .cta-primary :global(.cta-xl-high) :global(.cta-xl-number) {
+    font-size: clamp(1.375rem, 0.9rem + 2.4vw, 1.875rem);
+  }
+</style>

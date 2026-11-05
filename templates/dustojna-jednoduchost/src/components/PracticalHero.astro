@@ -1,0 +1,47 @@
+---
+/**
+ * Practical hero: H1, one-sentence lead, then the CTA tier. `text-with-image` adds a modest
+ * 3:2 image AFTER the CTA block (never before it); with no image it falls back to text-only.
+ */
+import PlaceholderMark from "@core/components/PlaceholderMark.astro";
+import type { SiteContext } from "@core/content/view-models.ts";
+import { resolveOptionalImage } from "@core/media/resolve.ts";
+import type { Page } from "@core/content/schemas.ts";
+import CtaTier from "./CtaTier.astro";
+import HeroFigure from "./HeroFigure.astro";
+import type { TemplateOptions } from "../lib/options.ts";
+
+interface Props {
+  site: SiteContext;
+  page: Page;
+  options: TemplateOptions;
+  band: string;
+}
+
+const { site, page, options, band } = Astro.props;
+let image = null;
+if (options.heroVariant === "text-with-image") {
+  image = resolveOptionalImage(page.heroImage);
+}
+const high = options.emergencyEmphasis === "high";
+---
+<section class:list={["band", band]} aria-labelledby="uvod-nadpis" data-section="hero" data-hero-variant={options.heroVariant}>
+  <div class="container-b grid gap-8 md:grid-cols-12 md:gap-x-10">
+    <div class="md:col-span-7">
+      <PlaceholderMark active={page.placeholder} kind="content">
+        <h1 id="uvod-nadpis">{page.title}</h1>
+        {page.lead !== null ? <p class="mt-4 max-w-[38rem] text-lg">{page.lead}</p> : null}
+      </PlaceholderMark>
+    </div>
+    <div class="md:col-span-5">
+      <CtaTier site={site} high={high} />
+    </div>
+    {
+      image !== null ? (
+        <div class="md:col-span-7">
+          <HeroFigure image={image} />
+        </div>
+      ) : null
+    }
+  </div>
+</section>

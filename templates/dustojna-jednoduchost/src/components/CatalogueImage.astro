@@ -1,0 +1,40 @@
+---
+/** Image cell of the uniform catalogue grid: the image, or a quiet frame of the same size. */
+import { Image } from "astro:assets";
+import PlaceholderMark from "@core/components/PlaceholderMark.astro";
+import type { ResolvedImage } from "@core/media/resolve.ts";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  image: ResolvedImage | null;
+  aspectClass: string;
+}
+
+const { image, aspectClass } = Astro.props;
+---
+<div class="mb-4">
+  {
+    image !== null ? (
+      <PlaceholderMark active={image.isPlaceholder} kind="image">
+        <Image
+          src={image.src}
+          alt={image.alt}
+          widths={[360, 540, 720]}
+          sizes="(min-width: 64rem) 22rem, (min-width: 40rem) 45vw, 100vw"
+          class:list={["w-full bg-band object-cover", aspectClass]}
+          style={`object-position: ${image.objectPosition}`}
+          loading="lazy"
+        />
+      </PlaceholderMark>
+    ) : (
+      <div
+        class:list={[
+          "flex w-full items-center justify-center border border-hair bg-band p-4 text-center text-[0.9375rem] text-muted",
+          aspectClass,
+        ]}
+      >
+        {ui.photoMissing}
+      </div>
+    )
+  }
+</div>

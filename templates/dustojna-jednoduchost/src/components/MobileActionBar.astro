@@ -1,0 +1,135 @@
+---
+/**
+ * Fixed bottom action bar below 768 px: "Nonstop převoz" (filled) and "Kancelář" (outlined).
+ * <body> reserves --bar-h of bottom padding and scroll-padding, so the bar never covers
+ * content or the focused element. Hidden from 768 px (the header button takes over) and in print.
+ */
+import EmergencyPhoneLink from "@core/components/EmergencyPhoneLink.astro";
+import PhoneLink from "@core/components/PhoneLink.astro";
+import type { SiteContext } from "@core/content/view-models.ts";
+import { formatPhone } from "@core/format/phone.ts";
+import LineIcon from "./LineIcon.astro";
+import { ui } from "../i18n/cs.ts";
+import { primaryOfficePhone } from "../lib/site.ts";
+import type { TemplateOptions } from "../lib/options.ts";
+
+interface Props {
+  site: SiteContext;
+  options: TemplateOptions;
+}
+
+const { site, options } = Astro.props;
+const high = options.emergencyEmphasis === "high";
+const office = primaryOfficePhone(site);
+const officeNumber = formatPhone(office.number);
+const emergencyOn = site.emergency.enabled;
+let emergencyVariant: "number" | "label" = "label";
+if (high) {
+  emergencyVariant = "number";
+}
+---
+<aside class="mobile-action-bar md:hidden" aria-label={ui.actionBar} data-mobile-action-bar>
+  <div class:list={["bar-grid", emergencyOn ? "grid-cols-2" : "grid-cols-1"]}>
+    {
+      emergencyOn ? (
+        <EmergencyPhoneLink
+          emergency={site.emergency}
+          variant={emergencyVariant}
+          class="btn btn-emergency bar-btn"
+          labelClass="hidden"
+          numberClass="num bar-number"
+        >
+          <LineIcon name="phone" />
+          <span class="bar-text">
+            <span>{ui.emergencyShort}</span>
+          </span>
+        </EmergencyPhoneLink>
+      ) : null
+    }
+    <PhoneLink number={office.number} class="btn btn-outline bar-btn">
+      <LineIcon name="phone" />
+      <span class="bar-text">
+        <span>{ui.officeShort}</span>
+        {high ? <span class="num bar-number">{officeNumber.display}</span> : <span class="sr-only-b">{officeNumber.spoken}</span>}
+      </span>
+    </PhoneLink>
+  </div>
+</aside>
+
+<style>
+  .mobile-action-bar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 45;
+    background-color: var(--c-surface);
+    border-top: 1px solid var(--c-line);
+    padding: 0.5rem 0.75rem calc(0.5rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  .bar-grid {
+    display: grid;
+    gap: 0.5rem;
+    max-width: 40rem;
+    margin-inline: auto;
+  }
+
+  .bar-grid :global(.bar-btn) {
+    width: 100%;
+    min-height: 3.125rem;
+    padding: 0.375rem 0.5rem;
+    font-size: 1rem;
+  }
+
+  .bar-text {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: flex-start;
+    line-height: 1.15;
+  }
+
+  /* In high emphasis the emergency number is a second line next to the label. */
+  .bar-grid :global(.bar-btn) > :global([data-part="number"]) {
+    display: none;
+  }
+
+  :global(html[data-emphasis="high"]) .bar-grid :global(.bar-btn) {
+    min-height: 4.25rem;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    grid-template-areas: "icon text" "icon number";
+    justify-items: start;
+    align-content: center;
+    column-gap: 0.5rem;
+    row-gap: 0.125rem;
+  }
+
+  :global(html[data-emphasis="high"]) .bar-grid :global(.bar-btn) > :global(svg) {
+    grid-area: icon;
+  }
+
+  :global(html[data-emphasis="high"]) .bar-grid :global(.bar-btn) > .bar-text {
+    grid-area: text;
+  }
+
+  :global(html[data-emphasis="high"]) .bar-grid :global(.bar-btn) > :global([data-part="number"]) {
+    display: block;
+    grid-area: number;
+  }
+
+  .bar-grid :global(.bar-number) {
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
+
+  @media (max-width: 22rem) {
+    .bar-grid :global(.bar-btn) {
+      font-size: 0.9375rem;
+    }
+
+    .bar-grid :global(.bar-number) {
+      font-size: 0.8125rem;
+    }
+  }
+</style>

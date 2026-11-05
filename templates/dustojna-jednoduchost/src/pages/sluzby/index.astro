@@ -1,0 +1,21 @@
+---
+import { getPage, getServices, getSiteContext } from "@core/content/load.ts";
+import Site from "../../layouts/Site.astro";
+import PageHeading from "../../components/PageHeading.astro";
+import ServiceIndexList from "../../components/ServiceIndexList.astro";
+import { seoTitle } from "../../lib/site.ts";
+
+const site = await getSiteContext();
+const page = await getPage("sluzby");
+const services = await getServices();
+const Body = page.Content;
+---
+<Site site={site} title={seoTitle(page.data)} description={page.data.metaDescription}>
+  <PageHeading title={page.data.title} lead={page.data.lead} placeholder={page.data.placeholder} />
+  <div class="band">
+    <div class="container-b">
+      <div class="prose-b mb-8"><Body /></div>
+      <ServiceIndexList services={services} headingLevel="h2" />
+    </div>
+  </div>
+</Site>
