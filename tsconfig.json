@@ -15,7 +15,7 @@
     "resolveJsonModule": true,
     "skipLibCheck": true
   },
-  "include": ["core/**/*.ts", "fixtures/**/*.ts", "vitest.config.ts"],
+  "include": ["core/**/*.ts", "fixtures/**/*.ts", "tools/**/*.ts", "qa/**/*.ts", "vitest.config.ts"],
   "exclude": [
     "node_modules",
     "core/content/load.ts",
