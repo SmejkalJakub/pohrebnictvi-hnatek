@@ -1,0 +1,599 @@
+# Draft .pages.yml for the fixtures/neutral layout (docs/spikes/pages-cms.md).
+#
+# Status: DRAFT, not tested in a live Pages CMS. Written against lib/config-schema.ts at
+# pagescms/pagescms 2.1.8 (6f4e860a35d934406580287e7042e5e111e207a1). No JSON schema is published,
+# so conformance was checked by reading that file (strict objects, option names, `options` is a
+# free-form object).
+#
+# Decisions that follow editable-fields.md:
+#   - emergency transport is its own top-level entry, separate from contact and office hours
+#   - no articles collection
+#   - pages: no create / delete / rename
+#   - prices carry the demo/approved status select
+#   - every image has alt, rights and source fields
+#   - fields the client must not see are declared with `hidden: true` so they are preserved
+#     (undeclared keys are dropped on save; merge below is a second line of defence)
+#
+# Conventions in this file (phase 6 generator should produce them):
+#   - `options.minlength/maxlength/min/max` mirror the Zod limits in content-contract §6
+#   - dates use `default: ""`, otherwise the editor fills today's date into empty dates
+#   - boolean children of optional image objects use `default: null`, so an unused image object
+#     counts as empty (spike finding B6)
+#   - the shared `image-ref` component is an assumption: if a component cannot be reused with
+#     `name`/`label`/`required` overrides, the generator expands it inline
+
+settings:
+  hide: true                 # no Settings page; collaborators cannot manage .pages.yml anyway
+  content:
+    merge: true              # keep undeclared keys of the file (not keys inside list items)
+  commit:
+    identity: user           # commits show the editor's name/email
+    templates:
+      create: "Obsah: vytvořeno {path} (Pages CMS)"
+      update: "Obsah: upraveno {path} (Pages CMS)"
+      delete: "Obsah: smazáno {path} (Pages CMS)"
+
+media:
+  name: media
+  label: Obrázky
+  input: src/assets/media
+  output: src/assets/media   # equal to input: stored value is src/assets/media/<file>; core/media/normalize.ts reduces it to <file>
+  extensions: [jpg, jpeg, png, webp]
+  rename: safe               # ASCII slug, lowercase extension
+
+components:
+  image-ref:
+    type: object
+    fields:
+      - name: file
+        label: Fotografie
+        type: image
+        required: true
+        description: "JPEG, PNG nebo WebP, nejlépe do 8 MB."
+        options:
+          media: media
+          extensions: [jpg, jpeg, png, webp]
+      - name: alt
+        label: Popis obrázku (alt)
+        type: string
+        required: true
+        description: "Stručně popište, co je na fotografii. Příklad: Budova kanceláře s vchodem z ulice."
+        options: { maxlength: 200 }
+      - name: decorative
+        label: Obrázek je pouze dekorace
+        type: boolean
+        default: null
+      - name: caption
+        label: Popisek
+        type: string
+        options: { maxlength: 240 }
+      - name: credit
+        label: Autor / zdroj fotografie
+        type: string
+        options: { maxlength: 120 }
+      - name: source
+        label: Původ fotografie
+        type: select
+        required: true
+        options:
+          values:
+            - { value: client, label: "Fotografie od firmy" }
+            - { value: existing-website, label: "Z dosavadního webu firmy" }
+            - { value: own-photo, label: "Vlastní fotografie" }
+            - { value: licensed-stock, label: "Licencovaná fotografie" }
+            - { value: placeholder, label: "Zástupný obrázek – nezveřejňovat" }
+      - name: depicts
+        label: Fotografie ukazuje skutečné prostory, vůz nebo lidi firmy
+        type: select
+        required: true
+        options:
+          values:
+            - { value: actual-business, label: "Ano, skutečné prostory, vůz nebo lidi" }
+            - { value: generic, label: "Ne, obecná fotografie" }
+            - { value: placeholder, label: "Zástupný obrázek" }
+      - name: rightsConfirmed
+        label: Mám právo tuto fotografii použít
+        type: boolean
+        default: null
+      - name: focus
+        label: Výřez fotografie
+        type: select
+        options:
+          values:
+            - { value: center, label: "Střed" }
+            - { value: top, label: "Nahoře" }
+            - { value: bottom, label: "Dole" }
+            - { value: left, label: "Vlevo" }
+            - { value: right, label: "Vpravo" }
+
+content:
+  # ---------------------------------------------------------------- nonstop transport, own entry
+  - name: emergency
+    label: "Nonstop převoz zesnulých"
+    type: file
+    path: src/content/site/emergency.json
+    format: json
+    operations: { create: false, delete: false, rename: false }
+    fields:
+      - name: phone
+        label: Telefon
+        type: string
+        required: true
+        description: "Číslo pro nonstop převoz zesnulých. Nejde o kancelář."
+        pattern: { regex: '^\+[1-9]\d{7,14}$', message: "Telefon zadejte ve tvaru +420123456789 (bez mezer)." }
+      - name: shortNote
+        label: Krátká poznámka
+        type: text
+        options: { maxlength: 160 }
+      - name: serviceArea
+        label: Oblast, kde převoz zajišťujete
+        type: text
+        options: { maxlength: 160 }
+      - { name: enabled, type: boolean, hidden: true, default: true }
+      - { name: label, type: string, hidden: true, default: "Nonstop převoz zesnulých" }
+      - { name: availability, type: string, hidden: true, default: "24/7" }
+
+  # ---------------------------------------------------------------- company, contact, hours
+  - name: contact-group
+    label: "Firma a kontakt"
+    type: group
+    items:
+      - name: company
+        label: "Firma"
+        type: file
+        path: src/content/site/company.json
+        format: json
+        operations: { create: false, delete: false, rename: false }
+        fields:
+          - { name: brandName, label: "Název značky", type: string, required: true, options: { maxlength: 80 } }
+          - { name: legalName, label: "Obchodní jméno", type: string, required: true, options: { maxlength: 120 } }
+          - name: legalIds
+            label: "Údaje o firmě"
+            type: object
+            fields:
+              - name: ico
+                label: IČO
+                type: string
+                pattern: { regex: '^\d{8}$', message: "IČO má 8 číslic." }
+              - name: dic
+                label: DIČ
+                type: string
+                pattern: { regex: '^CZ\d{8,10}$', message: "DIČ zadejte ve tvaru CZ12345678." }
+              - { name: registryEntry, label: "Zápis v obchodním rejstříku", type: string, options: { maxlength: 200 } }
+              - name: registeredOffice
+                label: "Sídlo"
+                type: object
+                fields:
+                  - { name: street, label: "Ulice a číslo", type: string, required: true, options: { maxlength: 120 } }
+                  - { name: city, label: "Obec", type: string, required: true, options: { maxlength: 80 } }
+                  - name: postalCode
+                    label: PSČ
+                    type: string
+                    required: true
+                    pattern: { regex: '^\d{3}\s?\d{2}$', message: "PSČ zadejte ve tvaru 123 45." }
+                  - { name: country, type: string, hidden: true, default: CZ }
+          - name: tradition
+            label: "Tradice firmy"
+            type: object
+            fields:
+              - name: publicWording
+                label: "Text o tradici firmy (bez vymýšlení letopočtů)"
+                type: string
+                options: { maxlength: 120 }
+              - name: foundedYear
+                label: "Rok založení (jen pokud jej znáte jistě)"
+                type: number
+                options: { min: 1800, max: 2100 }
+          - { name: familyOwned, label: "Rodinná firma", type: boolean }
+          - { name: logo, label: "Logo", component: image-ref, required: false }
+
+      - name: contact
+        label: "Kontakt"
+        type: file
+        path: src/content/site/contact.json
+        format: json
+        operations: { create: false, delete: false, rename: false }
+        fields:
+          - name: locations
+            label: "Kancelář"
+            type: object
+            list: { min: 1, max: 1, collapsible: { collapsed: false } }
+            fields:
+              - { name: id, type: string, hidden: true }
+              - { name: name, label: "Název pracoviště", type: string, required: true, options: { maxlength: 80 } }
+              - name: address
+                label: "Adresa"
+                type: object
+                required: true
+                fields:
+                  - { name: street, label: "Ulice a číslo", type: string, required: true, options: { maxlength: 120 } }
+                  - { name: city, label: "Obec", type: string, required: true, options: { maxlength: 80 } }
+                  - name: postalCode
+                    label: PSČ
+                    type: string
+                    required: true
+                    pattern: { regex: '^\d{3}\s?\d{2}$', message: "PSČ zadejte ve tvaru 123 45." }
+                  - { name: country, type: string, hidden: true, default: CZ }
+              - name: geo                      # agent-only; declared so list items keep it
+                type: object
+                hidden: true
+                fields:
+                  - { name: lat, type: number, hidden: true }
+                  - { name: lng, type: number, hidden: true }
+              - name: mapUrl
+                label: "Odkaz na mapu"
+                type: string
+                pattern: { regex: '^https?://\S+$', message: "Zadejte celý odkaz včetně https://." }
+              - { name: accessNote, label: "Poznámka k příjezdu a parkování", type: text, options: { maxlength: 400 } }
+          - name: phones
+            label: "Telefony"
+            type: object
+            list: { min: 1, collapsible: { collapsed: true, summary: "{fields.label}" } }
+            fields:
+              - { name: id, type: string, hidden: true }
+              - { name: label, label: "Popisek", type: string, required: true, options: { maxlength: 60 } }
+              - name: number
+                label: "Telefon"
+                type: string
+                required: true
+                description: "Ve tvaru +420123456789, bez mezer."
+                pattern: { regex: '^\+[1-9]\d{7,14}$', message: "Telefon zadejte ve tvaru +420123456789 (bez mezer)." }
+              - name: department
+                type: select
+                hidden: true
+                default: office
+                options: { values: [office, flowers, other] }
+              - { name: locationId, type: string, hidden: true }
+          - name: emails
+            label: "E-maily"
+            type: object
+            list: { collapsible: { collapsed: true, summary: "{fields.label}" } }
+            fields:
+              - { name: id, type: string, hidden: true }
+              - { name: label, label: "Popisek", type: string, required: true, options: { maxlength: 60 } }
+              - name: address
+                label: "E-mailová adresa"
+                type: string
+                required: true
+                pattern: { regex: '^[^@\s]+@[^@\s]+\.[^@\s]+$', message: "Zadejte platný e-mail." }
+
+      - name: office-hours
+        label: "Otevírací doba kanceláře"
+        type: file
+        path: src/content/site/office-hours.json
+        format: json
+        operations: { create: false, delete: false, rename: false }
+        fields:
+          - { name: locationId, type: string, hidden: true }
+          - { name: label, label: "Nadpis", type: string, required: true, options: { maxlength: 60 } }
+          - name: weekly
+            label: "Pravidelná otevírací doba"
+            description: "Jen doba kanceláře. Nonstop převoz zesnulých je samostatná položka v menu."
+            type: object
+            list: { collapsible: { collapsed: false } }
+            fields:
+              - { name: id, type: string, hidden: true }
+              - name: days
+                label: "Dny"
+                type: select
+                required: true
+                options:
+                  multiple: true
+                  min: 1
+                  values:
+                    - { value: mon, label: "Pondělí" }
+                    - { value: tue, label: "Úterý" }
+                    - { value: wed, label: "Středa" }
+                    - { value: thu, label: "Čtvrtek" }
+                    - { value: fri, label: "Pátek" }
+                    - { value: sat, label: "Sobota" }
+                    - { value: sun, label: "Neděle" }
+              - name: open
+                label: "Od (HH:MM)"
+                type: string
+                required: true
+                pattern: { regex: '^([01]\d|2[0-3]):[0-5]\d$', message: "Čas zadejte ve tvaru HH:MM, např. 07:00." }
+              - name: close
+                label: "Do (HH:MM)"
+                type: string
+                required: true
+                pattern: { regex: '^([01]\d|2[0-3]):[0-5]\d$', message: "Čas zadejte ve tvaru HH:MM, např. 15:30." }
+              - name: breaks
+                label: "Přestávky"
+                type: object
+                list: { collapsible: { collapsed: true } }
+                fields:
+                  - name: from
+                    label: "Od (HH:MM)"
+                    type: string
+                    required: true
+                    pattern: { regex: '^([01]\d|2[0-3]):[0-5]\d$', message: "Čas zadejte ve tvaru HH:MM." }
+                  - name: to
+                    label: "Do (HH:MM)"
+                    type: string
+                    required: true
+                    pattern: { regex: '^([01]\d|2[0-3]):[0-5]\d$', message: "Čas zadejte ve tvaru HH:MM." }
+          - { name: holidayNote, label: "Poznámka ke svátkům", type: text, options: { maxlength: 200 } }
+          - name: exceptions
+            label: "Výjimky (např. vánoční zavření)"
+            type: object
+            list: { collapsible: { collapsed: true, summary: "{fields.note}" } }
+            fields:
+              - { name: from, label: "Od", type: date, required: true, default: "", options: { format: yyyy-MM-dd } }
+              - { name: to, label: "Do", type: date, required: true, default: "", options: { format: yyyy-MM-dd } }
+              - { name: closed, label: "Zavřeno", type: boolean }
+              - name: open
+                label: "Otevřeno od (HH:MM)"
+                type: string
+                pattern: { regex: '^([01]\d|2[0-3]):[0-5]\d$', message: "Čas zadejte ve tvaru HH:MM." }
+              - name: close
+                label: "Otevřeno do (HH:MM)"
+                type: string
+                pattern: { regex: '^([01]\d|2[0-3]):[0-5]\d$', message: "Čas zadejte ve tvaru HH:MM." }
+              - { name: note, label: "Poznámka", type: string, options: { maxlength: 160 } }
+          - { name: outsideHoursNote, label: "Poznámka mimo otevírací dobu", type: text, options: { maxlength: 200 } }
+
+  # ---------------------------------------------------------------- pricing
+  - name: pricing
+    label: "Ceník"
+    type: file
+    path: src/content/site/pricing.json
+    format: json
+    operations: { create: false, delete: false, rename: false }
+    fields:
+      - { name: visible, label: "Zobrazit ceník na webu", type: boolean }
+      - { name: currency, type: string, hidden: true, default: CZK }
+      - { name: vatNote, label: "Poznámka k DPH", type: string, options: { maxlength: 120 } }
+      - { name: validFrom, label: "Ceník platí od", type: date, default: "", options: { format: yyyy-MM-dd } }
+      - { name: generalNote, label: "Obecná poznámka", type: text, options: { maxlength: 400 } }
+      - name: groups
+        label: "Skupiny cen"
+        type: object
+        list: { collapsible: { collapsed: true, summary: "{fields.title}" } }
+        fields:
+          - { name: id, type: string, hidden: true }
+          - { name: title, label: "Název skupiny", type: string, required: true, options: { maxlength: 80 } }
+          - { name: description, label: "Popis skupiny", type: text, options: { maxlength: 240 } }
+          - name: items
+            label: "Položky"
+            type: object
+            required: true
+            list: { min: 1, collapsible: { collapsed: true, summary: "{fields.label}" } }
+            fields:
+              - { name: id, type: string, hidden: true }
+              - { name: label, label: "Název položky", type: string, required: true, options: { maxlength: 100 } }
+              - { name: description, label: "Popis", type: text, options: { maxlength: 240 } }
+              - name: kind
+                label: "Druh ceny"
+                type: select
+                required: true
+                options:
+                  values:
+                    - { value: fixed, label: "Pevná cena" }
+                    - { value: from, label: "Cena od" }
+                    - { value: range, label: "Rozpětí" }
+                    - { value: on-request, label: "Na dotaz (bez částky)" }
+              - name: amount
+                label: "Částka v Kč (celé číslo)"
+                type: number
+                description: "U druhu 'Na dotaz' nechte prázdné. U rozpětí je to dolní mez."
+                options: { min: 0, max: 2000000, step: 1 }
+              - name: amountMax
+                label: "Horní mez v Kč (jen u rozpětí)"
+                type: number
+                options: { min: 0, max: 2000000, step: 1 }
+              - { name: unit, label: "Jednotka (např. za km)", type: string, options: { maxlength: 30 } }
+              - name: status
+                label: "Stav ceny"
+                type: select
+                required: true
+                default: demo
+                options:
+                  values:
+                    - { value: demo, label: "Ukázková – nezveřejňovat" }
+                    - { value: approved, label: "Schválená skutečná cena" }
+
+  # ---------------------------------------------------------------- pages (fixed set)
+  - name: pages
+    label: "Stránky"
+    type: collection
+    path: src/content/pages
+    format: yaml-frontmatter
+    filename: "{primary}.md"
+    operations: { create: false, delete: false, rename: false }
+    view:
+      primary: title
+      fields: [title, navLabel]
+    fields:
+      - { name: title, label: "Nadpis stránky", type: string, required: true, options: { maxlength: 70 } }
+      - { name: navLabel, label: "Název v menu", type: string, required: true, options: { maxlength: 24 } }
+      - { name: lead, label: "Úvodní odstavec", type: text, options: { maxlength: 400 } }
+      - { name: excerpt, label: "Krátký výtah pro jiné stránky", type: text, options: { maxlength: 400 } }
+      - { name: metaTitle, label: "Titulek pro vyhledávače", type: string, options: { maxlength: 60 } }
+      - { name: metaDescription, label: "Popis pro vyhledávače", type: text, required: true, options: { maxlength: 160 } }
+      - { name: heroImage, label: "Hlavní obrázek", component: image-ref, required: false }
+      - { name: secondaryImage, label: "Další obrázek", component: image-ref, required: false }
+      - { name: placeholder, type: boolean, hidden: true, default: null }
+      - name: body
+        label: "Text stránky"
+        type: rich-text
+        description: "Nadpisy používejte od druhé úrovně. Telefonní čísla sem nepište, berou se z Kontaktu."
+        options: { format: markdown, switcher: false, media: false }
+
+  # ---------------------------------------------------------------- services
+  - name: services
+    label: "Služby"
+    type: collection
+    path: src/content/services
+    format: yaml-frontmatter
+    filename: { template: "{primary}.md", field: false }
+    operations: { create: true, delete: true, rename: false }
+    view:
+      primary: title
+      fields: [title, category, published]
+      sort: [order, title]
+    fields:
+      - { name: title, label: "Název služby", type: string, required: true, options: { maxlength: 80 } }
+      - { name: summary, label: "Krátký popis", type: text, required: true, options: { maxlength: 240 } }
+      - name: category
+        label: "Kategorie"
+        type: select
+        required: true
+        options:
+          values:
+            - { value: ceremony, label: "Obřad" }
+            - { value: transport, label: "Převoz" }
+            - { value: arrangements, label: "Zařízení pohřbu" }
+            - { value: cremation, label: "Kremace" }
+            - { value: memorial, label: "Vzpomínka" }
+            - { value: other, label: "Jiné" }
+      - { name: order, label: "Pořadí", type: number, options: { min: 0, max: 999, step: 1 } }
+      - { name: featured, label: "Zobrazit na úvodní stránce", type: boolean }
+      - { name: published, label: "Zveřejnit", type: boolean, default: true }
+      - { name: image, label: "Obrázek", component: image-ref, required: false }
+      - { name: priceGroupId, type: string, hidden: true }
+      - { name: placeholder, type: boolean, hidden: true, default: null }
+      - name: body
+        label: "Podrobný text"
+        type: rich-text
+        options: { format: markdown, switcher: false, media: false }
+
+  # ---------------------------------------------------------------- guidance
+  - name: guidance
+    label: "Jak postupovat"
+    type: collection
+    path: src/content/guidance
+    format: yaml-frontmatter
+    filename: { template: "{primary}.md", field: false }
+    operations: { create: true, delete: true, rename: false }
+    view:
+      primary: title
+      fields: [title, phase]
+      sort: [order, title]
+    fields:
+      - { name: title, label: "Nadpis kroku", type: string, required: true, options: { maxlength: 90 } }
+      - { name: summary, label: "Shrnutí", type: text, required: true, options: { maxlength: 240 } }
+      - name: phase
+        label: "Fáze"
+        type: select
+        required: true
+        options:
+          values:
+            - { value: first-hours, label: "První hodiny" }
+            - { value: first-days, label: "První dny" }
+            - { value: arrangements, label: "Zařízení pohřbu" }
+            - { value: after-funeral, label: "Po pohřbu" }
+      - name: situations
+        label: "Situace"
+        type: select
+        required: true
+        options:
+          multiple: true
+          min: 1
+          values:
+            - { value: any, label: "Jakákoli" }
+            - { value: home, label: "Doma" }
+            - { value: hospital, label: "V nemocnici" }
+            - { value: care-home, label: "V zařízení péče" }
+            - { value: abroad, label: "V zahraničí" }
+      - { name: order, label: "Pořadí", type: number, required: true, options: { min: 0, max: 999, step: 1 } }
+      - name: contactPrompt
+        label: "Odkaz na kontakt"
+        type: select
+        options:
+          values:
+            - { value: emergency, label: "Nonstop převoz" }
+            - { value: office, label: "Kancelář" }
+            - { value: none, label: "Žádný" }
+      - name: checklist
+        label: "Co si připravit"
+        type: string
+        list: { collapsible: { collapsed: true } }
+        options: { maxlength: 160 }
+      - name: review
+        label: "Odborná kontrola"
+        description: "Odborný obsah – po změně nechte text zkontrolovat."
+        type: object
+        fields:
+          - { name: reviewedBy, label: "Zkontroloval(a)", type: string, options: { maxlength: 80 } }
+          - { name: reviewedAt, label: "Datum kontroly", type: date, default: "", options: { format: yyyy-MM-dd } }
+          - name: sources
+            label: "Zdroje"
+            type: object
+            list: { collapsible: { collapsed: true, summary: "{fields.title}" } }
+            fields:
+              - { name: title, label: "Název zdroje", type: string, required: true, options: { maxlength: 120 } }
+              - name: url
+                label: "Odkaz"
+                type: string
+                required: true
+                pattern: { regex: '^https://\S+$', message: "Zadejte odkaz začínající https://." }
+      - { name: published, label: "Zveřejnit", type: boolean, default: true }
+      - { name: placeholder, type: boolean, hidden: true, default: null }
+      - name: body
+        label: "Text kroku"
+        type: rich-text
+        options: { format: markdown, switcher: false, media: false }
+
+  # ---------------------------------------------------------------- coffins
+  - name: coffins
+    label: "Rakve"
+    type: collection
+    path: src/content/coffins
+    format: yaml-frontmatter
+    filename: { template: "{primary}.md", field: false }
+    operations: { create: true, delete: true, rename: false }
+    view:
+      primary: name
+      fields: [name, code, published]
+      sort: [order, name]
+    fields:
+      - { name: name, label: "Název", type: string, required: true, options: { maxlength: 80 } }
+      - { name: code, label: "Kód v katalogu", type: string, options: { maxlength: 40 } }
+      - { name: material, label: "Materiál", type: string, options: { maxlength: 120 } }
+      - { name: summary, label: "Popis", type: text, required: true, options: { maxlength: 400 } }
+      - { name: image, label: "Obrázek", component: image-ref, required: false }
+      - { name: order, label: "Pořadí", type: number, options: { min: 0, max: 999, step: 1 } }
+      - { name: published, label: "Zveřejnit", type: boolean, default: true }
+      - { name: placeholder, type: boolean, hidden: true, default: null }
+      - name: body
+        type: rich-text
+        hidden: true
+        options: { format: markdown, switcher: false, media: false }
+
+  # ---------------------------------------------------------------- flowers
+  - name: flowers
+    label: "Květiny"
+    type: collection
+    path: src/content/flowers
+    format: yaml-frontmatter
+    filename: { template: "{primary}.md", field: false }
+    operations: { create: true, delete: true, rename: false }
+    view:
+      primary: title
+      fields: [title, type, published]
+      sort: [order, title]
+    fields:
+      - { name: title, label: "Název", type: string, required: true, options: { maxlength: 80 } }
+      - name: type
+        label: "Druh"
+        type: select
+        required: true
+        options:
+          values:
+            - { value: wreath, label: "Věnec" }
+            - { value: spray, label: "Kytice" }
+            - { value: bouquet, label: "Smuteční kytice" }
+            - { value: urn-arrangement, label: "Aranžmá k urně" }
+            - { value: other, label: "Jiné" }
+      - { name: summary, label: "Popis", type: text, options: { maxlength: 300 } }
+      - { name: image, label: "Obrázek", component: image-ref, required: false }
+      - { name: order, label: "Pořadí", type: number, options: { min: 0, max: 999, step: 1 } }
+      - { name: published, label: "Zveřejnit", type: boolean, default: true }
+      - { name: placeholder, type: boolean, hidden: true, default: null }
+      - name: body
+        type: rich-text
+        hidden: true
+        options: { format: markdown, switcher: false, media: false }
+
+# No `articles` entry: features.articles is false for Hnátek (editable-fields §4.11).
