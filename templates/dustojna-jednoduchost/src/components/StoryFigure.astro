@@ -1,0 +1,26 @@
+---
+/** Optional 4:3 image beside the story on /o-nas/ (slot about.story). */
+import { Image } from "astro:assets";
+import PlaceholderMark from "@core/components/PlaceholderMark.astro";
+import type { ResolvedImage } from "@core/media/resolve.ts";
+
+interface Props {
+  image: ResolvedImage;
+}
+
+const { image } = Astro.props;
+---
+<figure class="max-w-[28rem]" data-story-image>
+  <PlaceholderMark active={image.isPlaceholder} kind="image">
+    <Image
+      src={image.src}
+      alt={image.alt}
+      widths={[480, 720, 960]}
+      sizes="(min-width: 64rem) 28rem, 100vw"
+      class="aspect-[4/3] w-full max-w-[28rem] bg-band object-cover"
+      style={`object-position: ${image.objectPosition}`}
+      loading="lazy"
+    />
+  </PlaceholderMark>
+  {image.caption !== null ? <figcaption class="mt-2 text-[0.9375rem] text-muted">{image.caption}</figcaption> : null}
+</figure>

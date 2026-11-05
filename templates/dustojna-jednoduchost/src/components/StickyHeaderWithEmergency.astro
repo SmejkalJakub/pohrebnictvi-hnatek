@@ -1,0 +1,288 @@
+---
+/**
+ * Sticky header on every width: logo left; inline navigation from the `nav` breakpoint;
+ * the persistent emergency button from 768 px (below that the MobileActionBar carries it).
+ * Below the `nav` breakpoint the navigation is a "Menu" disclosure that drops down under the header.
+ */
+import { Image } from "astro:assets";
+import EmergencyPhoneLink from "@core/components/EmergencyPhoneLink.astro";
+import { formatPhone } from "@core/format/phone.ts";
+import type { SiteContext } from "@core/content/view-models.ts";
+import { resolveOptionalImage } from "@core/media/resolve.ts";
+import LineIcon from "./LineIcon.astro";
+import { ui } from "../i18n/cs.ts";
+import type { TemplateOptions } from "../lib/options.ts";
+import { primaryOfficePhone } from "../lib/site.ts";
+
+interface Props {
+  site: SiteContext;
+  options: TemplateOptions;
+}
+
+const { site, options } = Astro.props;
+const logo = resolveOptionalImage(site.company.logo);
+const path = Astro.url.pathname;
+const high = options.emergencyEmphasis === "high";
+const office = primaryOfficePhone(site);
+
+function isCurrent(href: string): boolean {
+  if (href === "/") {
+    return path === "/";
+  }
+  return path.startsWith(href);
+}
+---
+<header class="site-header sticky top-0 z-40 border-b border-hair bg-surface">
+  <div class="container-b flex min-h-(--header-h) items-center gap-3 md:gap-6">
+    <a href="/" class="brand mr-auto flex min-h-11 items-center gap-3 font-semibold text-ink no-underline">
+      {
+        logo !== null ? (
+          <>
+            <Image src={logo.src} alt="" height={40} class="h-10 w-auto" loading="eager" />
+            <span class="sr-only-b">{site.company.brandName}</span>
+          </>
+        ) : (
+          <span class="text-[1.0625rem] leading-tight md:text-lg">{site.company.brandName}</span>
+        )
+      }
+    </a>
+
+    <nav class="site-nav-wrap nav:order-none" aria-label={ui.mainNav}>
+      <button
+        type="button"
+        class="menu-toggle btn btn-quiet min-h-11 px-3 nav:hidden"
+        aria-expanded="false"
+        aria-controls="site-nav"
+        data-menu-toggle
+      >
+        <LineIcon name="menu" class="icon-open" />
+        <LineIcon name="close" class="icon-close hidden" />
+        <span>{ui.menu}</span>
+      </button>
+      <ul id="site-nav" class="site-nav" data-open="false">
+        {
+          site.nav.map((item) => (
+            <li>
+              <a href={item.href} aria-current={isCurrent(item.href) ? "page" : undefined}>
+                {item.label}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+
+    <div class="header-cta hidden md:block" data-no-print>
+      <EmergencyPhoneLink
+        emergency={site.emergency}
+        variant="number"
+        class:list={["btn btn-emergency whitespace-nowrap", high ? "header-cta-high" : "header-cta-standard"]}
+        numberClass="num"
+      >
+        <LineIcon name="phone" />
+        <span class="cta-text">
+          <span class="cta-line">
+            <span>{ui.emergencyShort}</span><span aria-hidden="true" class="cta-sep">·</span>
+          </span>
+          {high ? <span class="cta-sub">{ui.emergencyAround}</span> : null}
+        </span>
+      </EmergencyPhoneLink>
+    </div>
+  </div>
+  <p class="print-only container-b pb-2 text-[10pt]">
+    {site.emergency.enabled ? <span>{site.emergency.label}: {formatPhone(site.emergency.phone).display} · </span> : null}
+    <span>{office.label}: {formatPhone(office.number).display}</span>
+  </p>
+</header>
+
+<script is:inline>
+  (function () {
+    var toggle = document.querySelector("[data-menu-toggle]");
+    var list = document.getElementById("site-nav");
+    if (!toggle || !list) {
+      return;
+    }
+    function setOpen(open) {
+      toggle.setAttribute("aria-expanded", open ? "true" : "false");
+      list.setAttribute("data-open", open ? "true" : "false");
+    }
+    toggle.addEventListener("click", function () {
+      setOpen(toggle.getAttribute("aria-expanded") !== "true");
+    });
+    document.addEventListener("keydown", function (event) {
+      if (event.key === "Escape" && toggle.getAttribute("aria-expanded") === "true") {
+        setOpen(false);
+        toggle.focus();
+      }
+    });
+  })();
+</script>
+
+<style>
+  /* Mobile and tablet: dropdown list under the sticky header. */
+  .site-nav {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 100%;
+    background-color: var(--c-surface);
+    border-bottom: 1px solid var(--c-line);
+    max-height: calc(100dvh - var(--header-h) - var(--bar-h));
+    overflow-y: auto;
+    padding: 0.5rem 1rem 1rem;
+  }
+
+  :global(html.js) .site-nav[data-open="false"] {
+    display: none;
+  }
+
+  /* Without JS the list is simply shown in the header flow and the toggle is hidden. */
+  :global(html:not(.js)) .site-nav {
+    position: static;
+    border: 0;
+    padding: 0;
+  }
+
+  :global(html:not(.js)) .menu-toggle {
+    display: none;
+  }
+
+  :global(html:not(.js)) .site-header > div {
+    flex-wrap: wrap;
+  }
+
+  :global(html:not(.js)) .site-nav-wrap {
+    order: 3;
+    width: 100%;
+  }
+
+  :global(html:not(.js)) .site-header {
+    position: relative;
+  }
+
+  .site-nav li + li {
+    border-top: 1px solid var(--c-hair);
+  }
+
+  .site-nav a {
+    display: flex;
+    align-items: center;
+    min-height: 3rem;
+    padding-inline: 0.25rem;
+    color: var(--c-ink);
+    text-decoration: none;
+    font-weight: 600;
+  }
+
+  .site-nav a:hover {
+    text-decoration: underline;
+  }
+
+  .site-nav a[aria-current="page"] {
+    color: var(--c-accent);
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+  }
+
+  [aria-expanded="true"] :global(.icon-open) {
+    display: none;
+  }
+
+  [aria-expanded="true"] :global(.icon-close) {
+    display: block;
+  }
+
+  .cta-text {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: flex-start;
+    line-height: 1.15;
+  }
+
+  .cta-line {
+    display: inline-flex;
+    gap: 0.375rem;
+  }
+
+  .cta-sep {
+    font-weight: 400;
+  }
+
+  .cta-sub {
+    font-size: 0.8125rem;
+    font-weight: 400;
+  }
+
+  /* The number is the last child the core component renders. */
+  .header-cta :global(.header-cta-standard) {
+    font-size: 0.9375rem;
+    padding-inline: 0.875rem;
+  }
+
+  .header-cta :global(.header-cta-standard) .cta-text {
+    flex-direction: row;
+  }
+
+  .header-cta :global(.header-cta-high) {
+    display: grid;
+    grid-template-columns: auto auto auto;
+    grid-template-areas: "icon label number" "icon sub sub";
+    column-gap: 0.5rem;
+    row-gap: 0.125rem;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+  }
+
+  .header-cta :global(.header-cta-high) > :global(svg) {
+    grid-area: icon;
+  }
+
+  .header-cta :global(.header-cta-high) .cta-text {
+    display: contents;
+  }
+
+  .header-cta :global(.header-cta-high) .cta-line {
+    grid-area: label;
+  }
+
+  .header-cta :global(.header-cta-high) .cta-sub {
+    grid-area: sub;
+  }
+
+  .header-cta :global(.header-cta-high) > :global([data-part="number"]) {
+    grid-area: number;
+    font-size: 1.125rem;
+  }
+
+  @media (min-width: 80rem) {
+    .site-nav {
+      position: static;
+      display: flex !important;
+      flex-wrap: nowrap;
+      gap: 0.125rem;
+      max-height: none;
+      overflow: visible;
+      padding: 0;
+      border: 0;
+      background: none;
+    }
+
+    .site-nav li + li {
+      border-top: 0;
+    }
+
+    .site-nav a {
+      min-height: 2.75rem;
+      padding-inline: 0.5rem;
+      font-size: 0.9375rem;
+      white-space: nowrap;
+      border-bottom: 2px solid transparent;
+    }
+
+    .site-nav a[aria-current="page"] {
+      text-decoration: none;
+      border-bottom-color: var(--c-accent);
+    }
+  }
+</style>

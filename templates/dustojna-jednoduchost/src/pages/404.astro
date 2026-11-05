@@ -1,0 +1,36 @@
+---
+import { getSiteContext } from "@core/content/load.ts";
+import Site from "../layouts/Site.astro";
+import EmergencyPanel from "../components/EmergencyPanel.astro";
+import { ui } from "../i18n/cs.ts";
+import { resolveOptions } from "../lib/options.ts";
+
+const site = await getSiteContext();
+const options = resolveOptions(site.config);
+const links = site.nav.filter((item) => item.id === "home" || item.id === "jak-postupovat" || item.id === "kontakt");
+---
+<Site site={site} title={ui.notFoundTitle} description={ui.notFoundText} noindex>
+  <div class="band band-surface">
+    <div class="container-b">
+      <h1>{ui.notFoundTitle}</h1>
+      <p class="mt-3 text-lg text-muted">{ui.notFoundText}</p>
+    </div>
+  </div>
+  <div class="band">
+    <div class="container-b grid gap-10 md:grid-cols-2">
+      <EmergencyPanel emergency={site.emergency} high={options.emergencyEmphasis === "high"} />
+      <section aria-labelledby="pomoc">
+        <h2 id="pomoc">{ui.notFoundHelp}</h2>
+        <ul class="mt-3">
+          {
+            links.map((item) => (
+              <li>
+                <a href={item.href} class="text-link">{item.label}</a>
+              </li>
+            ))
+          }
+        </ul>
+      </section>
+    </div>
+  </div>
+</Site>

@@ -1,0 +1,58 @@
+---
+/**
+ * Page shell for Template B. Options become data attributes on <html>; the chrome is
+ * header → mobile action bar → main → compact footer. Every page gets the emergency CTA
+ * through the header (≥ 768 px) or the fixed bottom bar (< 768 px).
+ */
+import "../styles/global.css";
+import SeoHead from "@core/components/SeoHead.astro";
+import StructuredData from "@core/components/StructuredData.astro";
+import PrototypeBanner from "@core/components/PrototypeBanner.astro";
+import type { ImageMetadata } from "astro";
+import type { SiteContext } from "@core/content/view-models.ts";
+import StickyHeaderWithEmergency from "../components/StickyHeaderWithEmergency.astro";
+import MobileActionBar from "../components/MobileActionBar.astro";
+import CompactFooter from "../components/CompactFooter.astro";
+import { resolveOptions } from "../lib/options.ts";
+import { pageExists } from "../lib/site.ts";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  site: SiteContext;
+  /** Page title without the brand name; null on the homepage. */
+  title?: string | null;
+  description: string;
+  noindex?: boolean;
+  image?: ImageMetadata | null;
+}
+
+const { site, title = null, description, noindex = false, image = null } = Astro.props;
+const options = resolveOptions(site.config);
+const hasPrivacyPage = await pageExists("ochrana-osobnich-udaju");
+---
+<html
+  lang="cs"
+  class="no-js"
+  data-palette={options.palette}
+  data-font={options.fontPair}
+  data-hero={options.heroVariant}
+  data-emphasis={options.emergencyEmphasis}
+>
+  <head>
+    <SeoHead site={site} title={title} description={description} noindex={noindex} image={image} />
+    <script is:inline>
+      document.documentElement.classList.replace("no-js", "js");
+    </script>
+    <StructuredData site={site} />
+  </head>
+  <body class="font-sans text-ink">
+    <PrototypeBanner />
+    <a href="#obsah" class="skip-link">{ui.skipLink}</a>
+    <StickyHeaderWithEmergency site={site} options={options} />
+    <MobileActionBar site={site} options={options} />
+    <main id="obsah" tabindex="-1" class="focus:outline-none">
+      <slot />
+    </main>
+    <CompactFooter site={site} hasPrivacyPage={hasPrivacyPage} />
+  </body>
+</html>

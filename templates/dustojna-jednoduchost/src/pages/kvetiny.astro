@@ -1,0 +1,57 @@
+---
+import PhoneLink from "@core/components/PhoneLink.astro";
+import { getFlowers, getPage, getSiteContext } from "@core/content/load.ts";
+import Site from "../layouts/Site.astro";
+import PageHeading from "../components/PageHeading.astro";
+import LineIcon from "../components/LineIcon.astro";
+import UniformCatalogueGrid, { type CatalogueItem } from "../components/UniformCatalogueGrid.astro";
+import { flowerTypeLabels, ui } from "../i18n/cs.ts";
+import { flowerPhones, primaryOfficePhone, seoTitle } from "../lib/site.ts";
+
+const site = await getSiteContext();
+const page = await getPage("kvetiny");
+const flowers = await getFlowers();
+let orderPhones = flowerPhones(site);
+if (orderPhones.length === 0) {
+  orderPhones = [primaryOfficePhone(site)];
+}
+const Body = page.Content;
+const items: CatalogueItem[] = flowers.map((flower) => ({
+  id: flower.id,
+  name: flower.data.title,
+  image: flower.data.image,
+  placeholder: flower.data.placeholder,
+  facts: [{ label: ui.flowerType, value: flowerTypeLabels[flower.data.type] }],
+  summary: flower.data.summary,
+}));
+---
+<Site site={site} title={seoTitle(page.data)} description={page.data.metaDescription}>
+  <PageHeading title={page.data.title} lead={page.data.lead} placeholder={page.data.placeholder} />
+  <div class="band">
+    <div class="container-b space-y-10">
+      <div class="prose-b"><Body /></div>
+      <UniformCatalogueGrid site={site} items={items} aspect="1/1" headingId="nabidka-kvetin" heading={ui.flowersHeading} />
+    </div>
+  </div>
+  <section class="band band-surface" aria-labelledby="objednavka-kvetin">
+    <div class="container-b grid gap-6 md:grid-cols-2 md:gap-0 md:divide-x md:divide-line">
+      <div class="md:pr-8">
+        <h2 id="objednavka-kvetin">{ui.flowersOrder}</h2>
+        <p class="mt-3 text-muted">{ui.flowersOrderText}</p>
+      </div>
+      <ul class="space-y-2 md:pl-8" data-office-phones>
+        {
+          orderPhones.map((phone) => (
+            <li>
+              <span class="flex items-center gap-2 text-muted">
+                <LineIcon name="phone" />
+                {phone.label}
+              </span>
+              <PhoneLink number={phone.number} class="num inline-flex min-h-11 items-center text-xl font-semibold" />
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+</Site>

@@ -1,0 +1,14 @@
+---
+/** Prototype-only "Neověřený text" flag for guidance without review.reviewedAt (gate G-040 marker). */
+import type { SiteContext } from "@core/content/view-models.ts";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  site: SiteContext;
+  reviewedAt: string | null;
+}
+
+const { site, reviewedAt } = Astro.props;
+const show = site.mode === "prototype" && reviewedAt === null;
+---
+{show ? <span class="review-flag" data-review-flag>{ui.unreviewed}</span> : null}

@@ -1,0 +1,67 @@
+---
+/**
+ * Uniform catalogue grid (3/2/1 columns), equal heights, image on top, text underneath.
+ * If no entry has an image the grid is text-only; if some do, the others get a quiet frame.
+ * Zero entries → "Katalog připravujeme" (prototype) and the contact prompt is shown by the page.
+ */
+import PlaceholderMark from "@core/components/PlaceholderMark.astro";
+import type { SiteContext } from "@core/content/view-models.ts";
+import { resolveOptionalImage, type ResolvedImage } from "@core/media/resolve.ts";
+import type { ImageRef } from "@core/content/schemas.ts";
+import { ui } from "../i18n/cs.ts";
+import CatalogueImage from "./CatalogueImage.astro";
+import When from "./When.astro";
+
+export interface CatalogueItem {
+  id: string;
+  name: string;
+  image: ImageRef | null;
+  placeholder: boolean;
+  facts: { label: string; value: string }[];
+  summary: string | null;
+}
+
+interface Props {
+  site: SiteContext;
+  items: CatalogueItem[];
+  aspect: "4/3" | "1/1";
+  headingId: string;
+  heading: string;
+}
+
+const { site, items, aspect, headingId, heading } = Astro.props;
+const resolved: { item: CatalogueItem; image: ResolvedImage | null }[] = items.map((item) => ({
+  item,
+  image: resolveOptionalImage(item.image),
+}));
+const anyImage = resolved.some((entry) => entry.image !== null);
+const showSoon = items.length === 0 && site.mode === "prototype";
+const aspectClass = aspect === "4/3" ? "aspect-[4/3]" : "aspect-square";
+---
+<section aria-labelledby={headingId}>
+  <h2 id={headingId}>{heading}</h2>
+  {showSoon ? <p class="mt-4 border-t border-line pt-4">{ui.catalogueSoon}</p> : null}
+  <When if={items.length > 0}>
+      <ul class="catalogue-grid mt-6 grid gap-x-6 gap-y-8 sm:grid-cols-2 lg:grid-cols-3">
+        {resolved.map(({ item, image }) => (
+          <li class="flex flex-col border-t border-line pt-4" data-catalogue-item={item.id}>
+            <PlaceholderMark active={item.placeholder} kind="content" class="flex h-full flex-col">
+              {anyImage ? <CatalogueImage image={image} aspectClass={aspectClass} /> : null}
+              <h3>{item.name}</h3>
+              {item.facts.length > 0 ? (
+                <dl class="mt-2 grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 text-[0.9375rem]">
+                  {item.facts.map((fact) => (
+                    <>
+                      <dt class="text-muted">{fact.label}</dt>
+                      <dd>{fact.value}</dd>
+                    </>
+                  ))}
+                </dl>
+              ) : null}
+              {item.summary !== null ? <p class="mt-2 text-[0.9375rem] text-muted">{item.summary}</p> : null}
+            </PlaceholderMark>
+          </li>
+        ))}
+      </ul>
+  </When>
+</section>

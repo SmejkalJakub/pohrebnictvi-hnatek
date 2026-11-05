@@ -1,0 +1,58 @@
+---
+/**
+ * Service index: category headings, each with a two-column <ul> of title (link to the
+ * detail page), summary. No images. Used on the homepage (featured) and on /sluzby/ (all).
+ */
+import type { CollectionEntry } from "astro:content";
+import PlaceholderMark from "@core/components/PlaceholderMark.astro";
+import { serviceHref } from "@core/content/load.ts";
+import LineIcon from "./LineIcon.astro";
+import { groupServices } from "../lib/site.ts";
+
+interface Props {
+  services: CollectionEntry<"services">[];
+  headingLevel: "h2" | "h3";
+}
+
+const { services, headingLevel } = Astro.props;
+const groups = groupServices(services);
+const Heading = headingLevel;
+const ItemHeading = headingLevel === "h2" ? "h3" : "h4";
+---
+<div class="service-index space-y-8">
+  {
+    groups.map((group) => (
+      <div class="service-group grid gap-3 border-t border-line pt-4 md:grid-cols-12 md:gap-x-8" id={`kategorie-${group.category}`}>
+        <Heading class="md:col-span-3 text-[1.125rem]">{group.label}</Heading>
+        <ul class="grid gap-x-8 gap-y-5 sm:grid-cols-2 md:col-span-9">
+          {group.services.map((service) => (
+            <li data-service={service.id}>
+              <PlaceholderMark active={service.data.placeholder} kind="content">
+              <ItemHeading class="text-[1.0625rem]">
+                <a href={serviceHref(service.id, true)} class="service-link">
+                  <span>{service.data.title}</span>
+                  <LineIcon name="chevron" size={18} class="shrink-0" />
+                </a>
+              </ItemHeading>
+              <p class="mt-1 text-[0.9375rem] text-muted">{service.data.summary}</p>
+              </PlaceholderMark>
+            </li>
+          ))}
+        </ul>
+      </div>
+    ))
+  }
+</div>
+
+<style>
+  .service-link {
+    display: inline-flex;
+    align-items: flex-start;
+    gap: 0.25rem;
+    min-height: 1.5rem;
+  }
+
+  .service-link :global(svg) {
+    margin-top: 0.2em;
+  }
+</style>

@@ -1,0 +1,24 @@
+---
+import { getGuidance, getPage, getSiteContext } from "@core/content/load.ts";
+import Site from "../layouts/Site.astro";
+import PageHeading from "../components/PageHeading.astro";
+import PhasedChecklist from "../components/PhasedChecklist.astro";
+import { ui } from "../i18n/cs.ts";
+import { seoTitle } from "../lib/site.ts";
+
+const site = await getSiteContext();
+const page = await getPage("jak-postupovat");
+const guidance = await getGuidance();
+const Body = page.Content;
+---
+<Site site={site} title={seoTitle(page.data)} description={page.data.metaDescription}>
+  <PageHeading title={page.data.title} lead={page.data.lead} placeholder={page.data.placeholder}>
+    <p class="mt-4 max-w-[42rem] text-[0.9375rem] text-muted" data-no-print>{ui.printHint}</p>
+  </PageHeading>
+  <div class="band">
+    <div class="container-b">
+      <div class="prose-b mb-8"><Body /></div>
+      <PhasedChecklist site={site} guidance={guidance} />
+    </div>
+  </div>
+</Site>

@@ -1,0 +1,23 @@
+---
+/** Service detail pages (supports.serviceDetailPages: true): one per published service. */
+import { getPricing, getServices, getSiteContext, render } from "@core/content/load.ts";
+import Site from "../../layouts/Site.astro";
+import ServiceDetailLayout from "../../components/ServiceDetailLayout.astro";
+import { resolveOptions } from "../../lib/options.ts";
+
+export async function getStaticPaths() {
+  const services = await getServices();
+  return services.map((service) => ({ params: { slug: service.id }, props: { service } }));
+}
+
+const { service } = Astro.props;
+const site = await getSiteContext();
+const pricing = await getPricing();
+const options = resolveOptions(site.config);
+const { Content } = await render(service);
+---
+<Site site={site} title={service.data.title} description={service.data.summary.slice(0, 160)}>
+  <ServiceDetailLayout site={site} service={service} pricing={pricing} high={options.emergencyEmphasis === "high"}>
+    <Content />
+  </ServiceDetailLayout>
+</Site>

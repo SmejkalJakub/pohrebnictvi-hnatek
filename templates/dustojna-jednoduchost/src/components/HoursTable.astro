@@ -1,0 +1,77 @@
+---
+/**
+ * Office hours as a table, headed by the hours label. Every day appears (closed days are
+ * explicit). Never used for the emergency line, which has its own block.
+ */
+import type { SiteContext } from "@core/content/view-models.ts";
+import LineIcon from "./LineIcon.astro";
+import When from "./When.astro";
+import { ui } from "../i18n/cs.ts";
+import { formatTime } from "@core/format/hours.ts";
+import { formatIsoDate } from "../lib/site.ts";
+
+interface Props {
+  site: SiteContext;
+  headingLevel?: "h2" | "h3";
+  id?: string;
+  showNotes?: boolean;
+}
+
+const { site, headingLevel = "h2", id = "uredni-hodiny", showNotes = true } = Astro.props;
+const Heading = headingLevel;
+const hours = site.officeHours;
+const exceptions = hours.exceptions;
+
+function describeRange(from: string, to: string): string {
+  if (from === to) {
+    return formatIsoDate(from);
+  }
+  return `${formatIsoDate(from)} – ${formatIsoDate(to)}`;
+}
+
+function describeException(exception: (typeof exceptions)[number]): string {
+  if (exception.closed || exception.open === null || exception.close === null) {
+    return ui.hoursClosedDays;
+  }
+  return `${formatTime(exception.open)}–${formatTime(exception.close)}`;
+}
+---
+<section aria-labelledby={id} data-office-hours>
+  <Heading id={id} class="flex items-center gap-2">
+    <LineIcon name="clock" class="shrink-0 text-muted" />
+    <span>{hours.label}</span>
+  </Heading>
+  <table class="hours-table mt-3">
+    <tbody>
+      {
+        site.officeHoursRows.map((row) => (
+          <tr>
+            <th scope="row">
+              <abbr title={row.daysLong} class="no-underline">{row.days}</abbr>
+            </th>
+            <td>
+              <span class="num">{row.text}</span>
+              {row.note !== null ? <span class="block text-[0.9375rem] text-muted">{row.note}</span> : null}
+            </td>
+          </tr>
+        ))
+      }
+    </tbody>
+  </table>
+  {showNotes && hours.holidayNote !== null ? <p class="mt-3 text-[0.9375rem] text-muted">{hours.holidayNote}</p> : null}
+  <When if={showNotes && exceptions.length > 0}>
+      <div class="mt-3">
+        <p class="font-semibold">{ui.exceptionsHeading}</p>
+        <ul class="mt-1 space-y-1 text-[0.9375rem]">
+          {exceptions.map((exception) => (
+            <li>
+              <span class="num">{describeRange(exception.from, exception.to)}</span>:{" "}
+              {describeException(exception)}
+              {exception.note !== null ? ` (${exception.note})` : ""}
+            </li>
+          ))}
+        </ul>
+      </div>
+  </When>
+  {showNotes && hours.outsideHoursNote !== null ? <p class="mt-3 text-[0.9375rem] text-muted">{hours.outsideHoursNote}</p> : null}
+</section>

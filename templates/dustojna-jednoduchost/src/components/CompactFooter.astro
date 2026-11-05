@@ -1,0 +1,85 @@
+---
+/**
+ * Compact two-row footer: (1) contact facts as one line group (address, office phones,
+ * e-mail, office hours under their own label), (2) legal identifiers.
+ * The emergency CTA is deliberately not repeated here: the header or bottom bar is always present.
+ */
+import PhoneLink from "@core/components/PhoneLink.astro";
+import MissingFact from "@core/components/MissingFact.astro";
+import type { SiteContext } from "@core/content/view-models.ts";
+import { formatAddressInline } from "@core/format/address.ts";
+import LineIcon from "./LineIcon.astro";
+import { ui } from "../i18n/cs.ts";
+import { mainLocation, mapHref, officePhones } from "../lib/site.ts";
+
+interface Props {
+  site: SiteContext;
+  hasPrivacyPage: boolean;
+}
+
+const { site, hasPrivacyPage } = Astro.props;
+const location = mainLocation(site);
+const map = mapHref(location);
+const phones = officePhones(site);
+const company = site.company;
+const ids = company.legalIds;
+---
+<footer class="site-footer border-t border-line bg-surface text-[0.9375rem]">
+  <div class="container-b grid gap-6 py-8 md:grid-cols-[1.2fr_1fr_1fr_1.2fr] md:gap-0 md:divide-x md:divide-hair">
+    <div class="footer-cell md:pr-6">
+      <p class="font-semibold">{company.brandName}</p>
+      <h2 class="sr-only-b">{ui.address}</h2>
+      <p class="mt-1 flex gap-2">
+        <LineIcon name="pin" class="mt-0.5 shrink-0 text-muted" />
+        <span>{formatAddressInline(location.address)}</span>
+      </p>
+      {map !== null ? <p><a href={map} class="text-link">{ui.showOnMap}</a></p> : null}
+    </div>
+    <div class="footer-cell md:px-6" data-office-phones>
+      <h2 class="label-b">{ui.phonesAndEmail}</h2>
+      <ul class="mt-1 space-y-1">
+        {
+          phones.map((phone) => (
+            <li class="flex flex-wrap items-center gap-x-2">
+              <LineIcon name="phone" class="shrink-0 text-muted" />
+              <span>{phone.label}:</span>
+              <PhoneLink number={phone.number} class="num inline-flex min-h-11 items-center font-semibold md:min-h-6" />
+            </li>
+          ))
+        }
+        {
+          site.contact.emails.map((email) => (
+            <li class="flex flex-wrap items-center gap-x-2">
+              <LineIcon name="mail" class="shrink-0 text-muted" />
+              <a href={`mailto:${email.address}`} class="inline-flex min-h-11 items-center break-all md:min-h-6">{email.address}</a>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+    <div class="footer-cell md:px-6" data-office-hours>
+      <h2 class="label-b">{site.officeHours.label}</h2>
+      <ul class="mt-1 space-y-1">
+        {
+          site.officeHoursRows.map((row) => (
+            <li>
+              <span class="font-semibold" title={row.daysLong}>{row.days}</span>{" "}
+              <span class="num">{row.text}</span>
+              {row.note !== null ? <span class="block text-muted">{row.note}</span> : null}
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+    <div class="footer-cell md:pl-6" data-legal>
+      <h2 class="label-b">{ui.legalIds}</h2>
+      <p class="mt-1">{company.legalName}</p>
+      <p class="text-muted">
+        {ui.ico}: {ids.ico !== null ? <span class="num">{ids.ico}</span> : <MissingFact name="IČO" />}
+        {ids.dic !== null ? <span> · {ui.dic}: <span class="num">{ids.dic}</span></span> : null}
+      </p>
+      {ids.registryEntry !== null ? <p class="text-muted">{ids.registryEntry}</p> : <p><MissingFact name="zápis v obchodním rejstříku" /></p>}
+      {hasPrivacyPage ? <p class="mt-2"><a href="/ochrana-osobnich-udaju/" class="text-link">{ui.privacy}</a></p> : null}
+    </div>
+  </div>
+</footer>

@@ -1,0 +1,138 @@
+---
+/**
+ * One <table> per price group: caption, columns Položka / Popis / Cena. Below 640 px the rows
+ * reflow into stacked blocks with visible labels; explicit ARIA roles keep table semantics
+ * when the display type changes. Prices only through core <PriceValue> ("UKÁZKA" on demo items).
+ */
+import PriceValue from "@core/components/PriceValue.astro";
+import type { PriceGroup } from "@core/content/schemas.ts";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  group: PriceGroup;
+}
+
+const { group } = Astro.props;
+---
+<table class="price-table" id={group.id} role="table" aria-labelledby={`${group.id}-nazev`}>
+  <caption id={`${group.id}-nazev`}>
+    <span class="block text-[1.3125rem] font-semibold">{group.title}</span>
+    {group.description !== null ? <span class="mt-1 block font-normal text-muted">{group.description}</span> : null}
+  </caption>
+  <thead role="rowgroup">
+    <tr role="row">
+      <th scope="col" role="columnheader">{ui.priceItem}</th>
+      <th scope="col" role="columnheader">{ui.priceDescription}</th>
+      <th scope="col" role="columnheader" class="col-price">{ui.price}</th>
+    </tr>
+  </thead>
+  <tbody role="rowgroup">
+    {
+      group.items.map((item) => (
+        <tr role="row" data-price-item={item.id}>
+          <th scope="row" role="rowheader">{item.label}</th>
+          <td role="cell" data-label={ui.priceDescription} data-empty={item.description === null ? "true" : undefined}>
+            {item.description !== null ? item.description : <span aria-label="bez popisu">{ui.noDescription}</span>}
+          </td>
+          <td role="cell" data-label={ui.price} class="col-price">
+            <PriceValue item={item} class="price-value" />
+          </td>
+        </tr>
+      ))
+    }
+  </tbody>
+</table>
+
+<style>
+  .price-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  tbody tr {
+    background-color: var(--c-surface);
+  }
+
+  caption {
+    text-align: left;
+    padding-bottom: 0.75rem;
+  }
+
+  th,
+  td {
+    text-align: left;
+    vertical-align: top;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--c-hair);
+  }
+
+  thead th {
+    font-size: 0.9375rem;
+    color: var(--c-muted);
+    border-bottom: 1px solid var(--c-line);
+    background-color: var(--c-bg);
+  }
+
+  tbody th {
+    font-weight: 600;
+    width: 32%;
+  }
+
+  .col-price {
+    text-align: right;
+    white-space: nowrap;
+    width: 1%;
+  }
+
+  .price-table :global(.price-value) {
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+  }
+
+  @media (max-width: 39.99rem) {
+    .price-table,
+    .price-table tbody,
+    .price-table tr,
+    .price-table th,
+    .price-table td {
+      display: block;
+      width: 100%;
+    }
+
+    .price-table caption {
+      display: block;
+    }
+
+    thead {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+    }
+
+    tbody tr {
+      border-top: 1px solid var(--c-line);
+      padding: 0.75rem 1rem;
+    }
+
+    tbody th,
+    tbody td {
+      border: 0;
+      padding: 0.125rem 0;
+      text-align: left;
+      white-space: normal;
+    }
+
+    tbody td[data-empty="true"] {
+      display: none;
+    }
+
+    tbody td::before {
+      content: attr(data-label) ": ";
+      color: var(--c-muted);
+      font-size: 0.875rem;
+      font-weight: 600;
+    }
+  }
+</style>

@@ -1,0 +1,22 @@
+---
+/** Page intro band: optional breadcrumb slot, H1 and lead. Placeholder pages get the core marker. */
+import PlaceholderMark from "@core/components/PlaceholderMark.astro";
+
+interface Props {
+  title: string;
+  lead?: string | null;
+  placeholder?: boolean;
+}
+
+const { title, lead = null, placeholder = false } = Astro.props;
+---
+<div class="band band-surface">
+  <div class="container-b">
+    <slot name="before" />
+    <PlaceholderMark active={placeholder} kind="content">
+      <h1>{title}</h1>
+      {lead !== null ? <p class="mt-3 max-w-[42rem] text-lg text-muted">{lead}</p> : null}
+    </PlaceholderMark>
+    <slot />
+  </div>
+</div>

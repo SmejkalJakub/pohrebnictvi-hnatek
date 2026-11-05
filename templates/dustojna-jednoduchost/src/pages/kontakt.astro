@@ -1,0 +1,108 @@
+---
+/** Contact: the emergency panel first, then address | office hours | phones and e-mail, then legal identifiers. */
+import MissingFact from "@core/components/MissingFact.astro";
+import PhoneLink from "@core/components/PhoneLink.astro";
+import { getPage, getSiteContext } from "@core/content/load.ts";
+import { formatAddressInline, formatAddressLines } from "@core/format/address.ts";
+import Site from "../layouts/Site.astro";
+import PageHeading from "../components/PageHeading.astro";
+import EmergencyPanel from "../components/EmergencyPanel.astro";
+import HoursTable from "../components/HoursTable.astro";
+import LineIcon from "../components/LineIcon.astro";
+import { ui } from "../i18n/cs.ts";
+import { resolveOptions } from "../lib/options.ts";
+import { mainLocation, mapHref, seoTitle } from "../lib/site.ts";
+
+const site = await getSiteContext();
+const options = resolveOptions(site.config);
+const page = await getPage("kontakt");
+const location = mainLocation(site);
+const map = mapHref(location);
+const lines = formatAddressLines(location.address);
+const ids = site.company.legalIds;
+const Body = page.Content;
+---
+<Site site={site} title={seoTitle(page.data)} description={page.data.metaDescription}>
+  <PageHeading title={page.data.title} lead={page.data.lead} placeholder={page.data.placeholder} />
+  <div class="band">
+    <div class="container-b space-y-12">
+      <EmergencyPanel emergency={site.emergency} high={options.emergencyEmphasis === "high"} />
+
+      <div class="grid gap-8 md:grid-cols-2 lg:grid-cols-3 lg:gap-0 lg:divide-x lg:divide-line">
+        <section aria-labelledby="adresa" class="lg:pr-8">
+          <h2 id="adresa" class="flex items-center gap-2">
+            <LineIcon name="pin" class="shrink-0 text-muted" />
+            <span>{ui.address}</span>
+          </h2>
+          <address class="mt-3 not-italic">
+            {location.name}<br />
+            {lines[0]}<br />
+            {lines[1]}
+          </address>
+          {
+            map !== null ? (
+              <p class="mt-1">
+                <a href={map} class="text-link">
+                  {ui.showOnMap}
+                  <LineIcon name="external" size={16} />
+                </a>
+              </p>
+            ) : (
+              <p class="mt-1"><MissingFact name="odkaz na mapu" /></p>
+            )
+          }
+          {location.accessNote !== null ? <p class="mt-3 text-[0.9375rem] text-muted">{location.accessNote}</p> : null}
+        </section>
+
+        <div class="lg:px-8">
+          <HoursTable site={site} headingLevel="h2" id="uredni-hodiny" />
+        </div>
+
+        <section aria-labelledby="telefony" class="lg:pl-8" data-office-phones>
+          <h2 id="telefony" class="flex items-center gap-2">
+            <LineIcon name="phone" class="shrink-0 text-muted" />
+            <span>{ui.phonesAndEmail}</span>
+          </h2>
+          <ul class="mt-3 space-y-2">
+            {
+              site.contact.phones.map((phone) => (
+                <li>
+                  <span class="text-muted">{phone.label}</span>
+                  <br />
+                  <PhoneLink number={phone.number} class="num inline-flex min-h-11 items-center text-lg font-semibold" />
+                </li>
+              ))
+            }
+            {
+              site.contact.emails.map((email) => (
+                <li>
+                  <span class="text-muted">{ui.emailLabel}</span>
+                  <br />
+                  <a href={`mailto:${email.address}`} class="inline-flex min-h-11 items-center break-all">{email.address}</a>
+                </li>
+              ))
+            }
+          </ul>
+        </section>
+      </div>
+
+      <div class="prose-b"><Body /></div>
+
+      <section aria-labelledby="udaje-spolecnosti" class="border-t border-line pt-6" data-legal>
+        <h2 id="udaje-spolecnosti">{ui.legalIds}</h2>
+        <dl class="mt-3 grid gap-x-6 gap-y-1 sm:grid-cols-[12rem_1fr]">
+          <dt class="font-semibold text-muted">{ui.legalName}</dt>
+          <dd>{site.company.legalName}</dd>
+          <dt class="font-semibold text-muted">{ui.ico}</dt>
+          <dd>{ids.ico !== null ? <span class="num">{ids.ico}</span> : <MissingFact name="IČO" />}</dd>
+          {ids.dic !== null ? <dt class="font-semibold text-muted">{ui.dic}</dt> : null}
+          {ids.dic !== null ? <dd class="num">{ids.dic}</dd> : null}
+          <dt class="font-semibold text-muted">{ui.registryEntry}</dt>
+          <dd>{ids.registryEntry !== null ? ids.registryEntry : <MissingFact name="zápis v obchodním rejstříku" />}</dd>
+          <dt class="font-semibold text-muted">{ui.registeredOffice}</dt>
+          <dd>{ids.registeredOffice !== null ? formatAddressInline(ids.registeredOffice) : <MissingFact name="sídlo společnosti" />}</dd>
+        </dl>
+      </section>
+    </div>
+  </div>
+</Site>

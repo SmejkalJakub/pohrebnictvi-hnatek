@@ -1,0 +1,26 @@
+---
+/** Optional 3:2 hero image for heroVariant "text-with-image"; always placed after the CTA tier. */
+import { Image } from "astro:assets";
+import PlaceholderMark from "@core/components/PlaceholderMark.astro";
+import type { ResolvedImage } from "@core/media/resolve.ts";
+
+interface Props {
+  image: ResolvedImage;
+}
+
+const { image } = Astro.props;
+---
+<figure class="max-w-[36rem]" data-hero-image>
+  <PlaceholderMark active={image.isPlaceholder} kind="image">
+    <Image
+      src={image.src}
+      alt={image.alt}
+      widths={[480, 720, 960]}
+      sizes="(min-width: 48rem) 36rem, 100vw"
+      class="aspect-[3/2] w-full max-w-[36rem] bg-band object-cover"
+      style={`object-position: ${image.objectPosition}`}
+      loading="lazy"
+    />
+  </PlaceholderMark>
+  {image.caption !== null ? <figcaption class="mt-2 text-[0.9375rem] text-muted">{image.caption}</figcaption> : null}
+</figure>

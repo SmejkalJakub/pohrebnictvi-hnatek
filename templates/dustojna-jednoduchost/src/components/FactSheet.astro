@@ -1,0 +1,55 @@
+---
+/** "O nás" fact sheet: a <dl> of company facts, shown before the story. Null optional facts are omitted. */
+import MissingFact from "@core/components/MissingFact.astro";
+import type { SiteContext } from "@core/content/view-models.ts";
+import { formatAddressInline } from "@core/format/address.ts";
+import { ui } from "../i18n/cs.ts";
+import { mainLocation } from "../lib/site.ts";
+
+interface Props {
+  site: SiteContext;
+}
+
+const { site } = Astro.props;
+const company = site.company;
+const location = mainLocation(site);
+const rows: { label: string; value: string }[] = [{ label: ui.legalName, value: company.legalName }];
+if (company.familyOwned !== null) {
+  let value: string = ui.no;
+  if (company.familyOwned) {
+    value = ui.yes;
+  }
+  rows.push({ label: ui.familyOwned, value });
+}
+if (company.tradition.publicWording !== null) {
+  rows.push({ label: ui.tradition, value: company.tradition.publicWording });
+}
+if (company.tradition.foundedYear !== null) {
+  rows.push({ label: ui.foundedYear, value: String(company.tradition.foundedYear) });
+}
+rows.push({ label: ui.location, value: formatAddressInline(location.address) });
+if (company.legalIds.ico !== null) {
+  rows.push({ label: ui.ico, value: company.legalIds.ico });
+}
+---
+<section aria-labelledby="zakladni-udaje" class="fact-sheet">
+  <h2 id="zakladni-udaje">{ui.factSheet}</h2>
+  <dl class="mt-4 border-t border-line">
+    {
+      rows.map((row) => (
+        <div class="grid gap-1 border-b border-hair py-3 sm:grid-cols-[14rem_1fr] sm:gap-6">
+          <dt class="font-semibold text-muted">{row.label}</dt>
+          <dd>{row.value}</dd>
+        </div>
+      ))
+    }
+    {
+      company.legalIds.ico === null ? (
+        <div class="grid gap-1 border-b border-hair py-3 sm:grid-cols-[14rem_1fr] sm:gap-6">
+          <dt class="font-semibold text-muted">{ui.ico}</dt>
+          <dd><MissingFact name="IČO" /></dd>
+        </div>
+      ) : null
+    }
+  </dl>
+</section>

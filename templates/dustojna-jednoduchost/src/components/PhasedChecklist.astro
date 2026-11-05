@@ -1,0 +1,135 @@
+---
+/**
+ * Phased checklist for /jak-postupovat/: guidance grouped under phase headings. Each entry is a
+ * compact block: summary, situations, a <details> body, a printable checklist and its contact prompt.
+ * Closed <details> do not print, so the body is repeated in a print-only block.
+ */
+import type { CollectionEntry } from "astro:content";
+import { render } from "@core/content/load.ts";
+import EmergencyPhoneLink from "@core/components/EmergencyPhoneLink.astro";
+import PhoneLink from "@core/components/PhoneLink.astro";
+import PlaceholderMark from "@core/components/PlaceholderMark.astro";
+import { GUIDANCE_PHASES } from "@core/content/schemas.ts";
+import type { SiteContext } from "@core/content/view-models.ts";
+import { formatPhone } from "@core/format/phone.ts";
+import LineIcon from "./LineIcon.astro";
+import ReviewFlag from "./ReviewFlag.astro";
+import { guidancePhaseAnchors, guidancePhaseLabels, situationLabels, ui } from "../i18n/cs.ts";
+import { primaryOfficePhone } from "../lib/site.ts";
+
+interface Props {
+  site: SiteContext;
+  guidance: CollectionEntry<"guidance">[];
+}
+
+const { site, guidance } = Astro.props;
+const office = primaryOfficePhone(site);
+const officeNumber = formatPhone(office.number);
+const phases = GUIDANCE_PHASES.map((phase) => ({
+  phase,
+  label: guidancePhaseLabels[phase],
+  anchor: guidancePhaseAnchors[phase],
+  entries: guidance.filter((entry) => entry.data.phase === phase),
+})).filter((group) => group.entries.length > 0);
+
+const rendered = new Map<string, Awaited<ReturnType<typeof render>>["Content"]>();
+for (const entry of guidance) {
+  const { Content } = await render(entry);
+  rendered.set(entry.id, Content);
+}
+---
+<nav aria-label={ui.phasesNav} class="phase-nav" data-no-print>
+  <ol class="flex flex-wrap gap-2">
+    {
+      phases.map((group, index) => (
+        <li>
+          <a href={`#${group.anchor}`} class="btn btn-quiet min-h-11 px-3 text-[0.9375rem] font-semibold">
+            <span class="num text-muted">{index + 1}.</span> {group.label}
+          </a>
+        </li>
+      ))
+    }
+  </ol>
+</nav>
+
+<div class="mt-10 space-y-12">
+  {
+    phases.map((group, phaseIndex) => (
+      <section aria-labelledby={group.anchor} class="phase">
+        <h2 id={group.anchor} class="flex items-baseline gap-3 border-b border-line pb-2">
+          <span class="num text-muted">{phaseIndex + 1}.</span>
+          <span>{group.label}</span>
+        </h2>
+        <ol class="mt-2">
+          {group.entries.map((entry) => {
+            const Content = rendered.get(entry.id);
+            const situations = entry.data.situations.filter((situation) => situation !== "any");
+            return (
+              <li id={entry.id} class="guidance-entry border-b border-hair py-6">
+                <PlaceholderMark active={entry.data.placeholder} kind="content">
+                  <div class="grid gap-4 md:grid-cols-12 md:gap-x-8">
+                    <div class="md:col-span-8">
+                      <h3>{entry.data.title}</h3>
+                      {situations.length > 0 ? (
+                        <p class="mt-1 text-[0.9375rem] font-semibold text-muted">
+                          {situations.map((situation) => situationLabels[situation]).join(" · ")}
+                        </p>
+                      ) : null}
+                      <p class="mt-2">{entry.data.summary}</p>
+                      <ReviewFlag site={site} reviewedAt={entry.data.review.reviewedAt} />
+                      {Content !== undefined ? (
+                        <>
+                          <details class="details-b mt-2">
+                            <summary>
+                              <LineIcon name="chevron" class="chev" />
+                              {ui.detailedSteps}
+                            </summary>
+                            <div class="prose-b pb-2 pl-7"><Content /></div>
+                          </details>
+                          <div class="print-only prose-b mt-2"><Content /></div>
+                        </>
+                      ) : null}
+                    </div>
+                    <div class="space-y-4 md:col-span-4">
+                      {entry.data.checklist.length > 0 ? (
+                        <div>
+                          <p class="font-semibold">{ui.prepareList}</p>
+                          <ul class="checklist-b mt-2">
+                            {entry.data.checklist.map((item) => <li>{item}</li>)}
+                          </ul>
+                        </div>
+                      ) : null}
+                      {entry.data.contactPrompt === "emergency" && site.emergency.enabled ? (
+                        <div data-emergency-block>
+                          <p class="text-[0.9375rem] font-semibold">{ui.callEmergencyPrompt}</p>
+                          <EmergencyPhoneLink
+                            emergency={site.emergency}
+                            variant="full"
+                            class="btn btn-emergency mt-2 flex-wrap text-left"
+                            numberClass="num"
+                          >
+                            <LineIcon name="phone" />
+                          </EmergencyPhoneLink>
+                        </div>
+                      ) : null}
+                      {entry.data.contactPrompt === "office" ? (
+                        <div>
+                          <p class="text-[0.9375rem] font-semibold">{ui.callOfficePrompt}</p>
+                          <PhoneLink number={office.number} class="btn btn-outline mt-2 flex-wrap justify-start text-left">
+                            <LineIcon name="phone" />
+                            <span>{office.label}</span>
+                            <span class="num">{officeNumber.display}</span>
+                          </PhoneLink>
+                        </div>
+                      ) : null}
+                    </div>
+                  </div>
+                </PlaceholderMark>
+              </li>
+            );
+          })}
+        </ol>
+      </section>
+    ))
+  }
+</div>
