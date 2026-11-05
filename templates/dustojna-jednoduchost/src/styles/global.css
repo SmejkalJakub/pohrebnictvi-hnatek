@@ -401,7 +401,6 @@
     background-color: var(--c-flag-bg);
     color: var(--c-flag-ink);
     border: 1px solid var(--c-flag-line);
-    border-left-width: 4px;
     padding: 0.75rem 1rem;
     max-width: 48rem;
   }
@@ -409,8 +408,7 @@
   /* Accent-bordered emergency panel (contact page, 404, guidance prompts). */
   .emergency-panel {
     background-color: var(--c-surface);
-    border: 1px solid var(--c-line);
-    border-left: 6px solid var(--c-accent);
+    border: 2px solid var(--c-accent);
     padding: 1.25rem 1.25rem 1.5rem;
   }
 
