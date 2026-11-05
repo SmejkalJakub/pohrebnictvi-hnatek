@@ -1,0 +1,38 @@
+---
+import SeoHead from "@core/components/SeoHead.astro";
+import StructuredData from "@core/components/StructuredData.astro";
+import PrototypeBanner from "@core/components/PrototypeBanner.astro";
+import EmergencyPhoneLink from "@core/components/EmergencyPhoneLink.astro";
+import type { SiteContext } from "@core/content/view-models.ts";
+
+interface Props {
+  site: SiteContext;
+  title?: string | null;
+  description: string;
+  noindex?: boolean;
+}
+
+const { site, title = null, description, noindex = false } = Astro.props;
+---
+<html lang="cs">
+  <head>
+    <SeoHead site={site} title={title} description={description} noindex={noindex} />
+    <StructuredData site={site} />
+  </head>
+  <body>
+    <PrototypeBanner />
+    <a href="#obsah">Přeskočit na obsah</a>
+    <header>
+      <p>{site.company.brandName}</p>
+      <EmergencyPhoneLink emergency={site.emergency} variant="full" />
+      <nav aria-label="Hlavní navigace">
+        <ul>
+          {site.nav.map((item) => <li><a href={item.href}>{item.label}</a></li>)}
+        </ul>
+      </nav>
+    </header>
+    <main id="obsah">
+      <slot />
+    </main>
+  </body>
+</html>

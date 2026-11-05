@@ -1,0 +1,33 @@
+---
+/**
+ * Nonstop transport CTA (content-contract §6.5). The accessible name always contains the
+ * service label and the number. Renders nothing when the service is disabled.
+ * Variants: "full" (label + number), "label" (label only), "number" (number only).
+ * Optional default slot is rendered first (e.g. an icon).
+ */
+import type { EmergencyTransport } from "../content/schemas.ts";
+import { formatPhone } from "../format/phone.ts";
+
+interface Props {
+  emergency: EmergencyTransport;
+  variant?: "full" | "label" | "number";
+  class?: string;
+  labelClass?: string;
+  numberClass?: string;
+}
+
+const { emergency, variant = "full", class: className, labelClass, numberClass } = Astro.props;
+const phone = formatPhone(emergency.phone);
+const accessibleName = `${emergency.label}, volat ${phone.spoken}`;
+const showLabel = variant !== "number";
+const showNumber = variant !== "label";
+---
+{
+  emergency.enabled ? (
+    <a href={phone.href} class={className} aria-label={accessibleName} data-emergency-link data-variant={variant}>
+      <slot />
+      {showLabel ? <span class={labelClass} data-part="label">{emergency.label}</span> : null}
+      {showNumber ? <span class={numberClass} data-part="number">{phone.display}</span> : null}
+    </a>
+  ) : null
+}

@@ -1,0 +1,43 @@
+---
+// Conditional route pattern (template-contract §4): no file is emitted when pricing is hidden.
+import Harness from "../../layouts/Harness.astro";
+import PriceValue from "@core/components/PriceValue.astro";
+import DemoPricingNotice from "@core/components/DemoPricingNotice.astro";
+import { getPage, getPricing, getSiteContext } from "@core/content/load.ts";
+
+export async function getStaticPaths() {
+  const pricing = await getPricing();
+  if (pricing === null) {
+    return [];
+  }
+  return [{ params: { path: undefined } }];
+}
+
+const site = await getSiteContext();
+const page = await getPage("cenik");
+const pricing = await getPricing();
+if (pricing === null) {
+  throw new Error("unreachable: pricing hidden");
+}
+---
+<Harness site={site} title={page.data.title} description={page.data.metaDescription} noindex={pricing.hasDemo}>
+  <h1>{page.data.title}</h1>
+  <DemoPricingNotice pricing={pricing} brandName={site.company.brandName} />
+  {
+    pricing.groups.map((group) => (
+      <table>
+        <caption>{group.title}</caption>
+        <tbody>
+          {group.items.map((item) => (
+            <tr data-price-item={item.id}>
+              <th scope="row">{item.label}</th>
+              <td>
+                <PriceValue item={item} />
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    ))
+  }
+</Harness>

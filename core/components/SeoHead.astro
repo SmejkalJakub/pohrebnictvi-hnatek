@@ -1,0 +1,46 @@
+---
+/**
+ * <head> metadata. Prototype builds and pages passing `noindex` (e.g. /cenik/ with demo prices)
+ * get robots noindex,nofollow. Use inside <head>; templates add their own styles/fonts.
+ */
+import type { ImageMetadata } from "astro";
+import { getImage } from "astro:assets";
+import type { SiteContext } from "../content/view-models.ts";
+
+interface Props {
+  site: SiteContext;
+  /** Page title without the brand name; omit on the homepage. */
+  title?: string | null;
+  description: string;
+  noindex?: boolean;
+  image?: ImageMetadata | null;
+}
+
+const { site, title = null, description, noindex = false, image = null } = Astro.props;
+const brand = site.company.brandName;
+let fullTitle = brand;
+if (title !== null && title !== brand) {
+  fullTitle = `${title} | ${brand}`;
+}
+const base = site.config.siteUrl.replace(/\/$/, "");
+const canonical = `${base}${Astro.url.pathname}`;
+const robots = site.mode === "prototype" || noindex ? "noindex,nofollow" : "index,follow";
+let imageUrl: string | null = null;
+if (image !== null) {
+  const optimized = await getImage({ src: image, width: 1200, format: "jpeg" });
+  imageUrl = `${base}${optimized.src}`;
+}
+---
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>{fullTitle}</title>
+<meta name="description" content={description} />
+<link rel="canonical" href={canonical} />
+<meta name="robots" content={robots} />
+<meta property="og:type" content="website" />
+<meta property="og:locale" content="cs_CZ" />
+<meta property="og:site_name" content={brand} />
+<meta property="og:title" content={fullTitle} />
+<meta property="og:description" content={description} />
+<meta property="og:url" content={canonical} />
+{imageUrl !== null ? <meta property="og:image" content={imageUrl} /> : null}

@@ -1,0 +1,18 @@
+{
+  "client": "neutral-fixture",
+  "createdAt": "2026-11-05",
+  "facts": {
+    "company.brandName": { "value": "Pohřební služba Vzor", "status": "CLIENT_PROVIDED", "source": "fictional fixture" },
+    "company.legalName": { "value": "Pohřební služba Vzor s.r.o.", "status": "CLIENT_PROVIDED", "source": "fictional fixture" },
+    "company.legalIds.ico": { "value": null, "status": "UNKNOWN" },
+    "company.tradition.foundedYear": { "value": null, "status": "UNKNOWN", "note": "Never derive from the incorporation date." },
+    "contact.phones.kancelar.number": { "value": "+420000000101", "status": "EXISTING_WEBSITE", "source": "https://example.invalid", "retrievedAt": "2026-11-05" },
+    "emergency.phone": { "value": "+420000000199", "status": "VERIFIED", "verifiedBy": "Fixture Operator", "verifiedAt": "2026-11-05" },
+    "office-hours.weekly.pracovni-dny": {
+      "value": { "days": ["mon", "tue", "wed", "thu", "fri"], "open": "07:00", "close": "15:30", "breaks": [{ "from": "12:00", "to": "12:30" }] },
+      "status": "EXISTING_WEBSITE",
+      "source": "https://example.invalid",
+      "retrievedAt": "2026-11-05"
+    }
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "visible": true,
+  "currency": "CZK",
+  "vatNote": null,
+  "validFrom": null,
+  "generalNote": "Konečnou cenu vždy upřesníme při osobním sjednání.",
+  "groups": [
+    {
+      "id": "pohreb",
+      "title": "Pohřeb",
+      "description": "Sjednání a zajištění pohřbu.",
+      "items": [
+        { "id": "pohreb-s-obradem", "label": "Pohřeb s obřadem", "description": "Základní rozsah služeb.", "kind": "from", "amount": 18900, "amountMax": null, "unit": null, "status": "demo" },
+        { "id": "pohreb-bez-obradu", "label": "Pohřeb bez obřadu", "description": null, "kind": "fixed", "amount": 9900, "amountMax": null, "unit": null, "status": "demo" }
+      ]
+    },
+    {
+      "id": "prevoz",
+      "title": "Převoz",
+      "description": null,
+      "items": [
+        { "id": "prevoz-km", "label": "Převoz zesnulého", "description": "Účtuje se podle vzdálenosti.", "kind": "fixed", "amount": 38, "amountMax": null, "unit": "za km", "status": "demo" },
+        { "id": "prevoz-noc", "label": "Příplatek za noční převoz", "description": null, "kind": "range", "amount": 800, "amountMax": 1500, "unit": null, "status": "demo" }
+      ]
+    },
+    {
+      "id": "kvetiny",
+      "title": "Květiny",
+      "description": null,
+      "items": [
+        { "id": "smutecni-venec", "label": "Smuteční věnec", "description": "Podle velikosti a druhu květin.", "kind": "on-request", "amount": null, "amountMax": null, "unit": null, "status": "demo" }
+      ]
+    }
+  ]
+}

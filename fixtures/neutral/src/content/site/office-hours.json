@@ -1,0 +1,10 @@
+{
+  "locationId": "vzorov",
+  "label": "Kancelář – úřední hodiny",
+  "weekly": [
+    { "id": "pracovni-dny", "days": ["mon", "tue", "wed", "thu", "fri"], "open": "07:00", "close": "15:30", "breaks": [{ "from": "12:00", "to": "12:30" }] }
+  ],
+  "holidayNote": "Ve státní svátky je kancelář zavřená.",
+  "exceptions": [],
+  "outsideHoursNote": null
+}

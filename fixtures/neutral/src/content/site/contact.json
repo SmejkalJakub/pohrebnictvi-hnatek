@@ -1,0 +1,18 @@
+{
+  "locations": [
+    {
+      "id": "vzorov",
+      "name": "Kancelář Vzorov",
+      "address": { "street": "Ukázková 123/4", "city": "Vzorov", "postalCode": "000 00", "country": "CZ" },
+      "geo": null,
+      "mapUrl": "https://example.invalid/mapa/vzorov",
+      "accessNote": "Parkování je možné přímo před kanceláří. Vchod je bezbariérový."
+    }
+  ],
+  "phones": [
+    { "id": "kancelar", "label": "Kancelář", "number": "+420000000101", "department": "office", "locationId": "vzorov" },
+    { "id": "kancelar-mobil", "label": "Kancelář – mobil", "number": "+420000000102", "department": "office", "locationId": "vzorov" },
+    { "id": "kvetiny", "label": "Objednávky květin", "number": "+420000000103", "department": "flowers", "locationId": null }
+  ],
+  "emails": [{ "id": "kancelar", "label": "Kancelář", "address": "kancelar@example.invalid" }]
+}

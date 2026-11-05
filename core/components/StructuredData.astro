@@ -1,0 +1,13 @@
+---
+/** JSON-LD LocalBusiness. Never contains prices or unknown facts. */
+import type { SiteContext } from "../content/view-models.ts";
+import { buildLocalBusinessJsonLd } from "../seo/structured-data.ts";
+
+interface Props {
+  site: SiteContext;
+}
+
+const { site } = Astro.props;
+const json = JSON.stringify(buildLocalBusinessJsonLd(site)).replace(/</g, "\\u003c");
+---
+<script type="application/ld+json" set:html={json} />

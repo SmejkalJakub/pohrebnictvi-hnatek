@@ -1,0 +1,29 @@
+---
+/**
+ * The only way a template may output a price (content-contract §6.11).
+ * Demo items always carry the visible text "UKÁZKA" and data-demo; templates style, never remove.
+ */
+import type { PriceItem } from "../content/schemas.ts";
+import { formatPriceAmount } from "../format/price.ts";
+
+interface Props {
+  item: PriceItem;
+  class?: string;
+  demoLabelClass?: string;
+}
+
+const { item, class: className, demoLabelClass } = Astro.props;
+const amount = formatPriceAmount(item);
+const isDemo = item.status === "demo";
+---
+{
+  isDemo ? (
+    <span class={className} data-price data-demo="true">
+      <span data-price-amount>{amount}</span> <span class={demoLabelClass} data-demo-label>UKÁZKA</span>
+    </span>
+  ) : (
+    <span class={className} data-price>
+      <span data-price-amount>{amount}</span>
+    </span>
+  )
+}

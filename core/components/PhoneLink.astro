@@ -1,0 +1,14 @@
+---
+/** tel: link with Czech display formatting. Slot content replaces the visible number. */
+import { formatPhone } from "../format/phone.ts";
+
+interface Props {
+  number: string;
+  class?: string;
+}
+
+const { number, class: className } = Astro.props;
+const phone = formatPhone(number);
+const hasSlot = Astro.slots.has("default");
+---
+<a href={phone.href} class={className} data-phone-link>{hasSlot ? <slot /> : phone.display}</a>

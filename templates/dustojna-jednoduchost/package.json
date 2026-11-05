@@ -1,0 +1,21 @@
+{
+  "name": "@site/template-dustojna-jednoduchost",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "SITE_ROOT=../../fixtures/neutral astro dev",
+    "build": "SITE_ROOT=../../fixtures/neutral astro build",
+    "build:production": "SITE_ROOT=../../fixtures/neutral SITE_MODE=production astro build",
+    "preview": "astro preview",
+    "check": "SITE_ROOT=../../fixtures/neutral astro check"
+  },
+  "dependencies": {
+    "@fontsource/ibm-plex-sans": "5.3.0",
+    "@fontsource/ibm-plex-serif": "5.3.0",
+    "@fontsource/public-sans": "5.3.0",
+    "@tailwindcss/vite": "4.3.3",
+    "astro": "7.4.2",
+    "tailwindcss": "4.3.3"
+  }
+}

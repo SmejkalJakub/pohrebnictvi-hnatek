@@ -1,0 +1,15 @@
+---
+/** Visible "[Doplnit: …]" marker for a missing required fact. Never allowed in production. */
+import { mode } from "virtual:site-core/data";
+
+interface Props {
+  name: string;
+  class?: string;
+}
+
+const { name, class: className } = Astro.props;
+if (mode === "production") {
+  throw new Error(`Missing required fact "${name}" in a production build (gate G-010/G-011).`);
+}
+---
+<span class={className} data-missing-fact>[Doplnit: {name}]</span>

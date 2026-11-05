@@ -1,0 +1,75 @@
+---
+import { Image } from "astro:assets";
+import Harness from "../layouts/Harness.astro";
+import PhoneLink from "@core/components/PhoneLink.astro";
+import PlaceholderMark from "@core/components/PlaceholderMark.astro";
+import MissingFact from "@core/components/MissingFact.astro";
+import EmergencyPhoneLink from "@core/components/EmergencyPhoneLink.astro";
+import { getGuidance, getPage, getServices, getSiteContext, serviceHref } from "@core/content/load.ts";
+import { resolveOptionalImage } from "@core/media/resolve.ts";
+import { formatAddressLines } from "@core/format/address.ts";
+
+const site = await getSiteContext();
+const home = await getPage("home");
+const services = await getServices();
+const guidance = await getGuidance();
+const hero = resolveOptionalImage(home.data.heroImage);
+const location = site.contact.locations[0];
+---
+<Harness site={site} description={home.data.metaDescription}>
+  <PlaceholderMark active={home.data.placeholder} kind="content" as="section">
+    <h1>{home.data.title}</h1>
+    <p>{home.data.lead}</p>
+    <home.Content />
+  </PlaceholderMark>
+
+  {
+    hero !== null ? (
+      <PlaceholderMark active={hero.isPlaceholder} kind="image" as="figure">
+        <Image src={hero.src} alt={hero.alt} widths={[480, 960]} sizes="100vw" style={`object-position: ${hero.objectPosition}`} />
+      </PlaceholderMark>
+    ) : null
+  }
+
+  <section aria-labelledby="sluzby">
+    <h2 id="sluzby">Služby</h2>
+    <ul>
+      {services.map((service) => <li data-service={service.id}><a href={serviceHref(service.id, true)}>{service.data.title}</a></li>)}
+    </ul>
+  </section>
+
+  <section aria-labelledby="postup">
+    <h2 id="postup">Postup</h2>
+    <ol>
+      {guidance.map((entry) => <li data-guidance={entry.id} data-phase={entry.data.phase}>{entry.data.title}</li>)}
+    </ol>
+  </section>
+
+  <section aria-labelledby="kontakt" data-section="contact">
+    <h2 id="kontakt">Kontakt</h2>
+    {location !== undefined ? <address>{formatAddressLines(location.address).map((line) => <span>{line}<br /></span>)}</address> : null}
+    <ul data-office-phones>
+      {site.contact.phones.map((phone) => <li>{phone.label}: <PhoneLink number={phone.number} /></li>)}
+    </ul>
+    <section aria-labelledby="hodiny" data-office-hours>
+      <h3 id="hodiny">{site.officeHours.label}</h3>
+      <dl>
+        {site.officeHoursRows.map((row) => (
+          <>
+            <dt title={row.daysLong}>{row.days}</dt>
+            <dd>{row.text}{row.note !== null ? ` (${row.note})` : ""}</dd>
+          </>
+        ))}
+      </dl>
+    </section>
+    <section aria-labelledby="nonstop" data-emergency-block>
+      <h3 id="nonstop">{site.emergency.label}</h3>
+      <EmergencyPhoneLink emergency={site.emergency} variant="number" />
+      <p>{site.emergency.shortNote}</p>
+    </section>
+    <p data-legal>
+      {site.company.legalName}
+      {site.missing.map((fact) => <MissingFact name={fact.label} />)}
+    </p>
+  </section>
+</Harness>

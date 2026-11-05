@@ -1,0 +1,11 @@
+{
+  "name": "@site/core",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Shared data, validation and safety layer. Copied verbatim into exported client sites; never published.",
+  "dependencies": {
+    "astro": "7.4.2",
+    "yaml": "2.9.1"
+  }
+}

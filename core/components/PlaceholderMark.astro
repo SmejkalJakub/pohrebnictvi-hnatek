@@ -1,0 +1,29 @@
+---
+/** Wraps placeholder content or images with a visible label (prototype builds only; production rejects placeholders). */
+interface Props {
+  active: boolean;
+  kind?: "content" | "image";
+  as?: "div" | "span" | "section" | "article" | "figure" | "li";
+  class?: string;
+  labelClass?: string;
+}
+
+const { active, kind = "content", as = "div", class: className, labelClass } = Astro.props;
+const Tag = as;
+let label = "Zástupný obsah";
+if (kind === "image") {
+  label = "Zástupný obrázek";
+}
+---
+{
+  active ? (
+    <Tag class={className} data-placeholder={kind}>
+      <span class={labelClass} data-placeholder-label>
+        {label}
+      </span>
+      <slot />
+    </Tag>
+  ) : (
+    <slot />
+  )
+}

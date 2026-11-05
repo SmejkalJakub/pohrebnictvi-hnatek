@@ -1,0 +1,17 @@
+---
+/** Top-of-page banner in prototype builds. Place it as the first element in <body>. */
+import { mode } from "virtual:site-core/data";
+
+interface Props {
+  class?: string;
+}
+
+const { class: className } = Astro.props;
+---
+{
+  mode === "prototype" ? (
+    <div role="note" class={className} data-prototype-banner>
+      Testovací verze webu – obsahuje neověřené a ukázkové údaje.
+    </div>
+  ) : null
+}

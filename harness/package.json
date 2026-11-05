@@ -1,0 +1,15 @@
+{
+  "name": "@site/harness",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Minimal Astro project that renders core components against fixture content. Not a template.",
+  "scripts": {
+    "build": "SITE_ROOT=../fixtures/neutral astro build",
+    "dev": "SITE_ROOT=../fixtures/neutral astro dev",
+    "check": "SITE_ROOT=../fixtures/neutral astro check"
+  },
+  "dependencies": {
+    "astro": "7.4.2"
+  }
+}

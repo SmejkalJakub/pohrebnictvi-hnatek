@@ -1,0 +1,13 @@
+---
+// Articles are off for the fixture (and for Hnátek): getStaticPaths returns no paths, so no files exist.
+import { getSiteContext } from "@core/content/load.ts";
+
+export async function getStaticPaths() {
+  const site = await getSiteContext();
+  if (!site.config.features.articles) {
+    return [];
+  }
+  return [{ params: { path: undefined } }];
+}
+---
+<p>Články</p>

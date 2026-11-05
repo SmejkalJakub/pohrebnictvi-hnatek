@@ -1,0 +1,36 @@
+{
+  "name": "funeral-site-system",
+  "private": true,
+  "type": "module",
+  "description": "Reusable Astro template system for Czech funeral-home websites (private).",
+  "engines": {
+    "node": ">=24.21.0"
+  },
+  "packageManager": "npm@11.19.0",
+  "workspaces": [
+    "core",
+    "harness",
+    "templates/*"
+  ],
+  "scripts": {
+    "test": "vitest run --project unit",
+    "test:harness": "npm run build -w harness && vitest run --project harness",
+    "typecheck": "tsc -p tsconfig.json && npm run check -w harness",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "validate": "node core/cli/validate.ts",
+    "check:launch": "node core/cli/check-launch.ts",
+    "media:inventory": "node core/cli/media-inventory.ts",
+    "check": "npm run lint && npm run typecheck && npm test && npm run test:harness",
+    "test:templates": "vitest run --project templates --passWithNoTests"
+  },
+  "devDependencies": {
+    "@astrojs/check": "0.9.12",
+    "@types/node": "24.19.2",
+    "eslint": "10.13.0",
+    "prettier": "3.9.10",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.72.0",
+    "vitest": "4.1.12"
+  }
+}

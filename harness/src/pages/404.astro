@@ -1,0 +1,10 @@
+---
+import Harness from "../layouts/Harness.astro";
+import { getSiteContext } from "@core/content/load.ts";
+
+const site = await getSiteContext();
+---
+<Harness site={site} title="Stránka nenalezena" description="Stránka nenalezena." noindex>
+  <h1>Stránka nenalezena</h1>
+  <p><a href="/">Zpět na úvod</a></p>
+</Harness>

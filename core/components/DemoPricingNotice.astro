@@ -1,0 +1,20 @@
+---
+/** Shown on /cenik/ before the first price whenever any visible price is a demo price. */
+import type { PricingView } from "../content/view-models.ts";
+
+interface Props {
+  pricing: PricingView;
+  brandName: string;
+  class?: string;
+}
+
+const { pricing, brandName, class: className } = Astro.props;
+---
+{
+  pricing.hasDemo ? (
+    <p role="note" class={className} data-demo-pricing-notice>
+      <strong>Ukázkový ceník</strong> – ceny jsou smyšlené a slouží pouze k vyzkoušení vzhledu webu. Nejde o
+      skutečné ceny {brandName}.
+    </p>
+  ) : null
+}
