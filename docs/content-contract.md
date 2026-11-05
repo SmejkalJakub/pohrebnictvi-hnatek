@@ -582,6 +582,7 @@ Gate rules. Each has an id; the `prototype` column gives its behaviour in protot
 | G-002 | Required page file present | fail | fail |
 | G-003 | Every referenced image file exists in `src/assets/media` (even on unpublished entries) | fail | fail |
 | G-004 | References resolve (`phones[].locationId`, `officeHours.locationId`, `services[].priceGroupId`) | fail | fail |
+| G-005 | `site.config.ts` uses only the options and homepage sections declared in the template manifest | fail | fail |
 | G-010 | Required fact present: office hours not empty; each location has `mapUrl` or `geo` | marker | fail |
 | G-011 | `company.legalIds` (IČO, registered office, register entry) present | marker | fail |
 | G-012 | `siteUrl` is a real domain (not `example.invalid`) | – | fail |

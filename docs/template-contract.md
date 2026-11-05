@@ -62,6 +62,8 @@ Template source therefore needs no rewriting on export.
 
 - Every Astro project installs the integration `siteCore()` from `core/integration.ts`, and its `src/content.config.ts` is a one-line re-export of `@core/content/collections.ts`.
 - The integration reads the site from `SITE_ROOT`. This defaults to the project root; template and harness scripts set `SITE_ROOT=../fixtures/neutral`.
+- During template development, `SITE_CONFIG` can point at a template's own fixture config (e.g. `templates/<id>/fixture.site.config.ts`, with that template's id, default options and section order). It overrides `<SITE_ROOT>/src/site.config.ts`.
+- Pass the manifest as `siteCore({ manifest })`. The gate then checks the config against it (G-005).
 - Before every build the integration runs the schema check and the publication gate, and fails the build on errors. It also fixes the route conventions, and writes `robots.txt`, plus `sitemap.xml` in production.
 - It exposes the singletons, the config, the build mode and the media map through the virtual module `virtual:site-core/data`. Templates never import that module directly; they use `@core/content/load.ts` and `@core/media/resolve.ts`.
 - The harness (`harness/`) is the reference consumer.

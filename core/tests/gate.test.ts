@@ -1,5 +1,7 @@
 import { beforeAll, describe, expect, it } from "vitest";
 import { hasErrors, runGate, type Finding, type RuleId } from "../gate/rules.ts";
+import { runGateForSite } from "../gate/run.ts";
+import type { TemplateManifest } from "../content/config.ts";
 import { readSiteSnapshot, validateSnapshot, type ValidatedContent } from "../content/snapshot.ts";
 import { clone, FIXTURE_ROOT, loadFixture, makeProductionReady } from "./helpers.ts";
 
@@ -211,5 +213,40 @@ describe("schema problems surface as G-001", () => {
     const copy = clone(fixture);
     copy.company.brandName = "Jiná";
     expect(fixture.company.brandName).toBe("Pohřební služba Vzor");
+  });
+});
+
+describe("G-005 config against the template manifest", () => {
+  const manifest: TemplateManifest = {
+    id: "harness",
+    name: "Harness",
+    version: "0.1.0",
+    coreVersion: "^0.1.0",
+    supports: { articles: false, multipleLocations: false, contactForm: false, serviceDetailPages: true },
+    homepageSections: {
+      available: ["hero", "next-steps", "services", "contact-summary", "family-story"],
+      default: ["hero", "next-steps", "services", "contact-summary", "family-story"],
+      constraints: { first: "hero", required: ["hero", "contact-summary"] },
+    },
+    options: {},
+    imageSlots: {},
+    pageFields: {},
+  };
+
+  it("passes when the fixture config fits the manifest", async () => {
+    const run = await runGateForSite(FIXTURE_ROOT, { mode: "prototype", now: NOW, manifest });
+    expect(rules(run.findings)).not.toContain("G-005");
+  });
+
+  it("fails when the config uses an undeclared section or names another template", async () => {
+    const narrow = {
+      ...manifest,
+      id: "other",
+      homepageSections: { ...manifest.homepageSections, available: ["hero", "contact-summary"] as const },
+    };
+    const run = await runGateForSite(FIXTURE_ROOT, { mode: "prototype", now: NOW, manifest: narrow });
+    expect(run.findings.filter((finding) => finding.rule === "G-005").map((finding) => finding.path)).toEqual(
+      expect.arrayContaining(["template", "homepage.sections"]),
+    );
   });
 });

@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { checkMarkdownBody } from "../markdown/restrict-body.ts";
 import { isSupportedMediaFile, normalizeMediaFile } from "../media/normalize.ts";
 import { resolveMode } from "../mode.ts";
-import { resolveSiteRoot } from "../paths.ts";
+import { resolveConfigOverride, resolveSiteRoot, sitePaths } from "../paths.ts";
 
 function kinds(body: string): string[] {
   return checkMarkdownBody(body).map((issue) => issue.kind);
@@ -76,5 +76,13 @@ describe("mode and paths", () => {
       "/repo/fixtures/neutral",
     );
     expect(resolveSiteRoot("/client-site", {})).toBe("/client-site");
+  });
+
+  it("lets SITE_CONFIG point at a template's own fixture config", () => {
+    expect(resolveConfigOverride("/repo/templates/a", {})).toBeNull();
+    const override = resolveConfigOverride("/repo/templates/a", { SITE_CONFIG: "./fixture.site.config.ts" });
+    expect(override).toBe("/repo/templates/a/fixture.site.config.ts");
+    expect(sitePaths("/repo/fixtures/neutral", override).configFile).toBe(override);
+    expect(sitePaths("/site").configFile).toBe("/site/src/site.config.ts");
   });
 });

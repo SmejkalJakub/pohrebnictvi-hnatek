@@ -1,18 +1,25 @@
 /**
  * Validate a site's content and run the publication gate without building.
- *   node core/cli/validate.ts [siteRoot] [--mode prototype|production] [--json]
+ *   node core/cli/validate.ts [siteRoot] [--mode prototype|production] [--config path/site.config.ts] [--json]
  * Exit code 1 when the gate reports errors for the chosen mode.
  */
 import { runGateForSite } from "../gate/run.ts";
 import { formatFindings, summarize } from "../gate/report.ts";
 import { hasErrors } from "../gate/rules.ts";
 import { resolveMode } from "../mode.ts";
+import path from "node:path";
+import { resolveConfigOverride } from "../paths.ts";
 import { parseArgs } from "./args.ts";
 
 const { root, flags } = parseArgs(process.argv.slice(2));
 const modeFlag = flags.get("mode");
 const mode = resolveMode(typeof modeFlag === "string" ? modeFlag : process.env.SITE_MODE);
-const { findings } = await runGateForSite(root, { mode });
+const configFlag = flags.get("config");
+let configFile: string | null = resolveConfigOverride();
+if (typeof configFlag === "string") {
+  configFile = path.resolve(process.cwd(), configFlag);
+}
+const { findings } = await runGateForSite(root, { mode, configFile });
 
 if (flags.has("json")) {
   console.log(JSON.stringify({ root, mode, findings }, null, 2));

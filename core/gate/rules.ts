@@ -19,6 +19,7 @@ export const RULES = {
   "G-002": { title: "Required page file present", prototype: "error", production: "error" },
   "G-003": { title: "Referenced image file exists", prototype: "error", production: "error" },
   "G-004": { title: "References between content resolve", prototype: "error", production: "error" },
+  "G-005": { title: "Site config matches the template manifest", prototype: "error", production: "error" },
   "G-010": { title: "Required fact present", prototype: "marker", production: "error" },
   "G-011": { title: "Company legal identifiers present", prototype: "marker", production: "error" },
   "G-012": { title: "siteUrl is a real domain", prototype: "off", production: "error" },

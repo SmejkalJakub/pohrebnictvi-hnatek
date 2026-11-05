@@ -138,8 +138,13 @@ async function readConfig(paths: SitePaths): Promise<RawFile> {
   }
 }
 
-export async function readSiteSnapshot(root: string): Promise<RawSnapshot> {
-  const paths = sitePaths(root);
+export interface SnapshotOptions {
+  /** Absolute path of a site.config.ts to use instead of <root>/src/site.config.ts. */
+  configFile?: string | null;
+}
+
+export async function readSiteSnapshot(root: string, options: SnapshotOptions = {}): Promise<RawSnapshot> {
+  const paths = sitePaths(root, options.configFile ?? null);
   const singletons: Partial<Record<SingletonName, RawFile>> = {};
   for (const name of SINGLETON_NAMES) {
     const absolute = path.join(paths.contentDir, "site", `${name}.json`);
@@ -303,6 +308,9 @@ export function validateSnapshot(raw: RawSnapshot): ValidationResult {
   };
 }
 
-export async function loadValidatedContent(root: string): Promise<ValidationResult> {
-  return validateSnapshot(await readSiteSnapshot(root));
+export async function loadValidatedContent(
+  root: string,
+  options: SnapshotOptions = {},
+): Promise<ValidationResult> {
+  return validateSnapshot(await readSiteSnapshot(root, options));
 }

@@ -17,7 +17,7 @@ import { hasErrors } from "./gate/rules.ts";
 import { runGateForSite } from "./gate/run.ts";
 import { isSupportedMediaFile } from "./media/normalize.ts";
 import { resolveMode, type SiteMode } from "./mode.ts";
-import { resolveSiteRoot, sitePaths, type SitePaths } from "./paths.ts";
+import { resolveConfigOverride, resolveSiteRoot, sitePaths, type SitePaths } from "./paths.ts";
 
 const VIRTUAL_ID = "virtual:site-core/data";
 const RESOLVED_VIRTUAL_ID = `\0${VIRTUAL_ID}`;
@@ -62,7 +62,8 @@ async function listHtmlPages(directory: string, prefix = ""): Promise<string[]> 
 
 export default function siteCore(options: SiteCoreOptions = {}): AstroIntegration {
   const root = resolveSiteRoot();
-  const paths = sitePaths(root);
+  const configFile = resolveConfigOverride();
+  const paths = sitePaths(root, configFile);
   const mode = resolveMode(process.env.SITE_MODE);
   let siteUrl: string | null = null;
 
@@ -70,7 +71,7 @@ export default function siteCore(options: SiteCoreOptions = {}): AstroIntegratio
     name: "site-core",
     hooks: {
       "astro:config:setup": async ({ command, updateConfig, logger }) => {
-        const run = await runGateForSite(root, { mode, manifest: options.manifest });
+        const run = await runGateForSite(root, { mode, manifest: options.manifest, configFile });
         siteUrl = run.content?.config.siteUrl ?? null;
         const counts = summarize(run.findings);
         logger.info(
