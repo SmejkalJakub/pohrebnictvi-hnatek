@@ -1,5 +1,5 @@
 import { beforeAll, describe, expect, it } from "vitest";
-import { hasErrors, runGate, type Finding, type RuleId } from "../gate/rules.ts";
+import { collectReferencedMediaFiles, hasErrors, runGate, type Finding, type RuleId } from "../gate/rules.ts";
 import { runGateForSite } from "../gate/run.ts";
 import type { TemplateManifest } from "../content/config.ts";
 import { readSiteSnapshot, validateSnapshot, type ValidatedContent } from "../content/snapshot.ts";
@@ -116,11 +116,33 @@ describe("individual rules", () => {
     expect(rules(findings, "error")).toEqual(["G-030"]);
   });
 
-  it("G-034 H1 in a body is an error in every mode", () => {
+  it("G-034 raw HTML in a body is an error in every mode; CMS underline and line breaks are allowed", () => {
     const findings = productionErrors((content) => {
-      content.pages[0]!.body = "# Nadpis";
+      content.pages[0]!.body = '<div class="x">blok</div>';
     }, "prototype");
     expect(rules(findings, "error")).toEqual(["G-034"]);
+    const formatting = productionErrors((content) => {
+      content.pages[0]!.body = "Text <u>podtržený</u><br>další řádek";
+    });
+    expect(hasErrors(formatting)).toBe(false);
+  });
+
+  it("G-035 heading issues from the CMS editor only warn (H1 is demoted at render)", () => {
+    const findings = productionErrors((content) => {
+      content.pages[0]!.body = "# Nadpis\n\n#### Hluboko";
+    });
+    expect(hasErrors(findings)).toBe(false);
+    expect(rules(findings, "warning")).toEqual(["G-035"]);
+  });
+
+  it("lists only referenced media files", () => {
+    const content = makeProductionReady(fixture);
+    expect(collectReferencedMediaFiles(content)).toEqual([]);
+    expect(collectReferencedMediaFiles(fixture)).toEqual([
+      "placeholder-1x1.png",
+      "placeholder-3x2.png",
+      "placeholder-4x3.png",
+    ]);
   });
 
   it("G-031 ignores unpublished placeholder entries", () => {
@@ -222,7 +244,13 @@ describe("G-005 config against the template manifest", () => {
     name: "Harness",
     version: "0.1.0",
     coreVersion: "^0.1.0",
-    supports: { articles: false, multipleLocations: false, contactForm: false, serviceDetailPages: true },
+    supports: {
+      articles: false,
+      multipleLocations: false,
+      contactForm: false,
+      serviceDetailPages: true,
+      mapEmbed: false,
+    },
     homepageSections: {
       available: ["hero", "next-steps", "services", "contact-summary", "family-story"],
       default: ["hero", "next-steps", "services", "contact-summary", "family-story"],

@@ -17,6 +17,8 @@ export interface BodyIssue {
 const PHONE_PATTERN = /(\+\d{3}[\s ]?\d{3}[\s ]?\d{3}[\s ]?\d{3})|(\b\d{3}[\s ]?\d{3}[\s ]?\d{3}\b)/;
 const HTML_PATTERN = /<!--|<\/?[a-zA-Z][\w-]*(\s[^<>]*)?\/?>/;
 const AUTOLINK_PATTERN = /<(https?:|mailto:)[^>]*>/g;
+/** Inline tags the Pages CMS editor may emit for formatting Markdown lacks (underline, hard break). */
+const ALLOWED_HTML_PATTERN = /<\/?u>|<br\s*\/?>/gi;
 const HEADING_PATTERN = /^(#{1,6})\s/;
 const IMAGE_PATTERN = /!\[[^\]]*\]\(/;
 const UNSAFE_LINK_PATTERN = /\]\(\s*javascript:|javascript:|http:\/\//i;
@@ -62,7 +64,7 @@ export function checkMarkdownBody(body: string): BodyIssue[] {
       previousLevel = level;
     }
 
-    if (HTML_PATTERN.test(line.replace(AUTOLINK_PATTERN, ""))) {
+    if (HTML_PATTERN.test(line.replace(AUTOLINK_PATTERN, "").replace(ALLOWED_HTML_PATTERN, ""))) {
       issues.push({ kind: "html", line: lineNumber, message: "HTML kód v textu není povolen." });
     }
     if (IMAGE_PATTERN.test(line)) {

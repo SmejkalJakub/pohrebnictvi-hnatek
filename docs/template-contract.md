@@ -89,6 +89,7 @@ export default {
     multipleLocations: false,
     contactForm: false,           // reserved; enabling needs U9 resolved
     serviceDetailPages: true,     // generates /sluzby/<slug>/
+    mapEmbed: false,              // features.map "embed-on-click" rejected by G-005 when false
   },
 
   homepageSections: {
@@ -164,7 +165,9 @@ export interface SiteContext {
 }
 
 export async function getSiteContext(): Promise<SiteContext>;
-export async function getPage(id: PageId): Promise<PageView>;          // frontmatter + rendered body
+export async function getPage(id: PageId): Promise<LoadedPage>;        // { data, Content, hasBody }; throws if missing (G-002)
+export async function getOptionalPage(id: PageId): Promise<LoadedPage | null>; // e.g. ochrana-osobnich-udaju
+export async function hasPage(id: PageId): Promise<boolean>;
 export async function getServices(): Promise<ServiceView[]>;           // published only, sorted
 export async function getGuidance(): Promise<GuidanceView[]>;
 export async function getCoffins(): Promise<CoffinView[]>;
@@ -209,6 +212,15 @@ These are tested by the shared QA suite in Phase 2 (S6), not just reviewed.
 - `prefers-reduced-motion` respected. In practice there is no decorative motion at all.
 - Images use `alt` from `ImageRef`; decorative images use `alt=""`.
 - The map is a link ("Zobrazit na mapě"). A click-to-load embed is allowed only with the privacy page (gate G-061).
+
+**Core components and template CSS (learned in S3/S4)**
+
+- Classes passed into core components (`class`, `labelClass`, …) are not reached by Astro-scoped `<style>`. Style them in global CSS or by their `data-*` hooks (`[data-placeholder-label]`, `[data-demo-label]`, `[data-missing-fact]`, `[data-unreviewed-mark]`, `[data-emergency-link]`).
+- `EmergencyPhoneLink variant="custom"` renders only the slot (short UI text such as "Nonstop převoz"), while the accessible name still comes from core.
+- `UnreviewedMark` renders the G-040 "Neověřený text" marker. `resolveTemplateOptions(config, manifest)` (from `@core/content/config.ts`) fills in manifest defaults.
+- Tailwind v4 scans templates, so a custom class named like a utility (e.g. `float-right`) also receives that utility. Give template classes non-utility names.
+- `@fontsource/<font>/latin-<weight>.css` files have no `unicode-range`. Import the combined `<weight>.css`, or declare the faces with ranges yourself.
+- The integration imports only images referenced by content, so unused files in `src/assets/media/` are not emitted.
 
 **Technical**
 

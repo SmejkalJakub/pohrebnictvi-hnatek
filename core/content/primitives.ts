@@ -59,3 +59,97 @@ export const Email = z.email("Zadejte platnou e-mailovou adresu.");
 export const Url = z.url("Zadejte celou adresu včetně https://.");
 
 export const Order = z.number().int().min(0).max(999).default(100);
+
+// ---------------------------------------------------------------------------
+// Tolerance for what Pages CMS writes (docs/spikes/pages-cms.md B3, B6, B7)
+// ---------------------------------------------------------------------------
+
+/** Pages CMS deletes empty values on save, so a whole object of nulls may vanish: treat missing as {}. */
+export function objectOrEmpty<T extends z.ZodType>(schema: T) {
+  return z.preprocess((value) => {
+    if (value === undefined || value === null) {
+      return {};
+    }
+    return value;
+  }, schema);
+}
+
+/** Boolean that a CMS may leave as null/missing (it cannot represent "unset"): null → fallback. */
+export function flag(fallback: boolean) {
+  return z.preprocess((value) => {
+    if (value === undefined || value === null || value === "") {
+      return fallback;
+    }
+    return value;
+  }, z.boolean());
+}
+
+/** "Příliš žluťoučký kůň" → "prilis-zlutoucky-kun"; never empty (falls back to "polozka"). */
+export function asciiSlug(value: string): string {
+  const slug = value
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+  if (slug === "") {
+    return "polozka";
+  }
+  return slug;
+}
+
+/**
+ * Lists the client can extend in the CMS: new rows arrive without an `id` (B7). Missing or empty ids
+ * are derived from a label (ASCII slug, "-2", "-3" on collision). Explicit ids are kept as written, so
+ * duplicate explicit ids are still reported by the schema.
+ */
+export function withDerivedIds(labelOf: (item: Record<string, unknown>, index: number) => string) {
+  return (value: unknown): unknown => {
+    if (!Array.isArray(value)) {
+      return value;
+    }
+    const explicit = new Set<string>();
+    for (const item of value) {
+      if (typeof item === "object" && item !== null && typeof (item as { id?: unknown }).id === "string") {
+        const id = (item as { id: string }).id.trim();
+        if (id !== "") {
+          explicit.add(id);
+        }
+      }
+    }
+    const used = new Set(explicit);
+    return value.map((item: unknown, index) => {
+      if (typeof item !== "object" || item === null) {
+        return item;
+      }
+      const record = item as Record<string, unknown>;
+      const current = typeof record.id === "string" ? record.id.trim() : "";
+      if (current !== "") {
+        return record;
+      }
+      const base = asciiSlug(labelOf(record, index));
+      let candidate = base;
+      let suffix = 2;
+      while (used.has(candidate)) {
+        candidate = `${base}-${suffix}`;
+        suffix += 1;
+      }
+      used.add(candidate);
+      return { ...record, id: candidate };
+    });
+  };
+}
+
+/** Read a string field for id derivation, with a positional fallback. */
+export function labelField(field: string, fallbackPrefix: string) {
+  return (item: Record<string, unknown>, index: number): string => {
+    const value = item[field];
+    if (typeof value === "string" && value.trim() !== "") {
+      return value;
+    }
+    if (Array.isArray(value) && value.length > 0) {
+      return value.join("-");
+    }
+    return `${fallbackPrefix}-${index + 1}`;
+  };
+}

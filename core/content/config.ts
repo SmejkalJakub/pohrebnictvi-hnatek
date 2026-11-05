@@ -74,6 +74,8 @@ export interface TemplateManifest {
     multipleLocations: boolean;
     contactForm: boolean;
     serviceDetailPages: boolean;
+    /** Click-to-load map embed (features.map = "embed-on-click"). */
+    mapEmbed: boolean;
   };
   homepageSections: {
     available: readonly HomepageSection[];
@@ -133,5 +135,39 @@ export function checkConfigAgainstManifest(config: SiteConfig, manifest: Templat
   if (config.features.contactForm && !manifest.supports.contactForm) {
     issues.push({ path: "features.contactForm", message: "Template does not support a contact form." });
   }
+  if (config.features.map === "embed-on-click" && !manifest.supports.mapEmbed) {
+    issues.push({ path: "features.map", message: 'Template does not support an embedded map; use "link".' });
+  }
   return issues;
+}
+
+type DeclaredOptions = Record<string, { values: readonly string[]; default: string }>;
+
+export type ResolvedOptions<O extends DeclaredOptions> = {
+  [K in keyof O]: O[K]["values"][number];
+};
+
+/**
+ * The template's options with manifest defaults filled in. Throws on an undeclared value; the
+ * build gate (G-005) reports the same problem earlier with a readable message.
+ */
+export function resolveTemplateOptions<O extends DeclaredOptions>(
+  config: Pick<SiteConfig, "options">,
+  manifest: { id: string; options: O },
+): ResolvedOptions<O> {
+  const resolved: Record<string, string> = {};
+  for (const [name, declaration] of Object.entries(manifest.options)) {
+    const chosen = config.options[name];
+    if (chosen === undefined) {
+      resolved[name] = declaration.default;
+      continue;
+    }
+    if (!declaration.values.includes(chosen)) {
+      throw new Error(
+        `Option ${name}="${chosen}" is not declared by template "${manifest.id}" (gate G-005).`,
+      );
+    }
+    resolved[name] = chosen;
+  }
+  return resolved as ResolvedOptions<O>;
 }

@@ -315,7 +315,7 @@
   [data-placeholder-label],
   [data-missing-fact],
   [data-demo-label],
-  [data-review-flag] {
+  [data-unreviewed-mark] {
     display: inline-block;
     background: var(--flag-bg);
     color: var(--ink);

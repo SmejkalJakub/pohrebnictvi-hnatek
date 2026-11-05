@@ -89,6 +89,10 @@ async function productionReadyFixture(): Promise<string> {
       await writeFile(file, source, "utf8");
     }
   }
+  // A CMS editor may type an H1 in a body; core demotes it at render (G-035 warns only).
+  const home = path.join(root, "src", "content", "pages", "home.md");
+  const homeSource = await readFile(home, "utf8");
+  await writeFile(home, `${homeSource}\n# Nadpis z editoru\n\nText.\n`, "utf8");
   return root;
 }
 
@@ -145,6 +149,12 @@ describe("prototype build of the neutral fixture", () => {
     );
   });
 
+  it("gives Markdown headings ASCII ids and emits only referenced images", async () => {
+    expect(await html("index.html")).toContain('<h2 id="jsme-tu-pro-vas"');
+    const assets = await readdir(path.join(DIST, "_astro"));
+    expect(assets.some((file) => file.includes("placeholder-4x5"))).toBe(false);
+  });
+
   it("emits structured data without prices", async () => {
     const page = await html("index.html");
     const match = /<script type="application\/ld\+json">(.*?)<\/script>/s.exec(page);
@@ -172,6 +182,8 @@ describe("production builds", () => {
     const page = await html("index.html", result.outDir);
     expect(page).toContain('<meta name="robots" content="index,follow">');
     expect(page).not.toMatch(/data-prototype-banner|data-placeholder|data-missing-fact|UKÁZKA/);
+    expect(page.match(/<h1[\s>]/g)?.length).toBe(1);
+    expect(page).toContain('<h2 id="nadpis-z-editoru"');
     const pricePage = await html("cenik/index.html", result.outDir);
     expect(pricePage).not.toContain("data-demo");
     const sitemap = await html("sitemap.xml", result.outDir);

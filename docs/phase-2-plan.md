@@ -69,6 +69,18 @@ Sessions S3 and S4 can run in parallel once S1 is merged. They touch disjoint di
 - **Done when:** `npm test` passes; `npm run validate -- fixtures/neutral` passes in prototype mode and lists the expected production violations.
 - **Out of scope:** any template styling or pages.
 
+### Core fix-up after S2–S4 ✅ done 2026-11-05
+
+This pass folded the template workarounds and the S2 findings back into core:
+
+- **CMS-tolerant schemas:** defaults for objects the CMS deletes, `familyOwned` as a select, image objects without a file count as no image, and ids derived for rows added in the CMS.
+- **Markdown:** H1 is demoted at render, heading issues only warn (G-035), `<u>`/`<br>` are allowed, and heading ids are ASCII via Sätteri plugins.
+- **New core APIs:** `getOptionalPage`, `hasPage`, `hasBody`, `resolveTemplateOptions`, `UnreviewedMark` and `EmergencyPhoneLink variant="custom"`.
+- **Media and map:** only referenced media is imported, and `supports.mapEmbed` is checked by G-005.
+- **Templates:** both switched to the new APIs.
+- **Docs:** amended in content-contract §7.3/§8, editable-fields §2/§4/§5/§6, and template-contract §3/§5/§6.
+- **Still open for S5:** the `content`/`main` publish workflow (A5) and the CMS config generator, which must apply A3, A7 and B4.
+
 ### S2: Pages CMS spike (research only, ~half a session)
 
 - **Inputs:** editable-fields (all).

@@ -1,6 +1,6 @@
 /** Small, template-local derivations over core view models. No content is read here directly. */
 import type { CollectionEntry } from "astro:content";
-import { getPage } from "@core/content/load.ts";
+import { hasPage } from "@core/content/load.ts";
 import type { ContactPhone, Location, PageId, Service } from "@core/content/schemas.ts";
 import type { SiteContext } from "@core/content/view-models.ts";
 import { serviceCategoryLabels } from "../i18n/cs.ts";
@@ -53,12 +53,7 @@ export function mapHref(location: Location): string | null {
 
 /** True when the optional page file exists (e.g. ochrana-osobnich-udaju). */
 export async function pageExists(id: PageId): Promise<boolean> {
-  try {
-    await getPage(id);
-    return true;
-  } catch {
-    return false;
-  }
+  return hasPage(id);
 }
 
 export interface ServiceGroup {

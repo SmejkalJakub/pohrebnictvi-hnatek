@@ -12,6 +12,7 @@ const manifest = {
     multipleLocations: false,
     contactForm: false,
     serviceDetailPages: true,
+    mapEmbed: false,
   },
 
   homepageSections: {

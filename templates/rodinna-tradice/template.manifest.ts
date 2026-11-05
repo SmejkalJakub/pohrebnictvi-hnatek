@@ -14,6 +14,7 @@ const manifest = {
     contactForm: false,
     // One long /sluzby/ page with anchors (/sluzby/#<slug>); no /sluzby/<slug>/ paths are emitted.
     serviceDetailPages: false,
+    mapEmbed: false,
   },
 
   homepageSections: {

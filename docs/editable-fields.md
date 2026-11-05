@@ -28,7 +28,7 @@ Related: [content-contract.md](content-contract.md) · [template-contract.md](te
 | **CMS (toggle)** | Editable only as a boolean or select from fixed options. |
 | **Agent** | Set by the agent/operator before handover; not shown in the CMS. Changeable later only through source. |
 | **Locked** | Set by the template or core; never changed per client except through a template release. |
-| **Hidden** | Present in the file and preserved by the CMS, but not displayed (e.g., `placeholder`, `id`). |
+| **Hidden** | Declared in `.pages.yml` with `hidden: true`: preserved, validated and defaulted, but not displayed (e.g., `placeholder`, `id`). Keys **not declared** are stripped on save unless `settings.content.merge: true`, and merge does not protect keys inside list items, so every list-item key must be declared (S2 amendment A7). |
 
 ## 3. Production agent rules (before handover)
 
@@ -64,7 +64,7 @@ Legend for the CMS widget: `string` single line · `text` multi-line plain · `r
 | `legalIds.ico`, `dic`, `registryEntry`, `registeredOffice` | yes (from ledger only) | **CMS** | string with pattern | legally required text (U10) |
 | `tradition.publicWording` | draft only | **CMS** | string, ≤ 120 | label: "Text o tradici firmy (bez vymýšlení letopočtů)" |
 | `tradition.foundedYear` | from ledger only | **CMS** | number 1800–2100, optional | shown only as "od roku…" |
-| `familyOwned` | from ledger | **CMS (toggle)** | boolean | |
+| `familyOwned` | from ledger | **CMS** | select: `yes` / `no` / `unknown` (a toggle cannot represent "not stated") | S2 amendment A4 |
 | `logo` | yes | **CMS** | image + alt | §4.10 image rules |
 
 ### 4.2 Contact (`site/contact.json`)
@@ -164,7 +164,7 @@ In the CMS this file is a **separate menu entry** ("Nonstop převoz zesnulých")
 | `file` | yes | **CMS** | image upload into `src/assets/media/` | JPEG/PNG/WebP; ≤ 8 MB; resized at build |
 | `alt` | yes | **CMS** | string ≤ 200, required unless decorative | help text with an example |
 | `decorative`, `caption`, `credit` | yes | **CMS** | boolean, strings | |
-| `source` | yes | **CMS** | select (client, existing-website, own-photo, licensed-stock); `placeholder` is not offered in the CMS | |
+| `source` | yes | **CMS** | select (client, existing-website, own-photo, licensed-stock, and `placeholder` labelled "Zástupný obrázek – nezveřejňovat"). It must be offered, because Pages CMS refuses to save a select value outside its list (S2 B5, A3); the production gate (G-032) still rejects it | |
 | `depicts` | yes | **CMS** | select (actual-business, generic) | label: "Fotografie ukazuje skutečné prostory, vůz nebo lidi firmy" |
 | `rightsConfirmed` | evidence required | **CMS (toggle)** | boolean "Mám právo tuto fotografii použít" | production fails if false |
 | `focus` | yes | **CMS** | select | cropping hint |
@@ -177,7 +177,13 @@ In the CMS this file is a **separate menu entry** ("Nonstop převoz zesnulých")
 
 - **The CMS is a convenience; the build is the gate.** Pages CMS field constraints (`required`, `pattern`, selects) give early feedback. Zod and the publication gate are authoritative, and they run on every Git-triggered build.
 - **No silent publication of invalid data:** a commit that fails validation produces a failed build, so nothing deploys and the previous version stays live. The host must be configured to e-mail the client and operator on failed deploys (Phase 6). The gate prints Czech messages with the file and field.
-- **Recovery:** revert the offending commit (Pages CMS history or GitHub "Revert"), or fix the field. Pages CMS writes to a preview branch, and production deploys only from `main`; whether Pages CMS supports this branch workflow is confirmed in the S2 spike, with direct-to-`main` plus host rollback as the fallback.
+- **Where errors appear:** an invalid save caught by Pages CMS shows only a short toast. The Czech build messages are the real error channel (S2 amendment A8). Pages CMS validates per field only; cross-field rules (time order, price `kind`/`amount`, duplicate ids) exist only at build time.
+- **Branches and publishing (S2 amendment A5, to be built in S5 and tested in Phase 6):** Pages CMS has no merge, PR or preview feature.
+  - The client repo's default branch is `content`, which the CMS edits and the host previews (`noindex`). Production deploys from `main`.
+  - A CMS Action, "Zveřejnit změny", dispatches a `publish.yml` workflow. It builds with `SITE_MODE=production` and the gate, and only on success fast-forwards `main`.
+  - A second Action, "Zahodit nepublikované změny", resets `content` to `main`.
+- **Recovery:** Pages CMS history is read-only, with no revert (S2 B1). A broken edit is either fixed forward in the CMS, or reverted in GitHub ("Revert") or by redeploying the previous version at the host.
+- **Dates:** Pages CMS pre-fills an empty `date` field with today's date (S2 B4). Every date field in the generated config must declare `default: ""`; otherwise an unreviewed guidance entry would silently gain a review date.
 - **Generated, not hand-written:** `.pages.yml` is generated by `tools/cms` from this policy, the template manifest (`pageFields`, `imageSlots`) and features. A collection is generated only when its feature is on, so Hnátek has no articles editor.
 
 ## 6. Phase 6 test mapping
@@ -189,4 +195,4 @@ In the CMS this file is a **separate menu entry** ("Nonstop převoz zesnulých")
 | 3. Update a service description | `services/*.md` summary/body | restricted Markdown rules |
 | 4. Replace an approved image | `ImageRef.file`, `alt`, `rightsConfirmed` | alt required; rights toggle required for production |
 | 5. Try to change layout or colours | – | no such fields exist in the CMS |
-| 6. Recover from malformed content | any | build fails, nothing deploys, revert via history |
+| 6. Recover from malformed content | any | the production build in `publish.yml` fails, so `main` is not updated; fix forward in the CMS, or revert in GitHub (Pages CMS history cannot revert) |

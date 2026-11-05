@@ -30,6 +30,8 @@ export const RULES = {
   "G-032": { title: "No placeholder images", prototype: "marker", production: "error" },
   "G-033": { title: "Image rights confirmed", prototype: "warning", production: "error" },
   "G-034": { title: "Markdown bodies follow the restricted format", prototype: "error", production: "error" },
+  // Heading issues come from the CMS editor (it offers H1); core demotes H1 at render, so only warn.
+  "G-035": { title: "Markdown body heading levels", prototype: "warning", production: "warning" },
   "G-040": { title: "Published guidance has a review date", prototype: "marker", production: "error" },
   "G-041": { title: "Guidance review not older than 12 months", prototype: "off", production: "warning" },
   "G-042": {
@@ -231,6 +233,25 @@ function checkStructure(content: ValidatedContent, out: Candidate[]): void {
 }
 
 /** Images on every entry, published or not: a missing file is an error even for drafts. */
+function bodyRule(kind: string): RuleId {
+  if (kind === "phone") {
+    return "G-030";
+  }
+  if (kind === "h1" || kind === "heading-skip") {
+    return "G-035";
+  }
+  return "G-034";
+}
+
+/** Media file names referenced by any content (published or not): the only files the site imports. */
+export function collectReferencedMediaFiles(content: ValidatedContent): string[] {
+  const files = new Set<string>();
+  for (const use of collectAllImages(content)) {
+    files.add(normalizeMediaFile(use.image.file));
+  }
+  return [...files].sort();
+}
+
 function collectAllImages(content: ValidatedContent): ImageUse[] {
   const uses: ImageUse[] = [];
   if (content.company.logo !== null) {
@@ -349,7 +370,7 @@ function checkBodies(content: ValidatedContent, out: Candidate[]): void {
   const entries: ContentEntry<unknown>[] = [...content.pages, ...allEntries(content)];
   for (const entry of entries) {
     for (const issue of checkMarkdownBody(entry.body)) {
-      const rule = issue.kind === "phone" ? "G-030" : "G-034";
+      const rule = bodyRule(issue.kind);
       out.push({
         rule,
         file: entry.file,

@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { Contact, Guidance, ImageRef, OfficeHours, Page, PriceItem, Pricing } from "../content/schemas.ts";
-import { SiteConfig, checkConfigAgainstManifest, type TemplateManifest } from "../content/config.ts";
+import {
+  SiteConfig,
+  checkConfigAgainstManifest,
+  resolveTemplateOptions,
+  type TemplateManifest,
+} from "../content/config.ts";
 import { optionalText } from "../content/primitives.ts";
 
 const baseImage = {
@@ -229,7 +234,13 @@ describe("SiteConfig and manifest", () => {
     name: "Demo",
     version: "0.1.0",
     coreVersion: "^0.1.0",
-    supports: { articles: false, multipleLocations: false, contactForm: false, serviceDetailPages: false },
+    supports: {
+      articles: false,
+      multipleLocations: false,
+      contactForm: false,
+      serviceDetailPages: false,
+      mapEmbed: false,
+    },
     homepageSections: {
       available: ["hero", "services", "contact-summary", "family-story"],
       default: ["hero", "services", "contact-summary"],
@@ -258,6 +269,23 @@ describe("SiteConfig and manifest", () => {
     const issues = checkConfigAgainstManifest(bad, manifest).map((issue) => issue.path);
     expect(issues).toEqual(
       expect.arrayContaining(["options.palette", "options.glow", "homepage.sections", "features.articles"]),
+    );
+  });
+
+  it("rejects an embedded map on a template without map support", () => {
+    const embed = { ...config, features: { ...config.features, map: "embed-on-click" as const } };
+    expect(checkConfigAgainstManifest(embed, manifest).map((issue) => issue.path)).toEqual(["features.map"]);
+  });
+
+  it("resolves options with manifest defaults and rejects undeclared values", () => {
+    const options = {
+      palette: { values: ["a", "b"], default: "a" },
+      size: { values: ["s", "m"], default: "m" },
+    } as const;
+    const resolved = resolveTemplateOptions({ options: { palette: "b" } }, { id: "demo", options });
+    expect(resolved).toEqual({ palette: "b", size: "m" });
+    expect(() => resolveTemplateOptions({ options: { size: "xl" } }, { id: "demo", options })).toThrow(
+      /G-005/,
     );
   });
 

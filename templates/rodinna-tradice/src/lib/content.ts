@@ -2,23 +2,10 @@
  * Small template-side helpers on top of @core loaders. No content is read directly.
  */
 import type { ImageMetadata } from "astro";
-import { getPage } from "@core/content/load.ts";
-import type { PageId } from "@core/content/schemas.ts";
 import type { Location } from "@core/content/schemas.ts";
 
-type LoadedPage = Awaited<ReturnType<typeof getPage>>;
-
-/**
- * Optional pages (e.g. ochrana-osobnich-udaju) may be absent. Core's getPage throws for a
- * missing page, so this wraps it. Gap recorded in docs/notes/s3-rodinna-tradice.md.
- */
-export async function getOptionalPage(id: PageId): Promise<LoadedPage | null> {
-  try {
-    return await getPage(id);
-  } catch {
-    return null;
-  }
-}
+/** Optional pages (e.g. ochrana-osobnich-udaju) come from core; re-exported for existing imports. */
+export { getOptionalPage } from "@core/content/load.ts";
 
 /** Responsive widths that never upscale the source image. */
 export function widthsFor(src: ImageMetadata, candidates: readonly number[]): number[] {

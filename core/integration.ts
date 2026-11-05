@@ -13,7 +13,8 @@ import type { AstroIntegration } from "astro";
 import type { TemplateManifest } from "./content/config.ts";
 import { SINGLETON_NAMES } from "./content/schemas.ts";
 import { formatFindings, summarize } from "./gate/report.ts";
-import { hasErrors } from "./gate/rules.ts";
+import { collectReferencedMediaFiles, hasErrors } from "./gate/rules.ts";
+import { installContractMarkdownPlugins } from "./markdown/satteri-plugins.ts";
 import { runGateForSite } from "./gate/run.ts";
 import { isSupportedMediaFile } from "./media/normalize.ts";
 import { resolveMode, type SiteMode } from "./mode.ts";
@@ -26,7 +27,12 @@ export interface SiteCoreOptions {
   manifest?: TemplateManifest;
 }
 
-async function buildDataModule(paths: SitePaths, mode: SiteMode, siteUrl: string | null): Promise<string> {
+async function buildDataModule(
+  paths: SitePaths,
+  mode: SiteMode,
+  siteUrl: string | null,
+  referencedMedia: string[] | null,
+): Promise<string> {
   const lines: string[] = [];
   lines.push(`export { default as config } from ${JSON.stringify(paths.configFile)};`);
   for (const name of SINGLETON_NAMES) {
@@ -38,7 +44,13 @@ async function buildDataModule(paths: SitePaths, mode: SiteMode, siteUrl: string
   lines.push(`export const siteUrl = ${JSON.stringify(siteUrl)};`);
   const mediaEntries: string[] = [];
   if (existsSync(paths.mediaDir)) {
-    const files = (await readdir(paths.mediaDir)).filter(isSupportedMediaFile).sort();
+    // Import only referenced images so unused files in the media folder are not emitted to dist/.
+    // Without validated content (schema errors in dev) every file is imported.
+    let files = (await readdir(paths.mediaDir)).filter(isSupportedMediaFile).sort();
+    if (referencedMedia !== null) {
+      const wanted = new Set(referencedMedia);
+      files = files.filter((file) => wanted.has(file));
+    }
     files.forEach((file, index) => {
       lines.push(`import media${index} from ${JSON.stringify(path.join(paths.mediaDir, file))};`);
       mediaEntries.push(`${JSON.stringify(file)}: media${index}`);
@@ -70,7 +82,13 @@ export default function siteCore(options: SiteCoreOptions = {}): AstroIntegratio
   return {
     name: "site-core",
     hooks: {
-      "astro:config:setup": async ({ command, updateConfig, logger }) => {
+      "astro:config:setup": async ({ command, config, updateConfig, logger }) => {
+        const installed = installContractMarkdownPlugins(config.markdown.processor);
+        if (!installed) {
+          logger.warn(
+            "Markdown processor is not Sätteri: H1 demotion and ASCII heading ids are not applied.",
+          );
+        }
         const run = await runGateForSite(root, { mode, manifest: options.manifest, configFile });
         siteUrl = run.content?.config.siteUrl ?? null;
         const counts = summarize(run.findings);
@@ -86,7 +104,11 @@ export default function siteCore(options: SiteCoreOptions = {}): AstroIntegratio
           );
         }
 
-        const dataModule = await buildDataModule(paths, mode, siteUrl);
+        let referencedMedia: string[] | null = null;
+        if (run.content !== null) {
+          referencedMedia = collectReferencedMediaFiles(run.content);
+        }
+        const dataModule = await buildDataModule(paths, mode, siteUrl, referencedMedia);
         updateConfig({
           trailingSlash: "always",
           build: { format: "directory" },

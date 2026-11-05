@@ -1,0 +1,25 @@
+---
+/**
+ * "Neověřený text" marker for guidance without a subject-matter review (gate G-040).
+ * Renders only in prototype builds; a production build never reaches it with a missing review.
+ */
+import { mode } from "virtual:site-core/data";
+
+interface Props {
+  reviewedAt: string | null;
+  class?: string;
+}
+
+const { reviewedAt, class: className } = Astro.props;
+if (mode === "production" && reviewedAt === null) {
+  throw new Error("Unreviewed guidance in a production build (gate G-040).");
+}
+const show = mode === "prototype" && reviewedAt === null;
+---
+{
+  show ? (
+    <span class={className} data-unreviewed-mark>
+      Neověřený text
+    </span>
+  ) : null
+}

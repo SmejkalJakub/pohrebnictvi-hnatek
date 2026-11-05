@@ -12,9 +12,14 @@ import {
   Phone,
   Time,
   Url,
+  asciiSlug,
+  flag,
+  labelField,
   nullable,
+  objectOrEmpty,
   optionalText,
   text,
+  withDerivedIds,
 } from "./primitives.ts";
 
 type RefinementContext = z.RefinementCtx;
@@ -33,13 +38,16 @@ export const ImageRef = z
   .object({
     file: text(300),
     alt: z.string().trim().max(200, "Maximálně 200 znaků.").default(""),
-    decorative: z.boolean().default(false),
+    decorative: flag(false),
     caption: optionalText(240),
     credit: optionalText(120),
     source: z.enum(["client", "existing-website", "own-photo", "licensed-stock", "placeholder"]),
     depicts: z.enum(["actual-business", "generic", "placeholder"]),
-    rightsConfirmed: z.boolean().default(false),
-    focus: z.enum(["center", "top", "bottom", "left", "right"]).default("center"),
+    rightsConfirmed: flag(false),
+    focus: z.preprocess(
+      emptyToUndefined,
+      z.enum(["center", "top", "bottom", "left", "right"]).default("center"),
+    ),
   })
   .superRefine((img, ctx) => {
     if (!img.decorative && img.alt.length < 5) {
@@ -63,7 +71,32 @@ export const ImageRef = z
   });
 export type ImageRef = z.infer<typeof ImageRef>;
 
-const OptionalImage = nullable(ImageRef).default(null);
+function emptyToUndefined(value: unknown): unknown {
+  if (value === "" || value === null) {
+    return undefined;
+  }
+  return value;
+}
+
+/**
+ * "No image" may arrive as null, "", a missing key, or an object without a file: Pages CMS keeps
+ * booleans such as rightsConfirmed: false, so an untouched optional image is never fully empty (B6).
+ */
+function emptyImageToNull(value: unknown): unknown {
+  if (value === undefined || value === null || value === "") {
+    return null;
+  }
+  if (typeof value === "object" && !Array.isArray(value)) {
+    const file = (value as { file?: unknown }).file;
+    const hasFile = typeof file === "string" && file.trim() !== "";
+    if (!hasFile) {
+      return null;
+    }
+  }
+  return value;
+}
+
+const OptionalImage = z.preprocess(emptyImageToNull, ImageRef.nullable());
 
 // ---------------------------------------------------------------------------
 // §6.1 Company
@@ -80,20 +113,38 @@ export type Address = z.infer<typeof Address>;
 export const Company = z.object({
   brandName: text(80),
   legalName: text(120),
-  legalIds: z.object({
-    ico: nullable(z.string().regex(/^\d{8}$/, "IČO má 8 číslic.")),
-    dic: nullable(z.string().regex(/^CZ\d{8,10}$/, "DIČ zadejte ve tvaru CZ12345678.")),
-    registryEntry: optionalText(200),
-    registeredOffice: nullable(Address),
-  }),
-  tradition: z.object({
-    publicWording: optionalText(120),
-    foundedYear: nullable(z.number().int().min(1800).max(2100)),
-  }),
-  familyOwned: nullable(z.boolean()),
+  legalIds: objectOrEmpty(
+    z.object({
+      ico: nullable(z.string().regex(/^\d{8}$/, "IČO má 8 číslic.")),
+      dic: nullable(z.string().regex(/^CZ\d{8,10}$/, "DIČ zadejte ve tvaru CZ12345678.")),
+      registryEntry: optionalText(200),
+      registeredOffice: nullable(Address),
+    }),
+  ),
+  tradition: objectOrEmpty(
+    z.object({
+      publicWording: optionalText(120),
+      foundedYear: nullable(z.number().int().min(1800).max(2100)),
+    }),
+  ),
+  // true / false / null (= not stated). A CMS select can send "yes" / "no" / "unknown" (A4).
+  familyOwned: z.preprocess(triState, z.boolean().nullable()),
   logo: OptionalImage,
 });
 export type Company = z.infer<typeof Company>;
+
+function triState(value: unknown): unknown {
+  if (value === "yes" || value === "ano") {
+    return true;
+  }
+  if (value === "no" || value === "ne") {
+    return false;
+  }
+  if (value === undefined || value === "" || value === "unknown") {
+    return null;
+  }
+  return value;
+}
 
 // ---------------------------------------------------------------------------
 // §6.2 Contact
@@ -122,8 +173,14 @@ export type ContactPhone = z.infer<typeof ContactPhone>;
 export const Contact = z
   .object({
     locations: z.array(Location).min(1, "Uveďte alespoň jedno místo."),
-    phones: z.array(ContactPhone).min(1, "Uveďte alespoň jeden telefon."),
-    emails: z.array(z.object({ id: Id, label: text(60), address: Email })).default([]),
+    phones: z.preprocess(
+      withDerivedIds(labelField("label", "telefon")),
+      z.array(ContactPhone).min(1, "Uveďte alespoň jeden telefon."),
+    ),
+    emails: z.preprocess(
+      withDerivedIds(labelField("label", "email")),
+      z.array(z.object({ id: Id, label: text(60), address: Email })).default([]),
+    ),
   })
   .superRefine((contact, ctx) => {
     const officePhones = contact.phones.filter((phone) => phone.department === "office");
@@ -171,7 +228,7 @@ export const OfficeHours = z
   .object({
     locationId: Id,
     label: text(60).default("Kancelář"),
-    weekly: z.array(OfficeHoursGroup),
+    weekly: z.preprocess(withDerivedIds(labelField("days", "doba")), z.array(OfficeHoursGroup)),
     holidayNote: optionalText(200),
     exceptions: z
       .array(
@@ -407,6 +464,60 @@ export const PriceGroup = z.object({
 });
 export type PriceGroup = z.infer<typeof PriceGroup>;
 
+/**
+ * New price groups and items added in the CMS arrive without ids (B7). Groups get a slug of their
+ * title; items get "<group id>-<slug of label>", unique across the whole price list, because item
+ * ids must be unique list-wide. Explicit ids are kept as written.
+ */
+function derivePriceIds(value: unknown): unknown {
+  const groups = withDerivedIds(labelField("title", "skupina"))(value);
+  if (!Array.isArray(groups)) {
+    return groups;
+  }
+  const used = new Set<string>();
+  for (const group of groups) {
+    const items = (group as { items?: unknown }).items;
+    if (!Array.isArray(items)) {
+      continue;
+    }
+    for (const item of items) {
+      const id = (item as { id?: unknown }).id;
+      if (typeof id === "string" && id.trim() !== "") {
+        used.add(id.trim());
+      }
+    }
+  }
+  return groups.map((group: unknown) => {
+    if (typeof group !== "object" || group === null) {
+      return group;
+    }
+    const record = group as Record<string, unknown>;
+    if (!Array.isArray(record.items)) {
+      return record;
+    }
+    const groupId = String(record.id);
+    const items = record.items.map((item: unknown, index) => {
+      if (typeof item !== "object" || item === null) {
+        return item;
+      }
+      const entry = item as Record<string, unknown>;
+      if (typeof entry.id === "string" && entry.id.trim() !== "") {
+        return entry;
+      }
+      const base = `${groupId}-${asciiSlug(labelField("label", "polozka")(entry, index))}`;
+      let candidate = base;
+      let suffix = 2;
+      while (used.has(candidate)) {
+        candidate = `${base}-${suffix}`;
+        suffix += 1;
+      }
+      used.add(candidate);
+      return { ...entry, id: candidate };
+    });
+    return { ...record, items };
+  });
+}
+
 export const Pricing = z
   .object({
     visible: z.boolean(),
@@ -414,7 +525,7 @@ export const Pricing = z
     vatNote: optionalText(120),
     validFrom: nullable(IsoDate),
     generalNote: optionalText(400),
-    groups: z.array(PriceGroup),
+    groups: z.preprocess(derivePriceIds, z.array(PriceGroup)),
   })
   .superRefine((pricing, ctx) => {
     const itemIds = new Set<string>();

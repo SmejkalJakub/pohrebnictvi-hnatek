@@ -556,12 +556,26 @@ Copy is plain professional Czech. There is no sentimental marketing, no superlat
 
 A core checker (`core/markdown/restrict-body.ts`) fails the build with the file and line when it finds the items below. S1 implemented it as a line-based checker rather than a remark plugin: the same code then runs in the Node validator, the build gate and the unit tests with no extra dependencies. It skips fenced code and inline code.
 
-- raw HTML;
-- `#` (H1) headings, because the H1 comes from `title`; bodies start at `##`;
-- skipped heading levels;
-- inline images, because images come from `ImageRef` fields;
+- raw HTML (G-034), except `<u>` and `<br>`, which the Pages CMS editor emits for underline and hard breaks;
+- inline images, because images come from `ImageRef` fields (G-034);
 - phone numbers in body text (pattern `+420` or nine-digit groups), because phones come from contact data so that a number edit in one place is complete;
-- links with `javascript:`, or bare URLs to non-HTTPS sites.
+- links with `javascript:`, or bare URLs to non-HTTPS sites (G-034).
+
+**Headings (amended after the S2 Pages CMS spike).** The CMS editor cannot be restricted and offers H1, so heading problems no longer fail the build:
+
+- core renders every body `#` as `##`, because the page H1 comes from `title`;
+- the gate only warns about H1 and skipped levels (G-035);
+- core gives every heading an ASCII id (`co-sluzba-zahrnuje`) through plugins it installs into Astro 7's Sätteri Markdown processor (`core/markdown/satteri-plugins.ts`).
+
+**What the CMS writes (amended after S2).** Pages CMS deletes `null`, `""`, `[]` and `{}` on every save and cannot represent "unset" in a toggle. The schemas therefore accept the following, and `core/tests/cms-tolerance.test.ts` re-parses the whole fixture after a simulated CMS save:
+
+- missing objects: `legalIds` and `tradition` default to all-null;
+- `familyOwned` as `"yes"` / `"no"` / `"unknown"`;
+- an image object without `file`, which counts as no image;
+- `null` booleans in images, which count as `false`;
+- rows added without `id` (`phones`, `emails`, `weekly`, price groups and items), which get an ASCII slug of their label. Price items get `<group id>-<label slug>`, unique list-wide. Explicit ids are kept, and duplicates are still errors.
+
+Entry file names that are not ASCII slugs fail as G-001 (S2 amendment A6).
 
 ## 8. Build modes and the publication gate
 
@@ -592,7 +606,8 @@ Gate rules. Each has an id; the `prototype` column gives its behaviour in protot
 | G-031 | Any `placeholder: true` page or entry is published | marker | fail |
 | G-032 | Any `ImageRef.source = "placeholder"` rendered | marker | fail |
 | G-033 | Any rendered image with `rightsConfirmed: false` | warn | fail |
-| G-034 | Markdown body breaks the restricted format (§7.3) in any way other than a phone number | fail | fail |
+| G-034 | Markdown body contains raw HTML (other than `<u>`, `<br>`), an inline image, or an unsafe link (§7.3) | fail | fail |
+| G-035 | Markdown body uses H1 or skips heading levels (H1 is demoted at render) | warn | warn |
 | G-040 | Published guidance without `review.reviewedAt` | marker "Neověřený text" | fail |
 | G-041 | Guidance review older than 12 months | – | warn |
 | G-042 | Emergency phone equals an office phone | warn | warn |

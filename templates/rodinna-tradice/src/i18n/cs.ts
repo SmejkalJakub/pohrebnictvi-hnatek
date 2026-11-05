@@ -30,7 +30,6 @@ export const ui = {
   registeredOffice: "Sídlo",
   serviceArea: "Oblast",
   privacy: "Ochrana osobních údajů",
-  reviewFlag: "Neověřený text",
   reviewedOn: "Text ověřen",
   sources: "Zdroje",
   foundedSince: "od roku",
