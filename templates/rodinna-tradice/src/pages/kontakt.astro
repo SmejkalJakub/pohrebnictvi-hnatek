@@ -1,0 +1,60 @@
+---
+/**
+ * Kontakt: left an address card in the letterhead style, right the office hours; below,
+ * full width, the separately framed nonstop transport panel.
+ */
+import LetterLayout from "../layouts/LetterLayout.astro";
+import PageIntro from "../components/PageIntro.astro";
+import AddressCard from "../components/AddressCard.astro";
+import HoursLetter from "../components/HoursLetter.astro";
+import NonstopPanel from "../components/NonstopPanel.astro";
+import { getPage, getSiteContext } from "@core/content/load.ts";
+
+const site = await getSiteContext();
+const page = await getPage("kontakt");
+---
+<LetterLayout site={site} title={page.data.metaTitle ?? page.data.title} description={page.data.metaDescription}>
+  <PageIntro title={page.data.title} lead={page.data.lead} placeholder={page.data.placeholder}>
+    <div class="prose intro-body">
+      <page.Content />
+    </div>
+  </PageIntro>
+  <div class="frame contact" data-contact-page>
+    <div class="contact-columns">
+      <AddressCard site={site} id="kontakt-adresa" phones="all" />
+      <HoursLetter site={site} id="kontakt-hodiny" look="letter" />
+    </div>
+    <div class="contact-nonstop">
+      <NonstopPanel site={site} id="kontakt-nonstop" />
+    </div>
+  </div>
+</LetterLayout>
+
+<style>
+  .intro-body:not(:empty) {
+    margin-top: 1.5rem;
+  }
+
+  .contact-columns {
+    display: grid;
+    gap: 2.5rem;
+  }
+
+  .contact-nonstop {
+    margin-top: 3rem;
+  }
+
+  @media (min-width: 48rem) {
+    .contact-columns {
+      grid-template-columns: 7fr 5fr;
+      column-gap: 3rem;
+      align-items: start;
+    }
+  }
+
+  @media (min-width: 64rem) {
+    .contact-columns {
+      column-gap: 5rem;
+    }
+  }
+</style>

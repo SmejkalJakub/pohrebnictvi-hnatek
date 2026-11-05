@@ -1,0 +1,34 @@
+---
+// Rendered only when the page file exists (content-contract §5: optional page).
+import LetterLayout from "../../layouts/LetterLayout.astro";
+import PageIntro from "../../components/PageIntro.astro";
+import { getSiteContext } from "@core/content/load.ts";
+import { getOptionalPage } from "../../lib/content.ts";
+
+export async function getStaticPaths() {
+  const page = await getOptionalPage("ochrana-osobnich-udaju");
+  if (page === null) {
+    return [];
+  }
+  return [{ params: { path: undefined } }];
+}
+
+const site = await getSiteContext();
+const page = await getOptionalPage("ochrana-osobnich-udaju");
+if (page === null) {
+  throw new Error("unreachable: privacy page missing");
+}
+---
+<LetterLayout site={site} title={page.data.metaTitle ?? page.data.title} description={page.data.metaDescription}>
+  <PageIntro title={page.data.title} lead={page.data.lead} placeholder={page.data.placeholder}>
+    <div class="prose intro-body">
+      <page.Content />
+    </div>
+  </PageIntro>
+</LetterLayout>
+
+<style>
+  .intro-body {
+    margin-top: 1.5rem;
+  }
+</style>

@@ -1,0 +1,82 @@
+---
+/**
+ * Home section shell: hairline rule above, small caps label in the left margin (desktop),
+ * heading and text on the offset narrow column. Asymmetry is intentional.
+ */
+interface Props {
+  id: string;
+  label: string;
+  heading: string;
+  section: string;
+  tone?: "paper" | "surface";
+}
+
+const { id, label, heading, section, tone = "paper" } = Astro.props;
+const headingId = `${id}-nadpis`;
+---
+<section class:list={["msec", `msec-${tone}`]} id={id} aria-labelledby={headingId} data-section={section}>
+  <div class="frame msec-grid">
+    <p class="label msec-label">{label}</p>
+    <div class="msec-body">
+      <h2 id={headingId} class="msec-heading">{heading}</h2>
+      <slot />
+    </div>
+  </div>
+</section>
+
+<style>
+  .msec-grid {
+    position: relative;
+    padding-top: 2rem;
+    padding-bottom: 3rem;
+  }
+
+  /* Hairline aligned with the text edges, not the frame padding. */
+  .msec-grid::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: var(--gutter);
+    right: var(--gutter);
+    border-top: 1px solid var(--rule);
+  }
+
+  .msec-surface .msec-grid::before {
+    display: none;
+  }
+
+  .msec-surface {
+    background: var(--surface);
+  }
+
+  .msec-surface .msec-grid {
+    padding-top: 3rem;
+  }
+
+  .msec-label {
+    margin-bottom: 0.5rem;
+  }
+
+  .msec-heading {
+    margin-bottom: 1.25rem;
+  }
+
+  @media (min-width: 64rem) {
+    .msec-grid {
+      display: grid;
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      column-gap: 2rem;
+      padding-top: 3.5rem;
+      padding-bottom: 4.5rem;
+    }
+
+    .msec-label {
+      grid-column: 1 / span 3;
+      padding-top: 0.875rem;
+    }
+
+    .msec-body {
+      grid-column: 4 / span 8;
+    }
+  }
+</style>

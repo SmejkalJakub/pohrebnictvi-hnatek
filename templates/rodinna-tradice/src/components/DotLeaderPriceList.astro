@@ -1,0 +1,108 @@
+---
+/**
+ * Ceník as grouped definition lists: label (and description) left, the core PriceValue
+ * right-aligned with dot leaders on desktop. Prices are only ever output through PriceValue.
+ */
+import PriceValue from "@core/components/PriceValue.astro";
+import type { PricingView } from "@core/content/view-models.ts";
+
+interface Props {
+  pricing: PricingView;
+}
+
+const { pricing } = Astro.props;
+---
+<div class="pricelist" data-price-list>
+  {
+    pricing.groups.map((group) => (
+      <section class="price-group" id={group.id} aria-labelledby={`${group.id}-nadpis`}>
+        <h2 id={`${group.id}-nadpis`}>{group.title}</h2>
+        {group.description !== null ? <p class="caption price-group-desc">{group.description}</p> : null}
+        <dl class="price-items">
+          {group.items.map((item) => (
+            <div class="price-row" data-price-item={item.id}>
+              <dt class="price-label">
+                <span>{item.label}</span>
+              </dt>
+              <dd class="price-amount">
+                <PriceValue item={item} />
+              </dd>
+              {item.description !== null ? <dd class="price-desc">{item.description}</dd> : null}
+            </div>
+          ))}
+        </dl>
+      </section>
+    ))
+  }
+</div>
+
+<style>
+  .pricelist {
+    display: grid;
+    gap: 3rem;
+    max-width: 44rem;
+  }
+
+  .price-group-desc {
+    margin-top: 0.25rem;
+  }
+
+  .price-items {
+    margin-top: 1rem;
+    border-top: 1px solid var(--rule);
+  }
+
+  .price-row {
+    display: grid;
+    grid-template-columns: 1fr;
+    padding-block: 0.875rem;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .price-label {
+    font-weight: 600;
+  }
+
+  .price-amount {
+    font-variant-numeric: tabular-nums lining-nums;
+  }
+
+  .price-desc {
+    color: var(--muted);
+    font-size: 0.9375em;
+    margin-top: 0.125rem;
+  }
+
+  @media (min-width: 40rem) {
+    .price-row {
+      grid-template-columns: minmax(0, 1fr) auto;
+      column-gap: 0;
+      align-items: baseline;
+    }
+
+    .price-label {
+      display: flex;
+      align-items: baseline;
+      min-width: 0;
+    }
+
+    /* Dot leaders between label and price. */
+    .price-label::after {
+      content: "";
+      flex: 1 1 auto;
+      min-width: 1.5rem;
+      margin-inline: 0.5rem;
+      border-bottom: 2px dotted var(--rule);
+      transform: translateY(-0.3em);
+    }
+
+    .price-amount {
+      text-align: right;
+    }
+
+    .price-desc {
+      grid-column: 1 / -1;
+      max-width: 32rem;
+    }
+  }
+</style>

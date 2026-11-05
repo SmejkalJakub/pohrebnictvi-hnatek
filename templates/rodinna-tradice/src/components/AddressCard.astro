@@ -1,0 +1,178 @@
+---
+/**
+ * Letterhead-style address card: brand, address, phones (tel:), e-mail, map link, access note.
+ * Contains no office hours and no emergency line.
+ */
+import PhoneLink from "@core/components/PhoneLink.astro";
+import MissingFact from "@core/components/MissingFact.astro";
+import type { SiteContext } from "@core/content/view-models.ts";
+import { formatAddressLines } from "@core/format/address.ts";
+import { mapHref } from "../lib/content.ts";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  site: SiteContext;
+  level?: 2 | 3;
+  id: string;
+  /** Visible heading text; defaults to the brand name. */
+  heading?: string;
+  look?: "card" | "letter";
+  /** Only office phones (footer) or every phone (Kontakt). */
+  phones?: "office" | "all";
+}
+
+const { site, level = 2, id, heading, look = "card", phones = "all" } = Astro.props;
+const Heading = `h${level}` as "h2" | "h3";
+const location = site.contact.locations[0];
+const listedPhones = site.contact.phones.filter((phone) => phones === "all" || phone.department === "office");
+const headingId = `${id}-nadpis`;
+let mapLink: string | null = null;
+let addressLines: string[] = [];
+if (location !== undefined) {
+  mapLink = mapHref(location);
+  addressLines = formatAddressLines(location.address);
+}
+---
+<section class:list={["address-card", `address-${look}`]} aria-labelledby={headingId} data-address-card>
+  <Heading id={headingId} class="address-heading">{heading ?? site.company.brandName}</Heading>
+  {
+    location !== undefined ? (
+      <address class="address-block">
+        {location.name !== site.company.brandName ? <span class="address-name">{location.name}</span> : null}
+        {addressLines.map((line) => (
+          <span class="address-line">{line}</span>
+        ))}
+      </address>
+    ) : null
+  }
+  <dl class="address-phones" aria-label={ui.phones}>
+    {
+      listedPhones.map((phone) => (
+        <div class="address-phone">
+          <dt>{phone.label}</dt>
+          <dd>
+            <PhoneLink number={phone.number} class="address-tel" />
+          </dd>
+        </div>
+      ))
+    }
+    {
+      site.contact.emails.map((email) => (
+        <div class="address-phone">
+          <dt>
+            {ui.email}
+            {site.contact.emails.length > 1 ? ` – ${email.label}` : null}
+          </dt>
+          <dd>
+            <a href={`mailto:${email.address}`} class="address-mail">
+              {email.address}
+            </a>
+          </dd>
+        </div>
+      ))
+    }
+  </dl>
+  {
+    location !== undefined ? (
+      <p class="address-map">
+        {mapLink !== null ? (
+          <a href={mapLink} class="more-link" rel="noopener">
+            {ui.showOnMap}
+          </a>
+        ) : (
+          <MissingFact name="odkaz na mapu" />
+        )}
+      </p>
+    ) : null
+  }
+  {location !== undefined && location.accessNote !== null ? <p class="address-note">{location.accessNote}</p> : null}
+</section>
+
+<style>
+  .address-heading {
+    margin-bottom: 0.75rem;
+  }
+
+  h2.address-heading {
+    font-size: clamp(1.75rem, 1.5rem + 0.6vw, 2rem);
+  }
+
+  .address-block {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .address-name {
+    color: var(--muted);
+  }
+
+  .address-phones {
+    margin-top: 1rem;
+    display: grid;
+    gap: 0.125rem;
+  }
+
+  .address-phone {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    column-gap: 0.75rem;
+  }
+
+  .address-phone dt {
+    color: var(--muted);
+    min-width: 8.25rem;
+  }
+
+  .address-card :global(.address-tel),
+  .address-mail {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.75rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums lining-nums;
+    white-space: nowrap;
+  }
+
+  .address-mail {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .address-map {
+    margin-top: 0.25rem;
+  }
+
+  .address-note {
+    margin-top: 0.75rem;
+    color: var(--muted);
+    font-size: 0.9375em;
+    max-width: 30rem;
+  }
+
+  /* The letterhead card: a hairline frame with a double rule under the heading. */
+  .address-card.address-card {
+    position: relative;
+  }
+
+  .address-card:where(.address-card) {
+    padding: 0;
+  }
+
+  .address-card.address-card:not(.address-letter) {
+    border: 1px solid var(--rule);
+    background: var(--paper);
+    padding: 1.5rem;
+  }
+
+  .address-card.address-card:not(.address-letter) .address-heading {
+    padding-bottom: 0.75rem;
+    border-bottom: 3px double var(--rule);
+  }
+
+  @media (min-width: 48rem) {
+    .address-card.address-card:not(.address-letter) {
+      padding: 2rem 2.25rem;
+    }
+  }
+</style>

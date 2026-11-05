@@ -1,0 +1,180 @@
+---
+/**
+ * Editorial figure gallery for coffins and flowers: a masonry-free two-column grid with a
+ * "one wide, then two narrow" rhythm and always-visible serif italic captions. Entries
+ * without an image render as captioned text entries, so the page is complete with no photos.
+ */
+import { Image } from "astro:assets";
+import PlaceholderMark from "@core/components/PlaceholderMark.astro";
+import type { ImageRef } from "@core/content/schemas.ts";
+import { resolveOptionalImage } from "@core/media/resolve.ts";
+import { widthsFor } from "../lib/content.ts";
+
+export interface GalleryEntry {
+  id: string;
+  name: string;
+  summary: string | null;
+  details: { label: string; value: string }[];
+  image: ImageRef | null;
+  placeholder: boolean;
+}
+
+interface Props {
+  entries: GalleryEntry[];
+  aspect: "3 / 2" | "1 / 1";
+  headingLevel?: 2 | 3;
+}
+
+const { entries, aspect, headingLevel = 3 } = Astro.props;
+const Heading = `h${headingLevel}` as "h2" | "h3";
+const items = entries.map((entry, index) => ({
+  entry,
+  image: resolveOptionalImage(entry.image),
+  wide: index % 3 === 0,
+}));
+---
+<ul class="gallery" style={`--gallery-aspect: ${aspect}`} data-figure-gallery>
+  {
+    items.map(({ entry, image, wide }) => (
+      <li class:list={["gallery-item", { "is-wide": wide, "has-image": image !== null }]} id={entry.id}>
+        <PlaceholderMark active={entry.placeholder} kind="content" as="div" class="gallery-mark">
+          <figure class="gallery-figure">
+            {image !== null ? (
+              <PlaceholderMark active={image.isPlaceholder} kind="image" class="gallery-media">
+                <Image
+                  src={image.src}
+                  alt={image.alt}
+                  widths={widthsFor(image.src, [360, 560, 860, 1200])}
+                  sizes={wide ? "(min-width: 64rem) 52rem, 100vw" : "(min-width: 64rem) 26rem, (min-width: 48rem) 50vw, 100vw"}
+                  class="gallery-image"
+                  style={`object-position: ${image.objectPosition}`}
+                />
+              </PlaceholderMark>
+            ) : null}
+            <figcaption class="gallery-caption">
+              <Heading class="gallery-name">{entry.name}</Heading>
+              {entry.details.length > 0 ? (
+                <p class="gallery-details">
+                  {entry.details.map((detail) => (
+                    <span>
+                      <span class="sr-only">{detail.label}: </span>
+                      {detail.value}
+                    </span>
+                  ))}
+                </p>
+              ) : null}
+              {entry.summary !== null ? <p class="caption gallery-summary">{entry.summary}</p> : null}
+              {image !== null && image.caption !== null ? <p class="caption gallery-summary">{image.caption}</p> : null}
+              {image !== null && image.credit !== null ? <p class="gallery-credit">{image.credit}</p> : null}
+            </figcaption>
+          </figure>
+        </PlaceholderMark>
+      </li>
+    ))
+  }
+</ul>
+
+<style>
+  .gallery {
+    display: grid;
+    gap: 2.5rem;
+  }
+
+  .gallery-figure {
+    margin: 0;
+  }
+
+  .gallery :global(.gallery-image) {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: var(--gallery-aspect);
+    object-fit: cover;
+    background: var(--surface);
+  }
+
+  .gallery-caption {
+    margin-top: 0.75rem;
+    max-width: 36rem;
+  }
+
+  .gallery-item:not(.has-image) .gallery-caption {
+    margin-top: 0;
+    border-top: 1px solid var(--rule);
+    padding-top: 1rem;
+  }
+
+  .gallery-name {
+    font-family: var(--font-display);
+    font-weight: var(--display-weight);
+    font-size: 1.75rem;
+    line-height: 1.2;
+  }
+
+  .gallery-details {
+    margin-top: 0.25rem;
+    display: flex;
+    flex-wrap: wrap;
+    column-gap: 1rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .gallery-summary {
+    margin-top: 0.5rem;
+  }
+
+  .gallery-credit {
+    margin-top: 0.25rem;
+    font-size: 0.8125rem;
+    color: var(--muted);
+  }
+
+  @media (min-width: 48rem) {
+    .gallery {
+      grid-template-columns: 1fr 1fr;
+      column-gap: 2.5rem;
+      row-gap: 3.5rem;
+    }
+
+    .gallery-item.is-wide {
+      grid-column: 1 / -1;
+    }
+
+    /* Wide entry: image on two thirds, caption beside it, like a plate in a book. */
+    .gallery-item.is-wide .gallery-figure {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      column-gap: 2.5rem;
+      align-items: end;
+    }
+
+    .gallery-item.is-wide:not(.has-image) .gallery-figure {
+      grid-template-columns: 1fr;
+    }
+
+    .gallery-item.is-wide:not(.has-image) .gallery-caption {
+      max-width: none;
+      display: grid;
+      grid-template-columns: 1fr 2fr;
+      column-gap: 2.5rem;
+    }
+
+    .gallery-item.is-wide:not(.has-image) .gallery-caption > :not(.gallery-name) {
+      grid-column: 2;
+    }
+
+    .gallery-item.is-wide:not(.has-image) .gallery-name {
+      grid-row: 1 / span 4;
+    }
+
+    .gallery-item.is-wide.has-image .gallery-caption {
+      margin-top: 0;
+      border-top: 1px solid var(--rule);
+      padding-top: 1rem;
+    }
+  }
+</style>

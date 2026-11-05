@@ -1,0 +1,111 @@
+---
+/** Květiny: intro prose, a 1:1 figure gallery, then a centred ordering block with the flowers phone. */
+import LetterLayout from "../layouts/LetterLayout.astro";
+import PageIntro from "../components/PageIntro.astro";
+import FigureGallery, { type GalleryEntry } from "../components/FigureGallery.astro";
+import CatalogueEmpty from "../components/CatalogueEmpty.astro";
+import PhoneLink from "@core/components/PhoneLink.astro";
+import { getFlowers, getPage, getSiteContext } from "@core/content/load.ts";
+import { ui } from "../i18n/cs.ts";
+
+const site = await getSiteContext();
+const page = await getPage("kvetiny");
+const flowers = await getFlowers();
+const entries: GalleryEntry[] = flowers.map((flower) => ({
+  id: flower.id,
+  name: flower.data.title,
+  summary: flower.data.summary,
+  details: [],
+  image: flower.data.image,
+  placeholder: flower.data.placeholder,
+}));
+const phones = site.contact.phones.filter((phone) => phone.department === "flowers");
+let orderPhones = phones;
+if (orderPhones.length === 0) {
+  orderPhones = site.contact.phones.filter((phone) => phone.department === "office").slice(0, 1);
+}
+---
+<LetterLayout site={site} title={page.data.metaTitle ?? page.data.title} description={page.data.metaDescription}>
+  <PageIntro title={page.data.title} lead={page.data.lead} placeholder={page.data.placeholder}>
+    <div class="prose intro-body">
+      <page.Content />
+    </div>
+  </PageIntro>
+  <section class="frame catalogue" aria-labelledby="kvetiny-nadpis">
+    <h2 id="kvetiny-nadpis" class="catalogue-heading">{ui.flowersHeading}</h2>
+    {entries.length > 0 ? <FigureGallery entries={entries} aspect="1 / 1" /> : <CatalogueEmpty site={site} phoneDepartment="flowers" />}
+  </section>
+  <section class="frame order" aria-labelledby="objednavka-nadpis" data-flowers-order>
+    <div class="order-inner">
+      <h2 id="objednavka-nadpis">{ui.flowersOrderHeading}</h2>
+      <p>{ui.flowersOrderText}</p>
+      <ul class="order-phones">
+        {
+          orderPhones.map((phone) => (
+            <li>
+              <span class="order-label">{phone.label}</span>
+              <PhoneLink number={phone.number} class="order-phone" />
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+</LetterLayout>
+
+<style>
+  .intro-body:not(:empty) {
+    margin-top: 1.5rem;
+  }
+
+  .catalogue-heading {
+    padding-top: 2rem;
+    border-top: 1px solid var(--rule);
+    margin-bottom: 2rem;
+  }
+
+  .order {
+    margin-top: 4rem;
+  }
+
+  .order-inner {
+    max-width: 34rem;
+    margin-inline: auto;
+    text-align: center;
+    border-block: 1px solid var(--rule);
+    padding-block: 2.5rem;
+  }
+
+  .order-inner h2 {
+    margin-bottom: 0.5rem;
+  }
+
+  .order-phones {
+    margin-top: 1rem;
+    display: grid;
+    gap: 0.5rem;
+    justify-items: center;
+  }
+
+  .order-phones li {
+    display: grid;
+    justify-items: center;
+  }
+
+  .order-label {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .order :global(.order-phone) {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.75rem;
+    font-size: 1.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+</style>

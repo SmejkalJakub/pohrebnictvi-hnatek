@@ -1,0 +1,110 @@
+---
+/**
+ * The separately headed nonstop transport block (content-contract §6.5 rule 3).
+ * Never placed inside an office-hours container. Renders nothing when disabled.
+ */
+import EmergencyPhoneLink from "@core/components/EmergencyPhoneLink.astro";
+import type { SiteContext } from "@core/content/view-models.ts";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  site: SiteContext;
+  level?: 2 | 3;
+  id: string;
+  /** "framed": full-width panel (Kontakt, home); "column": footer column; "dark": inverted. */
+  look?: "framed" | "column";
+}
+
+const { site, level = 2, id, look = "framed" } = Astro.props;
+const Heading = `h${level}` as "h2" | "h3";
+const emergency = site.emergency;
+const headingId = `${id}-nadpis`;
+---
+{
+  emergency.enabled ? (
+    <section class:list={["nonstop", `nonstop-${look}`]} aria-labelledby={headingId} data-emergency-block>
+      <Heading id={headingId} class="nonstop-heading">
+        {emergency.label}
+      </Heading>
+      {emergency.shortNote !== null ? <p class="nonstop-note">{emergency.shortNote}</p> : null}
+      <p class="nonstop-call">
+        <EmergencyPhoneLink emergency={emergency} variant="number" class="nonstop-link" />
+      </p>
+      {emergency.serviceArea !== null ? (
+        <p class="nonstop-area">
+          {ui.serviceArea}: {emergency.serviceArea}
+        </p>
+      ) : null}
+    </section>
+  ) : null
+}
+
+<style>
+  .nonstop-heading {
+    margin-bottom: 0.5rem;
+  }
+
+  h2.nonstop-heading {
+    font-size: clamp(1.75rem, 1.5rem + 0.6vw, 2rem);
+  }
+
+  .nonstop-note,
+  .nonstop-area {
+    color: var(--muted);
+  }
+
+  .nonstop-call {
+    margin-top: 0.75rem;
+  }
+
+  .nonstop :global(.nonstop-link) {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.75rem;
+    font-family: var(--font-body);
+    font-size: 1.625rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums lining-nums;
+    color: var(--accent);
+    text-decoration-thickness: 1px;
+    white-space: nowrap;
+  }
+
+  .nonstop-area {
+    margin-top: 0.5rem;
+    font-size: 0.9375em;
+  }
+
+  .nonstop-framed {
+    border: 1px solid var(--rule);
+    border-top: 4px solid var(--strip-bg);
+    background: var(--surface);
+    padding: 1.5rem;
+  }
+
+  @media (min-width: 48rem) {
+    .nonstop-framed {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      column-gap: 2rem;
+      align-items: center;
+      padding: 1.75rem 2.25rem;
+    }
+
+    .nonstop-framed .nonstop-heading,
+    .nonstop-framed .nonstop-note,
+    .nonstop-framed .nonstop-area {
+      grid-column: 1;
+    }
+
+    .nonstop-framed .nonstop-call {
+      grid-column: 2;
+      grid-row: 1 / span 3;
+      margin-top: 0;
+    }
+
+    .nonstop-framed :global(.nonstop-link) {
+      font-size: 2rem;
+    }
+  }
+</style>

@@ -1,0 +1,57 @@
+---
+/** Rakve: intro prose, then the editorial figure gallery (3:2). Handles zero entries. */
+import LetterLayout from "../layouts/LetterLayout.astro";
+import PageIntro from "../components/PageIntro.astro";
+import FigureGallery, { type GalleryEntry } from "../components/FigureGallery.astro";
+import CatalogueEmpty from "../components/CatalogueEmpty.astro";
+import { getCoffins, getPage, getSiteContext } from "@core/content/load.ts";
+import { ui } from "../i18n/cs.ts";
+
+const site = await getSiteContext();
+const page = await getPage("rakve");
+const coffins = await getCoffins();
+const entries: GalleryEntry[] = coffins.map((coffin) => {
+  const details: GalleryEntry["details"] = [];
+  if (coffin.data.material !== null) {
+    details.push({ label: ui.materialLabel, value: coffin.data.material });
+  }
+  if (coffin.data.code !== null) {
+    details.push({ label: ui.codeLabel, value: coffin.data.code });
+  }
+  return {
+    id: coffin.id,
+    name: coffin.data.name,
+    summary: coffin.data.summary,
+    details,
+    image: coffin.data.image,
+    placeholder: coffin.data.placeholder,
+  };
+});
+---
+<LetterLayout site={site} title={page.data.metaTitle ?? page.data.title} description={page.data.metaDescription}>
+  <PageIntro title={page.data.title} lead={page.data.lead} placeholder={page.data.placeholder}>
+    <div class="prose intro-body">
+      <page.Content />
+    </div>
+  </PageIntro>
+  <section class="frame catalogue" aria-labelledby="nabidka-nadpis">
+    <h2 id="nabidka-nadpis" class="catalogue-heading">{ui.coffinsHeading}</h2>
+    {entries.length > 0 ? <FigureGallery entries={entries} aspect="3 / 2" /> : <CatalogueEmpty site={site} />}
+  </section>
+</LetterLayout>
+
+<style>
+  .intro-body:not(:empty) {
+    margin-top: 1.5rem;
+  }
+
+  .catalogue {
+    padding-top: 1rem;
+  }
+
+  .catalogue-heading {
+    padding-top: 2rem;
+    border-top: 1px solid var(--rule);
+    margin-bottom: 2rem;
+  }
+</style>

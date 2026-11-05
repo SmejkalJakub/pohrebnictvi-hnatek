@@ -1,0 +1,137 @@
+---
+/**
+ * O nás: long-form story on a ~65-character measure with a drop cap on the first paragraph.
+ * "od roku YYYY" only when foundedYear is set; no timeline. Image only when one is set.
+ */
+import { Image } from "astro:assets";
+import LetterLayout from "../layouts/LetterLayout.astro";
+import PlaceholderMark from "@core/components/PlaceholderMark.astro";
+import { getPage, getSiteContext } from "@core/content/load.ts";
+import { resolveOptionalImage } from "@core/media/resolve.ts";
+import { ui } from "../i18n/cs.ts";
+import { widthsFor } from "../lib/content.ts";
+
+const site = await getSiteContext();
+const page = await getPage("o-nas");
+const image = resolveOptionalImage(page.data.heroImage);
+const tradition = site.company.tradition;
+---
+<LetterLayout site={site} title={page.data.metaTitle ?? page.data.title} description={page.data.metaDescription}>
+  <article class="frame story" data-about-story>
+    <header class="story-head">
+      <PlaceholderMark active={page.data.placeholder} kind="content">
+        {tradition.publicWording !== null ? <p class="label">{tradition.publicWording}</p> : null}
+        <h1>{page.data.title}</h1>
+        {
+          tradition.foundedYear !== null ? (
+            <p class="story-year">
+              {ui.foundedSince} {tradition.foundedYear}
+            </p>
+          ) : null
+        }
+        {page.data.lead !== null ? <p class="lead story-lead">{page.data.lead}</p> : null}
+      </PlaceholderMark>
+    </header>
+    {
+      image !== null ? (
+        <figure class="story-figure">
+          <PlaceholderMark active={image.isPlaceholder} kind="image">
+            <Image
+              src={image.src}
+              alt={image.alt}
+              widths={widthsFor(image.src, [480, 760, 1100])}
+              sizes="(min-width: 64rem) 46rem, 100vw"
+              class="story-image"
+              style={`object-position: ${image.objectPosition}`}
+            />
+          </PlaceholderMark>
+          {image.caption !== null || image.credit !== null ? (
+            <figcaption class="caption story-caption">
+              {image.caption} {image.credit}
+            </figcaption>
+          ) : null}
+        </figure>
+      ) : null
+    }
+    <div class="prose story-body" data-drop-cap>
+      <page.Content />
+    </div>
+  </article>
+</LetterLayout>
+
+<style>
+  .story {
+    padding-top: 2.5rem;
+  }
+
+  .story-head,
+  .story-body {
+    max-width: 40rem;
+    margin-inline: auto;
+  }
+
+  .story-head {
+    text-align: left;
+  }
+
+  .story-head :global(.label) {
+    margin-bottom: 0.75rem;
+  }
+
+  .story-year {
+    margin-top: 0.5rem;
+    font-family: var(--font-caption);
+    font-style: italic;
+    font-size: 1.375rem;
+    color: var(--accent);
+  }
+
+  .story-lead {
+    margin-top: 1.25rem;
+  }
+
+  .story-figure {
+    max-width: 46rem;
+    margin: 2.5rem auto 0;
+  }
+
+  .story :global(.story-image) {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 3 / 2;
+    object-fit: cover;
+  }
+
+  .story-caption {
+    margin-top: 0.5rem;
+  }
+
+  .story-body {
+    max-width: 40rem;
+    margin-top: 2.5rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--rule);
+  }
+
+  .story-body :global(p) {
+    max-width: 65ch;
+  }
+
+  /* Drop cap on the first paragraph only (O nás is the only page with one). */
+  .story-body :global(p:first-of-type::first-letter) {
+    float: left;
+    font-family: var(--font-display);
+    font-weight: var(--display-weight);
+    font-size: 4.25em;
+    line-height: 0.8;
+    padding: 0.08em 0.1em 0 0;
+    color: var(--accent);
+  }
+
+  @media (min-width: 64rem) {
+    .story {
+      padding-top: 4rem;
+    }
+  }
+</style>

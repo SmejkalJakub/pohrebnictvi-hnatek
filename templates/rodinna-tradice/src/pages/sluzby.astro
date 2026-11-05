@@ -1,0 +1,229 @@
+---
+/**
+ * Služby: ONE long page (serviceDetailPages: false). Category sections with ASCII anchors,
+ * a left-margin contents list on desktop, each service a heading plus prose body, with an
+ * optional half-width image alternating left and right.
+ */
+import { Image } from "astro:assets";
+import LetterLayout from "../layouts/LetterLayout.astro";
+import PageIntro from "../components/PageIntro.astro";
+import MarginToc, { type TocItem } from "../components/MarginToc.astro";
+import ShiftedBody from "../components/ShiftedBody.astro";
+import PlaceholderMark from "@core/components/PlaceholderMark.astro";
+import { getPage, getServices, getSiteContext, render } from "@core/content/load.ts";
+import { SERVICE_CATEGORIES } from "@core/content/schemas.ts";
+import { resolveOptionalImage } from "@core/media/resolve.ts";
+import { SERVICE_CATEGORY_ANCHOR, SERVICE_CATEGORY_LABEL, ui } from "../i18n/cs.ts";
+import { widthsFor } from "../lib/content.ts";
+
+const site = await getSiteContext();
+const page = await getPage("sluzby");
+const services = await getServices();
+const serviceIds = new Set(services.map((service) => service.id));
+
+function categoryAnchor(category: (typeof SERVICE_CATEGORIES)[number]): string {
+  const anchor = SERVICE_CATEGORY_ANCHOR[category];
+  if (serviceIds.has(anchor)) {
+    return `${anchor}-prehled`;
+  }
+  return anchor;
+}
+
+let imageIndex = 0;
+const categories = await Promise.all(
+  SERVICE_CATEGORIES.map(async (category) => {
+    const inCategory = services.filter((service) => service.data.category === category);
+    const items = await Promise.all(
+      inCategory.map(async (service) => {
+        const { Content } = await render(service);
+        return { service, Content, image: resolveOptionalImage(service.data.image) };
+      }),
+    );
+    return { category, anchor: categoryAnchor(category), label: SERVICE_CATEGORY_LABEL[category], items };
+  }),
+);
+const filled = categories.filter((group) => group.items.length > 0);
+const withSide = filled.map((group) => ({
+  ...group,
+  items: group.items.map((item) => {
+    let side: "left" | "right" | null = null;
+    if (item.image !== null) {
+      if (imageIndex % 2 === 0) {
+        side = "right";
+      } else {
+        side = "left";
+      }
+      imageIndex += 1;
+    }
+    return { ...item, side };
+  }),
+}));
+const toc: TocItem[] = withSide.map((group) => ({
+  href: `#${group.anchor}`,
+  label: group.label,
+  children: group.items.map((item) => ({ href: `#${item.service.id}`, label: item.service.data.title })),
+}));
+---
+<LetterLayout site={site} title={page.data.metaTitle ?? page.data.title} description={page.data.metaDescription}>
+  <PageIntro title={page.data.title} lead={page.data.lead} placeholder={page.data.placeholder}>
+    <div class="prose intro-body">
+      <page.Content />
+    </div>
+  </PageIntro>
+
+  <div class="frame services-grid">
+    <div class="services-toc">
+      <MarginToc items={toc} />
+    </div>
+    <div class="services" data-services-long-page>
+      {
+        withSide.map((group) => (
+          <section class="category" id={group.anchor} aria-labelledby={`${group.anchor}-nadpis`} data-category={group.category}>
+            <h2 id={`${group.anchor}-nadpis`} class="category-heading">
+              {group.label}
+            </h2>
+            {group.items.map(({ service, Content, image, side }) => (
+              <article class="service" id={service.id} aria-labelledby={`${service.id}-nadpis`} data-service={service.id}>
+                <PlaceholderMark active={service.data.placeholder} kind="content">
+                  <h3 id={`${service.id}-nadpis`} class="service-heading">
+                    {service.data.title}
+                  </h3>
+                  {image !== null ? (
+                    <figure class:list={["service-figure", `figure-${side}`]}>
+                      <PlaceholderMark active={image.isPlaceholder} kind="image">
+                        <Image
+                          src={image.src}
+                          alt={image.alt}
+                          widths={widthsFor(image.src, [360, 560, 760])}
+                          sizes="(min-width: 48rem) 20rem, 100vw"
+                          class="service-image"
+                          style={`object-position: ${image.objectPosition}`}
+                        />
+                      </PlaceholderMark>
+                      {image.caption !== null ? <figcaption class="caption">{image.caption}</figcaption> : null}
+                    </figure>
+                  ) : null}
+                  <p class="service-summary">{service.data.summary}</p>
+                  <ShiftedBody by={2} idPrefix={service.id}>
+                    <Content />
+                  </ShiftedBody>
+                  {service.data.priceGroupId !== null && site.pricingVisible ? (
+                    <p class="service-prices">
+                      <a class="more-link" href={`/cenik/#${service.data.priceGroupId}`}>
+                        {ui.relatedPrices}
+                      </a>
+                    </p>
+                  ) : null}
+                </PlaceholderMark>
+              </article>
+            ))}
+          </section>
+        ))
+      }
+    </div>
+  </div>
+</LetterLayout>
+
+<style>
+  .intro-body:not(:empty) {
+    margin-top: 1.5rem;
+  }
+
+  .services-grid {
+    display: grid;
+    gap: 2rem;
+  }
+
+  .services {
+    max-width: 44rem;
+  }
+
+  .category {
+    padding-top: 2rem;
+    border-top: 1px solid var(--rule);
+  }
+
+  .category + .category {
+    margin-top: 2.5rem;
+  }
+
+  .category-heading {
+    margin-bottom: 0.5rem;
+  }
+
+  .service {
+    padding-block: 1.5rem;
+    display: flow-root;
+  }
+
+  .service + .service {
+    border-top: 1px dotted var(--rule);
+  }
+
+  .service-heading {
+    margin-bottom: 0.5rem;
+  }
+
+  .service-summary {
+    font-family: var(--font-caption);
+    font-style: italic;
+    font-size: var(--caption-size);
+    color: var(--muted);
+    max-width: var(--measure);
+    margin-bottom: 0.75rem;
+  }
+
+  .service-figure {
+    margin: 0.5rem 0 1.25rem;
+  }
+
+  .service :global(.service-image) {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+  }
+
+  .service-figure figcaption {
+    margin-top: 0.375rem;
+  }
+
+  .service-prices {
+    margin-top: 0.5rem;
+  }
+
+  @media (min-width: 48rem) {
+    .service-figure {
+      width: 50%;
+      max-width: 22rem;
+    }
+
+    .figure-right {
+      float: right;
+      margin-left: 2rem;
+    }
+
+    .figure-left {
+      float: left;
+      margin-right: 2rem;
+    }
+  }
+
+  @media (min-width: 64rem) {
+    .services-grid {
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      column-gap: 2rem;
+      align-items: start;
+    }
+
+    .services-toc {
+      grid-column: 1 / span 3;
+      align-self: stretch;
+    }
+
+    .services {
+      grid-column: 4 / span 8;
+    }
+  }
+</style>

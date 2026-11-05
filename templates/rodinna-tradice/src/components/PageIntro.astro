@@ -1,0 +1,55 @@
+---
+/**
+ * Page opening: small caps label, H1 and lead, set on the offset text column.
+ * The placeholder flag wraps the intro when the page is placeholder content.
+ */
+import PlaceholderMark from "@core/components/PlaceholderMark.astro";
+
+interface Props {
+  title: string;
+  lead: string | null;
+  label?: string | null;
+  placeholder: boolean;
+}
+
+const { title, lead, label = null, placeholder } = Astro.props;
+---
+<div class="intro frame">
+  <div class="intro-text">
+    <PlaceholderMark active={placeholder} kind="content">
+      {label !== null ? <p class="label intro-label">{label}</p> : null}
+      <h1>{title}</h1>
+      {lead !== null ? <p class="lead intro-lead">{lead}</p> : null}
+    </PlaceholderMark>
+    <slot />
+  </div>
+</div>
+
+<style>
+  .intro {
+    padding-top: 2.5rem;
+    padding-bottom: 2rem;
+  }
+
+  .intro-label {
+    margin-bottom: 0.75rem;
+  }
+
+  .intro-lead {
+    margin-top: 1.25rem;
+  }
+
+  @media (min-width: 64rem) {
+    .intro {
+      display: grid;
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      column-gap: 2rem;
+      padding-top: 4rem;
+      padding-bottom: 3rem;
+    }
+
+    .intro-text {
+      grid-column: 4 / span 8;
+    }
+  }
+</style>

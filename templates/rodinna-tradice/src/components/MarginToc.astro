@@ -1,0 +1,103 @@
+---
+/**
+ * In-page table of contents for the left margin. Sticky on desktop; on mobile it is a plain
+ * list at the top of the article.
+ */
+import { ui } from "../i18n/cs.ts";
+
+export interface TocItem {
+  href: string;
+  label: string;
+  number?: string;
+  children?: { href: string; label: string }[];
+}
+
+interface Props {
+  items: TocItem[];
+  label?: string;
+}
+
+const { items, label = ui.pageContents } = Astro.props;
+---
+<nav class="toc" aria-label={label} data-margin-toc>
+  <p class="label toc-label" aria-hidden="true">{label}</p>
+  <ol class="toc-list">
+    {
+      items.map((item) => (
+        <li>
+          <a href={item.href}>
+            {item.number !== undefined ? <span class="toc-num">{item.number}</span> : null}
+            <span>{item.label}</span>
+          </a>
+          {item.children !== undefined && item.children.length > 0 ? (
+            <ol class="toc-sub">
+              {item.children.map((child) => (
+                <li>
+                  <a href={child.href}>{child.label}</a>
+                </li>
+              ))}
+            </ol>
+          ) : null}
+        </li>
+      ))
+    }
+  </ol>
+</nav>
+
+<style>
+  .toc {
+    border-top: 1px solid var(--rule);
+    border-bottom: 1px solid var(--rule);
+    padding-block: 1rem;
+    font-size: 0.9375rem;
+    line-height: 1.4;
+  }
+
+  .toc-label {
+    margin-bottom: 0.5rem;
+  }
+
+  .toc a {
+    display: flex;
+    gap: 0.5rem;
+    align-items: baseline;
+    padding-block: 0.375rem;
+    min-height: 1.75rem;
+    color: var(--ink);
+    text-decoration: none;
+  }
+
+  .toc a:hover {
+    color: var(--accent);
+    text-decoration: underline;
+  }
+
+  .toc-num {
+    font-family: var(--font-caption);
+    font-style: italic;
+    color: var(--accent);
+    min-width: 1.25rem;
+  }
+
+  .toc-sub {
+    padding-left: 1rem;
+    border-left: 1px solid var(--rule);
+    margin-left: 0.25rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .toc-sub a {
+    color: var(--muted);
+    font-size: 0.875rem;
+  }
+
+  @media (min-width: 64rem) {
+    .toc {
+      position: sticky;
+      top: var(--sticky-offset);
+      max-height: calc(100vh - var(--sticky-offset) - 2rem);
+      overflow-y: auto;
+      border-bottom: 0;
+    }
+  }
+</style>

@@ -1,0 +1,176 @@
+---
+/**
+ * Editorial hero: asymmetric two columns. Left: H1, lead, optional inline emergency line
+ * (emphasis "high"), home body. Right: a 4:5 portrait photograph (heroVariant "photo-right"
+ * with an image) or the TraditionPanel.
+ */
+import { Image } from "astro:assets";
+import EmergencyPhoneLink from "@core/components/EmergencyPhoneLink.astro";
+import PlaceholderMark from "@core/components/PlaceholderMark.astro";
+import type { SiteContext } from "@core/content/view-models.ts";
+import type { ResolvedImage } from "@core/media/resolve.ts";
+import TraditionPanel from "./TraditionPanel.astro";
+import { widthsFor } from "../lib/content.ts";
+
+interface Props {
+  site: SiteContext;
+  title: string;
+  lead: string | null;
+  image: ResolvedImage | null;
+  variant: "photo-right" | "typographic";
+  emphasis: "standard" | "high";
+  placeholder: boolean;
+}
+
+const { site, title, lead, image, variant, emphasis, placeholder } = Astro.props;
+let photo: ResolvedImage | null = null;
+if (variant === "photo-right") {
+  photo = image;
+}
+const showEmergencyLine = emphasis === "high" && site.emergency.enabled;
+---
+<section class="hero frame" aria-labelledby="uvod-nadpis" data-hero data-hero-variant={variant}>
+  <div class="hero-text">
+    <PlaceholderMark active={placeholder} kind="content">
+      <h1 id="uvod-nadpis">{title}</h1>
+      {lead !== null ? <p class="lead hero-lead">{lead}</p> : null}
+    </PlaceholderMark>
+    {
+      showEmergencyLine ? (
+        <p class="hero-emergency" data-hero-emergency>
+          <EmergencyPhoneLink emergency={site.emergency} variant="full" class="hero-emergency-link" />
+        </p>
+      ) : null
+    }
+    <div class="hero-body">
+      <slot />
+    </div>
+  </div>
+  <div class="hero-aside">
+    {
+      photo !== null ? (
+        <figure class="hero-figure">
+          <PlaceholderMark active={photo.isPlaceholder} kind="image">
+            <Image
+              src={photo.src}
+              alt={photo.alt}
+              widths={widthsFor(photo.src, [420, 640, 860])}
+              sizes="(min-width: 64rem) 30rem, 100vw"
+              loading="eager"
+              fetchpriority="high"
+              class="hero-image"
+              style={`object-position: ${photo.objectPosition}`}
+            />
+          </PlaceholderMark>
+          {photo.caption !== null || photo.credit !== null ? (
+            <figcaption class="caption hero-caption">
+              {photo.caption}
+              {photo.credit !== null ? <span class="hero-credit">{photo.credit}</span> : null}
+            </figcaption>
+          ) : null}
+        </figure>
+      ) : (
+        <TraditionPanel site={site} />
+      )
+    }
+  </div>
+</section>
+
+<style>
+  .hero {
+    display: grid;
+    gap: 2rem;
+    padding-top: 2.5rem;
+    padding-bottom: 3rem;
+  }
+
+  .hero-lead {
+    margin-top: 1.25rem;
+  }
+
+  .hero-emergency {
+    margin-top: 1.5rem;
+    padding: 0.75rem 1rem;
+    border-left: 4px solid var(--strip-bg);
+    background: var(--surface);
+    max-width: var(--measure);
+  }
+
+  .hero :global(.hero-emergency-link) {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    column-gap: 0.75rem;
+    min-height: 2.75rem;
+    color: var(--ink);
+    text-decoration: none;
+  }
+
+  .hero :global(.hero-emergency-link [data-part="label"]) {
+    font-weight: 600;
+  }
+
+  .hero :global(.hero-emergency-link [data-part="number"]) {
+    color: var(--accent);
+    font-size: 1.5rem;
+    font-weight: 600;
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.2em;
+    white-space: nowrap;
+  }
+
+  .hero-body:not(:empty) {
+    margin-top: 2rem;
+  }
+
+  .hero-body :global(h2) {
+    font-size: 1.75rem;
+  }
+
+  .hero-figure {
+    margin: 0;
+  }
+
+  .hero :global(.hero-image) {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 4 / 5;
+    object-fit: cover;
+    display: block;
+  }
+
+  .hero-caption {
+    margin-top: 0.5rem;
+  }
+
+  .hero-credit {
+    display: block;
+    font-size: 0.875rem;
+  }
+
+  @media (max-width: 47.99rem) {
+    .hero :global(.hero-image) {
+      aspect-ratio: 4 / 3;
+    }
+  }
+
+  @media (min-width: 64rem) {
+    .hero {
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      column-gap: 2rem;
+      align-items: start;
+      padding-top: 4rem;
+      padding-bottom: 5rem;
+    }
+
+    .hero-text {
+      grid-column: 1 / span 7;
+      padding-top: 2rem;
+    }
+
+    .hero-aside {
+      grid-column: 9 / span 4;
+    }
+  }
+</style>

@@ -1,0 +1,389 @@
+/*
+ * Rodinná tradice: global tokens, base typography and the styling of core's headless
+ * safety components (addressed through their data-* attributes; their text is never hidden).
+ * Composition lives in each component's scoped <style>.
+ */
+@import "tailwindcss";
+
+/* ------------------------------------------------------------------ */
+/* Palettes (design-differentiation §2.3, §8). Selected on <html>.     */
+/* ------------------------------------------------------------------ */
+:root,
+[data-palette="ivory-umber"] {
+  --paper: #f7f2e8;
+  --surface: #efe7d8;
+  --ink: #2b2722;
+  --muted: #5c544a;
+  --accent: #6b3f2a;
+  --rule: #8c7b64; /* non-text only: 3.67:1 on paper */
+  --strip-bg: #2b2722;
+  --strip-fg: #f7f2e8;
+  --flag-bg: #f3e2b3;
+  --flag-line: #7a5b12;
+}
+
+[data-palette="ivory-olive"] {
+  --accent: #4f5a3a; /* 6.6:1 on paper */
+}
+
+[data-palette="ivory-forest"] {
+  --accent: #1f3d2e; /* 10.7:1 on paper; harmonises with dark-green client logos */
+  --strip-bg: #1f3d2e;
+}
+
+/* ------------------------------------------------------------------ */
+/* Font pairs. "literata" is an all-serif book pair (Literata at optical    */
+/* display weight for headings). Cormorant Garamond was the doc candidate   */
+/* but positions Czech accents badly; see docs/notes/s3-rodinna-tradice.md. */
+/* ------------------------------------------------------------------ */
+:root,
+[data-fonts="garamond-source"] {
+  --font-display: "EB Garamond", "Iowan Old Style", Georgia, serif;
+  --display-weight: 500;
+  --display-tracking: -0.005em;
+  --font-subhead: "EB Garamond", "Iowan Old Style", Georgia, serif;
+  --subhead-weight: 500;
+  --subhead-size: 1.375rem;
+  --font-body: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
+  --body-size: 1.125rem;
+  --body-leading: 1.65;
+  --font-caption: "EB Garamond", "Iowan Old Style", Georgia, serif;
+  --caption-size: 1.125rem;
+}
+
+[data-fonts="literata"] {
+  --font-display: "Literata", Georgia, serif;
+  --display-weight: 500;
+  --display-tracking: -0.02em;
+  --font-subhead: "Literata", Georgia, serif;
+  --subhead-weight: 600;
+  --subhead-size: 1.1875rem;
+  --font-body: "Literata", Georgia, serif;
+  --body-size: 1.0625rem;
+  --body-leading: 1.7;
+  --font-caption: "Literata", Georgia, serif;
+  --caption-size: 1rem;
+}
+
+:root {
+  --page-max: 78rem;
+  --gutter: 1rem;
+  --measure: 38rem;
+  --sticky-offset: 3.5rem;
+}
+
+@media (min-width: 48rem) {
+  :root {
+    --gutter: 2rem;
+  }
+}
+
+@media (min-width: 64rem) {
+  :root {
+    --gutter: 3rem;
+    --sticky-offset: 1.5rem;
+  }
+
+  [data-emphasis="high"] {
+    --sticky-offset: 5rem;
+  }
+}
+
+@theme inline {
+  --color-paper: var(--paper);
+  --color-surface: var(--surface);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-rule: var(--rule);
+}
+
+/* ------------------------------------------------------------------ */
+/* Base                                                                 */
+/* ------------------------------------------------------------------ */
+@layer base {
+  html {
+    background: var(--paper);
+    color: var(--ink);
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    font-family: var(--font-body);
+    font-size: var(--body-size);
+    line-height: var(--body-leading);
+    background: var(--paper);
+    color: var(--ink);
+    font-kerning: normal;
+    font-variant-numeric: lining-nums;
+    overflow-wrap: break-word;
+  }
+
+  h1,
+  h2 {
+    font-family: var(--font-display);
+    font-weight: var(--display-weight);
+    color: var(--ink);
+    text-wrap: balance;
+  }
+
+  h1 {
+    font-size: clamp(2.25rem, 1.55rem + 3vw, 3.5rem);
+    line-height: 1.1;
+    letter-spacing: var(--display-tracking);
+  }
+
+  h2 {
+    font-size: clamp(1.75rem, 1.5rem + 1vw, 2.25rem);
+    line-height: 1.2;
+  }
+
+  h3,
+  h4 {
+    font-family: var(--font-subhead);
+    font-weight: var(--subhead-weight);
+    line-height: 1.3;
+    text-wrap: balance;
+  }
+
+  h3 {
+    font-size: var(--subhead-size);
+  }
+
+  h4 {
+    font-size: 1.0625rem;
+  }
+
+  a {
+    color: var(--accent);
+    text-decoration-line: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.2em;
+  }
+
+  a:hover {
+    text-decoration-thickness: 2px;
+  }
+
+  :focus-visible {
+    outline: 3px solid var(--accent);
+    outline-offset: 3px;
+    border-radius: 1px;
+  }
+
+  [id] {
+    scroll-margin-top: calc(var(--sticky-offset) + 1rem);
+  }
+
+  hr {
+    border: 0;
+    border-top: 1px solid var(--rule);
+  }
+
+  address {
+    font-style: normal;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Shared typographic devices                                           */
+/* ------------------------------------------------------------------ */
+@layer components {
+  .frame {
+    width: 100%;
+    max-width: var(--page-max);
+    margin-inline: auto;
+    padding-inline: var(--gutter);
+  }
+
+  /* Small caps section label, e.g. "SLUŽBY". */
+  .label {
+    display: block;
+    font-family: var(--font-body);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    line-height: 1.4;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  .lead {
+    font-size: 1.25rem;
+    line-height: 1.55;
+    color: var(--ink);
+    max-width: var(--measure);
+  }
+
+  [data-fonts="literata"] .lead {
+    font-size: 1.1875rem;
+  }
+
+  .prose {
+    max-width: var(--measure);
+  }
+
+  .prose > * + * {
+    margin-top: 1em;
+  }
+
+  .prose h2 {
+    margin-top: 2.25rem;
+  }
+
+  .prose h3,
+  .prose h4 {
+    margin-top: 1.75rem;
+  }
+
+  .prose h2 + *,
+  .prose h3 + *,
+  .prose h4 + * {
+    margin-top: 0.5rem;
+  }
+
+  .prose ul {
+    list-style: disc;
+    padding-left: 1.25em;
+  }
+
+  .prose ol {
+    list-style: decimal;
+    padding-left: 1.4em;
+  }
+
+  .prose li + li {
+    margin-top: 0.35em;
+  }
+
+  .prose li::marker {
+    color: var(--muted);
+  }
+
+  .prose strong {
+    font-weight: 600;
+  }
+
+  .prose blockquote {
+    border-left: 1px solid var(--rule);
+    padding-left: 1.25rem;
+    font-family: var(--font-caption);
+    font-style: italic;
+  }
+
+  .muted {
+    color: var(--muted);
+  }
+
+  .caption {
+    font-family: var(--font-caption);
+    font-style: italic;
+    font-size: var(--caption-size);
+    line-height: 1.45;
+    color: var(--muted);
+  }
+
+  /* An inline "→" link. */
+  .more-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.75rem;
+    font-weight: 600;
+  }
+
+  .more-link::after {
+    content: "\00a0→";
+    text-decoration: none;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Core safety components (headless): visible review flags              */
+/* ------------------------------------------------------------------ */
+@layer components {
+  [data-prototype-banner] {
+    background: var(--flag-bg);
+    color: var(--ink);
+    border-bottom: 1px dashed var(--flag-line);
+    font-family: var(--font-body);
+    font-size: 0.875rem;
+    line-height: 1.4;
+    padding: 0.5rem var(--gutter);
+    text-align: center;
+  }
+
+  [data-placeholder-label],
+  [data-missing-fact],
+  [data-demo-label],
+  [data-review-flag] {
+    display: inline-block;
+    background: var(--flag-bg);
+    color: var(--ink);
+    border: 1px dashed var(--flag-line);
+    font-family: var(--font-body);
+    font-size: 0.75rem;
+    font-style: normal;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    line-height: 1.4;
+    padding: 0.0625rem 0.4rem;
+    text-transform: uppercase;
+    vertical-align: 0.15em;
+    white-space: nowrap;
+  }
+
+  [data-missing-fact] {
+    text-transform: none;
+    letter-spacing: 0;
+    white-space: normal;
+  }
+
+  [data-placeholder="content"] > [data-placeholder-label] {
+    margin-bottom: 0.5rem;
+  }
+
+  [data-placeholder="image"] {
+    position: relative;
+    display: block;
+  }
+
+  [data-placeholder="image"] > [data-placeholder-label] {
+    position: absolute;
+    top: 0.5rem;
+    left: 0.5rem;
+    z-index: 1;
+  }
+
+  [data-demo-pricing-notice] {
+    border: 1px solid var(--rule);
+    border-left: 4px solid var(--accent);
+    background: var(--surface);
+    padding: 1rem 1.25rem;
+    max-width: var(--measure);
+  }
+
+  [data-price] {
+    font-variant-numeric: tabular-nums lining-nums;
+    white-space: nowrap;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Print-safe basics                                                    */
+/* ------------------------------------------------------------------ */
+@media print {
+  :root {
+    --paper: #ffffff;
+    --surface: #ffffff;
+    --strip-bg: #ffffff;
+    --strip-fg: #000000;
+  }
+
+  body {
+    font-size: 11pt;
+  }
+
+  a {
+    color: inherit;
+  }
+}

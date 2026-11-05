@@ -1,0 +1,38 @@
+---
+/** "Navštivte nás": letter-style address and office hours side by side, emergency block below. */
+import { getSiteContext } from "@core/content/load.ts";
+import AddressCard from "./AddressCard.astro";
+import HoursLetter from "./HoursLetter.astro";
+import MarginSection from "./MarginSection.astro";
+import NonstopPanel from "./NonstopPanel.astro";
+import { ui } from "../i18n/cs.ts";
+
+const site = await getSiteContext();
+---
+<MarginSection id="navstivte-nas" label={ui.sectionLabelVisit} heading={ui.visitHeading} section="contact-summary">
+  <div class="visit">
+    <AddressCard site={site} id="uvod-adresa" level={3} look="letter" phones="all" />
+    <HoursLetter site={site} id="uvod-hodiny" level={3} />
+  </div>
+  <div class="visit-nonstop">
+    <NonstopPanel site={site} id="uvod-nonstop" level={3} />
+  </div>
+</MarginSection>
+
+<style>
+  .visit {
+    display: grid;
+    gap: 2rem;
+  }
+
+  .visit-nonstop {
+    margin-top: 2.5rem;
+  }
+
+  @media (min-width: 48rem) {
+    .visit {
+      grid-template-columns: 1fr 1fr;
+      column-gap: 3rem;
+    }
+  }
+</style>
