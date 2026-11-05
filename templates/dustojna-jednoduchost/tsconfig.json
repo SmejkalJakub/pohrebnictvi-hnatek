@@ -1,0 +1,17 @@
+{
+  "extends": "astro/tsconfigs/strict",
+  "compilerOptions": {
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
+    "paths": { "@core/*": ["../../core/*"] }
+  },
+  "include": [
+    ".astro/types.d.ts",
+    "src",
+    "template.manifest.ts",
+    "fixture.site.config.ts",
+    "../../core/**/*.ts",
+    "../../core/**/*.astro"
+  ],
+  "exclude": ["dist", "../../core/cli", "../../core/tests"]
+}

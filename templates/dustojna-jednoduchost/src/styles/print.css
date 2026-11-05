@@ -1,0 +1,106 @@
+/*
+ * PrintStyles: every page prints as plain black-on-white text with the contact numbers
+ * at the top. On /jak-postupovat/ all steps print expanded with empty checkboxes.
+ */
+@media print {
+  @page {
+    margin: 16mm 14mm;
+  }
+
+  :root {
+    --c-bg: #ffffff;
+    --c-surface: #ffffff;
+    --c-band: #ffffff;
+    --c-ink: #000000;
+    --c-muted: #222222;
+    --c-accent: #000000;
+    --c-hair: #999999;
+    --bar-h: 0rem;
+  }
+
+  html,
+  body {
+    background: #ffffff !important;
+    color: #000000;
+    font-size: 11pt;
+    line-height: 1.45;
+  }
+
+  body {
+    padding-bottom: 0 !important;
+    display: block;
+  }
+
+  [data-no-print],
+  [data-prototype-banner],
+  .skip-link,
+  .site-nav,
+  .menu-toggle,
+  .mobile-action-bar,
+  .details-b {
+    display: none !important;
+  }
+
+  .print-only {
+    display: block !important;
+  }
+
+  .site-header {
+    position: static !important;
+    border-bottom: 1px solid #000000;
+  }
+
+  .band {
+    padding-block: 0.5rem !important;
+    border: 0 !important;
+  }
+
+  a {
+    color: #000000;
+    text-decoration: none;
+  }
+
+  .btn {
+    border: 0 !important;
+    background: none !important;
+    color: #000000 !important;
+    padding: 0 !important;
+    min-height: 0 !important;
+  }
+
+  h1 {
+    font-size: 20pt;
+  }
+
+  h2 {
+    font-size: 15pt;
+    break-after: avoid;
+  }
+
+  h3 {
+    font-size: 12.5pt;
+    break-after: avoid;
+  }
+
+  .guidance-entry {
+    break-inside: avoid;
+    border-color: #999999 !important;
+  }
+
+  .checklist-b li::before {
+    border-color: #000000;
+  }
+
+  [data-placeholder-label],
+  [data-missing-fact],
+  [data-demo-label],
+  .review-flag {
+    background: none;
+    border: 1px solid #000000;
+    color: #000000;
+  }
+
+  img {
+    max-width: 50% !important;
+  }
+}
