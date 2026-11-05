@@ -1,0 +1,19 @@
+---
+/**
+ * Renders a Markdown body (passed as the default slot) with its headings shifted down, for
+ * bodies nested under an h2/h3 (bodies start at ## per content-contract §7.3).
+ */
+import { prefixIds, shiftHeadings } from "../lib/content.ts";
+
+interface Props {
+  by: number;
+  /** Namespace for heading ids when several bodies share a page. */
+  idPrefix?: string | null;
+  class?: string;
+}
+
+const { by, idPrefix = null, class: className } = Astro.props;
+const html = await Astro.slots.render("default");
+const shifted = prefixIds(shiftHeadings(html, by), idPrefix);
+---
+<div class:list={["prose", className]} set:html={shifted} />

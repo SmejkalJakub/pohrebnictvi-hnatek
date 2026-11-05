@@ -1,0 +1,147 @@
+---
+/**
+ * Office hours block. Always its own container with its own heading (officeHours.label);
+ * never contains the emergency line (template-contract §6 invariant 2).
+ */
+import MissingFact from "@core/components/MissingFact.astro";
+import type { SiteContext } from "@core/content/view-models.ts";
+import { formatTime } from "@core/format/hours.ts";
+import { formatCzechDate } from "../lib/content.ts";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  site: SiteContext;
+  level?: 2 | 3;
+  id: string;
+  /** "plain" sits in running text; "letter" adds the hairline frame used on Kontakt. */
+  look?: "plain" | "letter";
+}
+
+const { site, level = 2, id, look = "plain" } = Astro.props;
+const Heading = `h${level}` as "h2" | "h3";
+const hours = site.officeHours;
+const rows = site.officeHoursRows;
+const isEmpty = hours.weekly.length === 0;
+const headingId = `${id}-nadpis`;
+
+function exceptionText(exception: (typeof hours.exceptions)[number]): string {
+  if (exception.closed) {
+    return ui.closed;
+  }
+  if (exception.open !== null && exception.close !== null) {
+    return `${ui.exceptionOpen} ${formatTime(exception.open)}–${formatTime(exception.close)}`;
+  }
+  return "";
+}
+
+function exceptionDates(exception: (typeof hours.exceptions)[number]): string {
+  if (exception.from === exception.to) {
+    return formatCzechDate(exception.from);
+  }
+  return `${formatCzechDate(exception.from)} – ${formatCzechDate(exception.to)}`;
+}
+---
+<section class:list={["hours", `hours-${look}`]} aria-labelledby={headingId} data-office-hours>
+  <Heading id={headingId} class="hours-heading">{hours.label}</Heading>
+  {
+    isEmpty ? (
+      <p>
+        <MissingFact name="úřední hodiny" />
+      </p>
+    ) : (
+      <dl class="hours-list">
+        {rows.map((row) => (
+          <div class="hours-row" data-closed={row.closed ? "true" : undefined}>
+            <dt>
+              <abbr title={row.daysLong}>{row.days}</abbr>
+            </dt>
+            <dd>
+              <span class="hours-time">{row.text}</span>
+              {row.note !== null ? <span class="hours-note">({row.note})</span> : null}
+            </dd>
+          </div>
+        ))}
+      </dl>
+    )
+  }
+  {hours.holidayNote !== null ? <p class="hours-extra">{hours.holidayNote}</p> : null}
+  {
+    hours.exceptions.length > 0 ? (
+      <div class="hours-exceptions">
+        <p class="hours-extra-title">{ui.holidayExceptions}</p>
+        <ul>
+          {hours.exceptions.map((exception) => (
+            <li>
+              {exceptionDates(exception)}: {exceptionText(exception)}
+              {exception.note !== null ? ` – ${exception.note}` : null}
+            </li>
+          ))}
+        </ul>
+      </div>
+    ) : null
+  }
+  {hours.outsideHoursNote !== null ? <p class="hours-extra">{hours.outsideHoursNote}</p> : null}
+</section>
+
+<style>
+  .hours-heading {
+    margin-bottom: 0.75rem;
+  }
+
+  h2.hours-heading {
+    font-size: clamp(1.75rem, 1.5rem + 0.6vw, 2rem);
+  }
+
+  .hours-list {
+    display: grid;
+    gap: 0.25rem;
+  }
+
+  .hours-row {
+    display: grid;
+    grid-template-columns: 4.5rem 1fr;
+    gap: 0.75rem;
+    padding-block: 0.375rem;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .hours-row:last-child {
+    border-bottom: 0;
+  }
+
+  dt abbr {
+    text-decoration: none;
+    font-weight: 600;
+  }
+
+  .hours-time {
+    font-variant-numeric: tabular-nums lining-nums;
+  }
+
+  .hours-row[data-closed] .hours-time {
+    color: var(--muted);
+  }
+
+  .hours-note {
+    display: block;
+    color: var(--muted);
+    font-size: 0.9375em;
+  }
+
+  .hours-extra,
+  .hours-exceptions {
+    margin-top: 0.75rem;
+    color: var(--muted);
+    font-size: 0.9375em;
+  }
+
+  .hours-extra-title {
+    font-weight: 600;
+    color: var(--ink);
+  }
+
+  .hours-letter {
+    border-top: 1px solid var(--rule);
+    padding-top: 1.25rem;
+  }
+</style>

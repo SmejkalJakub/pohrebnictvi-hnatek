@@ -1,0 +1,77 @@
+---
+// Conditional route (template-contract §4): no file is emitted when pricing is hidden.
+import LetterLayout from "../../layouts/LetterLayout.astro";
+import PageIntro from "../../components/PageIntro.astro";
+import DotLeaderPriceList from "../../components/DotLeaderPriceList.astro";
+import DemoPricingNotice from "@core/components/DemoPricingNotice.astro";
+import { getPage, getPricing, getSiteContext } from "@core/content/load.ts";
+import { formatCzechDate } from "../../lib/content.ts";
+import { ui } from "../../i18n/cs.ts";
+
+export async function getStaticPaths() {
+  const pricing = await getPricing();
+  if (pricing === null) {
+    return [];
+  }
+  return [{ params: { path: undefined } }];
+}
+
+const site = await getSiteContext();
+const page = await getPage("cenik");
+const pricing = await getPricing();
+if (pricing === null) {
+  throw new Error("unreachable: pricing hidden");
+}
+---
+<LetterLayout
+  site={site}
+  title={page.data.metaTitle ?? page.data.title}
+  description={page.data.metaDescription}
+  noindex={pricing.hasDemo}
+>
+  <PageIntro title={page.data.title} lead={page.data.lead} placeholder={page.data.placeholder}>
+    <div class="prose intro-body">
+      <page.Content />
+    </div>
+  </PageIntro>
+  <div class="frame pricing" data-pricing>
+    <div class="pricing-col">
+      <DemoPricingNotice pricing={pricing} brandName={site.company.brandName} />
+      <div class="pricing-meta">
+        {pricing.validFrom !== null ? <p>{ui.validFrom} {formatCzechDate(pricing.validFrom)}</p> : null}
+        {pricing.vatNote !== null ? <p>{pricing.vatNote}</p> : null}
+      </div>
+      <DotLeaderPriceList pricing={pricing} />
+      {pricing.generalNote !== null ? <p class="caption pricing-note">{pricing.generalNote}</p> : null}
+    </div>
+  </div>
+</LetterLayout>
+
+<style>
+  .intro-body:not(:empty) {
+    margin-top: 1.5rem;
+  }
+
+  .pricing-meta {
+    margin-block: 1.25rem 2rem;
+    color: var(--muted);
+    font-size: 0.9375rem;
+  }
+
+  .pricing-note {
+    margin-top: 2.5rem;
+    max-width: 40rem;
+  }
+
+  @media (min-width: 64rem) {
+    .pricing {
+      display: grid;
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      column-gap: 2rem;
+    }
+
+    .pricing-col {
+      grid-column: 4 / span 8;
+    }
+  }
+</style>

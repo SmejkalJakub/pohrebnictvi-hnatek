@@ -1,0 +1,89 @@
+---
+/**
+ * Page shell for Rodinná tradice: prototype banner, skip link, dark utility strip
+ * (emergency CTA on every page), letterhead header, main, rich letter footer.
+ */
+import "../styles/fonts.css";
+import "../styles/global.css";
+import type { ImageMetadata } from "astro";
+import SeoHead from "@core/components/SeoHead.astro";
+import StructuredData from "@core/components/StructuredData.astro";
+import PrototypeBanner from "@core/components/PrototypeBanner.astro";
+import type { SiteContext } from "@core/content/view-models.ts";
+import UtilityStrip from "../components/UtilityStrip.astro";
+import LetterheadHeader from "../components/LetterheadHeader.astro";
+import RichFooter from "../components/RichFooter.astro";
+import { resolveOptions } from "../lib/options.ts";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  site: SiteContext;
+  /** Page title without the brand; null on the homepage. */
+  title?: string | null;
+  description: string;
+  noindex?: boolean;
+  image?: ImageMetadata | null;
+}
+
+const { site, title = null, description, noindex = false, image = null } = Astro.props;
+const options = resolveOptions(site.config.options);
+---
+<!doctype html>
+<html
+  lang="cs"
+  class="no-js"
+  data-palette={options.palette}
+  data-fonts={options.fontPair}
+  data-emphasis={options.emergencyEmphasis}
+  data-hero={options.heroVariant}
+>
+  <head>
+    <script is:inline>document.documentElement.classList.replace("no-js", "js");</script>
+    <SeoHead site={site} title={title} description={description} noindex={noindex} image={image} />
+    <meta name="theme-color" content="#2b2722" />
+    <StructuredData site={site} />
+  </head>
+  <body>
+    <PrototypeBanner />
+    <a class="skip-link" href="#obsah">{ui.skipLink}</a>
+    <UtilityStrip site={site} emphasis={options.emergencyEmphasis} />
+    <LetterheadHeader site={site} currentPath={Astro.url.pathname} />
+    <main id="obsah" tabindex="-1">
+      <slot />
+    </main>
+    <RichFooter site={site} />
+  </body>
+</html>
+
+<style>
+  .skip-link {
+    position: absolute;
+    left: var(--gutter);
+    top: -10rem;
+    z-index: 50;
+    background: var(--paper);
+    color: var(--accent);
+    padding: 0.75rem 1rem;
+    border: 2px solid var(--accent);
+    font-weight: 600;
+  }
+
+  .skip-link:focus {
+    top: 0.5rem;
+  }
+
+  main {
+    display: block;
+    padding-bottom: 4rem;
+  }
+
+  main:focus {
+    outline: none;
+  }
+
+  @media (min-width: 64rem) {
+    main {
+      padding-bottom: 6rem;
+    }
+  }
+</style>

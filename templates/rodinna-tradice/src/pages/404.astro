@@ -1,0 +1,82 @@
+---
+/** 404, including the emergency CTA (strip plus an inline line). */
+import LetterLayout from "../layouts/LetterLayout.astro";
+import EmergencyPhoneLink from "@core/components/EmergencyPhoneLink.astro";
+import { getSiteContext } from "@core/content/load.ts";
+import { ui } from "../i18n/cs.ts";
+
+const site = await getSiteContext();
+---
+<LetterLayout site={site} title={ui.notFoundTitle} description={ui.notFoundTitle} noindex>
+  <div class="frame missing">
+    <div class="missing-text">
+      <p class="label">404</p>
+      <h1>{ui.notFoundTitle}</h1>
+      <p class="lead missing-lead">{ui.notFoundText}</p>
+      <ul class="missing-links">
+        <li><a class="more-link" href="/">{ui.notFoundHome}</a></li>
+        <li><a class="more-link" href="/kontakt/">{ui.notFoundContact}</a></li>
+      </ul>
+      {
+        site.emergency.enabled ? (
+          <p class="missing-emergency">
+            <EmergencyPhoneLink emergency={site.emergency} variant="full" class="missing-emergency-link" />
+          </p>
+        ) : null
+      }
+    </div>
+  </div>
+</LetterLayout>
+
+<style>
+  .missing {
+    padding-top: 3rem;
+  }
+
+  .missing-text {
+    max-width: var(--measure);
+  }
+
+  .missing-text .label {
+    margin-bottom: 0.75rem;
+  }
+
+  .missing-lead {
+    margin-top: 1rem;
+  }
+
+  .missing-links {
+    margin-top: 1.5rem;
+    display: flex;
+    flex-wrap: wrap;
+    column-gap: 2rem;
+  }
+
+  .missing-emergency {
+    margin-top: 2rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--rule);
+  }
+
+  .missing :global(.missing-emergency-link) {
+    display: inline-flex;
+    flex-wrap: wrap;
+    column-gap: 0.75rem;
+    align-items: baseline;
+    min-height: 2.75rem;
+    font-weight: 600;
+  }
+
+  @media (min-width: 64rem) {
+    .missing {
+      padding-top: 5rem;
+      display: grid;
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      column-gap: 2rem;
+    }
+
+    .missing-text {
+      grid-column: 4 / span 7;
+    }
+  }
+</style>

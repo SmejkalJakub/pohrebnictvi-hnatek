@@ -1,0 +1,63 @@
+---
+/** Home: sections in site.config.homepage.sections order (default: hero → family-story →
+ * services → next-steps → contact-summary). */
+import LetterLayout from "../layouts/LetterLayout.astro";
+import EditorialHero from "../components/EditorialHero.astro";
+import HomeFamilyStory from "../components/HomeFamilyStory.astro";
+import ProseServiceGroups from "../components/ProseServiceGroups.astro";
+import HomeFirstSteps from "../components/HomeFirstSteps.astro";
+import HomeVisitUs from "../components/HomeVisitUs.astro";
+import HomeCatalogueLinks from "../components/HomeCatalogueLinks.astro";
+import { getPage, getSiteContext } from "@core/content/load.ts";
+import { resolveOptionalImage } from "@core/media/resolve.ts";
+import { resolveOptions } from "../lib/options.ts";
+
+const site = await getSiteContext();
+const home = await getPage("home");
+const options = resolveOptions(site.config.options);
+const hero = resolveOptionalImage(home.data.heroImage);
+const sections = site.config.homepage.sections;
+let ogImage = null;
+if (hero !== null && !hero.isPlaceholder) {
+  ogImage = hero.src;
+}
+---
+<LetterLayout site={site} title={home.data.metaTitle} description={home.data.metaDescription} image={ogImage}>
+  {
+    sections.map((section) => {
+      if (section === "hero") {
+        return (
+          <EditorialHero
+            site={site}
+            title={home.data.title}
+            lead={home.data.lead}
+            image={hero}
+            variant={options.heroVariant}
+            emphasis={options.emergencyEmphasis}
+            placeholder={home.data.placeholder}
+          >
+            <div class="prose">
+              <home.Content />
+            </div>
+          </EditorialHero>
+        );
+      }
+      if (section === "family-story") {
+        return <HomeFamilyStory />;
+      }
+      if (section === "services") {
+        return <ProseServiceGroups />;
+      }
+      if (section === "next-steps") {
+        return <HomeFirstSteps />;
+      }
+      if (section === "contact-summary") {
+        return <HomeVisitUs />;
+      }
+      if (section === "catalogue-links") {
+        return <HomeCatalogueLinks />;
+      }
+      return null;
+    })
+  }
+</LetterLayout>

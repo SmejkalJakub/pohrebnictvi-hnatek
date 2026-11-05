@@ -1,0 +1,32 @@
+---
+/** Family story excerpt (o-nas excerpt, falling back to its lead) and a "Více o nás" link. */
+import PlaceholderMark from "@core/components/PlaceholderMark.astro";
+import { getPage } from "@core/content/load.ts";
+import MarginSection from "./MarginSection.astro";
+import { ui } from "../i18n/cs.ts";
+
+const about = await getPage("o-nas");
+const text = about.data.excerpt ?? about.data.lead;
+---
+<MarginSection id="nas-pribeh" label={ui.sectionLabelStory} heading={about.data.title} section="family-story">
+  <PlaceholderMark active={about.data.placeholder} kind="content">
+    {text !== null ? <p class="story-text">{text}</p> : null}
+  </PlaceholderMark>
+  <p>
+    <a class="more-link" href="/o-nas/">{ui.moreAboutUs}</a>
+  </p>
+</MarginSection>
+
+<style>
+  .story-text {
+    font-family: var(--font-caption);
+    font-size: 1.375rem;
+    line-height: 1.55;
+    max-width: 36rem;
+    margin-bottom: 0.75rem;
+  }
+
+  :global([data-fonts="literata"]) .story-text {
+    font-size: 1.1875rem;
+  }
+</style>

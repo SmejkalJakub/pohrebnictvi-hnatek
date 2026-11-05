@@ -1,0 +1,49 @@
+---
+/** Shown on Rakve / Květiny when no entry is published (content-contract §7.1). */
+import PhoneLink from "@core/components/PhoneLink.astro";
+import type { SiteContext } from "@core/content/view-models.ts";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  site: SiteContext;
+  phoneDepartment?: "office" | "flowers";
+}
+
+const { site, phoneDepartment = "office" } = Astro.props;
+const phone =
+  site.contact.phones.find((candidate) => candidate.department === phoneDepartment) ??
+  site.contact.phones.find((candidate) => candidate.department === "office");
+---
+<div class="empty" data-catalogue-empty>
+  <p class="empty-title">{ui.catalogueEmpty}</p>
+  {
+    phone !== undefined ? (
+      <p>
+        {ui.catalogueEmptyContact} <PhoneLink number={phone.number} class="empty-phone" />
+      </p>
+    ) : null
+  }
+</div>
+
+<style>
+  .empty {
+    max-width: var(--measure);
+    border-block: 1px solid var(--rule);
+    padding-block: 1.5rem;
+  }
+
+  .empty-title {
+    font-family: var(--font-caption);
+    font-style: italic;
+    font-size: 1.375rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .empty :global(.empty-phone) {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+</style>

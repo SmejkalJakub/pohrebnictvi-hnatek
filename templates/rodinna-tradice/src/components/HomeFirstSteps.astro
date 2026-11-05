@@ -1,0 +1,84 @@
+---
+/**
+ * "Když zemře blízký člověk": a short narrative from first-hours guidance, with the
+ * emergency CTA repeated inline and a link to the full guide.
+ */
+import EmergencyPhoneLink from "@core/components/EmergencyPhoneLink.astro";
+import PlaceholderMark from "@core/components/PlaceholderMark.astro";
+import { getGuidance, getSiteContext } from "@core/content/load.ts";
+import MarginSection from "./MarginSection.astro";
+import { ui } from "../i18n/cs.ts";
+
+const site = await getSiteContext();
+const guidance = await getGuidance();
+let steps = guidance.filter((entry) => entry.data.phase === "first-hours");
+if (steps.length === 0) {
+  steps = guidance.slice(0, 3);
+}
+---
+<MarginSection id="prvni-kroky" label={ui.sectionLabelSteps} heading={ui.stepsHeading} section="next-steps" tone="surface">
+  <p class="steps-intro">{ui.stepsIntro}</p>
+  <div class="steps">
+    {
+      steps.map((entry) => (
+        <PlaceholderMark active={entry.data.placeholder} kind="content">
+          <div class="step" data-guidance={entry.id}>
+            <h3>
+              <a href={`/jak-postupovat/#${entry.id}`}>{entry.data.title}</a>
+            </h3>
+            <p>{entry.data.summary}</p>
+          </div>
+        </PlaceholderMark>
+      ))
+    }
+  </div>
+  {
+    site.emergency.enabled ? (
+      <p class="steps-emergency">
+        {ui.stepsEmergencyLead}{" "}
+        <EmergencyPhoneLink emergency={site.emergency} variant="number" class="steps-emergency-link" />
+      </p>
+    ) : null
+  }
+  <p>
+    <a class="more-link" href="/jak-postupovat/">{ui.stepsFullGuide}</a>
+  </p>
+</MarginSection>
+
+<style>
+  .steps-intro {
+    max-width: var(--measure);
+  }
+
+  .steps {
+    display: grid;
+    gap: 1.25rem;
+    margin-top: 1.5rem;
+    max-width: var(--measure);
+  }
+
+  .step h3 a {
+    color: var(--ink);
+    text-decoration-color: var(--rule);
+  }
+
+  .step h3 a:hover {
+    color: var(--accent);
+  }
+
+  .steps-emergency {
+    margin-top: 1.75rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--rule);
+    max-width: var(--measure);
+    font-weight: 600;
+  }
+
+  .steps-emergency :global(.steps-emergency-link) {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.75rem;
+    font-size: 1.375rem;
+    white-space: nowrap;
+  }
+</style>

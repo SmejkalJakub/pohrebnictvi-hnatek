@@ -1,0 +1,132 @@
+---
+/**
+ * "Rich letter" footer: address and phones | office hours (own heading) | nonstop transport
+ * (own heading), then the legal identifiers in small type.
+ */
+import MissingFact from "@core/components/MissingFact.astro";
+import type { SiteContext } from "@core/content/view-models.ts";
+import { formatAddressInline } from "@core/format/address.ts";
+import AddressCard from "./AddressCard.astro";
+import HoursLetter from "./HoursLetter.astro";
+import NonstopPanel from "./NonstopPanel.astro";
+import { getOptionalPage } from "../lib/content.ts";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  site: SiteContext;
+}
+
+const { site } = Astro.props;
+const company = site.company;
+const legal = company.legalIds;
+const privacy = await getOptionalPage("ochrana-osobnich-udaju");
+const year = new Date().getFullYear();
+---
+<footer class="footer" data-footer>
+  <div class="frame">
+    <div class="footer-columns" data-emergency={site.emergency.enabled ? "true" : "false"}>
+      <AddressCard site={site} id="paticka-adresa" heading={ui.contactHeading} look="letter" phones="office" />
+      <HoursLetter site={site} id="paticka-hodiny" />
+      <NonstopPanel site={site} id="paticka-nonstop" look="column" />
+    </div>
+    <div class="footer-legal">
+      <p class="legal-line" data-legal>
+        <span>{company.legalName}</span>
+        <span>
+          {ui.ico}:{" "}
+          {legal.ico !== null ? legal.ico : <MissingFact name="IČO" />}
+        </span>
+        {
+          legal.dic !== null ? (
+            <span>
+              {ui.dic}: {legal.dic}
+            </span>
+          ) : null
+        }
+        <span>
+          {legal.registryEntry !== null ? legal.registryEntry : <MissingFact name="zápis v obchodním rejstříku" />}
+        </span>
+        <span>
+          {ui.registeredOffice}:{" "}
+          {legal.registeredOffice !== null ? (
+            formatAddressInline(legal.registeredOffice)
+          ) : (
+            <MissingFact name="sídlo společnosti" />
+          )}
+        </span>
+      </p>
+      <nav class="footer-nav" aria-label={ui.footerNav}>
+        <span>© {year} {company.brandName}</span>
+        {privacy !== null ? <a href="/ochrana-osobnich-udaju/">{ui.privacy}</a> : null}
+      </nav>
+    </div>
+  </div>
+</footer>
+
+<style>
+  .footer {
+    background: var(--surface);
+    border-top: 1px solid var(--rule);
+    padding-block: 3rem 2rem;
+  }
+
+  .footer-columns {
+    display: grid;
+    gap: 2.5rem;
+  }
+
+  .footer-columns :global(h2) {
+    font-size: 1.75rem;
+  }
+
+  .footer-legal {
+    margin-top: 3rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--rule);
+    font-size: 0.875rem;
+    color: var(--muted);
+  }
+
+  .legal-line {
+    display: flex;
+    flex-wrap: wrap;
+    column-gap: 1.25rem;
+    row-gap: 0.25rem;
+  }
+
+  .footer-nav {
+    margin-top: 0.75rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    column-gap: 1.5rem;
+  }
+
+  .footer-nav a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.75rem;
+  }
+
+  @media (min-width: 48rem) {
+    .footer-columns {
+      grid-template-columns: 1fr 1fr;
+      column-gap: 3rem;
+    }
+  }
+
+  @media (min-width: 64rem) {
+    .footer {
+      padding-block: 4rem 2.5rem;
+    }
+
+    .footer-columns {
+      grid-template-columns: 1.15fr 1fr 1fr;
+    }
+
+    .footer-columns > :global(* + *) {
+      border-left: 1px solid var(--rule);
+      padding-left: 2.5rem;
+    }
+  }
+</style>

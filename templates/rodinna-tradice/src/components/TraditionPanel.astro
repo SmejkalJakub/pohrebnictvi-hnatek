@@ -1,0 +1,111 @@
+---
+/**
+ * Typographic panel used instead of a hero photograph: the tradition wording in small caps
+ * between hairline rules. States only what the data states (foundedYear only when set).
+ */
+import type { SiteContext } from "@core/content/view-models.ts";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  site: SiteContext;
+}
+
+const { site } = Astro.props;
+const company = site.company;
+const wording = company.tradition.publicWording;
+const year = company.tradition.foundedYear;
+const location = site.contact.locations[0];
+let kicker: string | null = null;
+if (company.familyOwned === true && wording === null) {
+  kicker = ui.familyOwned;
+}
+---
+<div class="tradition" data-tradition-panel>
+  <div class="tradition-inner">
+    {kicker !== null ? <p class="tradition-kicker">{kicker}</p> : null}
+    <p class="tradition-brand">{company.brandName}</p>
+    {wording !== null ? <p class="tradition-wording">{wording}</p> : null}
+    {
+      year !== null ? (
+        <p class="tradition-year">
+          {ui.foundedSince} {year}
+        </p>
+      ) : null
+    }
+    {location !== undefined ? <p class="tradition-place">{location.address.city}</p> : null}
+  </div>
+</div>
+
+<style>
+  .tradition {
+    background: var(--surface);
+    padding: 1.25rem;
+    height: 100%;
+    display: flex;
+    align-items: center;
+  }
+
+  .tradition-inner {
+    width: 100%;
+    border-block: 1px solid var(--rule);
+    padding-block: 2rem;
+    text-align: center;
+    display: grid;
+    gap: 0.75rem;
+    justify-items: center;
+  }
+
+  .tradition-kicker,
+  .tradition-wording,
+  .tradition-place {
+    font-family: var(--font-body);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--accent);
+    max-width: 20rem;
+    line-height: 1.6;
+  }
+
+  .tradition-wording {
+    color: var(--ink);
+  }
+
+  .tradition-brand {
+    font-family: var(--font-display);
+    font-weight: var(--display-weight);
+    font-size: 2rem;
+    line-height: 1.15;
+    text-wrap: balance;
+  }
+
+  .tradition-year {
+    font-family: var(--font-caption);
+    font-style: italic;
+    font-size: 1.25rem;
+  }
+
+  .tradition-place {
+    color: var(--muted);
+    border-top: 1px solid var(--rule);
+    padding-top: 0.75rem;
+    min-width: 6rem;
+  }
+
+  @media (min-width: 64rem) {
+    .tradition {
+      padding: 2rem;
+      min-height: 26rem;
+    }
+
+    .tradition-inner {
+      padding-block: 3.5rem;
+      gap: 1rem;
+    }
+
+    .tradition-brand {
+      font-size: 2.5rem;
+    }
+  }
+</style>
