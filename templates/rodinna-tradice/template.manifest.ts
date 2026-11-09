@@ -37,6 +37,8 @@ const manifest = {
     "service.inline": { aspect: "4:3", required: false },
     "coffin.item": { aspect: "3:2", required: false },
     "flower.item": { aspect: "1:1", required: false },
+    // Rendered by LetterheadHeader; the text wordmark is used while company.logo is null.
+    "company.logo": { aspect: "none", required: false },
   },
 
   pageFields: {

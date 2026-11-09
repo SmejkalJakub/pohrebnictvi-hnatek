@@ -31,7 +31,6 @@ const manifest = {
   imageSlots: {
     "home.hero": { aspect: "3:2", required: false, page: "home", field: "heroImage" },
     "about.story": { aspect: "4:3", required: false, page: "o-nas", field: "heroImage" },
-    "service.card": { aspect: "none", required: false },
     "coffin.item": { aspect: "4:3", required: false },
     "flower.item": { aspect: "1:1", required: false },
     "company.logo": { aspect: "none", required: false },
