@@ -155,6 +155,8 @@ This pass folded the template workarounds and the S2 findings back into core:
 
 ## Phase 2 exit, and what Phase 3 needs
 
+Phase 3 runs through the client workflow in [client-workflow.md](client-workflow.md): `npm run client:new`, then the `/site-research`, `/site-build`, `/site-revise` and `/site-ship` skills.
+
 - Phase 2 exit = the S6 report is accepted.
 - Phase 3 additionally needs: the Phase 0 ledger for Hnátek; client answers on as many of U1–U24 as possible (content-contract §11), at least U5 (assets/logo), U13 (catalogue) and U14 (services list), which shape the prototype content; and a decision on which public sources the research session may consult (current website, ARES/commercial register for U10).
 

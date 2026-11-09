@@ -39,12 +39,11 @@ The shared surface is data-shaped, not markup-shaped. A template can therefore r
     dustojna-jednoduchost/
   fixtures/
     neutral/                        # synthetic business "Pohřební služba Vzor", every value marked placeholder/demo
-  clients/
+  clients/                          # tracked; created by npm run client:new (docs/client-workflow.md)
     hnatek/
+      src/         site.config.ts  content/ (content-contract §2 layout)  assets/media/
       provenance/  facts.json  approvals.json
-      content/     (content-contract §2 layout)
-      assets/      media/
-      site.config.ts                # per template: hnatek-rodinna-tradice / hnatek-dustojna-jednoduchost
+      notes/       research and feedback notes (not exported)
   tools/
     export/                         # builds a standalone client repo (§9)
     cms/                            # generates .pages.yml from contract + manifest + features
@@ -70,7 +69,7 @@ Template source therefore needs no rewriting on export.
 - It exposes the singletons, the config, the build mode and the media map through the virtual module `virtual:site-core/data`. Templates never import that module directly; they use `@core/content/load.ts` and `@core/media/resolve.ts`.
 - The harness (`harness/`) is the reference consumer.
 
-**Content source.** During template development, a template builds against `fixtures/neutral/`. For a client build, `tools/export` (or `npm run dev:client -- hnatek rodinna-tradice`) assembles a working directory from the template, core, and the client's content, assets and `site.config.ts`. Templates read content from `src/content/` and never know which client they render.
+**Content source.** During template development, a template builds against `fixtures/neutral/`. For a client, `npm run client:dev -- hnatek` runs the template named in `clients/hnatek/src/site.config.ts` with `SITE_ROOT`/`SITE_CONFIG` pointing at the client, and `npm run client:export -- hnatek` assembles the standalone project (§9) from the template, core, and the client's content, assets and `site.config.ts` (see [client-workflow.md](client-workflow.md)). Templates read content from `src/content/` and never know which client they render.
 
 ## 3. Template manifest
 
