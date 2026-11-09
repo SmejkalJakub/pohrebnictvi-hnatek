@@ -4,6 +4,7 @@ import {
   checkLedger,
   collectTrackedFacts,
   getFactValue,
+  findProvenanceDir,
   runLaunchCheck,
   type Ledger,
 } from "../gate/launch-check.ts";
@@ -152,5 +153,21 @@ describe("runLaunchCheck on the fixture", () => {
     const found = new Set(result.findings.map((finding) => finding.rule));
     expect(found.has("L-001")).toBe(true);
     expect(found.has("L-003")).toBe(true);
+  });
+});
+
+describe("provenance location", () => {
+  it("uses provenance/ before handover and docs/provenance/ inside an export", async () => {
+    const { mkdtemp, mkdir, rm } = await import("node:fs/promises");
+    const os = await import("node:os");
+    const path = await import("node:path");
+    const root = await mkdtemp(path.join(os.tmpdir(), "prov-"));
+    const paths = { root, provenanceDir: path.join(root, "provenance") };
+    expect(findProvenanceDir(paths)).toBe(paths.provenanceDir);
+    await mkdir(path.join(root, "docs", "provenance"), { recursive: true });
+    expect(findProvenanceDir(paths)).toBe(path.join(root, "docs", "provenance"));
+    await mkdir(paths.provenanceDir);
+    expect(findProvenanceDir(paths)).toBe(paths.provenanceDir);
+    await rm(root, { recursive: true, force: true });
   });
 });

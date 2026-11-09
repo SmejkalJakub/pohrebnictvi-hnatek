@@ -334,6 +334,21 @@ export function checkLedger(
   return findings;
 }
 
+/**
+ * Pre-handover the ledger lives in <root>/provenance; an exported site archives it in
+ * <root>/docs/provenance (template-contract §9), so the launch check also runs inside an export.
+ */
+export function findProvenanceDir(paths: { root: string; provenanceDir: string }): string {
+  if (existsSync(paths.provenanceDir)) {
+    return paths.provenanceDir;
+  }
+  const archived = path.join(paths.root, "docs", "provenance");
+  if (existsSync(archived)) {
+    return archived;
+  }
+  return paths.provenanceDir;
+}
+
 async function readJson(file: string): Promise<unknown> {
   return JSON.parse(await readFile(file, "utf8"));
 }
@@ -356,8 +371,9 @@ export async function runLaunchCheck(root: string, options: { now?: Date } = {})
     });
   }
   if (gate.content !== null) {
-    const ledgerFile = path.join(gate.content.paths.provenanceDir, "facts.json");
-    const approvalsFile = path.join(gate.content.paths.provenanceDir, "approvals.json");
+    const provenanceDir = findProvenanceDir(gate.content.paths);
+    const ledgerFile = path.join(provenanceDir, "facts.json");
+    const approvalsFile = path.join(provenanceDir, "approvals.json");
     if (!existsSync(ledgerFile) || !existsSync(approvalsFile)) {
       findings.push({
         rule: "L-002",
