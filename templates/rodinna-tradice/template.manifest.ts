@@ -1,6 +1,7 @@
 // Template A manifest (template-contract §3). Read by core (G-005), the CMS generator and QA.
-// `import type` only, so astro.config.mjs can load this file before the @core alias exists.
-import type { TemplateManifest } from "../../core/content/config.ts";
+// `import type` only (erased at load time), so astro.config.mjs can load this file before the @core
+// alias exists. Templates reach core only through `@core/` (design-differentiation §6).
+import type { TemplateManifest } from "@core/content/config.ts";
 
 const manifest = {
   id: "rodinna-tradice",
