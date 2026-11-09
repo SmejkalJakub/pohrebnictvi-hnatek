@@ -206,7 +206,7 @@ export const Company = z.object({
     publicWording: optionalText(120),   // the ONLY text used for tradition claims
     foundedYear: z.number().int().min(1800).max(2100).nullable(),
   }),
-  familyOwned: z.boolean().nullable(),
+  familyOwned: z.preprocess(triState, z.boolean().nullable()), // stored as "yes" | "no" | "unknown"
   logo: ImageRef.nullable(),            // null → templates render a text wordmark
 });
 ```
@@ -570,7 +570,7 @@ A core checker (`core/markdown/restrict-body.ts`) fails the build with the file 
 **What the CMS writes (amended after S2).** Pages CMS deletes `null`, `""`, `[]` and `{}` on every save and cannot represent "unset" in a toggle. The schemas therefore accept the following, and `core/tests/cms-tolerance.test.ts` re-parses the whole fixture after a simulated CMS save:
 
 - missing objects: `legalIds` and `tradition` default to all-null;
-- `familyOwned` as `"yes"` / `"no"` / `"unknown"`;
+- `familyOwned` as `"yes"` / `"no"` / `"unknown"`. This is also the form content files store, so agent-written content already matches what the CMS saves. Booleans are still accepted; the ledger records the parsed value (`true`/`false`/`null`);
 - an image object without `file`, which counts as no image;
 - `null` booleans in images, which count as `false`;
 - rows added without `id` (`phones`, `emails`, `weekly`, price groups and items), which get an ASCII slug of their label. Price items get `<group id>-<label slug>`, unique list-wide. Explicit ids are kept, and duplicates are still errors.
