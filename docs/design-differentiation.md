@@ -47,7 +47,9 @@ Related: [template-contract.md](template-contract.md) · [content-contract.md](c
 
 - **Palette `ivory-umber` (default):** paper `#F7F2E8`, surface `#EFE7D8`, ink `#2B2722`, muted `#5C544A`, accent (umber) `#6B3F2A`, rule `#8C7B64` (non-text, 3.67:1 on paper). Contrast is verified: ink on paper 13.3:1, muted 6.7:1, accent 7.9:1 (7.2:1 on surface).
 - **Palette `ivory-olive`:** same neutrals, accent `#4F5A3A` (6.6:1 on paper).
-- **Type, `garamond-source` (default):** EB Garamond for display and headings (H1 clamp 2.25–3.5 rem), Source Sans 3 for body text at 1.125 rem/1.65. **`cormorant-literata`:** Cormorant Garamond (600+ only, headings ≥ 1.75 rem) with Literata body. Candidates only; licence and latin-ext coverage to be verified in S3.
+- **Palette `ivory-forest`:** same neutrals, accent `#1F3D2E` (10.7:1 on paper). Added in S3 to harmonise with green client logos (§8).
+- **Type, `garamond-source` (default):** EB Garamond for display and headings (H1 clamp 2.25–3.5 rem), Source Sans 3 for body text at 1.125 rem/1.65.
+- **Type, `literata`:** Literata for headings and body. It replaced the planned `cormorant-literata` pair: in S3, Cormorant Garamond placed Czech accents visibly off the letter in Chrome (í, ř, ž), so it was dropped. See `docs/notes/s3-rodinna-tradice.md`.
 - **Layout grid:** 12 columns with a narrow text column (max 38 rem) offset from the margin. Asymmetry is intentional.
 - **Imagery:** fewer but larger images with warm natural light; captions always visible.
 - **Ornament:** hairline rules, small caps section labels ("SLUŽBY"), a drop cap on O nás only. No icons except the phone glyph in the utility strip.

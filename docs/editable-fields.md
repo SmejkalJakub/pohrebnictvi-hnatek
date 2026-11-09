@@ -112,7 +112,7 @@ In the CMS this file is a **separate menu entry** ("Nonstop převoz zesnulých")
 | `metaTitle`, `metaDescription` | yes | **CMS** | string ≤ 60 / ≤ 160 | |
 | `heroImage`, `secondaryImage` | yes | **CMS** | image (§4.10) | only slots the template declares |
 | `placeholder` | yes | **Hidden** | – | the client "clears" a placeholder by having the operator re-record approval. In the pilot the agent flips it after approval. |
-| create / delete pages | – | **Locked** | – | page set fixed by the route contract |
+| create / delete pages | – | **Locked** | – | page set fixed by the route contract. In the CMS every existing page is its own file entry ("Stránka: …") with create, delete and rename off, because a Pages CMS collection cannot show different fields per page |
 
 ### 4.6 Services (`services/*.md`)
 
@@ -121,7 +121,7 @@ In the CMS this file is a **separate menu entry** ("Nonstop převoz zesnulých")
 | `title`, `summary`, body | draft | **CMS** | string ≤ 80, text ≤ 240, rich-text | |
 | `category` | yes | **CMS** | select (fixed list) | |
 | `order`, `featured`, `published` | yes | **CMS** | number, boolean, boolean | `published: false` hides without deleting |
-| `image` | yes | **CMS** | image | shown only if the template uses `service.card` |
+| `image` | yes | **CMS** | image | shown only if the template manifest declares a `service.*` image slot (coffins `coffin.*`, flowers `flower.*` likewise) |
 | `priceGroupId` | yes | **Agent** | – | links depend on the pricing structure |
 | add / delete entries | yes | **CMS** | collection | new services are content, not new page *types*. In template B each one becomes a detail page using the same layout. |
 | file name (slug) | yes | **Locked after launch** | – | renaming breaks URLs; needs a developer redirect |

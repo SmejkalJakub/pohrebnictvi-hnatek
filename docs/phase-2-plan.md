@@ -111,7 +111,11 @@ This pass folded the template workarounds and the S2 findings back into core:
 - **Done when:** the build succeeds; every option value renders; the S6 checks pass locally.
 - **Out of scope:** template A; `core/` changes (as S3).
 
-### S5: Standalone export and independence verification
+### S5: Standalone export and independence verification ✅ done 2026-11-09
+
+**Result.** `tools/export`, `tools/export/verify.ts` and `tools/cms` are on `main`. Both fixture exports and both production-ready exports pass verify 10/10 from a clean folder outside the repo, including a network-blocked build. The publish and discard workflows, and the Pages CMS Actions, can only be tested on a real repository: see the 13 hands-on checks in `docs/notes/s5-export.md`.
+
+**Original brief:**
 
 - **Inputs:** template-contract §9; editable-fields §5 (CMS config generation); S2 findings.
 - **Do:**
@@ -120,7 +124,20 @@ This pass folded the template workarounds and the S2 findings back into core:
   - `tools/export/verify.ts` (clean-directory `npm ci` and build in both modes, a dependency and path scan, and an offline build after install).
 - **Done when:** exporting the fixture with each template produces two repos that build from a clean temp directory; the production-mode build fails with the expected gate ids (the fixture is all placeholders); the scan is clean; the `.pages.yml` has no articles collection when the feature is off.
 
-### S6: Cross-template QA and Phase 2 sign-off
+### S6: Cross-template QA and Phase 2 sign-off ✅ done 2026-11-09
+
+**Result.** `npm run qa` (Playwright + axe) passes for both templates: 412 checks, after two small template fixes. The scorecard is 13/15, an agent assessment pending the owner's review. The report is `docs/qa/phase-2-report.md`; screenshots are regenerated locally and not tracked.
+
+**Cleanup after S5/S6 (2026-11-09):**
+
+- `npm test` now includes the tools tests, and lint ignores `exports/`;
+- template A dropped the unused Cormorant font and declares its `company.logo` slot; B dropped the unused `service.card` slot;
+- the fixture stores `familyOwned` as `"yes"`;
+- the launch check also reads `docs/provenance/`;
+- `playwright-core` is pinned to 1.64.1 through `overrides`;
+- the contracts now name the required template hooks, the bootstrap exception, and the export as built.
+
+**Original brief:**
 
 - **Inputs:** design-differentiation §6–§7; template-contract §6; built outputs of S3–S5.
 - **Do:** add a shared Playwright suite run against both builds:
