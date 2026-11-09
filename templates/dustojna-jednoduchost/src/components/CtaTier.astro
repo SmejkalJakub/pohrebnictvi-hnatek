@@ -1,7 +1,9 @@
 ---
 /**
  * Two-tier CTA: (1) the emergency call, large; (2) a secondary office line with hours and number.
- * The two tiers are sibling blocks: office hours never sit inside the emergency block.
+ * The two tiers are sibling blocks: office hours never sit inside the emergency block, and the office
+ * tier is its own headed section (invariant 2: hours never share a container or heading with the
+ * emergency CTA). The heading keeps the look of the former label line.
  */
 import EmergencyPhoneLink from "@core/components/EmergencyPhoneLink.astro";
 import PhoneLink from "@core/components/PhoneLink.astro";
@@ -36,8 +38,8 @@ const emergency = site.emergency;
         {emergency.shortNote !== null ? <p class="mt-2 text-[0.9375rem] text-muted">{emergency.shortNote}</p> : null}
       </div>
   </When>
-  <div class="cta-secondary border-t border-hair pt-4" data-office-hours>
-    <p class="font-semibold">{site.officeHours.label}</p>
+  <section class="cta-secondary border-t border-hair pt-4" aria-labelledby="cta-kancelar" data-office-hours>
+    <h2 id="cta-kancelar" class="cta-office-heading">{site.officeHours.label}</h2>
     <p class="mt-1 text-[0.9375rem]">
       {
         site.officeHoursRows.map((row, index) => (
@@ -53,10 +55,16 @@ const emergency = site.emergency;
       <PhoneLink number={office.number} class="text-link num" />
       <span class="text-muted"> · {office.label}</span>
     </p>
-  </div>
+  </section>
 </div>
 
 <style>
+  .cta-office-heading {
+    font-size: inherit;
+    line-height: inherit;
+    font-weight: 600;
+  }
+
   .cta-primary :global(.cta-xl) {
     display: grid;
     grid-template-columns: auto 1fr;
