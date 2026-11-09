@@ -19,6 +19,13 @@ export default defineConfig({
       },
       {
         test: {
+          name: "tools",
+          include: ["tools/**/tests/*.test.ts"],
+          environment: "node",
+        },
+      },
+      {
+        test: {
           name: "harness",
           include: ["harness/tests/**/*.test.ts"],
           environment: "node",
