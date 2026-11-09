@@ -22,10 +22,6 @@ import {
   type Route,
 } from "./templates.ts";
 
-// The lockfile resolves @axe-core/playwright's peer playwright-core to 1.65.0 while @playwright/test
-// uses 1.64.1, so the two Page types differ only nominally. Runtime objects are identical.
-type AxePage = ConstructorParameters<typeof AxeBuilder>[0]["page"];
-
 const AXE_TAGS = ["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"];
 const MAX_TAB_STOPS = 250;
 
@@ -110,9 +106,7 @@ for (const t of templates) {
 
           test(`4 axe-core: no serious or critical violations ${route.path}`, async ({ page }) => {
             await open(page, route);
-            const results = await new AxeBuilder({ page: page as unknown as AxePage })
-              .withTags(AXE_TAGS)
-              .analyze();
+            const results = await new AxeBuilder({ page }).withTags(AXE_TAGS).analyze();
             const severe = results.violations.filter(
               (v) => v.impact === "serious" || v.impact === "critical",
             );

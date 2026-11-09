@@ -7,6 +7,8 @@ export default defineConfig(
       "**/node_modules/**",
       "**/dist/**",
       "**/.astro/**",
+      // Generated client exports (npm run export); verified separately by export:verify.
+      "exports/**",
       // Logo design mockup exported from a design tool (vendored React runtime); reference material, not code.
       "Hn*-html/**",
     ],

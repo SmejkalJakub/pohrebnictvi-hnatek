@@ -13,7 +13,7 @@
     "templates/*"
   ],
   "scripts": {
-    "test": "vitest run --project unit",
+    "test": "vitest run --project unit --project tools",
     "test:harness": "npm run build -w harness && vitest run --project harness",
     "typecheck": "tsc -p tsconfig.json && npm run check -w harness",
     "lint": "eslint .",
@@ -39,5 +39,8 @@
     "typescript": "6.0.3",
     "typescript-eslint": "8.72.0",
     "vitest": "4.1.12"
+  },
+  "overrides": {
+    "playwright-core": "1.64.1"
   }
 }

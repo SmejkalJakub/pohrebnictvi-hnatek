@@ -11,7 +11,6 @@
     "check": "SITE_ROOT=../../fixtures/neutral SITE_CONFIG=./fixture.site.config.ts astro check"
   },
   "dependencies": {
-    "@fontsource/cormorant-garamond": "5.3.0",
     "@fontsource/eb-garamond": "5.3.0",
     "@fontsource/literata": "5.3.0",
     "@fontsource/source-sans-3": "5.3.1",
