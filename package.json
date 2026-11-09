@@ -26,6 +26,11 @@
     "export": "node tools/export/export.ts",
     "export:verify": "node tools/export/verify.ts",
     "cms:config": "node tools/cms/generate.ts",
+    "client:new": "node tools/client/new.ts",
+    "client:dev": "node tools/client/astro.ts dev",
+    "client:build": "node tools/client/astro.ts build",
+    "client:validate": "node tools/client/validate.ts",
+    "client:export": "node tools/client/export.ts",
     "qa": "playwright test -c qa/playwright.config.ts",
     "qa:install": "playwright install chromium"
   },
