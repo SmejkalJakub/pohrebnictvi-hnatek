@@ -1,6 +1,6 @@
 # H · Plný přehled (`plny-prehled`)
 
-**Status (2026-11-10):** round-2 direction, liked by the owner; **moodboard stage**. Only the screens listed under *Drawn* exist. Everything under *Not drawn yet* is specified as rules, not pictures.
+**Status (2026-11-10):** round-2 direction, liked by the owner. Home, a notice page and the full page set are drawn. **Build from the pictures and the HTML;** the text below explains them and lists what must not change.
 
 **Concept.** For families who want facts, not atmosphere: the practical son or daughter who arranges everything and compares. The home page is a directory, like a timetable or a municipal noticeboard: every route, the key prices, the people and the documents fit on one desktop screen, in four ruled columns. Nobody has to scroll or guess what is behind a menu; on a phone the same index folds into a list of sections.
 
@@ -8,66 +8,58 @@
 
 | Path | What |
 | --- | --- |
-| `comps/bila-a-zluta/*.png`, `comps/seda-a-terakota/*.png` | rendered comps per palette: `home-1280`, `home-375`, `notice-375`, `board` |
-| `html/board-bila-a-zluta.html`, `html/board-seda-a-terakota.html` | plain HTML with every value resolved. **Read exact sizes and colours here.** |
-| `source/R2-H-Plny-prehled.dc.html` | canvas source |
+| `comps/bila-a-zluta/*.png`, `comps/seda-a-terakota/*.png` | every screen at native width, per palette; `board.png` = home + notice with notes; `pages.png` = all other pages with notes |
+| `html/board-*.html`, `html/pages-*.html` | plain HTML with every value resolved. **Read exact sizes and colours here.** |
+| `source/R2-H-*.dc.html` | canvas sources |
 | `tokens.json`, `TOKENS.md` | palettes with computed contrast, fonts, scales, layout |
 
-## Drawn
+## Drawn screens
 
-| Screen | File | Notes |
+| Screen | File (`comps/bila-a-zluta/`) | What to copy exactly |
 | --- | --- | --- |
-| Home 1280 | `comps/bila-a-zluta/home-1280.png` | whole directory above 800 px; FAQ row and footer below |
-| Home 375 | `comps/bila-a-zluta/home-375.png` | `<details>` sections, the first open |
-| Notice 375 | `comps/bila-a-zluta/notice-375.png` | with photo thumbnail, with livestream link, neutral form, data table |
-
-## Structure (build these exactly)
-
-- **Header (1280):** name 30 px bold + address line left; right: the **nonstop box** (highlight fill, 2 px ink border) and, separately, the **Kancelář box** (1 px ink border, hours and office phone in mono). Two boxes, two headings, never one container.
-- **Nav row:** 3 px ink rule above, 1 px below; every page as a text link, wrapping.
-- **Directory:** 4 equal columns with 1 px `rule` column lines: (1) Když někdo zemřel: situation links + “První hodiny” ordered list; (2) Ceník, výběr: 5-row table, mono prices right-aligned, VAT note bold; (3) Služby list + Rakve / Květiny with counts and small thumbnails; (4) Lidé (48×60 photo or initials box), Oznámení (link + count only), Dokumenty (PDF list).
-- **Then:** “Časté otázky” row under a 3 px rule, then the footer.
-- **375:** header with “Rejstřík” button; nonstop box; Kancelář box (hours on two lines); then every directory column as a `<details>` row (summary 20 px bold, count or from-price in mono beside it); first one open. No JS needed for the sections.
-- **Numbers:** every phone, time, date and price in Overpass Mono 500.
-- **Photos:** thumbnails only (people 48×60, coffins 64×48, flowers 48×48). Initials box when a person has no photo.
+| Home 1280 | `home-1280.png` | header with the highlighted nonstop box and the separate Kancelář box; full nav row under a 3 px rule; 4-column directory with column rules |
+| Home 375 | `home-375.png` | “Rejstřík” button; both boxes; directory as `<details>` rows, first open |
+| Notice 375 | `notice-375.png` | plain 1 px box instead of the highlight; data table of the facts |
+| Ceník 1280 | `cenik-1280.png` | two package groups side by side under 3 px rules, price in mono at the right of the group title, two lists each; items table with a **“Typ ceny” column** (pevná, za jednotku, rozpětí, od, na dotaz); VAT note under the title and under the table |
+| Ceník A4 | `cenik-a4.png` | the same tables; packages as one table with included / excluded columns; the highlight becomes a 2 px black box |
+| Kontakt 375 | `kontakt-375.png` | everything as key–value tables: contacts, úřední hodiny, převoz (availability, area) |
+| Oznámení 1280 / 375 | `oznameni-1280.png`, `oznameni-375.png` | plain box with publisher + phone; nav row reduced to Oznámení a obřady · Kontakt · Úvodní stránka; **timetable**: datum · čas · jméno · místo · obřad · přenos, em dash for missing values; on 375 each notice is a name + a 3-row mini table |
+| Jak postupovat 1280 | `jak-postupovat-1280.png` | **the situation matrix**: rows = steps, columns = doma / nemocnice / domov / zahraničí with “ano” or “—”; picking a situation hides the other columns and rows |
+| Jak postupovat 375 | `jak-postupovat-375-bez-vyberu.png`, `jak-postupovat-375-doma.png` | 2 × 2 situation buttons (the only filled controls); unpicked: table of all steps with “Platí pro”; picked: inverted button with “vybráno” and one compact checklist with real checkboxes |
+| Lidé 1280 | `lide-1280-s-fotkami.png`, `lide-1280-bez-fotek.png` | a table: 64 × 80 thumbnail or **square initials box**, name, “Na starosti”, direct line in mono or “—” |
+| Pro účastníky 375 | `pro-ucastniky-375.png` | reference sheet: two key–value tables (Smuteční síň, Na obřad) |
+| Menu 375 | `menu-375-otevrene.png` | “Rejstřík”: every page as a table row with a count or from-price in mono |
+| 404 375 | `404-375.png` | “Stránka nenalezena” + the whole index as `<details>` rows |
+| Služby 1280 | `sluzby-1280.png` | index table: služba · co zahrnuje · cena (mono) · Detail; VAT note under it |
+| Footer 1280 | `paticka-1280.png` | 3 px rule; Kancelář · Nonstop převoz · Dokumenty (PDF) · Právní (incl. adr.coi.cz); legal row |
 
 ## Emergency CTA
 
 | Form | Where | Spec |
 | --- | --- | --- |
-| Default | header box | highlight fill, 2 px ink border, label 17–18 px bold + number mono 30 px (28 at 375), underlined |
-| High emphasis | header box doubles in height; at 375 it repeats as the first row of every page | same component |
-| Neutral (notice pages) | under the header | plain 1 px ink box: “Oznámení zveřejňuje Pohřební služba Vzor. Telefon nonstop +420 …”, no highlight, number `nowrap`. ⚖ L1 |
+| Default | header box on every page | highlight fill + 2 px ink border; label 18 px bold, number mono 30 / 28 px, underlined, `nowrap` |
+| High emphasis | header box doubles in height; at 375 it repeats as the first row of the page | same component |
+| Neutral | notice list and notice pages | plain 1 px ink box: publisher + “Telefon nonstop …” in mono; reduced nav. ⚖ L1 |
 
-## Not drawn yet: rules for the remaining screens
+## Guardrails: do not drift
 
-| Screen | Rule |
-| --- | --- |
-| Jak postupovat | checklist table: rows = steps, a column per situation (doma, nemocnice, domov pro seniory, zahraničí) marking which apply; picking a situation (`:target`) hides the other columns and rows; 375: one list per situation |
-| Ceník + A4 | full table per group: položka · popis · cena (mono, right), then “V ceně je zahrnuto / Není zahrnuto” as two lists; VAT note above the first table and under each group. **A4 print = the same table**, nothing else changes |
-| Kontakt | two boxes (nonstop, kancelář) as in the header, then address, map link, phones table |
-| Oznámení list | table: datum · čas · jméno · místo · obřad; upcoming first; 375: each row stacks into a 2-column mini table |
-| Pro účastníky | reference sheet: headings + short tables (parkování, oblečení, květiny, přenos) |
-| Lidé | table-like rows with thumbnail or initials box, role, direct phone in mono |
-| Footer, 404, menu | footer under a 3 px rule; 404 = the directory itself with “Stránka nenalezena” as H1; “Rejstřík” opens the nav list in the flow |
+- **Keep:** white (or light grey) ground, black ink, one highlight colour behind the nonstop number only; Overpass for words, **Overpass Mono for every number**; tables and column rules as the structure; the full nav row on desktop; `<details>` sections on phones.
+- **Never add:** hero sections, big headlines over 40 px, marketing copy, illustrations, photos larger than a thumbnail, cards with shadows, icons, coloured backgrounds for sections, a hamburger icon (the button says “Rejstřík”), rounded corners.
+- **Colour:** the highlight is never used for anything else (not for links, prices or the active nav item).
+- **The yellow is a risk** (sector rule against cheerful colour on the urgent line): the owner may choose “Šedá a terakota” as default.
+- **Middle dot:** Overpass sets `·` tight to the next word; use separator elements with their own margin or plain lists.
 
 ## Self-check
 
 | Rule | Result |
 | --- | --- |
-| Nonstop in first screen at 375×667 | pass (~150 px) |
+| Nonstop in first screen at 375×667 on every drawn page | pass |
 | Office hours separate from nonstop | pass (two boxes, two headings) |
-| Body ≥ 18 px | **fix in build:** the mono hours and nonstop label are 17 px in the comp; use 18 px |
-| Contrast | pass; the highlight against white is 1.7 : 1, so the box **always** keeps its 2 px ink border |
-| Sector rule “no cheerful colour on the urgent line” | **risk:** yellow may read as a warning. It carries ink text and an ink border; palette “Šedá a terakota” is the calmer option. Owner to decide |
-| Ban list | pass (thumbnails are content, not decoration; no icon cards) |
-| Prices on home | allowed (not a notice page); demo prices marked UKÁZKA |
-| L1 | home lists notices only as a link and count, never a deceased person next to prices; notice page neutral. ⚖ legal review |
-| L8 footer identification | drawn on home 1280 and notice |
-| L9 prices with VAT | drawn: “Ceny jsou uvedeny včetně DPH.” beside the price table |
-| L10 Právní informace link | drawn in footers |
-| L12 consent | placeholder names marked; staff photos need consent |
-
-## Known font quirk
-
-Overpass sets the middle dot `·` close to the following word (“Doma ·V nemocnici”). Use a separator element with its own margin, or a plain list.
+| Body ≥ 18 px | pass on the page comps (the home comp’s 17 px mono hours: build at 18) |
+| Contrast | pass; the highlight box always keeps its 2 px ink border |
+| Ban list | pass; yellow on the urgent line flagged above |
+| L1 notices without promotion | plain box and reduced nav drawn; home shows notices only as a link with a count; ⚖ legal review |
+| L8 footer identification | drawn |
+| L9 VAT note | drawn (home, Ceník, Služby, A4) |
+| L10 ADR + Právní informace | drawn in the footer |
+| L12 consent | placeholders marked; staff photos need consent |

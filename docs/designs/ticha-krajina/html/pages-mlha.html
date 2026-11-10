@@ -1,0 +1,399 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<title>G · Tichá krajina – stránky · Mlha</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@500&amp;family=Spectral:wght@400;600&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#1f3d5c}a:hover{color:#0f2236}
+.ann{font-family:ui-sans-serif,system-ui,-apple-system,'Segoe UI',sans-serif}
+.lbl{margin:0 0 10px;font-size:15px;font-weight:600}
+.note{margin:10px 0 0;font-size:13px;line-height:1.45;color:#555}
+.row{display:flex;gap:48px;align-items:flex-start;margin-top:72px}
+.sc{position:relative;box-sizing:border-box;border:1px solid #9a9a96;overflow:hidden;background:var(--g);color:var(--ink);font-family:'Spectral',serif;font-size:20px;line-height:1.65}
+.sc p,.sc h1,.sc h2,.sc h3,.sc ul,.sc ol,.sc dl,.sc dd{margin:0}
+.sc ul{padding-left:22px}
+.sc a{color:var(--ink);text-underline-offset:5px}
+.sans{font-family:'Figtree',sans-serif;font-weight:500}
+.mut{color:var(--mut)}
+.top{display:flex;justify-content:space-between;align-items:center;padding:28px 64px}
+.top nav{display:flex;gap:28px;font-family:'Figtree',sans-serif;font-weight:500;font-size:18px}
+.sc a.wm{text-decoration:none;font-weight:600;font-size:24px}
+.hdr{display:flex;justify-content:space-between;align-items:center;padding:12px 16px}
+.hdr a.wm{font-size:20px}
+.btn{min-height:44px;padding:0 14px;border:1px solid var(--ink);background:transparent;color:var(--ink);font:500 18px 'Figtree',sans-serif;border-radius:0}
+.grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));column-gap:24px;padding:0 64px}
+.h1d{font-weight:400;font-size:72px;line-height:1.06;letter-spacing:-.01em}
+.h2d{font-weight:400;font-size:44px;line-height:1.1}
+.h1m{font-weight:400;font-size:38px;line-height:1.1}
+.h2m{font-weight:400;font-size:30px;line-height:1.15}
+.h3{font-weight:600;font-size:22px;line-height:1.3}
+.sc a.stamp{display:flex;justify-content:space-between;align-items:baseline;gap:24px;padding:18px 0;border-top:1px solid var(--ink);border-bottom:1px solid var(--ink);text-decoration:none}
+.stamp .l{font-family:'Figtree',sans-serif;font-weight:500;font-size:19px}
+.stamp .n{font-weight:600;font-size:42px;line-height:1.2;color:var(--acc);text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:8px;white-space:nowrap}
+.stamp .s{font-family:'Figtree',sans-serif;font-weight:500;font-size:18px;color:var(--mut)}
+.sc a.stampm{display:block;padding:14px 0 16px;border-top:1px solid var(--ink);border-bottom:1px solid var(--ink);text-decoration:none}
+.stampm .l{display:block;font-family:'Figtree',sans-serif;font-weight:500;font-size:18px}
+.stampm .n{display:block;font-weight:600;font-size:33px;line-height:1.25;color:var(--acc);text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:6px;white-space:nowrap}
+.stampm .s{display:block;font-family:'Figtree',sans-serif;font-weight:500;font-size:18px;color:var(--mut)}
+.neutral{padding:0 16px 12px;font-family:'Figtree',sans-serif;font-weight:500;font-size:18px;line-height:1.5;color:var(--mut)}
+.photo{display:flex;align-items:flex-end;padding:14px 16px;box-sizing:border-box;background:var(--ph);font-family:ui-sans-serif,system-ui,sans-serif;font-size:13px;line-height:1.35;color:var(--ink)}
+.hair td{padding:12px 0;border-top:1px solid var(--rule);vertical-align:top}
+.hair td.p{text-align:right;font-weight:600;white-space:nowrap;padding-left:24px}
+.pickw{font-family:'Figtree',sans-serif;font-weight:500;font-size:18px}
+.sc .pickw a{display:inline-flex;align-items:center;min-height:44px;margin-right:14px}
+.sc .pickw a.on{font-weight:500;text-decoration:none;border-bottom:3px solid var(--acc)}
+.chk{display:flex;gap:12px;align-items:flex-start;padding:6px 0;font-size:19px}
+.chk input{width:26px;height:26px;margin:3px 0 0;flex:none;accent-color:var(--acc)}
+.tag{display:inline-block;font-family:ui-sans-serif,system-ui,sans-serif;font-size:13px;font-weight:700;padding:1px 6px;border:1px dashed #8a6d00;background:#F6E7B0;color:#3D2E00;line-height:1.4}
+.fold{position:absolute;left:0;right:0;border-top:2px dashed #C2410C;pointer-events:none}
+.fold span{position:absolute;right:0;top:-22px;background:#C2410C;color:#fff;font-family:ui-sans-serif,system-ui,sans-serif;font-size:12px;font-weight:600;padding:2px 6px}
+.a4{background:#FFFFFF;color:#1B1F1E;font-size:16px;line-height:1.5;padding:64px 72px}
+.a4 td{padding:6px 0;border-top:1px solid #9AA3A1;vertical-align:top}
+.a4 td.p{text-align:right;font-weight:600;white-space:nowrap;padding-left:16px}
+</style>
+
+<div class="ann" style="width: 2650px; height: 8100px; box-sizing: border-box; padding: 48px; background: #FFFFFF; color: #1a1a1a; --g: #EEF1F0; --ink: #1B2422; --mut: #4C5856; --acc: #2F5160; --rule: #7E8A88; --ph: #C9D2CF">
+
+<div style="display: flex; gap: 48px; align-items: flex-end">
+<div>
+<p style="margin: 0; font-size: 14px; font-weight: 600; letter-spacing: .08em; color: #555">G · TICHÁ KRAJINA · PAGE COMPS · Mlha</p>
+<h1 style="margin: 6px 0 0; font-family: 'Spectral', serif; font-weight: 400; font-size: 52px; line-height: 1.1">Stránky</h1>
+</div>
+<p style="margin: 0; max-width: 1100px; font-size: 16px; line-height: 1.5; color: #333">The rest of the site on the same 12-column grid: heading column 1–4, text column 6–11. Space and landscape bands separate sections; the only lines are the stamp line and table hairlines. Notice pages lose the bands, the stamp line and most of the navigation.</p>
+</div>
+
+<div class="row">
+<div>
+<p class="lbl">Ceník · 1280 · price as the heading, two lists, VAT note</p>
+<div class="sc" data-shot="cenik-1280" style="width: 1280px; height: 1820px">
+<header class="top"><a class="wm" href="#">Pohřební služba Vzor</a><nav aria-label="Hlavní"><a href="#">Když někdo zemřel</a><a href="#">Oznámení a obřady</a><a href="#">Služby</a><a href="#" aria-current="page" style="text-decoration-thickness: 3px">Ceník</a><a href="#">O nás</a><a href="#">Kontakt</a></nav></header>
+<section class="grid" style="padding-top: 72px; align-items: end">
+<h1 class="h1d" style="grid-column: 1 / span 6">Ceník</h1>
+<div style="grid-column: 8 / span 5">
+<p style="font-size: 22px; line-height: 1.55"><strong style="font-weight: 600">Ceny jsou uvedeny včetně DPH.</strong> Konečnou cenu spočítáme s vámi v kanceláři.</p>
+<p class="sans" style="margin-top: 10px; font-size: 18px"><a href="#">Vytisknout ceník</a></p>
+</div>
+</section>
+<p class="sans mut" style="margin: 40px 64px 0; font-size: 18px"><span class="tag">UKÁZKA</span> Ceny jsou ukázkové a slouží jen k ověření rozvržení. Skutečný ceník doplní pohřební služba.</p>
+<section class="grid" style="padding-top: 96px">
+<div style="grid-column: 1 / span 4"><p class="sans mut" style="font-size: 18px">Pohřeb bez obřadu</p><h2 class="h2d" style="margin-top: 6px">od 14 900 Kč</h2></div>
+<div style="grid-column: 6 / span 3"><h3 class="h3">V ceně je zahrnuto</h3><ul style="margin-top: 8px"><li>převoz zesnulého do 20 km</li><li>chladicí zařízení do 7 dnů</li><li>úprava zesnulého a základní rakev</li><li>kremace a základní urna</li><li>vyřízení úředních věcí</li></ul></div>
+<div style="grid-column: 9 / span 3"><h3 class="h3">Není zahrnuto</h3><ul style="margin-top: 8px"><li>smuteční oznámení (tisk)</li><li>květiny</li><li>převoz nad 20 km</li><li>uložení urny do hrobu</li></ul></div>
+</section>
+<section class="grid" style="padding-top: 96px">
+<div style="grid-column: 1 / span 4"><p class="sans mut" style="font-size: 18px">Pohřeb s obřadem ve smuteční síni</p><h2 class="h2d" style="margin-top: 6px">od 24 900 Kč</h2></div>
+<div style="grid-column: 6 / span 3"><h3 class="h3">V ceně je zahrnuto</h3><ul style="margin-top: 8px"><li>vše z pohřbu bez obřadu</li><li>smuteční síň na 30 minut</li><li>hudba ze záznamu</li><li>základní výzdoba rakve</li><li>20 smutečních oznámení</li></ul></div>
+<div style="grid-column: 9 / span 3"><h3 class="h3">Není zahrnuto</h3><ul style="margin-top: 8px"><li>řečník</li><li>živá hudba</li><li>květiny nad rámec výzdoby</li><li>smuteční hostina</li></ul></div>
+</section>
+<section class="grid" style="padding-top: 96px">
+<div style="grid-column: 1 / span 4"><h2 class="h2d">Jednotlivé položky</h2></div>
+<table class="hair" style="grid-column: 6 / span 6; border-collapse: collapse; width: 100%">
+<tbody>
+<tr><td>Převoz zesnulého do 20 km</td><td class="p">2 900 Kč</td></tr>
+<tr><td>Každý další kilometr</td><td class="p">32 Kč / km</td></tr>
+<tr><td>Uložení v chladicím zařízení</td><td class="p">250 Kč / den</td></tr>
+<tr><td>Květinová výzdoba</td><td class="p">1 500–4 000 Kč</td></tr>
+<tr><td>Řečník</td><td class="p">od 1 500 Kč</td></tr>
+<tr><td>Převoz ze zahraničí</td><td class="p">cena na dotaz</td></tr>
+</tbody>
+</table>
+</section>
+<div style="padding: 120px 64px 0"><a class="stamp" href="tel:+420000000199"><span class="l">Nonstop převoz zesnulých</span><span class="n">+420 000 000 199</span><span class="s">ve dne, v noci i o&#160;svátcích</span></a></div>
+</div>
+<p class="note" style="max-width: 1280px">No photo bands on the price page: prices are read, not felt. The group name is a small Figtree label, the from-price is the H2. Groups are separated by 96 px of space, never by lines or boxes. The stamp line closes the page.</p>
+</div>
+
+<div>
+<p class="lbl">Ceník · A4 print</p>
+<div class="sc a4" data-shot="cenik-a4" style="width: 794px; height: 1123px">
+<p style="font-weight: 600; font-size: 20px">Pohřební služba Vzor</p>
+<p class="sans" style="font-size: 14px; color: #4C5856">Masarykovo náměstí 12, 682 01 Vyškov · Kancelář +420 000 000 101 · Nonstop +420 000 000 199</p>
+<h1 style="margin-top: 36px; font-weight: 400; font-size: 40px; line-height: 1.1">Ceník</h1>
+<p style="margin-top: 6px; font-weight: 600">Ceny jsou uvedeny včetně DPH.</p>
+<p class="sans" style="font-size: 13px; color: #4C5856">UKÁZKA: ceny jsou ukázkové a slouží jen k ověření rozvržení.</p>
+<div style="display: grid; grid-template-columns: 220px 1fr; column-gap: 28px; margin-top: 30px">
+<div><p class="sans" style="font-size: 13px; color: #4C5856">Pohřeb bez obřadu</p><p style="font-size: 24px">od 14 900 Kč</p></div>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px"><div><p style="font-weight: 600">V ceně</p><ul style="margin: 2px 0 0; padding-left: 16px"><li>převoz do 20 km</li><li>chlazení do 7 dnů</li><li>úprava, základní rakev</li><li>kremace, základní urna</li><li>úřední věci</li></ul></div><div><p style="font-weight: 600">Není v ceně</p><ul style="margin: 2px 0 0; padding-left: 16px"><li>oznámení (tisk)</li><li>květiny</li><li>převoz nad 20 km</li><li>uložení urny</li></ul></div></div>
+</div>
+<div style="display: grid; grid-template-columns: 220px 1fr; column-gap: 28px; margin-top: 26px">
+<div><p class="sans" style="font-size: 13px; color: #4C5856">Pohřeb s obřadem v síni</p><p style="font-size: 24px">od 24 900 Kč</p></div>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px"><div><p style="font-weight: 600">V ceně</p><ul style="margin: 2px 0 0; padding-left: 16px"><li>vše z pohřbu bez obřadu</li><li>síň na 30 minut</li><li>hudba ze záznamu</li><li>výzdoba rakve</li><li>20 oznámení</li></ul></div><div><p style="font-weight: 600">Není v ceně</p><ul style="margin: 2px 0 0; padding-left: 16px"><li>řečník</li><li>živá hudba</li><li>další květiny</li><li>hostina</li></ul></div></div>
+</div>
+<div style="display: grid; grid-template-columns: 220px 1fr; column-gap: 28px; margin-top: 26px">
+<p class="sans" style="font-size: 13px; color: #4C5856">Jednotlivé položky</p>
+<table style="border-collapse: collapse; width: 100%"><tbody><tr><td>Převoz do 20 km</td><td class="p">2 900 Kč</td></tr><tr><td>Každý další km</td><td class="p">32 Kč / km</td></tr><tr><td>Chladicí zařízení</td><td class="p">250 Kč / den</td></tr><tr><td>Květinová výzdoba</td><td class="p">1 500–4 000 Kč</td></tr><tr><td>Řečník</td><td class="p">od 1 500 Kč</td></tr><tr><td>Převoz ze zahraničí</td><td class="p">cena na dotaz</td></tr></tbody></table>
+</div>
+<p class="sans" style="position: absolute; left: 72px; right: 72px; bottom: 48px; font-size: 13px; line-height: 1.45; color: #4C5856">Pohřební služba Vzor s.r.o. · IČO 000 00 000 · Krajský soud v Brně, oddíl C, vložka 00000 · Vytištěno z vzor.example/cenik</p>
+</div>
+<p class="note" style="max-width: 794px">Print keeps the screen’s two-column logic (label + price left, lists right) at reduced size. No photos, no accent colour.</p>
+</div>
+
+<div>
+<p class="lbl">Kontakt · 375</p>
+<div class="sc" data-shot="kontakt-375" style="width: 375px; height: 1460px">
+<header class="hdr"><a class="wm" href="#">Pohřební služba Vzor</a><button type="button" class="btn">Menu</button></header>
+<section style="padding: 26px 16px 0">
+<h1 class="h1m">Kontakt</h1>
+<p style="margin-top: 12px">Kancelář je na náměstí ve Vyškově. Přijít můžete v&#160;úředních hodinách, jindy po domluvě.</p>
+</section>
+<div style="padding: 24px 16px 0"><a class="stampm" href="tel:+420000000199"><span class="l">Nonstop převoz zesnulých</span><span class="n">+420 000 000 199</span><span class="s">ve dne, v noci i o&#160;svátcích</span></a></div>
+<section style="padding: 44px 16px 0">
+<h2 class="h2m">Kancelář</h2>
+<p style="margin-top: 8px">Masarykovo náměstí 12<br>682 01 Vyškov</p>
+<p class="sans" style="margin-top: 6px; font-size: 18px"><a href="#">Mapa a příjezd</a></p>
+</section>
+<section style="padding: 36px 16px 0">
+<h2 class="h2m">Úřední hodiny</h2>
+<table class="hair" style="margin-top: 8px; width: 100%; border-collapse: collapse"><tbody><tr><td>Po–Čt</td><td class="p" style="font-weight: 400">7:00–15:30</td></tr><tr><td>Pá</td><td class="p" style="font-weight: 400">7:00–14:00</td></tr><tr><td>Přestávka</td><td class="p" style="font-weight: 400">12:00–12:30</td></tr></tbody></table>
+<p class="mut" style="margin-top: 6px; font-size: 18px">O státních svátcích zavřeno.</p>
+</section>
+<section style="padding: 36px 16px 0">
+<h2 class="h2m">Telefony</h2>
+<p style="margin-top: 8px"><a href="tel:+420000000101">Kancelář +420 000 000 101</a></p>
+<p style="margin-top: 4px"><a href="tel:+420000000104">Květiny +420 000 000 104</a></p>
+<p style="margin-top: 4px"><a href="#">kancelar@vzor.example</a></p>
+</section>
+<div class="photo" style="margin-top: 48px; height: 220px">Zástupný obrázek · budova kanceláře z náměstí, bez lidí</div>
+</div>
+<p class="note" style="max-width: 375px">The stamp line sits right after the opening paragraph, so it is in the first screen; the office hours follow under their own heading, below it.</p>
+</div>
+</div>
+
+<div class="row">
+<div>
+<p class="lbl">Oznámení a obřady · 1280 · neutral header, reduced nav, no bands</p>
+<div class="sc" data-shot="oznameni-1280" style="width: 1280px; height: 1560px">
+<header class="top"><a class="wm" href="#">Pohřební služba Vzor</a><nav aria-label="Hlavní"><a href="#" aria-current="page" style="text-decoration-thickness: 3px">Oznámení a obřady</a><a href="#">Kontakt</a><a href="#">Úvodní stránka</a></nav></header>
+<p class="sans mut" style="padding: 0 64px; font-size: 18px">Oznámení zveřejňuje Pohřební služba Vzor. <a href="tel:+420000000199">Telefon nonstop +420 000 000 199</a></p>
+<section class="grid" style="padding-top: 72px; align-items: end">
+<h1 class="h1d" style="grid-column: 1 / span 7">Oznámení a obřady</h1>
+<p class="mut" style="grid-column: 9 / span 4; font-size: 20px">Zveřejňujeme se souhlasem rodiny a po uplynutí doby zveřejnění oznámení odstraníme.</p>
+</section>
+<p style="padding: 24px 64px 0"><span class="tag">ZÁSTUPNÁ JMÉNA A FOTOGRAFIE</span></p>
+<section class="grid" style="padding-top: 72px">
+<h2 class="sans mut" style="grid-column: 1 / span 4; font-size: 18px">Nadcházející rozloučení</h2>
+<div style="grid-column: 6 / span 7; display: flex; flex-direction: column; gap: 56px">
+<article style="display: flex; gap: 28px"><div class="photo" style="width: 120px; height: 160px; flex: none; padding: 8px; font-size: 11px">fotografie od rodiny</div><div><a href="#" style="font-size: 34px; line-height: 1.15">Marie Dvořáková</a><p class="mut">* 3. 4. 1941 &#160; † 2. 11. 2026</p><p style="margin-top: 8px">Rozloučení se koná v&#160;pátek 14. 11. 2026 v&#160;10:00 ve smuteční síni ve Vyškově.</p></div></article>
+<article><a href="#" style="font-size: 34px; line-height: 1.15">Josef Kratochvíl</a><p class="mut">* 12. 8. 1936 &#160; † 4. 11. 2026</p><p style="margin-top: 8px">Rozloučení se koná v&#160;sobotu 15. 11. 2026 v&#160;11:00 ve farním kostele ve Vyškově.</p></article>
+<article><a href="#" style="font-size: 34px; line-height: 1.15">Jaroslava Malá</a><p class="mut">* 30. 1. 1950 &#160; † 5. 11. 2026</p><p style="margin-top: 8px">Pohřeb bez obřadu. Rodina se rozloučí v&#160;soukromí.</p></article>
+</div>
+</section>
+<section class="grid" style="padding-top: 96px">
+<h2 class="sans mut" style="grid-column: 1 / span 4; font-size: 18px">Nedávná oznámení</h2>
+<div style="grid-column: 6 / span 7"><a href="#" style="font-size: 26px">Karel Novotný</a><p class="mut">zemřel 28. 10. 2026 · rozloučení proběhlo 3. 11. 2026</p></div>
+</section>
+</div>
+<p class="note" style="max-width: 1280px">Each notice reads as a sentence, not a card. The family’s photo, when given, is a small 3:4 portrait beside the name; without it the name starts at the column edge. ⚖ Reduced nav for L1 review.</p>
+</div>
+
+<div>
+<p class="lbl">Oznámení a obřady · 375</p>
+<div class="sc" data-shot="oznameni-375" style="width: 375px; height: 1400px">
+<header class="hdr"><a class="wm" href="#">Pohřební služba Vzor</a><button type="button" class="btn">Menu</button></header>
+<p class="neutral">Oznámení zveřejňuje Pohřební služba Vzor. <a href="tel:+420000000199">Telefon nonstop +420 000 000 199</a></p>
+<section style="padding: 22px 16px 0">
+<h1 class="h1m">Oznámení a obřady</h1>
+<p class="mut" style="margin-top: 8px; font-size: 18px">Zveřejňujeme se souhlasem rodiny.</p>
+<p style="margin-top: 10px"><span class="tag">ZÁSTUPNÁ JMÉNA</span></p>
+<h2 class="sans mut" style="margin-top: 36px; font-size: 18px">Nadcházející rozloučení</h2>
+<article style="margin-top: 18px; display: flex; gap: 14px"><div class="photo" style="width: 72px; height: 96px; flex: none; padding: 4px; font-size: 10px">foto</div><div><a href="#" style="font-size: 26px; line-height: 1.15">Marie Dvořáková</a><p style="margin-top: 4px; font-size: 18px">pátek 14. 11. v&#160;10:00, smuteční síň ve Vyškově</p></div></article>
+<article style="margin-top: 32px"><a href="#" style="font-size: 26px; line-height: 1.15">Josef Kratochvíl</a><p style="margin-top: 4px; font-size: 18px">sobota 15. 11. v&#160;11:00, farní kostel ve Vyškově</p></article>
+<article style="margin-top: 32px"><a href="#" style="font-size: 26px; line-height: 1.15">Jaroslava Malá</a><p style="margin-top: 4px; font-size: 18px">pohřeb bez obřadu</p></article>
+<h2 class="sans mut" style="margin-top: 48px; font-size: 18px">Nedávná oznámení</h2>
+<article style="margin-top: 14px"><a href="#" style="font-size: 22px">Karel Novotný</a><p class="mut" style="font-size: 18px">zemřel 28. 10. 2026</p></article>
+</section>
+<div class="fold" aria-hidden="true" style="top: 666px"><span>667 px</span></div>
+</div>
+</div>
+
+<div>
+<p class="lbl">Jak postupovat · 375 · no situation picked</p>
+<div class="sc" data-shot="jak-postupovat-375-bez-vyberu" style="width: 375px; height: 1400px">
+<header class="hdr"><a class="wm" href="#">Pohřební služba Vzor</a><button type="button" class="btn">Menu</button></header>
+<section style="padding: 22px 16px 0">
+<h1 class="h1m">Když někdo zemřel</h1>
+<p style="margin-top: 10px">Nic nemusíte rozhodnout hned. Tady je, co se děje v&#160;prvních hodinách a dnech.</p>
+</section>
+<div style="padding: 20px 16px 0"><a class="stampm" href="tel:+420000000199"><span class="l">Nonstop převoz zesnulých</span><span class="n">+420 000 000 199</span></a></div>
+<p class="pickw" style="padding: 22px 16px 0">Kde blízký člověk zemřel?<br><a href="#doma">doma</a><a href="#nemocnice">v nemocnici</a><a href="#domov">v domově pro seniory</a><a href="#zahranici">v zahraničí</a></p>
+<section style="padding: 32px 16px 0">
+<p class="sans mut" style="font-size: 18px">V prvních hodinách</p>
+<h2 class="h3" style="margin-top: 14px">Zavolejte lékaře</h2>
+<p class="mut" style="font-size: 18px">když člověk zemřel doma</p>
+<p style="margin-top: 6px">Lékař provede prohlídku a vystaví list o&#160;prohlídce zemřelého. V&#160;noci a o&#160;víkendu volejte 155.</p>
+<h2 class="h3" style="margin-top: 22px">Nemocnice vám oznámí úmrtí</h2>
+<p class="mut" style="font-size: 18px">v nemocnici nebo v domově pro seniory</p>
+<p style="margin-top: 6px">Zesnulý zůstává v&#160;nemocnici, dokud nezavoláte pohřební službu.</p>
+<h2 class="h3" style="margin-top: 22px">Zavolejte nám převoz</h2>
+<p class="mut" style="font-size: 18px">vždy</p>
+</section>
+<div class="fold" aria-hidden="true" style="top: 666px"><span>667 px</span></div>
+</div>
+</div>
+
+<div>
+<p class="lbl">Jak postupovat · 375 · “doma” picked</p>
+<div class="sc" data-shot="jak-postupovat-375-doma" style="width: 375px; height: 1400px">
+<header class="hdr"><a class="wm" href="#">Pohřební služba Vzor</a><button type="button" class="btn">Menu</button></header>
+<section style="padding: 22px 16px 0">
+<h1 class="h1m">Když někdo zemřel</h1>
+</section>
+<div style="padding: 20px 16px 0"><a class="stampm" href="tel:+420000000199"><span class="l">Nonstop převoz zesnulých</span><span class="n">+420 000 000 199</span></a></div>
+<p class="pickw" style="padding: 22px 16px 0">Kde blízký člověk zemřel?<br><a href="#doma" class="on" aria-current="true">doma (vybráno)</a><a href="#nemocnice">v nemocnici</a><a href="#domov">v domově pro seniory</a><a href="#zahranici">v zahraničí</a></p>
+<p class="sans" style="padding: 6px 16px 0; font-size: 18px">5 kroků pro úmrtí doma. <a href="#">Zobrazit vše</a></p>
+<section style="padding: 28px 16px 0">
+<p class="sans mut" style="font-size: 18px">V prvních hodinách</p>
+<h2 class="h3" style="margin-top: 14px">Zavolejte lékaře</h2>
+<p style="margin-top: 6px">Lékař provede prohlídku a vystaví list o&#160;prohlídce zemřelého. V&#160;noci a o&#160;víkendu volejte 155.</p>
+<label class="chk"><input type="checkbox" checked=""><span>Lékař provedl prohlídku</span></label>
+<label class="chk"><input type="checkbox"><span>Máme list o&#160;prohlídce</span></label>
+<h2 class="h3" style="margin-top: 22px">Zavolejte nám převoz</h2>
+<p style="margin-top: 6px">Přijedeme, jakmile bude list o&#160;prohlídce vystavený.</p>
+<p class="sans mut" style="margin-top: 32px; font-size: 18px">V dalších dnech</p>
+<h2 class="h3" style="margin-top: 14px">Připravte doklady</h2>
+<p style="margin-top: 6px">Občanský průkaz zemřelého a váš, rodný nebo oddací list.</p>
+</section>
+<div class="fold" aria-hidden="true" style="top: 666px"><span>667 px</span></div>
+</div>
+<p class="note" style="max-width: 375px">The picker is a sentence of words (each ≥ 44 px tall); the chosen word loses its underline, gains a 3 px accent bar and the word “vybráno”. Phases are small Figtree labels, steps are Spectral 600 headings: a narrative, not a checklist grid.</p>
+</div>
+</div>
+
+<div class="row">
+<div>
+<p class="lbl">Lidé · 1280 · with photos</p>
+<div class="sc" data-shot="lide-1280-s-fotkami" style="width: 1280px; height: 1330px">
+<header class="top"><a class="wm" href="#">Pohřební služba Vzor</a><nav aria-label="Hlavní"><a href="#">Když někdo zemřel</a><a href="#">Oznámení a obřady</a><a href="#">Služby</a><a href="#">Ceník</a><a href="#" aria-current="page" style="text-decoration-thickness: 3px">O nás</a><a href="#">Kontakt</a></nav></header>
+<section class="grid" style="padding-top: 72px; align-items: end">
+<h1 class="h1d" style="grid-column: 1 / span 7">Kdo vás přijme</h1>
+<p style="grid-column: 9 / span 4"><span class="tag">ZÁSTUPNÁ JMÉNA A FOTOGRAFIE</span></p>
+</section>
+<section class="grid" style="padding-top: 72px; row-gap: 56px">
+<div class="photo" style="grid-column: 1 / span 2; height: 200px; padding: 8px; font-size: 11px">3:4 se souhlasem</div>
+<div style="grid-column: 4 / span 8; align-self: center"><p style="font-size: 36px; line-height: 1.15">Jana Vzorová</p><p class="sans mut" style="font-size: 18px">majitelka, sjednání pohřbů</p><p style="margin-top: 6px"><a href="tel:+420000000102">Přímá linka +420 000 000 102</a></p></div>
+<div class="photo" style="grid-column: 1 / span 2; height: 200px; padding: 8px; font-size: 11px">3:4 se souhlasem</div>
+<div style="grid-column: 4 / span 8; align-self: center"><p style="font-size: 36px; line-height: 1.15">Tomáš Vzor</p><p class="sans mut" style="font-size: 18px">převozy a obřady</p></div>
+<div class="photo" style="grid-column: 1 / span 2; height: 200px; padding: 8px; font-size: 11px">3:4 se souhlasem</div>
+<div style="grid-column: 4 / span 8; align-self: center"><p style="font-size: 36px; line-height: 1.15">Petra Malá</p><p class="sans mut" style="font-size: 18px">kancelář a květiny</p><p style="margin-top: 6px"><a href="tel:+420000000104">Přímá linka +420 000 000 104</a></p></div>
+<div class="photo" style="grid-column: 1 / span 2; height: 200px; padding: 8px; font-size: 11px">3:4 se souhlasem</div>
+<div style="grid-column: 4 / span 8; align-self: center"><p style="font-size: 36px; line-height: 1.15">Martin Šimek</p><p class="sans mut" style="font-size: 18px">převozy, nonstop služba</p></div>
+</section>
+</div>
+<p class="lbl" style="margin-top: 40px">Lidé · 1280 · without photos</p>
+<div class="sc" data-shot="lide-1280-bez-fotek" style="width: 1280px; height: 620px">
+<section class="grid" style="padding-top: 64px">
+<h1 class="h2d" style="grid-column: 1 / span 4">Kdo vás přijme</h1>
+<div style="grid-column: 6 / span 7; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 40px 32px">
+<div><p style="font-size: 32px; line-height: 1.15">Jana Vzorová</p><p class="sans mut" style="font-size: 18px">majitelka, sjednání pohřbů</p><p style="margin-top: 4px"><a href="tel:+420000000102">+420 000 000 102</a></p></div>
+<div><p style="font-size: 32px; line-height: 1.15">Tomáš Vzor</p><p class="sans mut" style="font-size: 18px">převozy a obřady</p></div>
+<div><p style="font-size: 32px; line-height: 1.15">Petra Malá</p><p class="sans mut" style="font-size: 18px">kancelář a květiny</p><p style="margin-top: 4px"><a href="tel:+420000000104">+420 000 000 104</a></p></div>
+<div><p style="font-size: 32px; line-height: 1.15">Martin Šimek</p><p class="sans mut" style="font-size: 18px">převozy, nonstop služba</p></div>
+</div>
+</section>
+</div>
+<p class="note" style="max-width: 1280px">With photos: one person per row, portrait in columns 1–2, name in a light 36 px Spectral. Without photos: the heading moves to its column and names sit two per row in the text column; no initials, no empty frames.</p>
+</div>
+
+<div>
+<p class="lbl">Pro účastníky pohřbu · 375</p>
+<div class="sc" data-shot="pro-ucastniky-375" style="width: 375px; height: 1780px">
+<header class="hdr"><a class="wm" href="#">Pohřební služba Vzor</a><button type="button" class="btn">Menu</button></header>
+<section style="padding: 26px 16px 0">
+<h1 class="h1m">Pro účastníky pohřbu</h1>
+<p style="margin-top: 10px">Co vědět, než přijdete na rozloučení.</p>
+</section>
+<div style="padding: 22px 16px 0"><a class="stampm" href="tel:+420000000199"><span class="l">Nonstop převoz zesnulých</span><span class="n">+420 000 000 199</span></a></div>
+<section style="padding: 40px 16px 0"><h2 class="h2m">Kde je smuteční síň</h2><p style="margin-top: 8px">U hřbitova, Hřbitovní 3, Vyškov. Vchod je od parkoviště.</p><p class="sans" style="margin-top: 4px; font-size: 18px"><a href="#">Mapa</a></p></section>
+<section style="padding: 32px 16px 0"><h2 class="h2m">Parkování</h2><p style="margin-top: 8px">U hřbitova je 20 míst zdarma. Přijeďte 15 minut předem.</p></section>
+<div class="photo" style="margin-top: 44px; height: 200px">Zástupný obrázek · cesta ke smuteční síni, bez lidí</div>
+<section style="padding: 44px 16px 0"><h2 class="h2m">Co si vzít na sebe</h2><p style="margin-top: 8px">Tmavé oblečení je zvykem, ale není podmínkou. Přání rodiny najdete v&#160;oznámení.</p></section>
+<section style="padding: 32px 16px 0"><h2 class="h2m">Květiny</h2><p style="margin-top: 8px">Věnec nebo kytici připravíme. Objednejte den před obřadem do 12:00.</p><p class="sans" style="margin-top: 4px; font-size: 18px"><a href="tel:+420000000104">Květiny +420 000 000 104</a></p></section>
+<section style="padding: 32px 16px 0"><h2 class="h2m">Přenos obřadu</h2><p style="margin-top: 8px">Odkaz najdete v&#160;oznámení. Přenos nenahrávejte a neposílejte dál.</p></section>
+<div class="fold" aria-hidden="true" style="top: 666px"><span>667 px</span></div>
+</div>
+</div>
+
+<div>
+<p class="lbl">Menu open · 375</p>
+<div class="sc" data-shot="menu-375-otevrene" style="width: 375px; height: 1060px">
+<header class="hdr"><a class="wm" href="#">Pohřební služba Vzor</a><button type="button" class="btn" aria-expanded="true">Zavřít</button></header>
+<nav aria-label="Hlavní" style="padding: 24px 16px 0; display: flex; flex-direction: column; gap: 6px">
+<a href="#" style="font-size: 28px; min-height: 48px">Když někdo zemřel</a>
+<a href="#" style="font-size: 28px; min-height: 48px">Oznámení a obřady</a>
+<a href="#" style="font-size: 28px; min-height: 48px">Pohřeb bez obřadu</a>
+<a href="#" style="font-size: 28px; min-height: 48px">Služby</a>
+<a href="#" style="font-size: 28px; min-height: 48px">Ceník</a>
+<a href="#" style="font-size: 28px; min-height: 48px">Pro účastníky pohřbu</a>
+<a href="#" style="font-size: 28px; min-height: 48px">O nás a lidé</a>
+<a href="#" style="font-size: 28px; min-height: 48px">Časté otázky</a>
+<a href="#" style="font-size: 28px; min-height: 48px">Kontakt</a>
+</nav>
+<div style="padding: 32px 16px 0"><a class="stampm" href="tel:+420000000199"><span class="l">Nonstop převoz zesnulých</span><span class="n">+420 000 000 199</span></a></div>
+</div>
+<p class="note" style="max-width: 375px">Large light Spectral words separated by space only; the stamp line closes the list. Opens in the flow.</p>
+</div>
+
+<div>
+<p class="lbl">404 · 375</p>
+<div class="sc" data-shot="404-375" style="width: 375px; height: 860px">
+<header class="hdr"><a class="wm" href="#">Pohřební služba Vzor</a><button type="button" class="btn">Menu</button></header>
+<section style="padding: 40px 16px 0">
+<p class="sans mut" style="font-size: 18px">Chyba 404</p>
+<h1 class="h1m" style="margin-top: 6px">Tuto stránku jsme nenašli.</h1>
+<p style="margin-top: 12px">Možná byla přesunuta. Zkuste <a href="#">úvodní stránku</a> nebo <a href="#">jak postupovat, když někdo zemřel</a>.</p>
+</section>
+<div style="padding: 32px 16px 0"><a class="stampm" href="tel:+420000000199"><span class="l">Nonstop převoz zesnulých</span><span class="n">+420 000 000 199</span><span class="s">ve dne, v noci i o&#160;svátcích</span></a></div>
+</div>
+</div>
+</div>
+
+<div class="row">
+<div>
+<p class="lbl">Služby · 1280 · long page broken by landscape bands</p>
+<div class="sc" data-shot="sluzby-1280" style="width: 1280px; height: 1780px">
+<header class="top"><a class="wm" href="#">Pohřební služba Vzor</a><nav aria-label="Hlavní"><a href="#">Když někdo zemřel</a><a href="#">Oznámení a obřady</a><a href="#" aria-current="page" style="text-decoration-thickness: 3px">Služby</a><a href="#">Ceník</a><a href="#">O nás</a><a href="#">Kontakt</a></nav></header>
+<section class="grid" style="padding-top: 72px; align-items: end">
+<h1 class="h1d" style="grid-column: 1 / span 7">Služby</h1>
+<p style="grid-column: 9 / span 4; font-size: 22px; line-height: 1.55">Převoz, úřední věci a pohřeb s&#160;obřadem i bez obřadu. Na všem se domluvíme v&#160;klidu.</p>
+</section>
+<div style="padding: 64px 64px 0"><a class="stamp" href="tel:+420000000199"><span class="l">Nonstop převoz zesnulých</span><span class="n">+420 000 000 199</span><span class="s">ve dne, v noci i o&#160;svátcích</span></a></div>
+<section class="grid" style="padding-top: 96px">
+<h2 class="h2d" style="grid-column: 1 / span 4">Pohřeb s obřadem</h2>
+<div style="grid-column: 6 / span 6"><p>Rozloučení ve smuteční síni nebo v&#160;kostele. Připravíme obřad, hudbu, řečníka i výzdobu.</p><p class="sans" style="margin-top: 10px; font-size: 18px"><a href="#">Co je v ceně</a></p></div>
+</section>
+<div class="photo" style="margin-top: 96px; height: 340px">Zástupný obrázek · krajina, na celou šířku, bez lidí</div>
+<section class="grid" style="padding-top: 96px">
+<h2 class="h2d" style="grid-column: 1 / span 4">Pohřeb bez obřadu</h2>
+<div style="grid-column: 6 / span 6"><p>Zařídíme převoz, kremaci a úřední věci. Rozloučit se můžete později, doma nebo v&#160;přírodě.</p><p class="sans" style="margin-top: 10px; font-size: 18px"><a href="#">Co je v ceně</a></p></div>
+</section>
+<section class="grid" style="padding-top: 96px">
+<h2 class="h2d" style="grid-column: 1 / span 4">Další služby</h2>
+<p class="sans" style="grid-column: 6 / span 6; font-size: 19px; line-height: 2"><a href="#">Převoz zesnulých</a> · <a href="#">Úřední vyřízení</a> · <a href="#">Smuteční oznámení</a> · <a href="#">Uložení urny</a> · <a href="#">Květinová výzdoba</a> · <a href="#">Rakve a urny</a></p>
+</section>
+</div>
+<p class="note" style="max-width: 1280px">One long page with anchors, no detail pages. A band sits between every second section; with no photos the bands become 96 px of space. On a page with a hero, the stamp line follows the hero.</p>
+</div>
+
+<div>
+<p class="lbl">Footer · 1280</p>
+<div class="sc" data-shot="paticka-1280" style="width: 1280px; height: 560px; padding: 0 64px">
+<div style="padding-top: 56px"><a class="stamp" href="tel:+420000000199"><span class="l">Nonstop převoz zesnulých</span><span class="n">+420 000 000 199</span><span class="s">ve dne, v noci i o&#160;svátcích</span></a></div>
+<div style="margin-top: 48px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 40px; font-size: 19px">
+<div><h2 class="h3">Kancelář</h2><p style="margin-top: 6px">Masarykovo náměstí 12<br>682 01 Vyškov</p><p class="mut" style="margin-top: 6px">Po–Čt 7:00–15:30, Pá 7:00–14:00</p><p style="margin-top: 6px"><a href="tel:+420000000101">+420 000 000 101</a></p></div>
+<div><h2 class="h3">Dokumenty</h2><p class="sans" style="margin-top: 6px; font-size: 18px; line-height: 1.9"><a href="#">Řád pohřební služby</a> (PDF)<br><a href="#">Obchodní podmínky</a> (PDF)<br><a href="#">Reklamační řád</a> (PDF)</p></div>
+<div><h2 class="h3">Právní informace</h2><p class="sans" style="margin-top: 6px; font-size: 18px; line-height: 1.9"><a href="#">Právní informace a spory</a><br><a href="#">Ochrana osobních údajů</a></p></div>
+</div>
+<p class="sans mut" style="margin-top: 40px; font-size: 18px">Pohřební služba Vzor s.r.o., Masarykovo náměstí 12, 682 01 Vyškov · IČO 000 00 000 · Krajský soud v Brně, oddíl C, vložka 00000 · Spory: Česká obchodní inspekce, <a href="#">adr.coi.cz</a></p>
+</div>
+<p class="note" style="max-width: 1280px">The second stamp line opens the footer. On notice pages the footer starts at the three columns (no stamp line).</p>
+</div>
+</div>
+
+</div>
+</body>
+</html>
