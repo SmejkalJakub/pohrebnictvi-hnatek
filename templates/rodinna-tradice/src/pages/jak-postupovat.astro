@@ -1,131 +1,273 @@
 ---
 /**
- * Jak postupovat: a long-form narrative article. Guidance entries are numbered <h2> sections
- * in reading order, with a sticky margin TOC on desktop, checklists as plain bulleted lists
- * and a boxed "Potřebujete převoz hned?" aside after the first section.
+ * Jak postupovat: a guided article. A "Kde blízký člověk zemřel?" chooser filters the steps
+ * through fragment targets (#situace-…) and CSS :has(:target), so no JavaScript is needed and
+ * every situation has a shareable link. Steps stay numbered <h2> sections in reading order
+ * (numbers from a CSS counter, so they stay continuous when steps are hidden). Each step leads
+ * with what to do, a tickable checklist and the right phone; the longer text sits in a
+ * <details> "Přečíst podrobnosti", and a "Další krok" link moves the reader on. Without :has()
+ * support the full guide simply shows.
  */
 import LetterLayout from "../layouts/LetterLayout.astro";
 import PageIntro from "../components/PageIntro.astro";
 import MarginToc, { type TocItem } from "../components/MarginToc.astro";
 import ShiftedBody from "../components/ShiftedBody.astro";
+import SituationChooser from "../components/SituationChooser.astro";
 import EmergencyPhoneLink from "@core/components/EmergencyPhoneLink.astro";
 import PhoneLink from "@core/components/PhoneLink.astro";
 import PlaceholderMark from "@core/components/PlaceholderMark.astro";
 import UnreviewedMark from "@core/components/UnreviewedMark.astro";
 import { getGuidance, getPage, getSiteContext, render } from "@core/content/load.ts";
-import { GUIDANCE_PHASE_LABEL, ui } from "../i18n/cs.ts";
+import {
+  SITUATION_ANCHOR,
+  SPECIFIC_SITUATIONS,
+  chooserSituations,
+  nextGuidanceStep,
+  situationsAttribute,
+} from "@core/content/guidance-flow.ts";
+import { GUIDANCE_PHASE_LABEL, SITUATION_FILTER_LABEL, ui } from "../i18n/cs.ts";
 import { formatCzechDate } from "../lib/content.ts";
+
+const ALL_ANCHOR = "postup";
 
 const site = await getSiteContext();
 const page = await getPage("jak-postupovat");
 const guidance = await getGuidance();
+const situations = chooserSituations(guidance);
 const entries = await Promise.all(
   guidance.map(async (entry, index) => {
     const { Content } = await render(entry);
     const previous = guidance[index - 1];
     const phaseStarts = previous === undefined || previous.data.phase !== entry.data.phase;
-    return { entry, Content, number: index + 1, phaseStarts };
+    return { entry, Content, phaseStarts, next: nextGuidanceStep(guidance, index), situations: situationsAttribute(entry) };
   }),
 );
+/** A phase label stays visible while any of its steps is visible. */
+function phaseSituations(phase: (typeof guidance)[number]["data"]["phase"]): string {
+  const inPhase = guidance.filter((other) => other.data.phase === phase);
+  const attributes = new Set(inPhase.flatMap((other) => situationsAttribute(other).split(" ")));
+  if (attributes.has("any")) {
+    return "any";
+  }
+  return [...attributes].join(" ");
+}
+
 const officePhone = site.contact.phones.find((phone) => phone.department === "office");
-const toc: TocItem[] = entries.map(({ entry, number }) => ({
+const toc: TocItem[] = entries.map(({ entry, situations: attr }) => ({
   href: `#${entry.id}`,
   label: entry.data.title,
-  number: `${number}.`,
+  situations: attr,
 }));
+
+/*
+ * Filter rules, one block per known situation. Generated here because the selectors depend on
+ * the situation anchors; they are static CSS (no JS) and harmless for absent situations.
+ */
+const filterCss = SPECIFIC_SITUATIONS.map((situation) => {
+  const target = `[data-guide]:has(#${SITUATION_ANCHOR[situation]}:target)`;
+  const hidden = `:not([data-situations~="any"]):not([data-situations~="${situation}"])`;
+  return [
+    `${target} [data-guide-step]${hidden}, ${target} [data-margin-toc] li${hidden} { display: none; }`,
+    `${target} [data-filter-status="${situation}"] { display: flex; }`,
+    `${target} [data-situation-link="${situation}"] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); color: var(--accent); }`,
+    `${target} [data-situation-link="${situation}"] .chooser-arrow::before { content: "✓ "; }`,
+  ].join("\n");
+}).join("\n");
 ---
 <LetterLayout site={site} title={page.data.metaTitle ?? page.data.title} description={page.data.metaDescription}>
-  <PageIntro title={page.data.title} lead={page.data.lead} placeholder={page.data.placeholder}>
+  <PageIntro title={page.data.title} lead={page.data.lead} placeholder={page.data.placeholder} />
+
+  <div class="frame guide" data-guide>
+    <style is:inline set:html={filterCss}></style>
+    {
+      situations.length > 0 ? (
+        <div class="guide-chooser">
+          <SituationChooser situations={situations} base="" allAnchor={ALL_ANCHOR} headingId="kde-zemrel" />
+        </div>
+      ) : null
+    }
+
     <div class="prose intro-body">
       <page.Content />
     </div>
-  </PageIntro>
 
-  <div class="frame article-grid">
-    <div class="article-toc">
-      <MarginToc items={toc} />
-    </div>
-    <article class="article" data-guidance-article>
-      {
-        entries.map(({ entry, Content, number, phaseStarts }, index) => (
-          <>
-            <section class="step" id={entry.id} aria-labelledby={`${entry.id}-nadpis`} data-guidance={entry.id} data-phase={entry.data.phase}>
-              {phaseStarts ? <p class="label step-phase">{GUIDANCE_PHASE_LABEL[entry.data.phase]}</p> : null}
-              <PlaceholderMark active={entry.data.placeholder} kind="content">
-                <h2 id={`${entry.id}-nadpis`} class="step-heading">
-                  <span class="step-num">{number}.</span> {entry.data.title}
-                </h2>
-                {entry.data.review.reviewedAt === null && site.mode === "prototype" ? (
-                  <p>
-                    <UnreviewedMark reviewedAt={entry.data.review.reviewedAt} />
-                  </p>
-                ) : null}
-                <p class="step-summary">{entry.data.summary}</p>
-                <ShiftedBody by={1} idPrefix={entry.id}>
-                  <Content />
-                </ShiftedBody>
-                {entry.data.checklist.length > 0 ? (
-                  <div class="prose step-checklist">
-                    <p>
-                      <strong>{ui.checklistLabel}:</strong>
-                    </p>
-                    <ul>
-                      {entry.data.checklist.map((item) => (
-                        <li>{item}</li>
-                      ))}
-                    </ul>
-                  </div>
-                ) : null}
-                {entry.data.contactPrompt === "emergency" && site.emergency.enabled ? (
-                  <p class="step-prompt">
-                    {ui.promptEmergency} <EmergencyPhoneLink emergency={site.emergency} variant="number" class="step-prompt-link" />
-                  </p>
-                ) : null}
-                {entry.data.contactPrompt === "office" && officePhone !== undefined ? (
-                  <p class="step-prompt">
-                    {ui.promptOffice} <PhoneLink number={officePhone.number} class="step-prompt-link" />
-                  </p>
-                ) : null}
-                {entry.data.review.reviewedAt !== null ? (
-                  <p class="step-review">
-                    {ui.reviewedOn} {formatCzechDate(entry.data.review.reviewedAt)}
-                    {entry.data.review.sources.length > 0 ? (
-                      <span>
-                        {" · "}
-                        {ui.sources}:{" "}
-                        {entry.data.review.sources.map((source, sourceIndex) => (
-                          <>
-                            {sourceIndex > 0 ? ", " : null}
-                            <a href={source.url} rel="noopener">
-                              {source.title}
-                            </a>
-                          </>
-                        ))}
-                      </span>
-                    ) : null}
-                  </p>
-                ) : null}
-              </PlaceholderMark>
-            </section>
-            {index === 0 && site.emergency.enabled ? (
-              <aside class="urgent" aria-label={site.emergency.label} data-urgent-aside>
-                <p class="urgent-title">{ui.urgentAsideTitle}</p>
-                {site.emergency.shortNote !== null ? <p>{site.emergency.shortNote}</p> : null}
-                <p>
-                  <EmergencyPhoneLink emergency={site.emergency} variant="full" class="urgent-link" />
+    {
+      situations.map((situation) => (
+        <span id={SITUATION_ANCHOR[situation]} class="situation-target" data-situation-target={situation} />
+      ))
+    }
+    <div id={ALL_ANCHOR} class="situation-target" />
+
+    {
+      situations.map((situation) => (
+        <p class="filter-status" data-filter-status={situation}>
+          <span>
+            {ui.filterShowing} <strong>{SITUATION_FILTER_LABEL[situation]}</strong>
+          </span>
+          <a class="filter-reset" href={`#${ALL_ANCHOR}`}>
+            {ui.filterShowAll}
+          </a>
+        </p>
+      ))
+    }
+
+    <div class="article-grid">
+      <div class="article-toc">
+        <MarginToc items={toc} autoNumber />
+      </div>
+      <article class="article" data-guidance-article>
+        {
+          entries.map(({ entry, Content, phaseStarts, next, situations: attr }, index) => (
+            <>
+              {phaseStarts ? (
+                <p class="label step-phase" data-guide-step data-situations={phaseSituations(entry.data.phase)}>
+                  {GUIDANCE_PHASE_LABEL[entry.data.phase]}
                 </p>
-              </aside>
-            ) : null}
-          </>
-        ))
-      }
-    </article>
+              ) : null}
+              <section
+                class="step"
+                id={entry.id}
+                aria-labelledby={`${entry.id}-nadpis`}
+                data-guidance={entry.id}
+                data-guide-step
+                data-situations={attr}
+                data-phase={entry.data.phase}
+              >
+                <PlaceholderMark active={entry.data.placeholder} kind="content">
+                  <h2 id={`${entry.id}-nadpis`} class="step-heading">
+                    <span class="step-num" aria-hidden="true" />
+                    <span class="step-title">{entry.data.title}</span>
+                  </h2>
+                  {entry.data.review.reviewedAt === null && site.mode === "prototype" ? (
+                    <p>
+                      <UnreviewedMark reviewedAt={entry.data.review.reviewedAt} />
+                    </p>
+                  ) : null}
+                  <div class="step-do">
+                    <p class="label step-do-label">{ui.stepDo}</p>
+                    <p class="step-summary">{entry.data.summary}</p>
+                  </div>
+                  {entry.data.checklist.length > 0 ? (
+                    <fieldset class="step-tasks">
+                      <legend class="step-tasks-legend">{ui.checklistLabel}</legend>
+                      <p class="step-tasks-hint">{ui.stepTicks}</p>
+                      <ul class="step-tasks-list">
+                        {entry.data.checklist.map((item, itemIndex) => (
+                          <li>
+                            <label class="task" for={`${entry.id}-ukol-${itemIndex + 1}`}>
+                              <input type="checkbox" id={`${entry.id}-ukol-${itemIndex + 1}`} class="task-box" />
+                              <span class="task-text">{item}</span>
+                            </label>
+                          </li>
+                        ))}
+                      </ul>
+                    </fieldset>
+                  ) : null}
+                  {entry.data.contactPrompt === "emergency" && site.emergency.enabled ? (
+                    <p class="step-prompt">
+                      <span class="step-prompt-lead">{ui.promptEmergency}</span>
+                      <EmergencyPhoneLink emergency={site.emergency} variant="number" class="step-prompt-link" />
+                    </p>
+                  ) : null}
+                  {entry.data.contactPrompt === "office" && officePhone !== undefined ? (
+                    <p class="step-prompt">
+                      <span class="step-prompt-lead">{ui.promptOffice}</span>
+                      <PhoneLink number={officePhone.number} class="step-prompt-link" />
+                    </p>
+                  ) : null}
+                  <details class="step-more">
+                    <summary class="step-more-summary">{ui.stepMore}</summary>
+                    <div class="step-more-body">
+                      <ShiftedBody by={1} idPrefix={entry.id}>
+                        <Content />
+                      </ShiftedBody>
+                    </div>
+                  </details>
+                  {entry.data.review.reviewedAt !== null ? (
+                    <p class="step-review">
+                      {ui.reviewedOn} {formatCzechDate(entry.data.review.reviewedAt)}
+                      {entry.data.review.sources.length > 0 ? (
+                        <span>
+                          {" · "}
+                          {ui.sources}:{" "}
+                          {entry.data.review.sources.map((source, sourceIndex) => (
+                            <>
+                              {sourceIndex > 0 ? ", " : null}
+                              <a href={source.url} rel="noopener">
+                                {source.title}
+                              </a>
+                            </>
+                          ))}
+                        </span>
+                      ) : null}
+                    </p>
+                  ) : null}
+                  {next !== null ? (
+                    <p class="step-next">
+                      <a class="step-next-link" href={`#${next.id}`}>
+                        <span class="step-next-label">{ui.stepNext}</span> {next.data.title}
+                        <span aria-hidden="true"> ↓</span>
+                      </a>
+                    </p>
+                  ) : (
+                    <p class="step-next step-end">
+                      {ui.stepDone}{" "}
+                      {officePhone !== undefined ? <PhoneLink number={officePhone.number} class="step-prompt-link" /> : null}
+                    </p>
+                  )}
+                </PlaceholderMark>
+              </section>
+              {index === 0 && site.emergency.enabled ? (
+                <aside class="urgent" aria-label={site.emergency.label} data-urgent-aside>
+                  <p class="urgent-title">{ui.urgentAsideTitle}</p>
+                  {site.emergency.shortNote !== null ? <p>{site.emergency.shortNote}</p> : null}
+                  <p>
+                    <EmergencyPhoneLink emergency={site.emergency} variant="full" class="urgent-link" />
+                  </p>
+                </aside>
+              ) : null}
+            </>
+          ))
+        }
+      </article>
+    </div>
   </div>
 </LetterLayout>
 
 <style>
+  .guide-chooser {
+    margin-bottom: 2.5rem;
+  }
+
   .intro-body:not(:empty) {
-    margin-top: 1.5rem;
+    max-width: var(--measure);
+    margin-bottom: 2rem;
+  }
+
+  .situation-target {
+    display: block;
+    height: 0;
+    scroll-margin-top: calc(var(--sticky-offset) + 1rem);
+  }
+
+  .filter-status {
+    display: none;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 1.25rem;
+    max-width: var(--measure);
+    margin-bottom: 1.5rem;
+    padding: 0.875rem 1.25rem;
+    border: 1px solid var(--accent);
+    background: var(--surface);
+    font-size: 1.125rem;
+  }
+
+  .filter-reset {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.75rem;
+    font-weight: 600;
   }
 
   .article-grid {
@@ -135,59 +277,207 @@ const toc: TocItem[] = entries.map(({ entry, number }) => ({
 
   .article {
     max-width: var(--measure);
+    counter-reset: guide-step;
+  }
+
+  .step-phase {
+    margin-top: 2.5rem;
   }
 
   .step {
+    counter-increment: guide-step;
     padding-block: 2rem;
     border-top: 1px solid var(--rule);
   }
 
-  .step-phase {
-    margin-bottom: 0.75rem;
-  }
-
-  .step-num {
-    font-family: var(--font-caption);
-    font-style: italic;
-    color: var(--accent);
-    margin-right: 0.25rem;
+  .step-phase + .step {
+    margin-top: 0.75rem;
   }
 
   .step-heading {
-    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .step-num {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    margin-top: 0.125rem;
+    border: 1px solid var(--accent);
+    border-radius: 50%;
+    font-family: var(--font-caption);
+    font-style: italic;
+    font-size: 1.375rem;
+    line-height: 1;
+    color: var(--accent);
+    background: var(--paper);
+  }
+
+  .step-num::before {
+    content: counter(guide-step);
+  }
+
+  .step-do-label {
+    margin-bottom: 0.25rem;
   }
 
   .step-summary {
     font-family: var(--font-caption);
-    font-size: 1.25rem;
-    line-height: 1.5;
-    margin-block: 0.75rem 1rem;
+    font-size: 1.3125rem;
+    line-height: 1.45;
   }
 
   :global([data-fonts="literata"]) .step-summary {
-    font-size: 1.125rem;
+    font-size: 1.1875rem;
   }
 
-  .step-checklist {
-    margin-top: 1.25rem;
+  .step-tasks {
+    margin-top: 1.5rem;
+    border: 0;
+    padding: 0;
+    min-width: 0;
+  }
+
+  .step-tasks-legend {
+    padding: 0;
+    font-weight: 600;
+  }
+
+  .step-tasks-hint {
+    font-size: 0.9375rem;
+    color: var(--muted);
+  }
+
+  .step-tasks-list {
+    margin-top: 0.5rem;
+    border-top: 1px solid var(--rule);
+  }
+
+  .task {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.875rem;
+    min-height: 3rem;
+    padding-block: 0.625rem;
+    border-bottom: 1px solid var(--rule);
+    cursor: pointer;
+  }
+
+  .task-box {
+    flex: none;
+    width: 1.5rem;
+    height: 1.5rem;
+    margin-top: 0.125rem;
+    accent-color: var(--accent);
+    cursor: pointer;
+  }
+
+  .task-box:checked + .task-text {
+    color: var(--muted);
+    text-decoration: line-through;
+    text-decoration-thickness: 1px;
   }
 
   .step-prompt {
-    margin-top: 1.25rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.25rem 0.75rem;
+    margin-top: 1.5rem;
     font-weight: 600;
   }
 
   .step :global(.step-prompt-link) {
     display: inline-flex;
     align-items: center;
-    min-height: 2.75rem;
+    min-height: 3rem;
+    padding: 0.25rem 1rem;
+    border: 1px solid var(--accent);
+    font-size: 1.25rem;
     white-space: nowrap;
+    text-decoration: none;
+  }
+
+  .step :global(.step-prompt-link:hover) {
+    background: var(--surface);
+    text-decoration: underline;
+  }
+
+  .step-more {
+    margin-top: 1.5rem;
+    border-top: 1px solid var(--rule);
+  }
+
+  .step-more-summary {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    min-height: 3rem;
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--accent);
+    list-style: none;
+  }
+
+  .step-more-summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .step-more-summary::before {
+    content: "+";
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    border: 1px solid var(--accent);
+    font-size: 1.125rem;
+    line-height: 1;
+  }
+
+  .step-more[open] > .step-more-summary::before {
+    content: "−";
+  }
+
+  .step-more-body {
+    padding-bottom: 0.5rem;
   }
 
   .step-review {
     margin-top: 1rem;
     font-size: 0.875rem;
     color: var(--muted);
+  }
+
+  .step-next {
+    margin-top: 1.5rem;
+  }
+
+  .step-next-link {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.25rem 0.5rem;
+    min-height: 2.75rem;
+    font-family: var(--font-subhead);
+    font-size: 1.1875rem;
+  }
+
+  .step-next-label {
+    font-family: var(--font-body);
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--muted);
+  }
+
+  .step-end {
+    font-weight: 600;
   }
 
   .urgent {
@@ -234,6 +524,12 @@ const toc: TocItem[] = entries.map(({ entry, number }) => ({
 
     .article {
       grid-column: 4 / span 7;
+    }
+
+    .guide-chooser,
+    .intro-body,
+    .filter-status {
+      margin-left: calc((100% + 2rem) / 12 * 3);
     }
   }
 </style>

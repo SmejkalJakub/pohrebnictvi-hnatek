@@ -75,6 +75,16 @@ export const ui = {
   emailLabel: "E-mail",
   hoursClosedDays: "zavřeno",
   exceptionsHeading: "Mimořádné změny",
+  pickerHeading: "Kde blízký člověk zemřel?",
+  pickerHint: "Vyberte jednu možnost. Zobrazíme jen kroky, které se vás týkají.",
+  pickerAll: "Jiná situace – celý postup",
+  filterShowing: "Zobrazený postup:",
+  filterShowAll: "Zobrazit všechny kroky",
+  tickHint: "Hotové body si odškrtněte.",
+  nextStep: "Další krok",
+  lastStep: "To je poslední krok. S dalšími otázkami vám poradíme v kanceláři.",
+  serviceHelpHeading: "Nevíte, kterou službu potřebujete?",
+  serviceHelpText: "Zavolejte nám. Poradíme vám, co je potřeba zařídit.",
 } as const;
 
 export const serviceCategoryLabels: Record<Service["category"], string> = {

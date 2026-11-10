@@ -114,7 +114,8 @@
 
   body {
     background-color: var(--c-bg);
-    font-size: 1.0625rem;
+    /* 18 px body text: the guide is read by older visitors, often on a phone. */
+    font-size: 1.125rem;
     line-height: 1.6;
     min-height: 100vh;
     display: flex;

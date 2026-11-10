@@ -1,16 +1,21 @@
 ---
 /**
- * "Když zemře blízký člověk": a short narrative from first-hours guidance, with the
- * emergency CTA repeated inline and a link to the full guide.
+ * "Když zemře blízký člověk": the emergency CTA first, then the "Kde blízký člověk zemřel?"
+ * chooser that opens the guide filtered to the reader's situation. When guidance names no
+ * specific situations, the first-hours steps are listed instead (as before), with a link to
+ * the full guide.
  */
 import EmergencyPhoneLink from "@core/components/EmergencyPhoneLink.astro";
 import PlaceholderMark from "@core/components/PlaceholderMark.astro";
 import { getGuidance, getSiteContext } from "@core/content/load.ts";
+import { chooserSituations } from "@core/content/guidance-flow.ts";
 import MarginSection from "./MarginSection.astro";
+import SituationChooser from "./SituationChooser.astro";
 import { ui } from "../i18n/cs.ts";
 
 const site = await getSiteContext();
 const guidance = await getGuidance();
+const situations = chooserSituations(guidance);
 let steps = guidance.filter((entry) => entry.data.phase === "first-hours");
 if (steps.length === 0) {
   steps = guidance.slice(0, 3);
@@ -18,20 +23,6 @@ if (steps.length === 0) {
 ---
 <MarginSection id="prvni-kroky" label={ui.sectionLabelSteps} heading={ui.stepsHeading} section="next-steps" tone="surface">
   <p class="steps-intro">{ui.stepsIntro}</p>
-  <div class="steps">
-    {
-      steps.map((entry) => (
-        <PlaceholderMark active={entry.data.placeholder} kind="content">
-          <div class="step" data-guidance={entry.id}>
-            <h3>
-              <a href={`/jak-postupovat/#${entry.id}`}>{entry.data.title}</a>
-            </h3>
-            <p>{entry.data.summary}</p>
-          </div>
-        </PlaceholderMark>
-      ))
-    }
-  </div>
   {
     site.emergency.enabled ? (
       <p class="steps-emergency">
@@ -40,14 +31,44 @@ if (steps.length === 0) {
       </p>
     ) : null
   }
-  <p>
-    <a class="more-link" href="/jak-postupovat/">{ui.stepsFullGuide}</a>
-  </p>
+  {
+    situations.length > 0 ? (
+      <div class="steps-chooser">
+        <SituationChooser situations={situations} base="/jak-postupovat/" allAnchor="postup" headingLevel={3} headingId="domu-kde-zemrel" />
+      </div>
+    ) : (
+      <>
+        <div class="steps">
+          {steps.map((entry) => (
+            <PlaceholderMark active={entry.data.placeholder} kind="content">
+              <div class="step" data-guidance={entry.id}>
+                <h3>
+                  <a href={`/jak-postupovat/#${entry.id}`}>{entry.data.title}</a>
+                </h3>
+                <p>{entry.data.summary}</p>
+              </div>
+            </PlaceholderMark>
+          ))}
+        </div>
+        <p class="steps-more">
+          <a class="more-link" href="/jak-postupovat/">{ui.stepsFullGuide}</a>
+        </p>
+      </>
+    )
+  }
 </MarginSection>
 
 <style>
   .steps-intro {
     max-width: var(--measure);
+  }
+
+  .steps-chooser {
+    margin-top: 1.75rem;
+  }
+
+  .steps-chooser :global(.chooser) {
+    background: var(--paper);
   }
 
   .steps {
@@ -66,10 +87,15 @@ if (steps.length === 0) {
     color: var(--accent);
   }
 
+  .steps-more {
+    margin-top: 1.5rem;
+  }
+
   .steps-emergency {
-    margin-top: 1.75rem;
-    padding-top: 1rem;
+    margin-top: 1.25rem;
+    padding-block: 1rem;
     border-top: 1px solid var(--rule);
+    border-bottom: 1px solid var(--rule);
     max-width: var(--measure);
     font-weight: 600;
   }

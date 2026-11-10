@@ -1,0 +1,95 @@
+---
+/**
+ * "Kde blízký člověk zemřel?": a grid of large signage-style buttons. Each one opens
+ * /jak-postupovat/ filtered to that situation through a fragment (:target); no JavaScript.
+ * Used on the guide page and, in place of the stepper, in the homepage "next-steps" band.
+ */
+import { SITUATION_ANCHOR, type SpecificSituation } from "@core/content/guidance-flow.ts";
+import LineIcon from "./LineIcon.astro";
+import { situationLabels, ui } from "../i18n/cs.ts";
+
+interface Props {
+  situations: SpecificSituation[];
+  /** "" on the guide itself, "/jak-postupovat/" elsewhere. */
+  base: string;
+  allAnchor: string;
+  headingId: string;
+  headingLevel?: 2 | 3;
+}
+
+const { situations, base, allAnchor, headingId, headingLevel = 2 } = Astro.props;
+const Heading = `h${headingLevel}` as "h2" | "h3";
+---
+<div class="picker" role="group" aria-labelledby={headingId} data-situation-picker>
+  <Heading id={headingId} class="picker-heading">{ui.pickerHeading}</Heading>
+  <p class="mt-1 text-muted">{ui.pickerHint}</p>
+  <ul class="picker-grid mt-4">
+    {
+      situations.map((situation) => (
+        <li>
+          <a href={`${base}#${SITUATION_ANCHOR[situation]}`} class="picker-btn" data-situation-link={situation}>
+            <span>{situationLabels[situation]}</span>
+            <LineIcon name="chevron" class="picker-chev" />
+          </a>
+        </li>
+      ))
+    }
+    <li>
+      <a href={`${base}#${allAnchor}`} class="picker-btn picker-btn-all">
+        <span>{ui.pickerAll}</span>
+        <LineIcon name="chevron" class="picker-chev" />
+      </a>
+    </li>
+  </ul>
+</div>
+
+<style>
+  .picker-heading {
+    font-size: 1.5rem;
+  }
+
+  .picker-grid {
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  .picker-btn {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    min-height: 4rem;
+    padding: 0.75rem 1.25rem;
+    border: 2px solid var(--c-accent);
+    border-radius: 0.375rem;
+    background: var(--c-surface);
+    color: var(--c-ink);
+    font-size: 1.25rem;
+    font-weight: 600;
+    line-height: 1.25;
+    text-decoration: none;
+  }
+
+  .picker-btn:hover {
+    background: var(--c-band);
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+
+  .picker-btn-all {
+    border-color: var(--c-line);
+    font-size: 1.0625rem;
+    font-weight: 400;
+  }
+
+  .picker-btn :global(.picker-chev) {
+    flex: none;
+    color: var(--c-accent);
+  }
+
+  @media (min-width: 48rem) {
+    .picker-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+</style>

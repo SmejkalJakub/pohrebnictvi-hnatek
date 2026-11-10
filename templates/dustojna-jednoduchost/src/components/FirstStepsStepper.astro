@@ -1,13 +1,17 @@
 ---
 /**
- * "Co dělat jako první": 3–4 numbered steps from guidance with phase first-hours.
- * Horizontal stepper on desktop, vertical numbered list on mobile. Links to the full guide.
+ * "Co dělat jako první". When guidance names specific situations, the band shows the
+ * "Kde blízký člověk zemřel?" picker, whose buttons open the guide filtered to that situation.
+ * Otherwise: 3–4 numbered steps from guidance with phase first-hours, as a horizontal stepper on
+ * desktop and a vertical numbered list on mobile. Links to the full guide.
  */
 import type { CollectionEntry } from "astro:content";
 import PlaceholderMark from "@core/components/PlaceholderMark.astro";
+import { chooserSituations } from "@core/content/guidance-flow.ts";
 import type { SiteContext } from "@core/content/view-models.ts";
 import LineIcon from "./LineIcon.astro";
 import ReviewFlag from "./ReviewFlag.astro";
+import SituationPicker from "./SituationPicker.astro";
 import When from "./When.astro";
 import { ui } from "../i18n/cs.ts";
 
@@ -23,11 +27,17 @@ if (steps.length < 3) {
   steps = [...steps, ...guidance.filter((entry) => entry.data.phase !== "first-hours")].slice(0, 3);
 }
 steps = steps.slice(0, 4);
+const situations = chooserSituations(guidance);
 ---
 <When if={steps.length > 0}>
     <section class:list={["band", band]} aria-labelledby="prvni-kroky" data-section="next-steps">
       <div class="container-b">
         <h2 id="prvni-kroky">{ui.firstSteps}</h2>
+        {situations.length > 0 ? (
+          <div class="mt-6 max-w-[52rem]">
+            <SituationPicker situations={situations} base="/jak-postupovat/" allAnchor="postup" headingId="domu-kde-zemrel" headingLevel={3} />
+          </div>
+        ) : (
         <ol class:list={["stepper mt-6", `stepper-${steps.length}`]}>
           {steps.map((entry, index) => (
             <li class="step">
@@ -42,6 +52,7 @@ steps = steps.slice(0, 4);
             </li>
           ))}
         </ol>
+        )}
         <p class="mt-6">
           <a href="/jak-postupovat/" class="text-link">
             {ui.fullGuide}

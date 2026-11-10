@@ -3,6 +3,8 @@ import { getPage, getServices, getSiteContext } from "@core/content/load.ts";
 import Site from "../../layouts/Site.astro";
 import PageHeading from "../../components/PageHeading.astro";
 import ServiceIndexList from "../../components/ServiceIndexList.astro";
+import CtaTier from "../../components/CtaTier.astro";
+import { ui } from "../../i18n/cs.ts";
 import { seoTitle } from "../../lib/site.ts";
 
 const site = await getSiteContext();
@@ -16,6 +18,11 @@ const Body = page.Content;
     <div class="container-b">
       <div class="prose-b mb-8"><Body /></div>
       <ServiceIndexList services={services} headingLevel="h2" />
+      <section class="mt-12 border-t border-line pt-8" aria-labelledby="sluzby-pomoc">
+        <h2 id="sluzby-pomoc">{ui.serviceHelpHeading}</h2>
+        <p class="mt-2 max-w-[42rem]">{ui.serviceHelpText}</p>
+        <div class="mt-4"><CtaTier site={site} high={false} /></div>
+      </section>
     </div>
   </div>
 </Site>

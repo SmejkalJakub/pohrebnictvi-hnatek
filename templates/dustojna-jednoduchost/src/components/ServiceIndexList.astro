@@ -1,7 +1,8 @@
 ---
 /**
- * Service index: category headings, each with a two-column <ul> of title (link to the
- * detail page), summary. No images. Used on the homepage (featured) and on /sluzby/ (all).
+ * Service index: category headings, each with a two-column <ul>. Every item is one large
+ * tappable row (title, summary, chevron) linking to the detail page, so readers do not have to
+ * aim at a small text link. No images. Used on the homepage (featured) and on /sluzby/ (all).
  */
 import type { CollectionEntry } from "astro:content";
 import PlaceholderMark from "@core/components/PlaceholderMark.astro";
@@ -24,17 +25,17 @@ const ItemHeading = headingLevel === "h2" ? "h3" : "h4";
     groups.map((group) => (
       <div class="service-group grid gap-3 border-t border-line pt-4 md:grid-cols-12 md:gap-x-8" id={`kategorie-${group.category}`}>
         <Heading class="md:col-span-3 text-[1.125rem]">{group.label}</Heading>
-        <ul class="grid gap-x-8 gap-y-5 sm:grid-cols-2 md:col-span-9">
+        <ul class="grid gap-x-4 gap-y-3 sm:grid-cols-2 md:col-span-9">
           {group.services.map((service) => (
             <li data-service={service.id}>
               <PlaceholderMark active={service.data.placeholder} kind="content">
-              <ItemHeading class="text-[1.0625rem]">
-                <a href={serviceHref(service.id, true)} class="service-link">
-                  <span>{service.data.title}</span>
-                  <LineIcon name="chevron" size={18} class="shrink-0" />
-                </a>
-              </ItemHeading>
-              <p class="mt-1 text-[0.9375rem] text-muted">{service.data.summary}</p>
+              <a href={serviceHref(service.id, true)} class="service-row">
+                <span class="service-row-text">
+                  <ItemHeading class="service-row-title">{service.data.title}</ItemHeading>
+                  <span class="mt-1 block text-[1rem] text-muted">{service.data.summary}</span>
+                </span>
+                <LineIcon name="chevron" size={22} class="service-row-chev shrink-0" />
+              </a>
               </PlaceholderMark>
             </li>
           ))}
@@ -45,14 +46,37 @@ const ItemHeading = headingLevel === "h2" ? "h3" : "h4";
 </div>
 
 <style>
-  .service-link {
-    display: inline-flex;
-    align-items: flex-start;
-    gap: 0.25rem;
-    min-height: 1.5rem;
+  .service-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    height: 100%;
+    min-height: 4rem;
+    padding: 0.875rem 1rem;
+    border: 1px solid var(--c-line);
+    border-radius: 0.25rem;
+    background: var(--c-surface);
+    color: var(--c-ink);
+    text-decoration: none;
   }
 
-  .service-link :global(svg) {
-    margin-top: 0.2em;
+  .service-row:hover {
+    border-color: var(--c-accent);
+  }
+
+  .service-row:hover .service-row-title {
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+
+  .service-row-title {
+    font-size: 1.1875rem;
+    font-weight: 600;
+    color: var(--c-accent-strong);
+  }
+
+  .service-row :global(.service-row-chev) {
+    color: var(--c-accent);
   }
 </style>

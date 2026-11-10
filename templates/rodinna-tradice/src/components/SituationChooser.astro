@@ -1,0 +1,120 @@
+---
+/**
+ * "Kde blízký člověk zemřel?": a letter-style panel of large answer links. Each link opens the
+ * guide filtered to that situation via a fragment (:target), so it works without JavaScript,
+ * from the homepage as well as on /jak-postupovat/. Options come from the guidance data only.
+ */
+import { SITUATION_ANCHOR, type SpecificSituation } from "@core/content/guidance-flow.ts";
+import { SITUATION_OPTION_LABEL, ui } from "../i18n/cs.ts";
+
+interface Props {
+  situations: SpecificSituation[];
+  /** "" on the guide itself, "/jak-postupovat/" elsewhere. */
+  base: string;
+  /** Fragment of the unfiltered guide ("postup"). */
+  allAnchor: string;
+  headingLevel?: 2 | 3;
+  headingId: string;
+}
+
+const { situations, base, allAnchor, headingLevel = 2, headingId } = Astro.props;
+const Heading = `h${headingLevel}` as "h2" | "h3";
+---
+<section class="chooser" aria-labelledby={headingId} data-situation-chooser>
+  <Heading id={headingId} class="chooser-heading">{ui.chooserHeading}</Heading>
+  <p class="chooser-hint">{ui.chooserHint}</p>
+  <ul class="chooser-list">
+    {
+      situations.map((situation) => (
+        <li>
+          <a class="chooser-option" href={`${base}#${SITUATION_ANCHOR[situation]}`} data-situation-link={situation}>
+            <span class="chooser-label">{SITUATION_OPTION_LABEL[situation]}</span>
+            <span class="chooser-arrow" aria-hidden="true">→</span>
+          </a>
+        </li>
+      ))
+    }
+    <li>
+      <a class="chooser-option chooser-option-all" href={`${base}#${allAnchor}`}>
+        <span class="chooser-label">{ui.chooserAll}</span>
+        <span class="chooser-arrow" aria-hidden="true">→</span>
+      </a>
+    </li>
+  </ul>
+</section>
+
+<style>
+  .chooser {
+    border: 1px solid var(--rule);
+    border-top: 4px solid var(--accent);
+    background: var(--surface);
+    padding: 1.5rem 1.25rem;
+    max-width: var(--measure);
+  }
+
+  .chooser-heading {
+    font-family: var(--font-display);
+    font-weight: var(--display-weight);
+    font-size: clamp(1.625rem, 1.4rem + 1vw, 2rem);
+    line-height: 1.2;
+  }
+
+  .chooser-hint {
+    margin-top: 0.5rem;
+    color: var(--muted);
+  }
+
+  .chooser-list {
+    margin-top: 1.25rem;
+    display: grid;
+    gap: 0.625rem;
+  }
+
+  .chooser-option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    min-height: 3.5rem;
+    padding: 0.75rem 1.125rem;
+    border: 1px solid var(--rule);
+    background: var(--paper);
+    color: var(--ink);
+    text-decoration: none;
+    font-family: var(--font-subhead);
+    font-weight: var(--subhead-weight);
+    font-size: 1.3125rem;
+    line-height: 1.25;
+  }
+
+  .chooser-option:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .chooser-option:hover .chooser-label {
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+
+  .chooser-option-all {
+    font-family: var(--font-body);
+    font-weight: 400;
+    font-size: 1.0625rem;
+    background: transparent;
+    border-style: dashed;
+  }
+
+  .chooser-arrow {
+    flex: none;
+    font-family: var(--font-body);
+    color: var(--accent);
+    font-size: 1.25rem;
+  }
+
+  @media (min-width: 48rem) {
+    .chooser {
+      padding: 2rem 2.25rem;
+    }
+  }
+</style>

@@ -1,7 +1,8 @@
 ---
 /**
  * In-page table of contents for the left margin. Sticky on desktop; on mobile it is a plain
- * list at the top of the article.
+ * list at the top of the article. With `autoNumber`, numbers come from a CSS counter so they stay
+ * continuous when the guide hides steps for a chosen situation (items carry `data-situations`).
  */
 import { ui } from "../i18n/cs.ts";
 
@@ -9,24 +10,28 @@ export interface TocItem {
   href: string;
   label: string;
   number?: string;
+  /** Value for data-situations (guide filter); omitted elsewhere. */
+  situations?: string;
   children?: { href: string; label: string }[];
 }
 
 interface Props {
   items: TocItem[];
   label?: string;
+  autoNumber?: boolean;
 }
 
-const { items, label = ui.pageContents } = Astro.props;
+const { items, label = ui.pageContents, autoNumber = false } = Astro.props;
 ---
-<nav class="toc" aria-label={label} data-margin-toc>
+<nav class:list={["toc", { "toc-auto": autoNumber }]} aria-label={label} data-margin-toc>
   <p class="label toc-label" aria-hidden="true">{label}</p>
   <ol class="toc-list">
     {
       items.map((item) => (
-        <li>
+        <li data-situations={item.situations}>
           <a href={item.href}>
-            {item.number !== undefined ? <span class="toc-num">{item.number}</span> : null}
+            {autoNumber ? <span class="toc-num toc-num-auto" aria-hidden="true" /> : null}
+            {!autoNumber && item.number !== undefined ? <span class="toc-num">{item.number}</span> : null}
             <span>{item.label}</span>
           </a>
           {item.children !== undefined && item.children.length > 0 ? (
@@ -77,6 +82,18 @@ const { items, label = ui.pageContents } = Astro.props;
     font-style: italic;
     color: var(--accent);
     min-width: 1.25rem;
+  }
+
+  .toc-auto .toc-list {
+    counter-reset: toc-step;
+  }
+
+  .toc-auto .toc-list > li {
+    counter-increment: toc-step;
+  }
+
+  .toc-num-auto::before {
+    content: counter(toc-step) ".";
   }
 
   .toc-sub {

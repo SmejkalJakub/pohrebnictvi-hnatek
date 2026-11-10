@@ -232,6 +232,7 @@ These are tested by the shared QA suite in Phase 2 (S6), not just reviewed.
 **Technical**
 
 - Static output only (`output: "static"`). No client framework islands. Vanilla JS is limited to the nav disclosure and is optional.
+- **Guided guidance (added 2026-11-09).** `/jak-postupovat/` offers a "Kde blízký člověk zemřel?" chooser when guidance names specific situations (`chooserSituations()` in `core/content/guidance-flow.ts`). Each option is a link to `#situace-<anchor>` (`SITUATION_ANCHOR`); the page hides the steps that do not apply with CSS `:has(:target)` on `[data-guide]`, `[data-guide-step]` and `data-situations` (`situationsAttribute()`), so the filter needs no JavaScript, works from other pages (`/jak-postupovat/#situace-doma`) and degrades to the full guide. Step numbers come from CSS counters so they stay continuous. "Další krok" links use `nextGuidanceStep()`, which never points at a step the filter can hide. Checklists are native checkboxes; longer text sits in `<details>`. Interactive behaviour stays native HTML/CSS; the JS limit above is unchanged.
 - Fonts are self-hosted (`@fontsource/*` packages or files in the repo). Calls to Google Fonts or other CDNs are forbidden, both for privacy and so the export works without them.
 - No third-party scripts, trackers or embeds by default.
 - Images go only through `astro:assets` (`<Image>`/`<Picture>`), with width and height set and lazy loading below the fold.

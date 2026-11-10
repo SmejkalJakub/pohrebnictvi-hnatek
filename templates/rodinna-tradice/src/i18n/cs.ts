@@ -2,6 +2,7 @@
  * Template UI strings (template-contract §7). Generic wording only: nothing here states a
  * business fact. Facts (names, numbers, hours, years) always come from content via core.
  */
+import type { SpecificSituation } from "@core/content/guidance-flow.ts";
 import type { Guidance, Service } from "@core/content/schemas.ts";
 
 type ServiceCategory = Service["category"];
@@ -55,12 +56,28 @@ export const ui = {
 
   // Jak postupovat
   urgentAsideTitle: "Potřebujete převoz hned?",
+  chooserHeading: "Kde blízký člověk zemřel?",
+  chooserHint: "Vyberte, co platí. Ukážeme vám jen kroky, které se vás týkají, ve správném pořadí.",
+  chooserAll: "Jiná situace – zobrazit celý postup",
+  filterShowing: "Zobrazujeme postup pro:",
+  filterShowAll: "Zobrazit všechny kroky",
+  stepDo: "Co udělat",
+  stepTicks: "Hotové body si můžete odškrtnout.",
+  stepMore: "Přečíst podrobnosti",
+  stepNext: "Další krok:",
+  stepDone: "Tím je postup u konce. S čímkoli dalším vám rádi poradíme:",
   checklistLabel: "K tomuto kroku si připravte",
   promptEmergency: "Převoz zesnulého:",
   promptOffice: "Zavolejte nám do kanceláře:",
 
   // Služby
   relatedPrices: "Související ceny",
+  servicesPickHeading: "S čím potřebujete pomoci?",
+  serviceMore: "Co služba zahrnuje",
+  helpHeading: "Nevíte si rady?",
+  helpText: "Zavolejte nám. Vše s vámi v klidu probereme a poradíme, co je potřeba zařídit.",
+  helpOffice: "Kancelář:",
+  helpEmergency: "Převoz zesnulého kdykoli:",
 
   // Catalogues
   coffinsHeading: "Nabídka rakví",
@@ -107,6 +124,22 @@ export const SERVICE_PROSE_GROUPS: readonly { title: string; categories: readonl
   { title: "Převoz a vyřízení náležitostí", categories: ["transport", "arrangements"] },
   { title: "Vzpomínka a další služby", categories: ["memorial", "other"] },
 ];
+
+/** Options of the "Kde blízký člověk zemřel?" chooser. */
+export const SITUATION_OPTION_LABEL: Record<SpecificSituation, string> = {
+  home: "Doma",
+  hospital: "V nemocnici",
+  "care-home": "V domově pro seniory nebo jiném zařízení",
+  abroad: "V zahraničí",
+};
+
+/** Used after ui.filterShowing ("Zobrazujeme postup pro: úmrtí doma"). */
+export const SITUATION_FILTER_LABEL: Record<SpecificSituation, string> = {
+  home: "úmrtí doma",
+  hospital: "úmrtí v nemocnici",
+  "care-home": "úmrtí v domově pro seniory nebo jiném zařízení",
+  abroad: "úmrtí v zahraničí",
+};
 
 export const GUIDANCE_PHASE_LABEL: Record<GuidancePhase, string> = {
   "first-hours": "V prvních hodinách",

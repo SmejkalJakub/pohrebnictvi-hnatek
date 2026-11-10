@@ -1,14 +1,18 @@
 ---
 /**
- * Služby: ONE long page (serviceDetailPages: false). Category sections with ASCII anchors,
- * a left-margin contents list on desktop, each service a heading plus prose body, with an
- * optional half-width image alternating left and right.
+ * Služby: ONE long page (serviceDetailPages: false). It opens with "S čím potřebujete pomoci?",
+ * a list of large links to every service. Category sections with ASCII anchors and a left-margin
+ * contents list on desktop follow; each service shows its heading and summary, with the longer
+ * text in a <details> "Co služba zahrnuje" and an optional half-width image alternating left and
+ * right. A "Nevíte si rady?" panel with the office and emergency numbers closes the page.
  */
 import { Image } from "astro:assets";
 import LetterLayout from "../layouts/LetterLayout.astro";
 import PageIntro from "../components/PageIntro.astro";
 import MarginToc, { type TocItem } from "../components/MarginToc.astro";
 import ShiftedBody from "../components/ShiftedBody.astro";
+import EmergencyPhoneLink from "@core/components/EmergencyPhoneLink.astro";
+import PhoneLink from "@core/components/PhoneLink.astro";
 import PlaceholderMark from "@core/components/PlaceholderMark.astro";
 import { getPage, getServices, getSiteContext, render } from "@core/content/load.ts";
 import { SERVICE_CATEGORIES } from "@core/content/schemas.ts";
@@ -58,6 +62,7 @@ const withSide = filled.map((group) => ({
     return { ...item, side };
   }),
 }));
+const officePhone = site.contact.phones.find((phone) => phone.department === "office");
 const toc: TocItem[] = withSide.map((group) => ({
   href: `#${group.anchor}`,
   label: group.label,
@@ -70,6 +75,24 @@ const toc: TocItem[] = withSide.map((group) => ({
       <page.Content />
     </div>
   </PageIntro>
+
+  <div class="frame">
+    <nav class="pick" aria-labelledby="sluzby-vyber">
+      <h2 id="sluzby-vyber" class="pick-heading">{ui.servicesPickHeading}</h2>
+      <ul class="pick-list">
+        {
+          withSide.flatMap((group) => group.items).map(({ service }) => (
+            <li>
+              <a class="pick-option" href={`#${service.id}`}>
+                <span>{service.data.title}</span>
+                <span class="pick-arrow" aria-hidden="true">↓</span>
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+  </div>
 
   <div class="frame services-grid">
     <div class="services-toc">
@@ -104,9 +127,12 @@ const toc: TocItem[] = withSide.map((group) => ({
                     </figure>
                   ) : null}
                   <p class="service-summary">{service.data.summary}</p>
-                  <ShiftedBody by={2} idPrefix={service.id}>
-                    <Content />
-                  </ShiftedBody>
+                  <details class="service-more">
+                    <summary class="service-more-summary">{ui.serviceMore}</summary>
+                    <ShiftedBody by={2} idPrefix={service.id}>
+                      <Content />
+                    </ShiftedBody>
+                  </details>
                   {service.data.priceGroupId !== null && site.pricingVisible ? (
                     <p class="service-prices">
                       <a class="more-link" href={`/cenik/#${service.data.priceGroupId}`}>
@@ -120,6 +146,28 @@ const toc: TocItem[] = withSide.map((group) => ({
           </section>
         ))
       }
+      <aside class="help" aria-labelledby="sluzby-pomoc">
+        <h2 id="sluzby-pomoc" class="help-heading">{ui.helpHeading}</h2>
+        <p>{ui.helpText}</p>
+        <ul class="help-list">
+          {
+            officePhone !== undefined ? (
+              <li>
+                <span class="help-lead">{ui.helpOffice}</span>
+                <PhoneLink number={officePhone.number} class="help-link" />
+              </li>
+            ) : null
+          }
+          {
+            site.emergency.enabled ? (
+              <li>
+                <span class="help-lead">{ui.helpEmergency}</span>
+                <EmergencyPhoneLink emergency={site.emergency} variant="number" class="help-link" />
+              </li>
+            ) : null
+          }
+        </ul>
+      </aside>
     </div>
   </div>
 </LetterLayout>
@@ -127,6 +175,50 @@ const toc: TocItem[] = withSide.map((group) => ({
 <style>
   .intro-body:not(:empty) {
     margin-top: 1.5rem;
+  }
+
+  .pick {
+    max-width: var(--measure);
+    margin-bottom: 2.5rem;
+  }
+
+  .pick-heading {
+    margin-bottom: 1rem;
+  }
+
+  .pick-list {
+    display: grid;
+    gap: 0.5rem;
+  }
+
+  .pick-option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    min-height: 3.25rem;
+    padding: 0.625rem 1rem;
+    border: 1px solid var(--rule);
+    background: var(--surface);
+    color: var(--ink);
+    text-decoration: none;
+    font-family: var(--font-subhead);
+    font-weight: var(--subhead-weight);
+    font-size: 1.25rem;
+    line-height: 1.25;
+  }
+
+  .pick-option:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+
+  .pick-arrow {
+    flex: none;
+    font-family: var(--font-body);
+    color: var(--accent);
   }
 
   .services-grid {
@@ -164,13 +256,93 @@ const toc: TocItem[] = withSide.map((group) => ({
     margin-bottom: 0.5rem;
   }
 
+  .service {
+    scroll-margin-top: calc(var(--sticky-offset) + 1rem);
+  }
+
   .service-summary {
     font-family: var(--font-caption);
-    font-style: italic;
-    font-size: var(--caption-size);
-    color: var(--muted);
+    font-size: 1.25rem;
+    line-height: 1.45;
     max-width: var(--measure);
     margin-bottom: 0.75rem;
+  }
+
+  .service-more {
+    max-width: var(--measure);
+  }
+
+  .service-more-summary {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    min-height: 3rem;
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--accent);
+    list-style: none;
+  }
+
+  .service-more-summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .service-more-summary::before {
+    content: "+";
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    border: 1px solid var(--accent);
+    font-size: 1.125rem;
+    line-height: 1;
+  }
+
+  .service-more[open] > .service-more-summary::before {
+    content: "−";
+  }
+
+  .help {
+    margin-top: 3rem;
+    padding: 1.5rem 1.25rem;
+    border: 1px solid var(--rule);
+    border-top: 4px solid var(--accent);
+    background: var(--surface);
+  }
+
+  .help-heading {
+    margin-bottom: 0.5rem;
+  }
+
+  .help-list {
+    margin-top: 1rem;
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  .help-list li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.25rem 0.75rem;
+    font-weight: 600;
+  }
+
+  .help :global(.help-link) {
+    display: inline-flex;
+    align-items: center;
+    min-height: 3rem;
+    padding: 0.25rem 1rem;
+    border: 1px solid var(--accent);
+    background: var(--paper);
+    font-size: 1.25rem;
+    white-space: nowrap;
+    text-decoration: none;
+  }
+
+  .help :global(.help-link:hover) {
+    text-decoration: underline;
   }
 
   .service-figure {
@@ -224,6 +396,10 @@ const toc: TocItem[] = withSide.map((group) => ({
 
     .services {
       grid-column: 4 / span 8;
+    }
+
+    .pick {
+      margin-left: calc((100% + 2rem) / 12 * 3);
     }
   }
 </style>

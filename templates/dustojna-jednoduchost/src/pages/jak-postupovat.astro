@@ -17,8 +17,9 @@ const Body = page.Content;
   </PageHeading>
   <div class="band">
     <div class="container-b">
-      <div class="prose-b mb-8"><Body /></div>
-      <PhasedChecklist site={site} guidance={guidance} />
+      <PhasedChecklist site={site} guidance={guidance}>
+        <Body />
+      </PhasedChecklist>
     </div>
   </div>
 </Site>
