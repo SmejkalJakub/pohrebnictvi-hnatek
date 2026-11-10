@@ -15,10 +15,11 @@ Read first: `clients/<id>/provenance/facts.json`, `approvals.json`, `notes/` and
 Split it into numbered items, each one of:
 
 - **Fact** (a phone, hours, address, IČO, tradition wording, a confirmation "the number is right"): goes through the ledger first.
-- **Sign-off** (copy, prices, guidance review, image rights): goes into `approvals.json`.
+- **Sign-off** (copy, prices, guidance review, image rights, staff consent): goes into `approvals.json`.
+- **Notice** (publish, correct or take down a death notice): content only, with the orderer's consent record.
 - **Copy** (wording, tone, shorter, add a section): content files only.
 - **Design** (colour, font, "nonstop number more prominent", section order, hero image): `src/site.config.ts` options and `homepage.sections` only.
-- **Out of scope** (a new layout, custom CSS, a new page type, a contact form): do not do it; explain that it is a template change and record it for the owner.
+- **Out of scope** (a new layout, custom CSS, a new page type, a contact form, condolence comments, a livestream embed, switching on a content type the template does not support): do not do it; explain that it is a template change and record it for the owner.
 
 Read the list back only if an item is ambiguous.
 
@@ -30,6 +31,10 @@ Read the list back only if an item is ambiguous.
   - Never mark VERIFIED without a named person and date.
 - **Sign-off.** Record only what the user states, with name and date: `copy[<file>] = { "status": "APPROVED", "approvedBy", "approvedAt" }`; `pricing = { "status": "APPROVED", …, "method" }` and then set those items to `"status": "approved"` plus `validFrom` and `vatNote`; guidance → both `approvals.guidance[<file>]` and the entry's `review.reviewedBy/reviewedAt`; images → `approvals.images["src/assets/media/<file>"].rightsEvidence` and `rightsConfirmed: true` on the image; CLIENT_PROVIDED facts → `approvals.facts[<key>]`.
 - **Copy.** Edit the file; if its text changed after approval, set its `copy` entry back to `DRAFT` and say so. Keep `placeholder` honest.
+- **Staff consent.** Only when the user says who agreed, when and how: `approvals.people["people/<id>.md"] = { "consentAt": "<date>", "recordedBy": "<operator>", "method": "<how>" }`. If a person withdraws consent, set `published: false` (or delete the file) and clear their ledger facts in the same round.
+- **Notices.** A real notice needs, from the user: who ordered it, the date, and the basis (`objednavka` or `souhlas`) → `consent`; then the facts the family supplied, `publishUntil` (required) and, if wanted, `publishFrom`. Keep `noindex: true` unless the family asks to be found by search engines. A take-down request: set `published: false` immediately (or delete the file); the next build removes the page, its QR code and its parte PDF. Never put prices, services or links to them on a notice (G-072).
+- **Documents.** Replace a placeholder PDF only with the client's file; update `validFrom`; set `placeholder: false` and record the copy approval.
+- **Feature switches.** Turn a content type on (`features.*` in `src/site.config.ts`) only when the template supports it and its required page exists (G-002, G-005).
 - **Design.** Use only values in `templates/<template>/template.manifest.ts` (G-005). Example: "make the nonstop number more prominent, move family history higher" → `emergencyEmphasis: "high"` and move `family-story` up in `homepage.sections`.
 
 Append the round to `clients/<id>/notes/feedback.md`: date, each item, what changed (files), what was not done and why.
@@ -37,7 +42,7 @@ Append the round to `clients/<id>/notes/feedback.md`: date, each item, what chan
 ## 3. Re-validate
 
 1. `npm run client:validate -- <id>`: must end with `PROTOTYPE: PASS`.
-2. `npm run client:build -- <id>`.
+2. `npm run client:build -- <id>` (notices: check that expired ones are gone and `/oznameni/<slug>/qr.svg` exists for the live ones).
 3. `npm run check:launch -- clients/<id>`: show how the launch findings moved (fewer L-003/L-005/L-006 lines is progress).
 
 ## 4. Report

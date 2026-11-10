@@ -29,19 +29,26 @@ src/
       office-hours.json
       emergency.json            # nonstop transport ONLY
       pricing.json
+      legal.json                # OPTIONAL: ADR body and complaints contact (§6.17)
     pages/                      # one Markdown file per fixed route (page copy)
       home.md  jak-postupovat.md  sluzby.md  rakve.md  kvetiny.md
       o-nas.md  kontakt.md  cenik.md  ochrana-osobnich-udaju.md
+      oznameni.md  pro-ucastniky.md  pohreb-predem.md  pravni-informace.md   # optional (§5)
     services/*.md               # collection
     guidance/*.md               # collection ("Jak postupovat" steps)
     coffins/*.md                # collection (catalogue)
     flowers/*.md                # collection (arrangement gallery)
     articles/*.md               # OPTIONAL collection; directory absent when feature off
+    notices/*.md                # OPTIONAL: smuteční oznámení (features.notices, §6.13)
+    people/*.md                 # OPTIONAL: lidé (features.people, §6.14)
+    faq/*.md                    # OPTIONAL: časté otázky (features.faq, §6.15)
+    documents/*.md              # OPTIONAL: dokumenty ke stažení (features.documents, §6.16)
   assets/
     media/                      # all raster images used by content (processed by astro:assets)
+    documents/                  # PDFs (documents, printed parte); copied to dist as they are
 provenance/                     # outside src/: never bundled, never deployed
   facts.json                    # fact ledger (Phase 0 input format, §3)
-  approvals.json                # human sign-offs (copy, pricing, guidance, images)
+  approvals.json                # human sign-offs (copy, pricing, guidance, images, staff consent)
 ```
 
 Format decisions:
@@ -105,9 +112,12 @@ This is the Phase 0 deliverable, written by the research/normalisation session a
   "copy":     { "pages/o-nas.md": { "status": "DRAFT", "approvedBy": null, "approvedAt": null } },
   "pricing":  { "status": "NOT_APPROVED", "approvedBy": null, "approvedAt": null, "method": null },
   "guidance": { "guidance/umrti-doma.md": { "reviewedBy": null, "reviewedAt": null } },
-  "images":   { "src/assets/media/kancelar.jpg": { "rightsEvidence": null } }
+  "images":   { "src/assets/media/kancelar.jpg": { "rightsEvidence": null } },
+  "people":   { "people/eva-vzorova.md": { "consentAt": null, "recordedBy": null, "method": null } }  // staff consent (G-074)
 }
 ```
+
+`people` records that a staff member agreed to appear on the site (research L12). Only the operator fills it in, from the person's or the client's confirmation, with `consentAt`, `recordedBy` and `method` (for example "písemný souhlas"). Unlike the rest of the file, the **build reads it** (G-074): the gate looks in `provenance/approvals.json`, then in the archived `docs/provenance/approvals.json` of an exported site.
 
 ### 3.3 How the layers interact
 
@@ -137,6 +147,13 @@ After handover the client owns the content. CMS edits are by definition client-p
 | Optional pricing | `site/pricing.json` | `Pricing` §6.11 |
 | Optional articles | `articles/*.md` (absent for Hnátek) | `Article` §6.12 |
 | Page copy and SEO for every route | `pages/*.md` | `Page` §6.6 |
+| Optional: death notices and ceremonies | `notices/*.md` + `pages/oznameni.md` | `Notice` §6.13 |
+| Optional: staff | `people/*.md` (+ consent in `approvals.json`) | `Person` §6.14 |
+| Optional: frequently asked questions | `faq/*.md` | `Faq` §6.15 |
+| Optional: documents for download | `documents/*.md` + PDFs in `assets/documents/` | `DocumentEntry` §6.16 |
+| Optional: legal information (ADR, complaints) | `site/legal.json` + `pages/pravni-informace.md` | `LegalInfo` §6.17 |
+| Optional: guests of a funeral, planning ahead | `pages/pro-ucastniky.md`, `pages/pohreb-predem.md` | `Page` §6.6 |
+| What a price includes / excludes | `site/pricing.json` → `groups[].includes`, `excludes` | `Pricing` §6.11 |
 
 ## 5. Route conventions
 
@@ -161,7 +178,15 @@ Owned by core; templates cannot rename them. Details of template-optional routes
 | `/cenik/` | `cenik` | only if `pricing.visible` is `true` |
 | `/ochrana-osobnich-udaju/` | `ochrana-osobnich-udaju` | required when the contact form, a map embed or analytics is enabled; otherwise recommended (U9) |
 | `/clanky/`, `/clanky/<slug>/` | – | only if `features.articles` is `true` **and** the template supports articles. **Off for Hnátek.** |
+| `/oznameni/` | `oznameni` | only if `features.notices` is `true` (then the page file is required, G-002). In the main navigation after "Jak postupovat". |
+| `/oznameni/<slug>/` | – | one per **live** notice (§6.13); `/oznameni/<slug>/qr.svg` (QR code) and `/oznameni/<slug>/<parte>.pdf` beside it |
+| `/pro-ucastniky/` | `pro-ucastniky` | only if `features.guestInfo` is `true` (then required). Not in the main navigation. |
+| `/pohreb-predem/` | `pohreb-predem` | only if `features.prePlanning` is `true` (then required). Not in the main navigation. |
+| `/pravni-informace/` | `pravni-informace` | optional, like `ochrana-osobnich-udaju`; linked from the footer of every page when `site/legal.json` exists (§6.17) |
+| `/dokumenty/<file>.pdf` | – | each published document while `features.documents` is `true` (§6.16) |
 | `/404.html` | – | required |
+
+The new page ids follow the `ochrana-osobnich-udaju` pattern: they are not in the locked main navigation (except `oznameni`), and templates link them where their design puts them.
 
 ## 6. Schemas (minimal, Zod)
 
@@ -362,6 +387,7 @@ Display rules (mandatory for every template; tested in Phase 2 QA):
 ```ts
 export const PageId = z.enum([
   "home", "jak-postupovat", "sluzby", "rakve", "kvetiny", "o-nas", "kontakt", "cenik", "ochrana-osobnich-udaju", "clanky",
+  "oznameni", "pro-ucastniky", "pohreb-predem", "pravni-informace",   // optional, §5
 ]);
 
 export const Page = z.object({
@@ -479,6 +505,8 @@ export const Pricing = z.object({
     title: text(80),
     description: optionalText(240),
     items: z.array(PriceItem).min(1),
+    includes: z.array(text(160)).default([]),   // "V ceně je zahrnuto" (research §8)
+    excludes: z.array(text(160)).default([]),   // "Není zahrnuto"
   })),
 }).superRefine((pricing, ctx) => {
   const ids = new Set<string>();
@@ -518,6 +546,9 @@ Demo-price safeguards, in layers:
 5. **Build gate:** a production build fails if `pricing.visible` is `true` and any item is `demo` (G-020), or if `validFrom` or `vatNote` is missing (G-021).
 6. **Launch check:** requires `approvals.pricing.status = "APPROVED"` with `approvedBy` and `approvedAt`.
 7. **Escape hatch:** with no approved prices at launch, the client or agent sets `visible: false`. The route, nav item and CMS teaser links all disappear.
+8. **VAT (research L9):** consumer prices are final, including VAT. Wherever a price is shown, the template renders `pricing.vatNote` next to it through the core `<VatNote>` component (template-contract §6). The gate cannot see templates, so this is a template invariant; the data side is G-021 (production fails without `vatNote`).
+
+`includes[]` / `excludes[]` list what a group's price covers and what is still to choose ("Co je v ceně"). Templates that render them declare `supports.priceInclusions`; otherwise the CMS keeps the lists hidden.
 
 ### 6.12 Articles (optional, `articles/*.md`)
 
@@ -534,6 +565,103 @@ export const Article = z.object({
 ```
 
 **For Hnátek: `features.articles = false`.** The result: no `/clanky/` routes are generated (the dynamic route returns no paths), there is no nav item, no sitemap entries, no CMS collection, and the `articles/` directory is absent. If the directory exists while the feature is off, the gate warns (G-050). If the feature is on but the template does not support articles, the build fails (G-051).
+
+### 6.13 Notices: smuteční oznámení / obřady (optional, `notices/*.md`)
+
+Switched on by `features.notices`; the template must declare `supports.notices` (G-005). Routes: §5.
+
+```ts
+export const NoticeCeremony = z.object({
+  type: z.enum(["civil", "church", "without-ceremony", "private"]),
+  date: IsoDate.nullable(), time: Time.nullable(),      // required for civil and church
+  placeName: optionalText(120),                          // required for civil and church
+  address: optionalText(200), mapUrl: Url.nullable(),
+});
+
+export const Notice = z.strictObject({                   // strict: unknown keys fail (research L1)
+  fullName: text(120),
+  born: YearOrDate.nullable(),                           // "1941" or "1941-04-03"
+  died: YearOrDate,
+  photo: ImageRef.nullable(), parteImage: ImageRef.nullable(),
+  partePdf: DocumentFile.nullable(),                     // PDF in src/assets/documents/
+  ceremony: NoticeCeremony.nullable(),
+  livestreamUrl: HttpsUrl.nullable(),                    // link only, never an embed (L14)
+  familyNote: optionalText(600),
+  condolencesViaOffice: z.boolean().default(false),      // show the office e-mail for condolences
+  publishFrom: IsoDate.nullable(), publishUntil: IsoDate,
+  noindex: z.boolean().default(true),                    // privacy first (L12)
+  listed: z.boolean().default(true),                     // false: reachable by link or QR only
+  published: z.boolean().default(true),
+  placeholder: z.boolean().default(false),
+  consent: z.object({                                    // never rendered
+    orderedBy: text(120), date: IsoDate, basis: z.enum(["objednavka", "souhlas"]),
+  }).nullable(),
+});
+// Markdown body = the notice text (restricted Markdown; no links to services, prices or other sites, G-072)
+```
+
+Rules:
+
+- **No advertising (research L1, ⚖).** The schema has no price, service, featured or link-to-offer field, and unknown keys fail it with a Czech message. `NoticeView` (the only thing templates get) carries the practical facts and nothing else: no consent record, no publication window. G-072 rejects body links to `/sluzby/`, `/cenik/`, `/rakve/`, `/kvetiny/`, `/pohreb-predem/`, `/clanky/` and to other sites. Templates add no service teasers, prices or promotional calls to action (template-contract §6).
+- **Consent (research L12, ⚖).** A published notice without a `consent` record fails the build in every mode (G-070). A draft (`published: false`) may lack it.
+- **Publication window.** A notice is *live* when it is published, `publishFrom` is empty or on/before the build date, and `publishUntil` is on/after it. Only live notices are built: an expired one (G-071 warns) or a scheduled one produces no page, no QR code and no parte PDF, so it drops out of the site on the next build. Static hosting means a site must be rebuilt for a notice to disappear on time; the client's host should rebuild daily (a scheduled publish) when notices are on.
+- **Indexing.** `noindex: true` (the default) gives the page robots `noindex,nofollow` through `SeoHead` and keeps it out of `sitemap.xml`; the template cannot forget it. `listed: false` keeps a notice off the `/oznameni/` list.
+- **QR code.** Generated at build in core (`core/qr/qr-code.ts`, byte mode, level M, no dependency, no network): inline via `<NoticeQrCode>` and as a printable `/oznameni/<slug>/qr.svg`, pointing at `siteUrl + /oznameni/<slug>/`.
+- **No condolence comments** (they need a server and moderation). With `condolencesViaOffice`, the view offers the first office e-mail from `contact.json`.
+- The `/oznameni/` list (`getNoticeIndex()`) shows upcoming ceremonies first (soonest first), then other notices by date of death.
+
+### 6.14 People: lidé (optional, `people/*.md`)
+
+```ts
+export const Person = z.object({
+  name: text(120), role: text(120),
+  photo: ImageRef.nullable(), phone: Phone.nullable(),   // direct phone, optional
+  order: Order, published: z.boolean().default(true), placeholder: z.boolean().default(false),
+});
+```
+
+A published person needs a consent record in `approvals.json` → `people["people/<id>.md"]` with `consentAt` and `recordedBy` (G-074: warning in prototype, error in production). Names, roles and phones are tracked facts for the launch check (`people.<id>.name`, `.role`, `.phone`). `PersonView.initials` lets layouts look complete without photos.
+
+### 6.15 FAQ: časté otázky (optional, `faq/*.md`)
+
+```ts
+export const Faq = z.object({
+  question: text(200),
+  topic: z.enum(["first-steps", "arrangements", "ceremony", "cremation-urn", "documents", "costs", "other"]),
+  order: Order, published: z.boolean().default(true), placeholder: z.boolean().default(false),
+});
+// Markdown body = the answer
+```
+
+`getFaq()` groups published questions by topic in this order, with Czech topic labels. Answers state legal and procedural facts (96 hours, urn after 12 months), so they get the same human review as guidance before launch (copy approval, L-006). Render them as `<details>` or plain sections; no FAQ structured-data markup.
+
+### 6.16 Documents: dokumenty ke stažení (optional, `documents/*.md`)
+
+```ts
+export const DocumentEntry = z.object({
+  title: text(120),
+  file: DocumentFile,                                    // *.pdf in src/assets/documents/
+  kind: z.enum(["rad-pohrebni-sluzby", "obchodni-podminky", "reklamacni-rad", "other"]),
+  validFrom: IsoDate.nullable(),
+  order: Order, published: z.boolean().default(true), placeholder: z.boolean().default(false),
+});
+```
+
+The PDF is not processed: the integration copies each published document to `/dokumenty/<file>` (and a live notice's parte to `/oznameni/<slug>/<file>`), and the dev server answers the same paths. A referenced file that is missing fails the build in every mode, even for a draft (G-075).
+
+### 6.17 Legal information: právní informace (optional singleton, `site/legal.json`)
+
+```ts
+export const LegalInfo = z.object({
+  adr: z.object({
+    name: text(120).default("Česká obchodní inspekce"),
+    url: Url.default("https://adr.coi.cz"),
+  }),
+  complaintsContact: optionalText(400),                  // where and how to file a complaint
+});
+```
+
+Consumer law requires telling consumers about the ADR body (research L10, ⚖). When `legal.json` and `pages/pravni-informace.md` both exist, `SiteContext.legalLink` is set and templates that render `/pravni-informace/` link it from the footer of every page. `legal.json` without the page warns (G-076), because nothing would show it. ADR name, URL and the complaints contact are tracked facts for the launch check.
 
 ## 7. Cross-cutting content rules
 
@@ -581,11 +709,13 @@ Entry file names that are not ASCII slugs fail as G-001 (S2 amendment A6).
 
 The mode comes from the environment variable `SITE_MODE`, either `prototype` or `production`. **The default when unset is `prototype`**, so a misconfigured build produces a no-index test site, not a public one.
 
+**Build date.** Notice windows and "upcoming ceremony" depend on "today". Core resolves it once per build (`core/content/build-date.ts`): `SITE_BUILD_DATE=YYYY-MM-DD` in the environment, else `site.config.ts` → `pinnedBuildDate`, else the current date in Europe/Prague. Fixtures and template development pin the date so builds and tests never depend on the clock; production must not pin it (G-073).
+
 | | `prototype` | `production` |
 | --- | --- | --- |
 | Global banner "Testovací verze webu – obsahuje neověřené a ukázkové údaje" | yes | no |
 | `<meta name="robots" content="noindex,nofollow">` and `robots.txt: Disallow: /` | yes | no (except `/cenik/` while demo, which cannot happen in production) |
-| Sitemap | not emitted | emitted (excludes noindex pages) |
+| Sitemap | not emitted | emitted (excludes `404` and noindex notices) |
 | Placeholders, demo prices, missing-data markers | allowed and visibly marked | build fails |
 
 Gate rules. Each has an id; the `prototype` column gives its behaviour in prototype mode and the `production` column its behaviour in production:
@@ -615,12 +745,21 @@ Gate rules. Each has an id; the `prototype` column gives its behaviour in protot
 | G-051 | Articles on, template unsupported | fail | fail |
 | G-060 | Contact form enabled without provider + privacy page | fail | fail |
 | G-061 | Map embed (iframe) enabled without privacy page | fail | fail |
+| G-070 | Published notice (not expired) without a consent record | fail | fail |
+| G-071 | Notice past `publishUntil`: not built | warn | warn |
+| G-072 | Notice body links to a promotional route (`/sluzby/`, `/cenik/`, `/rakve/`, `/kvetiny/`, `/pohreb-predem/`, `/clanky/`) or to another site | fail | fail |
+| G-073 | `pinnedBuildDate` set in `site.config.ts` | – | fail |
+| G-074 | Published person without a consent record in `approvals.json` | warn | fail |
+| G-075 | Referenced PDF (document, parte) missing from `src/assets/documents` (even on drafts) | fail | fail |
+| G-076 | `legal.json` exists but `pages/pravni-informace.md` does not | warn | warn |
+
+G-002 also requires the page of every switched-on feature (`oznameni`, `pro-ucastniky`, `pohreb-predem`), and G-005 rejects a switched-on feature (`notices`, `people`, `faq`, `documents`, `guestInfo`, `prePlanning`) that the template manifest does not support. Content of a switched-off feature is still schema-checked (G-001), its files must exist (G-003, G-075), and its bodies follow §7.3, but it is never built and no other rule looks at it.
 
 The gate prints one line per violation with its id, file and field path, in Czech and English. CMS users read Czech; developers read English.
 
 ## 9. Non-goals of this contract
 
-Obituaries, online booking, payments, client portal, multi-tenant hosting and a custom CMS are out of scope (brief §5, test plan non-goals).
+Online booking, payments, client portal, multi-tenant hosting and a custom CMS are out of scope (brief §5, test plan non-goals). Death notices are in scope since 2026-11-10 (§6.13, research funeral-ux.md §8), but without condolence comments, guest books, livestream embeds or anything else that needs a server. Online arrangement (`Online sjednání`) is deferred until a form backend exists.
 
 ## 10. Hnátek: fact ledger seed (from the brief, not yet researched further)
 

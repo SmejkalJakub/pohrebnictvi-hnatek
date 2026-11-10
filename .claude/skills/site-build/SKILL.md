@@ -20,6 +20,7 @@ Read first: `clients/<id>/provenance/facts.json`, `clients/<id>/notes/research.m
 - Images: never generate or use realistic imagery. Real photos only from the client's website or the client, with `source: "existing-website"` or `"client"`, `depicts: "actual-business"` only for their own premises, staff, vehicles or products, `rightsConfirmed: false`.
 - Never edit `templates/`, `core/` or any CSS for a client. Options and section order are the only design levers.
 - No phone numbers in Markdown bodies (G-030), no raw HTML or inline images (G-034).
+- Optional content types (notices, people, FAQ, documents, guest and pre-planning pages, legal information; `docs/content-contract.md` §6.13–§6.17): switch one on only when the template's manifest `supports` it (G-005) **and** the client has that content. Never invent a person, a notice, a document or a legal text.
 
 ## 1. Content from the ledger
 
@@ -29,6 +30,19 @@ Read first: `clients/<id>/provenance/facts.json`, `clients/<id>/notes/research.m
 - `coffins/`, `flowers/`: real entries only if the old site has a catalogue; otherwise keep the placeholder entries (prototype) and say so.
 - `pages/*.md`: every page file must stay (G-002). Rewrite `title`, `navLabel`, `metaDescription`, `lead`, `excerpt` and the body per page. Render only the fields the template lists in `pageFields`.
 - `provenance/approvals.json`: keep one `copy` entry per page and entry file (rename keys when you rename files), all `DRAFT`; one `guidance` entry per guidance file.
+
+### Optional content types (only with template support; see `features` in `site.config.ts`)
+
+`client:new` copies their skeleton files only when the template supports them, and every feature starts `false`.
+
+- **Notices** (`features.notices`, `notices/*.md`, `pages/oznameni.md`): real notices come from the client, after launch, through the CMS. For the prototype keep the skeleton's placeholder notices (obviously fictional names, `placeholder: true`, each with a fictional `consent` record so G-070 passes). Never copy a real notice from the old website or any other source: relatives on a parte are personal data and need the orderer's consent. Keep `noindex: true`. No links to services, prices or other sites in a notice body (G-072).
+- **People** (`features.people`, `people/*.md`): only people named in the ledger (`people.<id>.name/role/phone`, normally `EXISTING_WEBSITE` from the old site's team page). Photos only from the client or their site (`depicts: "actual-business"`). Add a `people["people/<id>.md"]` entry to `approvals.json` with `consentAt`, `recordedBy`, `method` all `null`: only the operator records consent (G-074 warns in prototype, fails production).
+- **FAQ** (`features.faq`, `faq/*.md`): draft answers from general knowledge like guidance (96-hour rule, urn after 12 months, research §4a L4/L6), `placeholder: false` when grounded, `DRAFT` copy entries; list the open legal points in your report.
+- **Documents** (`features.documents`, `documents/*.md`, PDFs in `src/assets/documents/`): only the client's own PDFs (řád pohřební služby, obchodní podmínky, reklamační řád). Until they arrive, keep the skeleton's "ZÁSTUPNÝ DOKUMENT" PDFs with `placeholder: true`, or switch the feature off.
+- **Legal information** (`site/legal.json`, `pages/pravni-informace.md`; only for templates with `pageFields["pravni-informace"]`): keep the ADR default (Česká obchodní inspekce, `https://adr.coi.cz`); `complaintsContact` only from the client or their terms. Ledger keys `legal.adr.name`, `legal.adr.url`, `legal.complaintsContact`.
+- **Guest and pre-planning pages** (`features.guestInfo` → `pages/pro-ucastniky.md`, `features.prePlanning` → `pages/pohreb-predem.md`): plain pages; pre-planning only if the client offers it, and never with a sign-up or e-mail capture.
+- **Price inclusions** (`pricing.json` → `groups[].includes` / `excludes`): only items the research found; rendered only by templates with `supports.priceInclusions`.
+- `pinnedBuildDate` never goes into a client's `site.config.ts` (G-073 fails production).
 
 ## 2. Template and options
 
@@ -62,7 +76,8 @@ Repeat until clean:
 Tell the user:
 
 - template and options chosen, and why (one line each);
-- the production blockers from `client:validate` (the "Production mode: blocked by …" list) with what resolves each: G-011 legal ids from the client, G-012 domain, G-020/G-021 approved prices or `visible: false`, G-031 placeholder copy, G-032 placeholder images, G-033 image rights, G-040 guidance review;
+- the production blockers from `client:validate` (the "Production mode: blocked by …" list) with what resolves each: G-011 legal ids from the client, G-012 domain, G-020/G-021 approved prices or `visible: false`, G-031 placeholder copy, G-032 placeholder images, G-033 image rights, G-040 guidance review, G-070 a notice without consent, G-074 staff consent, G-075 a missing PDF;
+- which optional content types are on, and what is still placeholder in them;
 - the stand-in values still in content (from the hard rules above);
 - the open questions for the client;
 - next step: `npm run client:dev -- <id>` to review, then `/site-revise <id>` with the feedback.

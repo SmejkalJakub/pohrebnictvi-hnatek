@@ -23,7 +23,7 @@ Steps 4–5 repeat until the owner is happy with the prototype. Go-live addition
 
 | Script | What it does |
 | --- | --- |
-| `npm run client:new -- <id> --template <t>` | Copies `fixtures/neutral/src/content` and its placeholder graphics into `clients/<id>/src/`, writes `src/site.config.ts` with the manifest's default options and homepage order, and writes `provenance/facts.json` (every fact the launch check tracks, all `UNKNOWN`) and `approvals.json` (all copy `DRAFT`, nothing signed off). Refuses an existing client and ids that are not ASCII slugs. |
+| `npm run client:new -- <id> --template <t>` | Copies `fixtures/neutral/src/content` and its placeholder graphics into `clients/<id>/src/`, writes `src/site.config.ts` with the manifest's default options and homepage order, and writes `provenance/facts.json` (every fact the launch check tracks, all `UNKNOWN`) and `approvals.json` (all copy `DRAFT`, nothing signed off, an empty staff-consent record per person). Optional content types (notices, people, FAQ, documents with their placeholder PDFs, guest and pre-planning pages, legal information) are copied only when the template supports them; their `features` stay `false`. Refuses an existing client and ids that are not ASCII slugs. |
 | `npm run client:validate -- <id> [--json]` | Schema, publication gate and G-005 against the template manifest, in both modes. Prints the prototype findings and the rules that still block production. Exit 1 only when prototype fails. |
 | `npm run client:dev -- <id> [astro flags]` | `astro dev` in `templates/<template>/` with `SITE_ROOT` and `SITE_CONFIG` pointing at the client (prototype mode). |
 | `npm run client:build -- <id> [--production]` | `astro build` the same way, as a render check. Output goes to the template's `dist/`. |
@@ -38,14 +38,15 @@ clients/<id>/
   src/site.config.ts        # template, options, homepage order, siteUrl (agent only)
   src/content/              # content-contract §2
   src/assets/media/         # client media (starts with the fixture's placeholder graphics)
+  src/assets/documents/     # optional: PDFs (documents, printed parte), copied to the site as they are
   public/                   # optional: favicon.svg, favicon.ico, apple-touch-icon.png, site.webmanifest
                             #   and the icons it lists; served from the site root, linked by SeoHead
   provenance/facts.json     # fact ledger: value, status, source per fact
-  provenance/approvals.json # copy, pricing, guidance and image sign-offs
+  provenance/approvals.json # copy, pricing, guidance and image sign-offs, staff consent (people)
   notes/                    # research.md, feedback.md (agent notes; never exported)
 ```
 
-The export copies `src/content`, `src/assets/media`, `src/site.config.ts`, `public/` and `provenance/` (to `docs/provenance/`). `notes/` stays in this repository.
+The export copies `src/content`, `src/assets/media`, `src/assets/documents` (when present), `src/site.config.ts`, `public/` and `provenance/` (to `docs/provenance/`). `notes/` stays in this repository.
 
 **`clients/` is tracked in Git.** The content is the client's real business data, gathered from public sources and confirmed by the client, and the ledger is the record of who confirmed what. That record must survive this machine. The repository is private; do not put credentials or private correspondence in `notes/`.
 
@@ -55,6 +56,8 @@ The export copies `src/content`, `src/assets/media`, `src/site.config.ts`, `publ
 - **Statuses.** The agent writes only `EXISTING_WEBSITE` (old website or public register, with `source` and `retrievedAt`) and `UNKNOWN`. `VERIFIED` and `CLIENT_PROVIDED` come only from the operator relaying the client, with a name and date (`/site-revise`).
 - **Synthetic content is marked.** Placeholder copy keeps `placeholder: true`, prices are `demo`, AI-drafted copy is `DRAFT`, guidance stays unreviewed. Production builds reject all of them.
 - **Design levers are the manifest's options only.** No per-client CSS or template edits (template-contract §8).
+- **Optional content types need template support.** `features.notices`, `people`, `faq`, `documents`, `guestInfo` and `prePlanning` may be switched on only for a template whose manifest supports them (G-005); A and B support none yet. Notices and staff need recorded consent (G-070, G-074), notices carry nothing promotional (G-072), and only the client's own PDFs are published.
+- **Notices expire only when the site is rebuilt.** With notices on, the client's host should run the production build daily (for example a scheduled run of `publish.yml`), so a notice disappears the day after `publishUntil`.
 
 ## First run, for the pilot
 

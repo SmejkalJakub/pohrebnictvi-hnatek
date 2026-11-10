@@ -91,6 +91,15 @@ export default {
     contactForm: false,           // reserved; enabling needs U9 resolved
     serviceDetailPages: true,     // generates /sluzby/<slug>/
     mapEmbed: false,              // features.map "embed-on-click" rejected by G-005 when false
+    // Optional content types (content-contract §6.13–§6.17). Each has a site.config feature of the
+    // same name; G-005 rejects a feature that is on while its flag is false.
+    notices: false,               // /oznameni/ and /oznameni/<slug>/
+    people: false,                // the people collection
+    faq: false,                   // the faq collection
+    documents: false,             // the documents collection (PDF links)
+    guestInfo: false,             // the page pro-ucastniky
+    prePlanning: false,           // the page pohreb-predem
+    priceInclusions: false,       // renders pricing groups' includes[] / excludes[] (CMS shows them only then)
   },
 
   homepageSections: {
@@ -122,6 +131,8 @@ export default {
 } satisfies TemplateManifest;
 ```
 
+Templates A and B declare every optional flag `false` (2026-11-10). A template that renders `/pravni-informace/` declares `pageFields["pravni-informace"]`; that is what makes the CMS show the legal-information entry and what obliges the footer link (§6). Image slots for notices and people use the prefixes `notice.` and `person.` (for example `"notice.photo"`, `"person.photo"`); without them the CMS keeps those image fields hidden.
+
 Every value in `options` must be fully implemented and must pass contrast and layout QA. The agent cannot ask for values outside the declared set (`site.config.ts` is validated against the manifest).
 
 ## 4. Route contract
@@ -141,9 +152,17 @@ Core owns the URLs (content-contract §5). Templates own the `src/pages/*.astro`
 | `/cenik/` | must render if `pricing.visible`; otherwise no file is emitted | `pricing` (+ `hasDemo`) |
 | `/ochrana-osobnich-udaju/` | must render if the page exists | `pages["ochrana-osobnich-udaju"]` |
 | `/clanky/…` | only if `supports.articles` and the feature is on | `articles[]` |
+| `/oznameni/` | only if `supports.notices` and the feature is on; must render upcoming ceremonies and the other listed notices, and handle 0 entries | `getNoticeIndex()` → `{ upcoming, recent }` of `NoticeView`, `pages.oznameni` |
+| `/oznameni/<slug>/` | one per live notice (`getNotices()`); nothing promotional (§6) | `NoticeView` + rendered body; `<NoticeQrCode>` |
+| `/pro-ucastniky/` | only if `supports.guestInfo` and the feature is on | `pages["pro-ucastniky"]` |
+| `/pohreb-predem/` | only if `supports.prePlanning` and the feature is on | `pages["pohreb-predem"]` |
+| `/pravni-informace/` | must render if the page exists **and** the template declares `pageFields["pravni-informace"]` | `site.legal`, `getDocuments()`, `pages["pravni-informace"]` |
+| people, FAQ | on pages the template chooses (e.g. `/o-nas/`, `/kontakt/`, `/jak-postupovat/`), only with their support flag | `getPeople()`, `getFaq()` |
 | `/404.html` | must render, including the emergency CTA | `SiteContext` |
 
-Conditional routes are implemented as dynamic routes whose `getStaticPaths` returns no paths when the route is disabled (e.g. `src/pages/clanky/[...path].astro`). Disabled sections therefore produce no files at all, not empty pages.
+Conditional routes are implemented as dynamic routes whose `getStaticPaths` returns no paths when the route is disabled (e.g. `src/pages/clanky/[...path].astro`, `src/pages/oznameni/[...path].astro`; `harness/src/pages/oznameni/` is a minimal example). Disabled sections therefore produce no files at all, not empty pages. The optional loaders return empty results while their feature is off, so templates may call them unconditionally.
+
+Core, not the template, writes `/oznameni/<slug>/qr.svg`, copies `/dokumenty/<file>.pdf` and `/oznameni/<slug>/<parte>.pdf`, and leaves noindex notices out of `sitemap.xml`.
 
 Each template must ship a page file for every required route, or the build fails.
 
@@ -174,6 +193,14 @@ export async function getGuidance(): Promise<GuidanceView[]>;
 export async function getCoffins(): Promise<CoffinView[]>;
 export async function getFlowers(): Promise<FlowerView[]>;
 export async function getPricing(): Promise<PricingView | null>;       // null when not visible
+// Optional content types (empty while the feature is off; content-contract §6.13–§6.17)
+export async function getNotices(): Promise<LoadedNotice[]>;           // live notices: { view: NoticeView, Content, hasBody }
+export async function getNoticeIndex(): Promise<NoticeIndex>;          // { upcoming, recent }, listed only
+export async function getPeople(): Promise<PersonView[]>;              // with initials and formatted phone
+export async function getFaq(): Promise<FaqGroup<FaqEntry>[]>;         // grouped by topic; render(entry) for the answer
+export async function getDocuments(): Promise<DocumentView[]>;         // href /dokumenty/<file>.pdf
+// SiteContext also has `legal` (site/legal.json or null) and `legalLink` ({ label, href } or null).
+export const buildDate: string;                                       // "today" of this build
 export function formatOfficeHours(h: OfficeHours): HoursRow[];         // [{ days: "Po–Pá", text: "7:00–15:30", note: "polední přestávka 12:00–12:30" }, { days: "So–Ne", text: "zavřeno" }]
 export function formatPhone(e164: string): { display: string; href: string };
 export function resolveImage(ref: ImageRef): ResolvedImage;            // ImageMetadata + alt + flags
@@ -201,13 +228,24 @@ These are tested by the shared QA suite in Phase 2 (S6), not just reviewed.
 | `<MissingFact name>` | null required facts in prototype | "[Doplnit: …]" |
 | `<PrototypeBanner>` | prototype mode, top of `<body>` | banner text |
 | `<EmergencyPhoneLink variant>` | the emergency CTA | `tel:` href, label + number in the accessible name |
-| `<SeoHead>` / `<StructuredData>` | head metadata, JSON-LD | canonical, robots (mode-dependent), `LocalBusiness` with office hours; the emergency line as a separate `contactPoint` (`hoursAvailable` 24/7); never demo prices or UNKNOWN facts |
+| `<SeoHead>` / `<StructuredData>` | head metadata, JSON-LD | canonical, robots (mode-dependent, and `noindex` for every noindex notice whatever the template passes), `LocalBusiness` with office hours; the emergency line as a separate `contactPoint` (`hoursAvailable` 24/7); never demo prices or UNKNOWN facts |
+| `<VatNote pricing>` | next to prices (research L9) | `pricing.vatNote` (`data-vat-note`); "[Doplnit]" marker in prototype while it is missing |
+| `<NoticeQrCode notice>` | notice pages | the build-time QR SVG of the notice URL (`data-notice-qr`), with an accessible title |
 
 **Required template hooks** (the QA suite in `qa/` relies on them; added after S6)
 
 - `data-office-hours` on every block that shows office hours, headed by its own heading (not a styled `<p>`);
 - `data-emergency-block` on every separately headed emergency block (footer, contact page);
 - `data-section="<homepage section id>"` on every homepage section, in rendered order.
+
+**Optional content types (added 2026-11-10; content-contract §6.13–§6.17)**
+
+- **No promotional content on notice pages** (research L1, ⚖ pending a lawyer's view). `/oznameni/` and `/oznameni/<slug>/` carry no service teasers, prices, `<PriceValue>`, "Objednejte" / "Naše služby" blocks, banners, homepage sections or promotional calls to action. Only neutral identification of the publisher (brand name, footer identification) and the practical facts from `NoticeView`. The nonstop line stays on these pages (invariant 1) in its neutral form: label and number, no sales wording. Flag the chosen form for legal review in the template report.
+- **Livestream as a link only** ("Sledovat přenos obřadu"), never an embed or player (L14). Condolences only as an instruction with `notice.condolencesEmail`, never a form.
+- **Legal footer link.** When `site.legalLink` is not null, a template that declares `pageFields["pravni-informace"]` links it from the footer of every page (research L10).
+- **Prices with VAT.** Every page that shows a `<PriceValue>` also renders `<VatNote>` near the prices (L9). The gate only checks the data (G-021); rendering is this invariant, checked in template QA.
+- **People without photos.** People layouts must look complete with no photo (use `PersonView.initials` or typography).
+- **No sign-up or e-mail capture** anywhere, including `/pohreb-predem/` (L1).
 
 **Accessibility (WCAG 2.2 AA where practical)**
 
@@ -261,7 +299,12 @@ import type { SiteConfigInput } from "./core/content/config.ts";   // path diffe
 const config = {
   template: "rodinna-tradice",
   siteUrl: "https://example.invalid",               // real domain required in production (G-012)
-  features: { articles: false, contactForm: false, map: "link" },
+  features: {
+    articles: false, contactForm: false, map: "link",
+    // Optional content types; each needs the template's supports flag (G-005). All default to false.
+    notices: false, people: false, faq: false, documents: false, guestInfo: false, prePlanning: false,
+  },
+  // pinnedBuildDate: "2026-11-10",              // fixtures/template development only; production fails (G-073)
   homepage: { sections: ["hero", "family-story", "services", "next-steps", "contact-summary"] },
   options: { palette: "ivory-umber", fontPair: "garamond-source", heroVariant: "photo-right", emergencyEmphasis: "standard" },
 } satisfies SiteConfigInput;
@@ -292,7 +335,7 @@ hnatek-web/
   src/
     core/                 # verbatim copy of core/ without core/tests (cli/ and the launch check included)
     layouts/ components/ pages/ styles/ i18n/   # from the template
-    content/  assets/media/  site.config.ts      # from clients/hnatek
+    content/  assets/media/  assets/documents/  site.config.ts   # from clients/hnatek (documents only when present)
   public/                 # from clients/<id>/public: favicon, touch icon, web manifest (linked by SeoHead when present); robots.txt is written by core at build time
   scripts/validate.ts     # runs schema + gate (+ G-005 against the manifest) without building; Node runs .ts directly
   .github/workflows/      # publish.yml (production build + gate, then fast-forward main) and discard.yml

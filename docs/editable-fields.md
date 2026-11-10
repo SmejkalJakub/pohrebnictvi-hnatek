@@ -156,6 +156,7 @@ In the CMS this file is a **separate menu entry** ("Nonstop převoz zesnulých")
 | `items[].status` | **only `demo`** | **CMS (toggle)** | select: "Ukázková – nezveřejňovat" / "Schválená skutečná cena" | the client approves their own prices; production build rejects any remaining demo item |
 | add / delete items and groups | yes | **CMS** | lists | |
 | `currency` | yes | **Locked** | – | CZK |
+| `groups[].includes`, `groups[].excludes` | draft | **CMS** (only if the template declares `supports.priceInclusions`; otherwise declared hidden) | lists of strings ≤ 160 | "V ceně je zahrnuto" / "Není zahrnuto" |
 
 ### 4.10 Images (`ImageRef`, everywhere)
 
@@ -169,9 +170,62 @@ In the CMS this file is a **separate menu entry** ("Nonstop převoz zesnulých")
 | `rightsConfirmed` | evidence required | **CMS (toggle)** | boolean "Mám právo tuto fotografii použít" | production fails if false |
 | `focus` | yes | **CMS** | select | cropping hint |
 
+### 4.12 Notices (`notices/*.md`, only while `features.notices` is on)
+
+CMS menu "Oznámení a obřady". Notices are ordered per case, usually after handover; the agent writes only placeholder notices with obviously fictional names.
+
+| Field | Agent | Client CMS | Widget / validation | Notes |
+| --- | --- | --- | --- | --- |
+| `fullName`, `born`, `died` | placeholder only | **CMS** | string ≤ 120; string "RRRR" or "RRRR-MM-DD" | |
+| `photo`, `parteImage` | placeholder only | **CMS** | image (§4.10), shown when the template declares a `notice.*` image slot | the family's photo needs rights like any other image |
+| `partePdf` | placeholder only | **CMS** | file, PDF, into `src/assets/documents/` | published at `/oznameni/<slug>/<file>` while the notice is live |
+| `ceremony.type`, `date`, `time`, `placeName`, `address`, `mapUrl` | placeholder only | **CMS** | select; date; string HH:MM; strings; URL | date, time and place required for civil and church ceremonies |
+| `livestreamUrl` | – | **CMS** | string, `https://` only | link to the hall's or crematorium's stream; never an embed |
+| `familyNote`, body | placeholder only | **CMS** | text ≤ 600; rich-text | body: no links to services, prices or other sites (G-072), no phone numbers |
+| `condolencesViaOffice` | – | **CMS (toggle)** | boolean | shows the office e-mail for condolences |
+| `publishFrom`, `publishUntil` | yes | **CMS** | date (empty default, B4); `publishUntil` required | the notice disappears on the first build after `publishUntil` |
+| `noindex`, `listed`, `published` | yes | **CMS (toggle)** | boolean (`noindex` and `listed` default on) | |
+| `consent.orderedBy`, `consent.date`, `consent.basis` | placeholder only | **CMS** group "Souhlas objednatele" | string, date, select objednávka / písemný souhlas | required to publish (G-070); never rendered |
+| `placeholder` | yes | **Hidden** | – | |
+| add / delete | yes | **CMS** | collection | the client deletes expired notices; the build already ignores them (G-071) |
+
+### 4.13 People (`people/*.md`, only while `features.people` is on)
+
+| Field | Agent | Client CMS | Widget / validation | Notes |
+| --- | --- | --- | --- | --- |
+| `name`, `role`, `phone` | from the ledger only | **CMS** | string ≤ 120, string ≤ 120, phone (E.164) | tracked facts (`people.<id>.*`) |
+| `photo` | client photo only | **CMS** | image, shown when the template declares a `person.*` image slot | `depicts: "actual-business"` |
+| `order`, `published` | yes | **CMS** | number, boolean (new entries start unpublished) | |
+| consent (`approvals.json` → `people`) | **operator only** | – (not in the CMS) | – | a published person without it fails production (G-074). After handover, a new person is published only once the operator or developer has recorded the consent; the CMS help text says so |
+| add / delete | yes | **CMS** | collection | |
+
+### 4.14 FAQ (`faq/*.md`, only while `features.faq` is on)
+
+| Field | Agent | Client CMS | Widget / validation | Notes |
+| --- | --- | --- | --- | --- |
+| `question`, body (answer) | draft | **CMS** | string ≤ 200, rich-text | "Odborný obsah – po změně nechte text zkontrolovat."; copy approval before launch |
+| `topic`, `order`, `published` | yes | **CMS** | select (fixed topics), number, boolean | |
+| add / delete | yes | **CMS** | collection | |
+
+### 4.15 Documents (`documents/*.md`, only while `features.documents` is on)
+
+| Field | Agent | Client CMS | Widget / validation | Notes |
+| --- | --- | --- | --- | --- |
+| `title`, `kind`, `validFrom`, `order`, `published` | yes | **CMS** | string, select, date, number, boolean | |
+| `file` | the client's own PDF only | **CMS** | file, PDF only, into `src/assets/documents/` (media folder "Dokumenty (PDF)") | never write a document for the client; placeholder PDFs say "ZÁSTUPNÝ DOKUMENT" |
+| add / delete | yes | **CMS** | collection | |
+
+### 4.16 Legal information (`site/legal.json`) and the optional pages
+
+| Field | Agent | Client CMS | Widget / validation | Notes |
+| --- | --- | --- | --- | --- |
+| `adr.name`, `adr.url` | default (ČOI) | **CMS** (only if the template renders `pravni-informace`) | string, URL | tracked facts (`legal.adr.*`) |
+| `complaintsContact` | draft | **CMS** | text ≤ 400 | |
+| pages `oznameni`, `pro-ucastniky`, `pohreb-predem`, `pravni-informace` | draft | **CMS** like §4.5, while their feature is on and the template declares their `pageFields` | | `pohreb-predem`: no sign-up or e-mail capture (research L1) |
+
 ### 4.11 Never in the CMS
 
-`site.config.ts` (template, options, homepage order, features, `siteUrl`), `template.manifest.ts`, everything under `src/core/`, `src/layouts/`, `src/components/`, `src/pages/`, `src/styles/`, `astro.config.mjs`, `package*.json`, `.pages.yml` itself, deployment settings, `docs/provenance/`, the `articles/` collection (absent for Hnátek), and the `emergency.label`, `emergency.availability` and `emergency.enabled` fields.
+`site.config.ts` (template, options, homepage order, features, `siteUrl`, `pinnedBuildDate`), `template.manifest.ts`, everything under `src/core/`, `src/layouts/`, `src/components/`, `src/pages/`, `src/styles/`, `astro.config.mjs`, `package*.json`, `.pages.yml` itself, deployment settings, `docs/provenance/` (including the staff consent records), the `articles/` collection (absent for Hnátek), every optional collection or page whose feature is off, and the `emergency.label`, `emergency.availability` and `emergency.enabled` fields.
 
 ## 5. CMS validation and failure handling
 
@@ -184,7 +238,7 @@ In the CMS this file is a **separate menu entry** ("Nonstop převoz zesnulých")
   - A second Action, "Zahodit nepublikované změny", resets `content` to `main`.
 - **Recovery:** Pages CMS history is read-only, with no revert (S2 B1). A broken edit is either fixed forward in the CMS, or reverted in GitHub ("Revert") or by redeploying the previous version at the host.
 - **Dates:** Pages CMS pre-fills an empty `date` field with today's date (S2 B4). Every date field in the generated config must declare `default: ""`; otherwise an unreviewed guidance entry would silently gain a review date.
-- **Generated, not hand-written:** `.pages.yml` is generated by `tools/cms` from this policy, the template manifest (`pageFields`, `imageSlots`) and features. A collection is generated only when its feature is on, so Hnátek has no articles editor.
+- **Generated, not hand-written:** `.pages.yml` is generated by `tools/cms` from this policy, the template manifest (`pageFields`, `imageSlots`, `supports`) and features. A collection is generated only when its feature is on **and** the template supports it, so Hnátek has no articles, notices, people, FAQ or documents editor. With notices or documents on, `media` becomes a list: "Obrázky" (`src/assets/media`) and "Dokumenty (PDF)" (`src/assets/documents`).
 
 ## 6. Phase 6 test mapping
 
