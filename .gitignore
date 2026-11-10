@@ -16,3 +16,6 @@ exports/
 docs/qa/screens/
 docs/qa/structure.json
 docs/notes/screens/
+
+# Local design-tool cache
+.impeccable/
