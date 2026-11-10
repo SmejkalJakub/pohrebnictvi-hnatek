@@ -5,7 +5,8 @@
  *                     [--name <package-name>] [--force]
  *
  * Assembles a self-contained Astro project: the template at the root, core/ in src/core/, the
- * client's content, media and site.config.ts in src/, provenance in docs/provenance/, plus a
+ * client's content, media and site.config.ts in src/, its public/ (favicon, touch icon, web
+ * manifest) in public/, provenance in docs/provenance/, plus a
  * generated package.json (exact versions from this repo's lockfile), package-lock.json, .nvmrc,
  * .pages.yml, the publish/discard workflows and the handover documents.
  * --force replaces an existing earlier export (a directory that contains TEMPLATE.json).
@@ -41,7 +42,8 @@ export const PINNED_ACTIONS = {
 /** Build-time tools the exported `check` script needs, taken from the root devDependencies. */
 const EXPORT_DEV_DEPENDENCIES = ["@astrojs/check", "typescript", "@types/node"];
 
-const ALWAYS_SKIPPED = new Set(["node_modules", "dist", ".astro", ".DS_Store"]);
+// Build output and local tool caches (e.g. the impeccable design hook) never go into a client repository.
+const ALWAYS_SKIPPED = new Set(["node_modules", "dist", ".astro", ".DS_Store", ".impeccable"]);
 const REWRITABLE = new Set([".ts", ".mts", ".mjs", ".js", ".cjs", ".astro", ".json", ".css"]);
 
 export interface ExportOptions {
@@ -497,6 +499,11 @@ export async function exportSite(options: ExportOptions): Promise<ExportResult> 
   const clientMedia = path.join(clientDir, "src", "assets", "media");
   if (existsSync(clientMedia)) {
     await copyTree(clientMedia, path.join(outDir, "src", "assets", "media"), () => true);
+  }
+  const clientPublic = path.join(clientDir, "public");
+  if (existsSync(clientPublic)) {
+    log(`Client ${clientPublic} → public/`);
+    await copyTree(clientPublic, path.join(outDir, "public"), () => true);
   }
   const exportedConfig = path.join(outDir, "src", "site.config.ts");
   await copyFile(configSource, exportedConfig);

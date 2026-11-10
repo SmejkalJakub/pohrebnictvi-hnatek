@@ -2,13 +2,14 @@
  * Astro integration that every template (and the harness) installs:
  *  - runs schema validation + publication gate before a build (fails a build on errors),
  *  - exposes site data through the virtual module "virtual:site-core/data",
- *  - fixes route conventions (trailing slash, directory format),
+ *  - fixes route conventions (trailing slash in builds, directory format),
+ *  - serves the site's public/ folder (favicon, touch icon, manifest) from the site root,
  *  - writes robots.txt and, in production, sitemap.xml.
  */
 import { existsSync } from "node:fs";
 import { readdir, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import type { AstroIntegration } from "astro";
 import type { TemplateManifest } from "./content/config.ts";
 import { SINGLETON_NAMES } from "./content/schemas.ts";
@@ -17,6 +18,7 @@ import { collectReferencedMediaFiles, hasErrors } from "./gate/rules.ts";
 import { installContractMarkdownPlugins } from "./markdown/satteri-plugins.ts";
 import { runGateForSite } from "./gate/run.ts";
 import { isSupportedMediaFile } from "./media/normalize.ts";
+import { detectSiteIcons, sitePublicDir } from "./media/site-icons.ts";
 import { resolveMode, type SiteMode } from "./mode.ts";
 import { resolveConfigOverride, resolveSiteRoot, sitePaths, type SitePaths } from "./paths.ts";
 
@@ -42,6 +44,7 @@ async function buildDataModule(
   }
   lines.push(`export const mode = ${JSON.stringify(mode)};`);
   lines.push(`export const siteUrl = ${JSON.stringify(siteUrl)};`);
+  lines.push(`export const icons = ${JSON.stringify(detectSiteIcons(paths.root))};`);
   const mediaEntries: string[] = [];
   if (existsSync(paths.mediaDir)) {
     // Import only referenced images so unused files in the media folder are not emitted to dist/.
@@ -109,8 +112,19 @@ export default function siteCore(options: SiteCoreOptions = {}): AstroIntegratio
           referencedMedia = collectReferencedMediaFiles(run.content);
         }
         const dataModule = await buildDataModule(paths, mode, siteUrl, referencedMedia);
+        // Builds keep "always". The dev server answers Astro's image endpoint at "/_image?…"
+        // (no slash), which "always" turns into a 404, so dev uses "ignore".
+        let trailingSlash: "always" | "ignore" = "always";
+        if (command === "dev") {
+          trailingSlash = "ignore";
+        }
+        // The site's own public/ (clients/<id>/public in this repo); templates ship none.
+        const publicDir = sitePublicDir(root);
+        if (existsSync(publicDir)) {
+          updateConfig({ publicDir: pathToFileURL(`${publicDir}${path.sep}`) });
+        }
         updateConfig({
-          trailingSlash: "always",
+          trailingSlash,
           build: { format: "directory" },
           vite: {
             plugins: [

@@ -292,7 +292,7 @@ hnatek-web/
     core/                 # verbatim copy of core/ without core/tests (cli/ and the launch check included)
     layouts/ components/ pages/ styles/ i18n/   # from the template
     content/  assets/media/  site.config.ts      # from clients/hnatek
-  public/                 # favicon, robots handled by core at build time
+  public/                 # from clients/<id>/public: favicon, touch icon, web manifest (linked by SeoHead when present); robots.txt is written by core at build time
   scripts/validate.ts     # runs schema + gate (+ G-005 against the manifest) without building; Node runs .ts directly
   .github/workflows/      # publish.yml (production build + gate, then fast-forward main) and discard.yml
   README.md               # Czech + English: build, preview, deploy, SITE_MODE

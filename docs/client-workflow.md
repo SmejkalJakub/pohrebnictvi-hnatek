@@ -38,12 +38,14 @@ clients/<id>/
   src/site.config.ts        # template, options, homepage order, siteUrl (agent only)
   src/content/              # content-contract §2
   src/assets/media/         # client media (starts with the fixture's placeholder graphics)
+  public/                   # optional: favicon.svg, favicon.ico, apple-touch-icon.png, site.webmanifest
+                            #   and the icons it lists; served from the site root, linked by SeoHead
   provenance/facts.json     # fact ledger: value, status, source per fact
   provenance/approvals.json # copy, pricing, guidance and image sign-offs
   notes/                    # research.md, feedback.md (agent notes; never exported)
 ```
 
-The export copies `src/content`, `src/assets/media`, `src/site.config.ts` and `provenance/` (to `docs/provenance/`). `notes/` stays in this repository.
+The export copies `src/content`, `src/assets/media`, `src/site.config.ts`, `public/` and `provenance/` (to `docs/provenance/`). `notes/` stays in this repository.
 
 **`clients/` is tracked in Git.** The content is the client's real business data, gathered from public sources and confirmed by the client, and the ledger is the record of who confirmed what. That record must survive this machine. The repository is private; do not put credentials or private correspondence in `notes/`.
 

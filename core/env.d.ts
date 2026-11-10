@@ -11,4 +11,5 @@ declare module "virtual:site-core/data" {
   export const mode: "prototype" | "production";
   export const siteUrl: string | null;
   export const media: Record<string, ImageMetadata>;
+  export const icons: { svg: boolean; ico: boolean; appleTouch: boolean; manifest: boolean };
 }
