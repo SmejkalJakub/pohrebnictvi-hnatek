@@ -120,7 +120,7 @@ describe("document templates", () => {
     },
   );
 
-  it("publishes only after a production build and only by fast-forward", async () => {
+  it("publishes only after a gated build (production unless PUBLISH_MODE says otherwise) and only by fast-forward", async () => {
     const text = renderTemplate(
       await readFile(path.join(TEMPLATES, "publish.yml.tpl"), "utf8"),
       PINNED_ACTIONS,
@@ -132,7 +132,7 @@ describe("document templates", () => {
       };
     };
     const build = workflow.jobs.build.steps.find((step) => step.run === "npm run build");
-    expect(build?.env).toEqual({ SITE_MODE: "production" });
+    expect(build?.env).toEqual({ SITE_MODE: "${{ vars.PUBLISH_MODE || 'production' }}" });
     expect(workflow.jobs.promote.needs).toBe("build");
     const push = workflow.jobs.promote.steps.map((step) => step.run ?? "").join("\n");
     expect(push).toContain("git merge-base --is-ancestor origin/main");

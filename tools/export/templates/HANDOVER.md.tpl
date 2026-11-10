@@ -45,7 +45,7 @@ Postup:
 
 1. Upravte obsah v Pages CMS a uložte. Změna se objeví v náhledu (obvykle do několika minut).
 2. Až je vše v pořádku, spusťte v Pages CMS akci **„Zveřejnit změny“**.
-3. Akce spustí na GitHubu workflow `.github/workflows/publish.yml`. Ten nainstaluje balíčky, sestaví web v režimu `production` včetně kontroly obsahu a **jen když vše projde**, posune `main` na stav `content`. Hosting pak nasadí ostrý web.
+3. Akce spustí na GitHubu workflow `.github/workflows/publish.yml`. Ten nainstaluje balíčky, sestaví web v režimu `production` včetně kontroly obsahu a **jen když vše projde**, posune `main` na stav `content`. Hosting pak nasadí ostrý web. (Ve zkušebním provozu s proměnnou repozitáře `PUBLISH_MODE` = `prototype` se kontroluje v testovacím režimu a `main` zůstává neindexovaný testovací web.)
 4. Když kontrola neprojde, `main` se nezmění a ostrý web zůstane beze změny. Důvod je v záznamu běhu na GitHubu (záložka Actions), česky, s názvem souboru a pole. Opravte obsah v CMS a akci spusťte znovu.
 
 Akce **„Zahodit nepublikované změny“** (`.github/workflows/discard.yml`) vrátí větev `content` do stavu ostrého webu. Všechny uložené, ale nezveřejněné změny zmizí z CMS i z náhledu. Záznam běhu na GitHubu uvádí číslo původního stavu, ze kterého je vývojář umí obnovit.
@@ -65,6 +65,7 @@ Neplatný obsah se nikdy nezveřejní sám: sestavení s chybou nic nenasadí a 
 - Na GitHubu nastavte výchozí větev repozitáře na `content` (Pages CMS otevírá výchozí větev).
 - Ve větvi `main` nesmí být ochrana, která zakazuje push z GitHub Actions, jinak akce „Zveřejnit změny“ selže. Pokud ochranu chcete, povolte výjimku pro `github-actions[bot]`.
 - Na hostingu: produkce z `main` se `SITE_MODE=production`, náhled z `content` bez této proměnné, upozornění e-mailem při neúspěšném nasazení.
+- Zkušební provoz před spuštěním: `main` bez `SITE_MODE` a na GitHubu proměnná repozitáře `PUBLISH_MODE` = `prototype`. Při spuštění ostrého webu proměnnou smažte a pro `main` nastavte `SITE_MODE=production`.
 - V Pages CMS nainstalujte GitHub aplikaci jen pro tento repozitář a pozvěte redaktory jako spolupracovníky.
 
 ## 5. Vlastnictví a odpovědnost

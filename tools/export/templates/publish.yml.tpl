@@ -3,6 +3,9 @@
 #
 # Started by the Pages CMS Action "Zveřejnit změny" (workflow_dispatch on the current branch).
 # Pages CMS sends one input, `payload` (JSON); it is accepted and not used.
+# The gate runs in production mode unless the repository variable PUBLISH_MODE is "prototype":
+# that is a test run, where `main` is deployed as a noindex test site (host builds `main` without
+# SITE_MODE) and the CMS publishing flow can be tried before the content is approved.
 # `main` is only ever fast-forwarded: if it has commits that `content` does not contain, the run
 # fails and nothing is overwritten.
 name: Zveřejnit změny
@@ -24,7 +27,7 @@ concurrency:
 
 jobs:
   build:
-    name: Production build and gate
+    name: Build and publication gate
     if: github.ref == 'refs/heads/content'
     runs-on: ubuntu-latest
     permissions:
@@ -45,10 +48,10 @@ jobs:
       - name: Install exact dependencies
         run: npm ci --no-audit --no-fund
 
-      - name: Build in production mode (publication gate)
+      - name: Build with the publication gate (PUBLISH_MODE, default production)
         run: npm run build
         env:
-          SITE_MODE: production
+          SITE_MODE: ${{ vars.PUBLISH_MODE || 'production' }}
 
   promote:
     name: Fast-forward main

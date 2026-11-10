@@ -37,6 +37,8 @@ Sestavený web je složka `dist/`. Na hostingu nastavte:
 - pro větev `content` žádnou proměnnou (náhled v testovacím režimu, neindexovaný);
 - e-mailové upozornění při neúspěšném nasazení.
 
+**Zkušební provoz** (než klient vše potvrdí): pro `main` proměnnou `SITE_MODE` nenastavujte a na GitHubu přidejte proměnnou repozitáře `PUBLISH_MODE` = `prototype` (Settings → Secrets and variables → Actions → Variables). Akce „Zveřejnit změny“ pak kontroluje obsah v testovacím režimu a `main` běží jako neindexovaný testovací web. Před spuštěním ostrého webu proměnnou smažte a pro `main` nastavte `SITE_MODE=production`.
+
 Jak se změny z CMS dostanou na ostrý web, popisuje [HANDOVER.md](HANDOVER.md).
 
 ### Struktura
@@ -78,7 +80,7 @@ Static site built with [Astro](https://astro.build) (template "{{templateName}}"
 
 ### Deploy
 
-`dist/` is the artifact. On the host: build command `npm ci && npm run build`, output `dist`, Node.js from `.nvmrc`; set `SITE_MODE=production` for the `main` branch only; leave the `content` branch preview in prototype mode; turn on e-mail alerts for failed deploys. No host-specific files are included; add them only for the host you choose.
+`dist/` is the artifact. On the host: build command `npm ci && npm run build`, output `dist`, Node.js from `.nvmrc`; set `SITE_MODE=production` for the `main` branch only; leave the `content` branch preview in prototype mode; turn on e-mail alerts for failed deploys. For a trial run before the content is approved, leave `SITE_MODE` unset on `main` too and add the GitHub repository variable `PUBLISH_MODE` = `prototype`: "Zveřejnit změny" then gates in prototype mode and `main` is a noindex test site. Remove the variable and set `SITE_MODE=production` on `main` to go live. No host-specific files are included; add them only for the host you choose.
 
 The build needs no network access after `npm ci`: fonts are self-hosted from `@fontsource` packages and images live in `src/assets/media/`. Astro may try to send anonymous telemetry; disable it with `npx astro telemetry disable` or `ASTRO_TELEMETRY_DISABLED=1`.
 

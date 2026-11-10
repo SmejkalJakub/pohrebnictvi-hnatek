@@ -29,6 +29,7 @@ Output this checklist, adapted:
 4. Static host (Cloudflare Pages suggested): connect the GitHub repo; build command `npm run build`; output directory `dist`; environment variable `NODE_VERSION` = the version in `.nvmrc`.
    - Production branch `main` with `SITE_MODE=production`. It fails to build while the production gate has errors. That is the gate working, not a hosting problem.
    - Preview branch `content` with no `SITE_MODE` (prototype: banner, `noindex`, `robots.txt` disallow). Send the client the preview URL.
+   - Trial run (whole flow online before the facts are confirmed): leave `SITE_MODE` unset on `main` as well, and add the GitHub repository variable `PUBLISH_MODE` = `prototype`. "Zveřejnit změny" then gates in prototype mode and `main` is a noindex test site. At go-live (B) delete the variable and set `SITE_MODE=production` on `main`.
 5. Pages CMS: sign in at `https://app.pagescms.org` with GitHub, install the Pages CMS GitHub App on **this repository only**, open it on the `content` branch. Expect no configuration errors; note any warnings. Invite the client's editors as collaborators.
 6. The content-branch workflow (explain to the client; HANDOVER.md §2 has the Czech text, §4 the one-time setup):
    - edits are saved to `content` and appear on the preview site;
