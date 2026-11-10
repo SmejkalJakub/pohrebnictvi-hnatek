@@ -1,0 +1,66 @@
+---
+// Notices: /oznameni/ and /oznameni/<slug>/ only while features.notices is on. No design; this page
+// exercises the core view models (no promotional content, research L1), the QR code and noindex.
+import Harness from "../../layouts/Harness.astro";
+import NoticeQrCode from "@core/components/NoticeQrCode.astro";
+import { getNoticeIndex, getNotices, getOptionalPage, getSiteContext, type LoadedNotice } from "@core/content/load.ts";
+
+export async function getStaticPaths() {
+  const site = await getSiteContext();
+  if (!site.config.features.notices) {
+    return [];
+  }
+  const notices = await getNotices();
+  return [
+    { params: { path: undefined }, props: { notice: null } },
+    ...notices.map((notice) => ({ params: { path: notice.view.id }, props: { notice } })),
+  ];
+}
+
+interface Props {
+  notice: LoadedNotice | null;
+}
+
+const { notice } = Astro.props;
+const site = await getSiteContext();
+const page = await getOptionalPage("oznameni");
+const index = await getNoticeIndex();
+---
+{
+  notice === null ? (
+    <Harness site={site} title={page?.data.title ?? "Oznámení"} description={page?.data.metaDescription ?? ""}>
+      <h1>{page?.data.title}</h1>
+      <section aria-labelledby="nadchazejici" data-notices-upcoming>
+        <h2 id="nadchazejici">Nadcházející rozloučení</h2>
+        <ul>{index.upcoming.map((view) => <li data-notice={view.id}><a href={view.href}>{view.fullName}</a></li>)}</ul>
+      </section>
+      <section aria-labelledby="oznameni" data-notices-recent>
+        <h2 id="oznameni">Oznámení</h2>
+        <ul>{index.recent.map((view) => <li data-notice={view.id}><a href={view.href}>{view.fullName}</a></li>)}</ul>
+      </section>
+    </Harness>
+  ) : (
+    <Harness site={site} title={notice.view.fullName} description={`Smuteční oznámení: ${notice.view.fullName}`}>
+      <article data-notice={notice.view.id}>
+        <h1>{notice.view.fullName}</h1>
+        <p data-life-dates>
+          {notice.view.bornText !== null ? `* ${notice.view.bornText} ` : ""}† {notice.view.diedText}
+        </p>
+        {notice.view.ceremony !== null ? (
+          <p data-ceremony>
+            {notice.view.ceremony.typeLabel}
+            {notice.view.ceremony.dateText !== null ? `, ${notice.view.ceremony.weekday} ${notice.view.ceremony.dateText}` : ""}
+            {notice.view.ceremony.timeText !== null ? ` v ${notice.view.ceremony.timeText}` : ""}
+            {notice.view.ceremony.placeName !== null ? `, ${notice.view.ceremony.placeName}` : ""}
+          </p>
+        ) : null}
+        {notice.hasBody ? <notice.Content /> : null}
+        {notice.view.livestreamUrl !== null ? <p><a href={notice.view.livestreamUrl}>Sledovat přenos obřadu</a></p> : null}
+        {notice.view.partePdfHref !== null ? <p><a href={notice.view.partePdfHref}>Parte (PDF)</a></p> : null}
+        {notice.view.condolencesEmail !== null ? <p data-condolences>{notice.view.condolencesEmail}</p> : null}
+        <NoticeQrCode notice={notice.view} />
+        <p><a href={notice.view.qr.href}>QR kód k tisku</a></p>
+      </article>
+    </Harness>
+  )
+}

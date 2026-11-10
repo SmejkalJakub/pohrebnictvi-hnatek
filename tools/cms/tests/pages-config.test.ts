@@ -45,6 +45,11 @@ async function pageIds(): Promise<string[]> {
   );
 }
 
+/** Fixture pages the template renders (A and B declare no pageFields for the optional pages). */
+async function templatePageIds(manifest: TemplateManifest): Promise<string[]> {
+  return (await pageIds()).filter((pageId) => manifest.pageFields[pageId] !== undefined);
+}
+
 async function generated(manifest: TemplateManifest, articles = false): Promise<ParsedConfig> {
   const config = generatePagesConfig({ manifest, features: { articles }, pageIds: await pageIds() });
   const yaml = renderPagesYaml(config, { templateId: manifest.id, templateVersion: manifest.version });
@@ -161,7 +166,7 @@ describe.each(TEMPLATES)("generated .pages.yml for %s", (templateId) => {
     const config = await generated(await loadManifest(templateId));
     const pages = config.content.find((item) => item.name === "pages");
     expect(pages?.type).toBe("group");
-    expect(pages?.items?.length).toBe((await pageIds()).length);
+    expect(pages?.items?.length).toBe((await templatePageIds(await loadManifest(templateId))).length);
     for (const page of pages?.items ?? []) {
       expect(page.type).toBe("file");
       expect(page.operations).toEqual({ create: false, delete: false, rename: false });
@@ -177,7 +182,7 @@ describe.each(TEMPLATES)("generated .pages.yml for %s", (templateId) => {
   it("shows only the page fields the template renders; the rest stay declared but hidden", async () => {
     const manifest = await loadManifest(templateId);
     const config = await generated(manifest);
-    for (const pageId of await pageIds()) {
+    for (const pageId of await templatePageIds(manifest)) {
       const page = entry(config, `page-${pageId}`);
       const visible = (page.fields ?? []).filter((item) => item.hidden !== true).map((item) => item.name);
       const expected = (manifest.pageFields[pageId] ?? []).filter((name) => {
@@ -195,13 +200,14 @@ describe.each(TEMPLATES)("generated .pages.yml for %s", (templateId) => {
   });
 
   it("declares every key of the fixture content, list items included", async () => {
-    const config = await generated(await loadManifest(templateId));
+    const manifest = await loadManifest(templateId);
+    const config = await generated(manifest);
     const problems: string[] = [];
     for (const name of ["company", "contact", "office-hours", "emergency", "pricing"]) {
       const data = await fixtureFile(`src/content/site/${name}.json`);
       problems.push(...undeclaredKeys(data, entry(config, name).fields, name));
     }
-    for (const pageId of await pageIds()) {
+    for (const pageId of await templatePageIds(manifest)) {
       const data = await fixtureFile(`src/content/pages/${pageId}.md`);
       problems.push(...undeclaredKeys(data, entry(config, `page-${pageId}`).fields, `pages/${pageId}`));
     }
@@ -347,5 +353,129 @@ describe("feature-dependent output", () => {
     const config = await generated(withoutCoffinImages);
     expect(field(entry(config, "coffins").fields, "image").hidden).toBe(true);
     expect(field(entry(config, "flowers").fields, "image").hidden).not.toBe(true);
+  });
+});
+
+/** A template that supports every optional content type and renders their pages and images. */
+async function fullManifest(): Promise<TemplateManifest> {
+  const base = await loadManifest("dustojna-jednoduchost");
+  const pageFields: Record<string, readonly string[]> = { ...base.pageFields };
+  for (const pageId of ["oznameni", "pro-ucastniky", "pohreb-predem", "pravni-informace"]) {
+    pageFields[pageId] = ["title", "navLabel", "lead", "metaTitle", "metaDescription", "body"];
+  }
+  return {
+    ...base,
+    supports: {
+      ...base.supports,
+      notices: true,
+      people: true,
+      faq: true,
+      documents: true,
+      guestInfo: true,
+      prePlanning: true,
+      priceInclusions: true,
+    },
+    imageSlots: {
+      ...base.imageSlots,
+      "notice.photo": { aspect: "4:5", required: false },
+      "person.photo": { aspect: "1:1", required: false },
+    },
+    pageFields,
+  };
+}
+
+const ALL_FEATURES = {
+  articles: false,
+  notices: true,
+  people: true,
+  faq: true,
+  documents: true,
+  guestInfo: true,
+  prePlanning: true,
+};
+
+async function generatedFull(): Promise<ParsedConfig & { media: unknown }> {
+  const config = generatePagesConfig({
+    manifest: await fullManifest(),
+    features: ALL_FEATURES,
+    pageIds: await pageIds(),
+    legal: true,
+  });
+  return parse(renderPagesYaml(config, { templateId: "full", templateVersion: "0.0.0" })) as ParsedConfig;
+}
+
+describe("optional content types in the CMS", () => {
+  it("adds no optional collection, page, legal entry or PDF folder for A and B", async () => {
+    for (const templateId of TEMPLATES) {
+      const yaml = JSON.stringify(await generated(await loadManifest(templateId)));
+      for (const forbidden of [
+        "notices",
+        "people",
+        "faq",
+        "src/content/documents",
+        "legal.json",
+        "assets/documents",
+      ]) {
+        expect(yaml).not.toContain(forbidden);
+      }
+      const pricing = await generated(await loadManifest(templateId));
+      const groups = field(entry(pricing, "pricing").fields, "groups");
+      expect(field(groups.fields, "includes").hidden).toBe(true);
+      expect(field(groups.fields, "excludes").hidden).toBe(true);
+    }
+  });
+
+  it("generates notices with a required consent group, and a PDF media folder", async () => {
+    const config = await generatedFull();
+    const notices = entry(config, "notices");
+    expect(notices.label).toBe("Oznámení a obřady");
+    const consent = field(notices.fields, "consent");
+    expect(consent.label).toBe("Souhlas objednatele");
+    expect(field(consent.fields, "orderedBy").required).toBe(true);
+    expect(field(consent.fields, "date").default).toBe("");
+    const names = (notices.fields ?? []).map((item) => item.name);
+    for (const promotional of ["price", "priceGroupId", "service", "services", "featured"]) {
+      expect(names).not.toContain(promotional);
+    }
+    expect(field(notices.fields, "partePdf").type).toBe("file");
+    expect(field(notices.fields, "noindex").default).toBe(true);
+    expect(Array.isArray(config.media)).toBe(true);
+    expect(config.media).toContainEqual(
+      expect.objectContaining({ name: "documents", input: "src/assets/documents", extensions: ["pdf"] }),
+    );
+    expect(field(entry(config, "documents").fields, "file").options).toMatchObject({ media: "documents" });
+  });
+
+  it("shows the optional pages, legal information and price inclusions when supported", async () => {
+    const config = await generatedFull();
+    for (const pageId of ["oznameni", "pro-ucastniky", "pohreb-predem", "pravni-informace"]) {
+      expect(entry(config, `page-${pageId}`).path).toBe(`src/content/pages/${pageId}.md`);
+    }
+    expect(entry(config, "legal").path).toBe("src/content/site/legal.json");
+    const groups = field(entry(config, "pricing").fields, "groups");
+    expect(field(groups.fields, "includes").hidden).toBeUndefined();
+    for (const name of ["notices", "people", "faq", "documents"]) {
+      expect(entry(config, name).operations).toEqual({ create: true, delete: true, rename: false });
+    }
+  });
+
+  it("declares every key of the fixture's optional content", async () => {
+    const config = await generatedFull();
+    const problems: string[] = [];
+    for (const name of ["pricing", "legal"]) {
+      const data = await fixtureFile(`src/content/site/${name}.json`);
+      problems.push(...undeclaredKeys(data, entry(config, name).fields, name));
+    }
+    for (const pageId of ["oznameni", "pro-ucastniky", "pohreb-predem", "pravni-informace"]) {
+      const data = await fixtureFile(`src/content/pages/${pageId}.md`);
+      problems.push(...undeclaredKeys(data, entry(config, `page-${pageId}`).fields, `pages/${pageId}`));
+    }
+    for (const collection of ["notices", "people", "faq", "documents"]) {
+      for (const file of await readdir(path.join(FIXTURE, "src", "content", collection))) {
+        const data = await fixtureFile(`src/content/${collection}/${file}`);
+        problems.push(...undeclaredKeys(data, entry(config, collection).fields, `${collection}/${file}`));
+      }
+    }
+    expect(problems).toEqual([]);
   });
 });

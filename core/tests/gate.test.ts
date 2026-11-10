@@ -23,12 +23,23 @@ describe("neutral fixture", () => {
     const findings = runGate(fixture, { mode: "prototype", now: NOW });
     expect(hasErrors(findings)).toBe(false);
     expect(rules(findings, "marker")).toEqual(["G-011", "G-020", "G-031", "G-032", "G-040"]);
-    expect(rules(findings, "warning")).toEqual(["G-021"]);
+    // G-071: one fixture notice has expired; G-074: fixture people have no recorded consent.
+    expect(rules(findings, "warning")).toEqual(["G-021", "G-071", "G-074"]);
   });
 
   it("fails in production mode with exactly the expected rules", () => {
     const findings = runGate(fixture, { mode: "production", now: NOW });
-    expect(rules(findings, "error")).toEqual(["G-011", "G-012", "G-020", "G-021", "G-031", "G-032", "G-040"]);
+    expect(rules(findings, "error")).toEqual([
+      "G-011",
+      "G-012",
+      "G-020",
+      "G-021",
+      "G-031",
+      "G-032",
+      "G-040",
+      "G-073",
+      "G-074",
+    ]);
   });
 
   it("passes production once every flagged item is resolved", () => {
@@ -142,7 +153,13 @@ describe("individual rules", () => {
       "placeholder-1x1.png",
       "placeholder-3x2.png",
       "placeholder-4x3.png",
+      "placeholder-4x5.png",
     ]);
+    // Notice and people photos are imported only while their features are on.
+    const off = clone(fixture);
+    off.config.features.notices = false;
+    off.config.features.people = false;
+    expect(collectReferencedMediaFiles(off)).not.toContain("placeholder-4x5.png");
   });
 
   it("G-031 ignores unpublished placeholder entries", () => {
@@ -250,6 +267,14 @@ describe("G-005 config against the template manifest", () => {
       contactForm: false,
       serviceDetailPages: true,
       mapEmbed: false,
+      // The harness renders every optional content type the fixture switches on.
+      notices: true,
+      people: true,
+      faq: true,
+      documents: true,
+      guestInfo: true,
+      prePlanning: true,
+      priceInclusions: true,
     },
     homepageSections: {
       available: ["hero", "next-steps", "services", "contact-summary", "family-story"],

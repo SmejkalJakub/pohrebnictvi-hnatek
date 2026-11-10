@@ -3,5 +3,8 @@
   "copy": { "pages/home.md": { "status": "DRAFT", "approvedBy": null, "approvedAt": null } },
   "pricing": { "status": "NOT_APPROVED", "approvedBy": null, "approvedAt": null, "method": null },
   "guidance": {},
-  "images": {}
+  "images": {},
+  "people": {
+    "people/eva-vzorova.md": { "consentAt": null, "recordedBy": null, "method": null }
+  }
 }

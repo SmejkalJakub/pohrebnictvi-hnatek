@@ -5,13 +5,34 @@
 import { getCollection, render, type CollectionEntry } from "astro:content";
 import * as data from "virtual:site-core/data";
 import { SiteConfig } from "./config.ts";
-import { Company, Contact, EmergencyTransport, OfficeHours, Pricing, type PageId } from "./schemas.ts";
 import {
+  Company,
+  Contact,
+  EmergencyTransport,
+  LegalInfo,
+  OfficeHours,
+  Pricing,
+  type PageId,
+} from "./schemas.ts";
+import { isCollectionEnabled, isNoticeLive } from "../gate/visibility.ts";
+import {
+  buildDocumentView,
+  buildNoticeIndex,
+  buildNoticeView,
+  buildPersonView,
   buildPricingView,
   buildSiteContext,
+  groupFaq,
   sortCatalogue,
+  sortDocuments,
   sortGuidance,
+  sortPeople,
   sortServices,
+  type DocumentView,
+  type FaqGroup,
+  type NoticeIndex,
+  type NoticeView,
+  type PersonView,
   type PricingView,
   type SiteContext,
 } from "./view-models.ts";
@@ -46,9 +67,20 @@ export async function getSiteContext(): Promise<SiteContext> {
     emergency: parseOrThrow("emergency.json", EmergencyTransport, data.emergency),
     pricing: parseOrThrow("pricing.json", Pricing, data.pricing),
     pages,
+    legal: loadLegal(),
   });
   return cachedContext;
 }
+
+function loadLegal(): LegalInfo | null {
+  if (data.legal === null) {
+    return null;
+  }
+  return parseOrThrow("legal.json", LegalInfo, data.legal);
+}
+
+/** "Today" of this build (YYYY-MM-DD): SITE_BUILD_DATE, pinnedBuildDate or the Prague date. */
+export const buildDate: string = data.buildDate;
 
 async function findPage(id: PageId) {
   const pages = await getCollection("pages");
@@ -99,6 +131,75 @@ export async function getCoffins(): Promise<CollectionEntry<"coffins">[]> {
 
 export async function getFlowers(): Promise<CollectionEntry<"flowers">[]> {
   return sortCatalogue(await getCollection("flowers"));
+}
+
+// ---------------------------------------------------------------------------
+// Optional content types (content-contract §6.13–§6.17). Each returns nothing while its feature
+// is off, so a template can call them unconditionally.
+// ---------------------------------------------------------------------------
+
+export interface LoadedNotice {
+  view: NoticeView;
+  /** Rendered Markdown body (the notice text); check `hasBody` first. */
+  Content: Awaited<ReturnType<typeof render>>["Content"];
+  hasBody: boolean;
+}
+
+/** Live notices (published, inside publishFrom–publishUntil on the build date), with their bodies. */
+export async function getNotices(): Promise<LoadedNotice[]> {
+  const site = await getSiteContext();
+  const visibility = { config: site.config, pricing: parseOrThrow("pricing.json", Pricing, data.pricing) };
+  if (!site.config.features.notices) {
+    return [];
+  }
+  const entries = (await getCollection("notices")).filter((entry) =>
+    isNoticeLive(entry.data, visibility, data.buildDate),
+  );
+  const officeEmail = site.contact.emails[0]?.address ?? null;
+  const loaded: LoadedNotice[] = [];
+  for (const entry of entries) {
+    const { Content } = await render(entry);
+    const view = buildNoticeView(entry, {
+      siteUrl: site.config.siteUrl,
+      buildDate: data.buildDate,
+      officeEmail,
+    });
+    loaded.push({ view, Content, hasBody: (entry.body ?? "").trim() !== "" });
+  }
+  return loaded.sort((a, b) => a.view.id.localeCompare(b.view.id));
+}
+
+/** The /oznameni/ list: upcoming ceremonies first, then recent notices; unlisted notices omitted. */
+export async function getNoticeIndex(): Promise<NoticeIndex> {
+  const notices = await getNotices();
+  return buildNoticeIndex(notices.map((notice) => notice.view));
+}
+
+/** Published people, by order then name (empty while features.people is off). */
+export async function getPeople(): Promise<PersonView[]> {
+  const site = await getSiteContext();
+  if (!isCollectionEnabled("people", site)) {
+    return [];
+  }
+  return sortPeople(await getCollection("people")).map(buildPersonView);
+}
+
+/** Published questions grouped by topic; render each entry's answer with `render(entry)`. */
+export async function getFaq(): Promise<FaqGroup<CollectionEntry<"faq">>[]> {
+  const site = await getSiteContext();
+  if (!isCollectionEnabled("faq", site)) {
+    return [];
+  }
+  return groupFaq(await getCollection("faq"));
+}
+
+/** Published documents (PDF links under /dokumenty/), empty while features.documents is off. */
+export async function getDocuments(): Promise<DocumentView[]> {
+  const site = await getSiteContext();
+  if (!isCollectionEnabled("documents", site)) {
+    return [];
+  }
+  return sortDocuments(await getCollection("documents")).map(buildDocumentView);
 }
 
 export async function getPricing(): Promise<PricingView | null> {

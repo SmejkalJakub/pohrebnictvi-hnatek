@@ -13,6 +13,8 @@ import { SiteConfig } from "./config.ts";
 import {
   COLLECTION_NAMES,
   COLLECTION_SCHEMAS,
+  OPTIONAL_SINGLETON_NAMES,
+  OPTIONAL_SINGLETON_SCHEMAS,
   PageId,
   SINGLETON_NAMES,
   SINGLETON_SCHEMAS,
@@ -21,16 +23,24 @@ import {
   type CollectionName,
   type Company,
   type Contact,
+  type DocumentEntry,
   type EmergencyTransport,
+  type Faq,
   type FlowerArrangement,
   type Guidance,
+  type LegalInfo,
+  type Notice,
   type OfficeHours,
+  type OptionalSingletonName,
   type Page,
+  type Person,
   type Pricing,
   type Service,
   type SingletonName,
 } from "./schemas.ts";
+import { readPeopleConsents, type PeopleConsents } from "./provenance.ts";
 import { sitePaths, type SitePaths } from "../paths.ts";
+import { isSupportedDocumentFile } from "../media/documents.ts";
 import { isSupportedMediaFile } from "../media/normalize.ts";
 
 // ---------------------------------------------------------------------------
@@ -55,9 +65,14 @@ export interface RawSnapshot {
   paths: SitePaths;
   config: RawFile;
   singletons: Partial<Record<SingletonName, RawFile>>;
+  optionalSingletons: Partial<Record<OptionalSingletonName, RawFile>>;
   entries: RawEntry[];
   mediaFiles: string[];
+  /** PDFs in src/assets/documents (documents collection and notice parte). */
+  documentFiles: string[];
   articlesDirExists: boolean;
+  /** approvals.json → people (consent records, G-074). */
+  peopleConsents: PeopleConsents;
 }
 
 function relative(paths: SitePaths, absolute: string): string {
@@ -152,6 +167,13 @@ export async function readSiteSnapshot(root: string, options: SnapshotOptions = 
       singletons[name] = await readJsonFile(paths, absolute);
     }
   }
+  const optionalSingletons: Partial<Record<OptionalSingletonName, RawFile>> = {};
+  for (const name of OPTIONAL_SINGLETON_NAMES) {
+    const absolute = path.join(paths.contentDir, "site", `${name}.json`);
+    if (existsSync(absolute)) {
+      optionalSingletons[name] = await readJsonFile(paths, absolute);
+    }
+  }
   const entries: RawEntry[] = [];
   for (const collection of COLLECTION_NAMES) {
     entries.push(...(await readCollection(paths, collection)));
@@ -160,13 +182,20 @@ export async function readSiteSnapshot(root: string, options: SnapshotOptions = 
   if (existsSync(paths.mediaDir)) {
     mediaFiles = (await readdir(paths.mediaDir)).filter(isSupportedMediaFile).sort();
   }
+  let documentFiles: string[] = [];
+  if (existsSync(paths.documentsDir)) {
+    documentFiles = (await readdir(paths.documentsDir)).filter(isSupportedDocumentFile).sort();
+  }
   return {
     paths,
     config: await readConfig(paths),
     singletons,
+    optionalSingletons,
     entries,
     mediaFiles,
+    documentFiles,
     articlesDirExists: existsSync(path.join(paths.contentDir, "articles")),
+    peopleConsents: readPeopleConsents(paths),
   };
 }
 
@@ -196,8 +225,16 @@ export interface ValidatedContent {
   coffins: ContentEntry<Coffin>[];
   flowers: ContentEntry<FlowerArrangement>[];
   articles: ContentEntry<Article>[];
+  notices: ContentEntry<Notice>[];
+  people: ContentEntry<Person>[];
+  faq: ContentEntry<Faq>[];
+  documents: ContentEntry<DocumentEntry>[];
+  /** site/legal.json, or null when the site has none. */
+  legal: LegalInfo | null;
   mediaFiles: string[];
+  documentFiles: string[];
   articlesDirExists: boolean;
+  peopleConsents: PeopleConsents;
 }
 
 export interface SchemaProblem {
@@ -253,6 +290,11 @@ export function validateSnapshot(raw: RawSnapshot): ValidationResult {
     }
     singletonValues[name] = parseWith(SINGLETON_SCHEMAS[name], file, problems);
   }
+  let legal: LegalInfo | null = null;
+  const legalFile = raw.optionalSingletons.legal;
+  if (legalFile !== undefined) {
+    legal = parseWith(OPTIONAL_SINGLETON_SCHEMAS.legal, legalFile, problems);
+  }
 
   const collections: Record<CollectionName, ContentEntry<unknown>[]> = {
     pages: [],
@@ -261,6 +303,10 @@ export function validateSnapshot(raw: RawSnapshot): ValidationResult {
     coffins: [],
     flowers: [],
     articles: [],
+    notices: [],
+    people: [],
+    faq: [],
+    documents: [],
   };
   for (const entry of raw.entries) {
     if (!ID_PATTERN.test(entry.id)) {
@@ -301,8 +347,15 @@ export function validateSnapshot(raw: RawSnapshot): ValidationResult {
       coffins: collections.coffins as ContentEntry<Coffin>[],
       flowers: collections.flowers as ContentEntry<FlowerArrangement>[],
       articles: collections.articles as ContentEntry<Article>[],
+      notices: collections.notices as ContentEntry<Notice>[],
+      people: collections.people as ContentEntry<Person>[],
+      faq: collections.faq as ContentEntry<Faq>[],
+      documents: collections.documents as ContentEntry<DocumentEntry>[],
+      legal,
       mediaFiles: raw.mediaFiles,
+      documentFiles: raw.documentFiles,
       articlesDirExists: raw.articlesDirExists,
+      peopleConsents: raw.peopleConsents,
     },
     problems,
   };

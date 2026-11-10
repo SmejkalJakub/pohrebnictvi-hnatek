@@ -17,7 +17,7 @@
  * not confirm that component overrides (`label`, `required`) work.
  */
 import { Document } from "yaml";
-import type { TemplateManifest } from "../../core/content/config.ts";
+import type { ContentFeature, TemplateManifest } from "../../core/content/config.ts";
 
 // ---------------------------------------------------------------------------
 // Field model (subset of Pages CMS 2.1.8 lib/config-schema.ts that we use)
@@ -94,29 +94,35 @@ export interface CmsAction {
   confirm: boolean;
 }
 
+export interface CmsMedia {
+  name: string;
+  label: string;
+  input: string;
+  output: string;
+  extensions: string[];
+  rename: string;
+}
+
 export interface PagesConfig {
   settings: {
     hide: boolean;
     content: { merge: boolean };
     commit: { identity: string; templates: Record<string, string> };
   };
-  media: {
-    name: string;
-    label: string;
-    input: string;
-    output: string;
-    extensions: string[];
-    rename: string;
-  };
+  /** One media folder (images), or images plus documents (PDF) when a PDF field exists. */
+  media: CmsMedia | CmsMedia[];
   content: CmsContentEntry[];
   actions: CmsAction[];
 }
 
 export interface PagesConfigInput {
   manifest: TemplateManifest;
-  features: { articles: boolean };
+  /** site.config features; the optional content types default to off. */
+  features: { articles: boolean } & Partial<Record<ContentFeature, boolean>>;
   /** Ids of the page files that exist in src/content/pages (e.g. "home", "o-nas"). */
   pageIds: readonly string[];
+  /** True when src/content/site/legal.json exists. */
+  legal?: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -124,8 +130,10 @@ export interface PagesConfigInput {
 // ---------------------------------------------------------------------------
 
 const MEDIA_DIR = "src/assets/media";
+const DOCUMENTS_DIR = "src/assets/documents";
 const CONTENT_DIR = "src/content";
 const IMAGE_EXTENSIONS = ["jpg", "jpeg", "png", "webp"];
+const DOCUMENT_EXTENSIONS = ["pdf"];
 
 const PHONE: CmsPattern = {
   regex: "^\\+[1-9]\\d{7,14}$",
@@ -141,6 +149,10 @@ const DIC: CmsPattern = { regex: "^CZ\\d{8,10}$", message: "DIČ zadejte ve tvar
 const EMAIL: CmsPattern = { regex: "^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$", message: "Zadejte platný e-mail." };
 const HTTP_URL: CmsPattern = { regex: "^https?://\\S+$", message: "Zadejte celý odkaz včetně https://." };
 const HTTPS_URL: CmsPattern = { regex: "^https://\\S+$", message: "Zadejte odkaz začínající https://." };
+const YEAR_OR_DATE: CmsPattern = {
+  regex: "^\\d{4}(-\\d{2}-\\d{2})?$",
+  message: "Zadejte rok (RRRR) nebo datum (RRRR-MM-DD).",
+};
 
 const NO_FILE_OPERATIONS: CmsOperations = { create: false, delete: false, rename: false };
 const COLLECTION_OPERATIONS: CmsOperations = { create: true, delete: true, rename: false };
@@ -161,6 +173,17 @@ export const PAGE_LABELS: Record<string, string> = {
   cenik: "Ceník",
   "ochrana-osobnich-udaju": "Ochrana osobních údajů",
   clanky: "Články",
+  oznameni: "Oznámení a obřady",
+  "pro-ucastniky": "Pro účastníky pohřbu",
+  "pohreb-predem": "Pohřeb předem",
+  "pravni-informace": "Právní informace",
+};
+
+/** Pages that exist only while their feature is on (mirrors core/gate/visibility.ts FEATURE_PAGES). */
+const FEATURE_PAGE_IDS: Record<string, ContentFeature> = {
+  oznameni: "notices",
+  "pro-ucastniky": "guestInfo",
+  "pohreb-predem": "prePlanning",
 };
 
 // ---------------------------------------------------------------------------
@@ -582,7 +605,7 @@ function officeHoursEntry(): CmsFileEntry {
 }
 
 /** §4.9: demo/approved status select; currency locked (hidden). */
-function pricingEntry(): CmsFileEntry {
+function pricingEntry(inclusions: boolean): CmsFileEntry {
   return jsonFile("pricing", "Ceník", "pricing.json", [
     bool("visible", "Zobrazit ceník na webu"),
     hidden("currency", "string", "CZK"),
@@ -637,10 +660,21 @@ function pricingEntry(): CmsFileEntry {
           { min: 1, ...collapsed("{fields.label}") },
           { required: true },
         ),
+        stringList("includes", "V ceně je zahrnuto", 160, inclusions),
+        stringList("excludes", "Není zahrnuto (doplníte podle potřeby)", 160, inclusions),
       ],
       collapsed("{fields.title}"),
     ),
   ]);
+}
+
+/** A list of short strings; declared but hidden when the template does not render it (A7). */
+function stringList(name: string, label: string, max: number, visible: boolean): CmsField {
+  const field: CmsField = { name, label, type: "string", list: collapsed(), options: { maxlength: max } };
+  if (visible) {
+    return field;
+  }
+  return makeHidden(field);
 }
 
 // ---------------------------------------------------------------------------
@@ -708,6 +742,7 @@ function pageEntries(
   manifest: TemplateManifest,
   pageIds: readonly string[],
   articles: boolean,
+  enabled: (feature: ContentFeature) => boolean,
 ): CmsFileEntry[] {
   const entries: CmsFileEntry[] = [];
   for (const pageId of Object.keys(PAGE_LABELS)) {
@@ -715,6 +750,10 @@ function pageEntries(
       continue;
     }
     if (pageId === "clanky" && !articles) {
+      continue;
+    }
+    const feature = FEATURE_PAGE_IDS[pageId];
+    if (feature !== undefined && !enabled(feature)) {
       continue;
     }
     if (manifest.pageFields[pageId] === undefined) {
@@ -936,29 +975,285 @@ function articlesCollection(manifest: TemplateManifest): CmsCollectionEntry {
 }
 
 // ---------------------------------------------------------------------------
+// Optional content types (content-contract §6.13–§6.17; editable-fields §4.12–§4.16)
+// ---------------------------------------------------------------------------
+
+/** A PDF upload into src/assets/documents/ (the "documents" media folder). */
+function pdfFile(
+  name: string,
+  label: string,
+  options: { required?: boolean; description?: string } = {},
+): CmsField {
+  const field: CmsField = {
+    name,
+    label,
+    type: "file",
+    options: { media: "documents", extensions: DOCUMENT_EXTENSIONS },
+  };
+  if (options.required === true) {
+    field.required = true;
+  }
+  if (options.description !== undefined) {
+    field.description = options.description;
+  }
+  return field;
+}
+
+function noticesCollection(manifest: TemplateManifest): CmsCollectionEntry {
+  const images = hasSlotPrefix(manifest, "notice");
+  return collection(
+    "notices",
+    "Oznámení a obřady",
+    { primary: "fullName", fields: ["fullName", "died", "publishUntil", "published"], sort: ["died"] },
+    [
+      str("fullName", "Jméno zesnulé/ho", {
+        required: true,
+        max: 120,
+        description: "Celé jméno včetně titulů, jak má být na oznámení.",
+      }),
+      str("born", "Narození", { pattern: YEAR_OR_DATE, description: "Rok (1941) nebo datum (1941-04-03)." }),
+      str("died", "Úmrtí", {
+        required: true,
+        pattern: YEAR_OR_DATE,
+        description: "Rok (2026) nebo datum (2026-11-02).",
+      }),
+      imageRef("photo", "Fotografie", images),
+      imageRef("parteImage", "Parte jako obrázek", images),
+      pdfFile("partePdf", "Parte jako PDF", {
+        description: "Tištěné parte ke stažení. Zmizí s koncem zveřejnění.",
+      }),
+      objectField(
+        "ceremony",
+        "Rozloučení",
+        [
+          select(
+            "type",
+            "Druh rozloučení",
+            [
+              { value: "civil", label: "Občanský obřad" },
+              { value: "church", label: "Církevní obřad" },
+              { value: "without-ceremony", label: "Pohřeb bez obřadu" },
+              { value: "private", label: "V úzkém rodinném kruhu" },
+            ],
+            { required: true },
+          ),
+          date("date", "Datum obřadu"),
+          str("time", "Čas obřadu (HH:MM)", { pattern: TIME }),
+          str("placeName", "Místo obřadu", { max: 120, description: "Např. Smuteční síň Vyškov." }),
+          str("address", "Adresa místa", { max: 200 }),
+          str("mapUrl", "Odkaz na mapu", { pattern: HTTP_URL }),
+        ],
+        { description: "U občanského a církevního obřadu vyplňte datum, čas i místo." },
+      ),
+      str("livestreamUrl", "Odkaz na přenos obřadu", {
+        pattern: HTTPS_URL,
+        description:
+          "Jen odkaz na přenos, který provozuje obřadní síň nebo krematorium. Přenos na web nevkládáme.",
+      }),
+      txt("familyNote", "Krátký text od rodiny", { max: 600 }),
+      bool("condolencesViaOffice", "Rodina souhlasí s kondolencemi přes e-mail kanceláře", false),
+      date("publishFrom", "Zveřejnit od"),
+      date("publishUntil", "Zveřejnit do", true),
+      bool("noindex", "Skrýt před vyhledávači (doporučeno)", true),
+      bool("listed", "Zobrazit v přehledu oznámení", true),
+      bool("published", "Zveřejnit", true),
+      objectField(
+        "consent",
+        "Souhlas objednatele",
+        [
+          str("orderedBy", "Kdo oznámení objednal", { required: true, max: 120 }),
+          date("date", "Datum objednávky nebo souhlasu", true),
+          select(
+            "basis",
+            "Právní základ",
+            [
+              { value: "objednavka", label: "Objednávka služby" },
+              { value: "souhlas", label: "Písemný souhlas" },
+            ],
+            { required: true },
+          ),
+        ],
+        {
+          description:
+            "Povinné. Bez záznamu, kdo zveřejnění objednal, kdy a na jakém základě, se oznámení na web nedostane. Údaje se na webu nezobrazují.",
+        },
+      ),
+      hiddenPlaceholderFlag(),
+      richText(
+        "body",
+        "Text oznámení",
+        "Jen text oznámení. Žádné odkazy na služby, ceník ani jiné weby a žádná telefonní čísla.",
+      ),
+    ],
+  );
+}
+
+function peopleCollection(manifest: TemplateManifest): CmsCollectionEntry {
+  return collection(
+    "people",
+    "Lidé",
+    { primary: "name", fields: ["name", "role", "published"], sort: ["order", "name"] },
+    [
+      str("name", "Jméno", { required: true, max: 120 }),
+      str("role", "Role", { required: true, max: 120, description: "Např. Vedoucí kanceláře." }),
+      imageRef("photo", "Fotografie", hasSlotPrefix(manifest, "person")),
+      str("phone", "Přímý telefon", {
+        pattern: PHONE,
+        description: "Nepovinné. Ve tvaru +420123456789, bez mezer.",
+      }),
+      order(),
+      {
+        ...bool("published", "Zveřejnit", false),
+        description:
+          "Zveřejnit lze jen člověka, jehož souhlas se zveřejněním má správce webu zaznamenaný. Nového pracovníka nejdřív nahlaste správci.",
+      },
+      hiddenPlaceholderFlag(),
+      hiddenBody(),
+    ],
+  );
+}
+
+function faqCollection(): CmsCollectionEntry {
+  return collection(
+    "faq",
+    "Časté otázky",
+    { primary: "question", fields: ["question", "topic", "published"], sort: ["order", "question"] },
+    [
+      str("question", "Otázka", { required: true, max: 200 }),
+      select(
+        "topic",
+        "Téma",
+        [
+          { value: "first-steps", label: "Úmrtí a první kroky" },
+          { value: "arrangements", label: "Sjednání pohřbu" },
+          { value: "ceremony", label: "Obřad a rozloučení" },
+          { value: "cremation-urn", label: "Kremace a urna" },
+          { value: "documents", label: "Doklady a úřady" },
+          { value: "costs", label: "Náklady a platba" },
+          { value: "other", label: "Další otázky" },
+        ],
+        { required: true },
+      ),
+      order(),
+      bool("published", "Zveřejnit", true),
+      hiddenPlaceholderFlag(),
+      richText(
+        "body",
+        "Odpověď",
+        "Odborný obsah – po změně nechte text zkontrolovat. Telefonní čísla sem nepište.",
+      ),
+    ],
+  );
+}
+
+function documentsCollection(): CmsCollectionEntry {
+  return collection(
+    "documents",
+    "Dokumenty ke stažení",
+    { primary: "title", fields: ["title", "kind", "validFrom", "published"], sort: ["order", "title"] },
+    [
+      str("title", "Název dokumentu", { required: true, max: 120 }),
+      pdfFile("file", "Soubor PDF", { required: true }),
+      select(
+        "kind",
+        "Druh",
+        [
+          { value: "rad-pohrebni-sluzby", label: "Řád pohřební služby" },
+          { value: "obchodni-podminky", label: "Obchodní podmínky" },
+          { value: "reklamacni-rad", label: "Reklamační řád" },
+          { value: "other", label: "Jiný dokument" },
+        ],
+        { required: true },
+      ),
+      date("validFrom", "Platí od"),
+      order(),
+      bool("published", "Zveřejnit", true),
+      hiddenPlaceholderFlag(),
+      hiddenBody(),
+    ],
+  );
+}
+
+/** site/legal.json: the ADR body defaults to ČOI (research L10). */
+function legalEntry(): CmsFileEntry {
+  return jsonFile("legal", "Právní informace", "legal.json", [
+    objectField(
+      "adr",
+      "Mimosoudní řešení spotřebitelských sporů",
+      [
+        str("name", "Subjekt", { max: 120, default: "Česká obchodní inspekce" }),
+        str("url", "Odkaz", { pattern: HTTP_URL, default: "https://adr.coi.cz" }),
+      ],
+      { description: "Obvykle Česká obchodní inspekce (adr.coi.cz)." },
+    ),
+    txt("complaintsContact", "Kde a jak uplatnit reklamaci", { max: 400 }),
+  ]);
+}
+
+// ---------------------------------------------------------------------------
 // Whole config
 // ---------------------------------------------------------------------------
 
 export function generatePagesConfig(input: PagesConfigInput): PagesConfig {
   const { manifest, features, pageIds } = input;
   const articles = features.articles && manifest.supports.articles;
+  const enabled = (feature: ContentFeature): boolean =>
+    features[feature] === true && manifest.supports[feature];
+  const showLegal = input.legal === true && manifest.pageFields["pravni-informace"] !== undefined;
+  const companyItems: CmsFileEntry[] = [companyEntry(), contactEntry(), officeHoursEntry()];
+  if (showLegal) {
+    companyItems.push(legalEntry());
+  }
   const content: CmsContentEntry[] = [
     emergencyEntry(),
+    { name: "contact-group", label: "Firma a kontakt", type: "group", items: companyItems },
+    pricingEntry(manifest.supports.priceInclusions),
     {
-      name: "contact-group",
-      label: "Firma a kontakt",
+      name: "pages",
+      label: "Texty stránek",
       type: "group",
-      items: [companyEntry(), contactEntry(), officeHoursEntry()],
+      items: pageEntries(manifest, pageIds, articles, enabled),
     },
-    pricingEntry(),
-    { name: "pages", label: "Texty stránek", type: "group", items: pageEntries(manifest, pageIds, articles) },
-    servicesCollection(manifest),
-    guidanceCollection(),
-    coffinsCollection(manifest),
-    flowersCollection(manifest),
   ];
+  if (enabled("notices")) {
+    content.push(noticesCollection(manifest));
+  }
+  content.push(servicesCollection(manifest), guidanceCollection());
+  if (enabled("faq")) {
+    content.push(faqCollection());
+  }
+  content.push(coffinsCollection(manifest), flowersCollection(manifest));
+  if (enabled("people")) {
+    content.push(peopleCollection(manifest));
+  }
+  if (enabled("documents")) {
+    content.push(documentsCollection());
+  }
   if (articles) {
     content.push(articlesCollection(manifest));
+  }
+  const imageMedia: CmsMedia = {
+    name: "media",
+    label: "Obrázky",
+    input: MEDIA_DIR,
+    // Equal to input: the stored value is src/assets/media/<file>, which core normalises to <file>.
+    output: MEDIA_DIR,
+    extensions: IMAGE_EXTENSIONS,
+    rename: "safe",
+  };
+  let media: CmsMedia | CmsMedia[] = imageMedia;
+  if (enabled("documents") || enabled("notices")) {
+    media = [
+      imageMedia,
+      {
+        name: "documents",
+        label: "Dokumenty (PDF)",
+        input: DOCUMENTS_DIR,
+        output: DOCUMENTS_DIR,
+        extensions: DOCUMENT_EXTENSIONS,
+        rename: "safe",
+      },
+    ];
   }
   return {
     settings: {
@@ -973,15 +1268,7 @@ export function generatePagesConfig(input: PagesConfigInput): PagesConfig {
         },
       },
     },
-    media: {
-      name: "media",
-      label: "Obrázky",
-      input: MEDIA_DIR,
-      // Equal to input: the stored value is src/assets/media/<file>, which core normalises to <file>.
-      output: MEDIA_DIR,
-      extensions: IMAGE_EXTENSIONS,
-      rename: "safe",
-    },
+    media,
     content,
     // A5: the editor works on `content`; these Actions dispatch workflows on the current branch.
     actions: [

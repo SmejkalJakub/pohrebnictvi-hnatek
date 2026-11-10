@@ -1,0 +1,53 @@
+---
+// Legal information, documents, people and FAQ: renders whatever the optional loaders return.
+import Harness from "../../layouts/Harness.astro";
+import { getDocuments, getFaq, getOptionalPage, getPeople, getSiteContext, render } from "@core/content/load.ts";
+
+const site = await getSiteContext();
+const page = await getOptionalPage("pravni-informace");
+const documents = await getDocuments();
+const people = await getPeople();
+const faq = await getFaq();
+const answers = await Promise.all(
+  faq.flatMap((group) => group.entries).map(async (entry) => ({ id: entry.id, ...(await render(entry)) })),
+);
+---
+<Harness site={site} title={page?.data.title ?? "Právní informace"} description={page?.data.metaDescription ?? ""}>
+  <h1>{page?.data.title ?? "Právní informace"}</h1>
+  {
+    site.legal !== null ? (
+      <section aria-labelledby="adr" data-legal>
+        <h2 id="adr">Mimosoudní řešení sporů</h2>
+        <p><a href={site.legal.adr.url}>{site.legal.adr.name}</a></p>
+        {site.legal.complaintsContact !== null ? <p>{site.legal.complaintsContact}</p> : null}
+      </section>
+    ) : null
+  }
+  <section aria-labelledby="dokumenty" data-documents>
+    <h2 id="dokumenty">Dokumenty</h2>
+    <ul>{documents.map((document) => <li><a href={document.href}>{document.title}</a> ({document.kindLabel})</li>)}</ul>
+  </section>
+  <section aria-labelledby="lide" data-people>
+    <h2 id="lide">Lidé</h2>
+    <ul>{people.map((person) => <li data-person={person.id}>{person.initials} {person.name}, {person.role}</li>)}</ul>
+  </section>
+  <section aria-labelledby="otazky" data-faq>
+    <h2 id="otazky">Časté otázky</h2>
+    {
+      faq.map((group) => (
+        <section aria-label={group.label}>
+          <h3>{group.label}</h3>
+          {group.entries.map((entry) => {
+            const answer = answers.find((item) => item.id === entry.id);
+            return (
+              <details>
+                <summary>{entry.data.question}</summary>
+                {answer !== undefined ? <answer.Content /> : null}
+              </details>
+            );
+          })}
+        </section>
+      ))
+    }
+  </section>
+</Harness>

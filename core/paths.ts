@@ -9,6 +9,8 @@ export interface SitePaths {
   root: string;
   contentDir: string;
   mediaDir: string;
+  /** PDFs for download (documents collection, notice parte): copied to dist as they are. */
+  documentsDir: string;
   configFile: string;
   provenanceDir: string;
 }
@@ -45,6 +47,7 @@ export function sitePaths(root: string, configFile: string | null = null): SiteP
     root,
     contentDir: path.join(root, "src", "content"),
     mediaDir: path.join(root, "src", "assets", "media"),
+    documentsDir: path.join(root, "src", "assets", "documents"),
     configFile: resolvedConfig,
     provenanceDir: path.join(root, "provenance"),
   };

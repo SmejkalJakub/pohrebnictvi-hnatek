@@ -12,6 +12,17 @@
       "items": [
         { "id": "pohreb-s-obradem", "label": "Pohřeb s obřadem", "description": "Základní rozsah služeb.", "kind": "from", "amount": 18900, "amountMax": null, "unit": null, "status": "demo" },
         { "id": "pohreb-bez-obradu", "label": "Pohřeb bez obřadu", "description": null, "kind": "fixed", "amount": 9900, "amountMax": null, "unit": null, "status": "demo" }
+      ],
+      "includes": [
+        "Sjednání pohřbu v kanceláři nebo u vás doma",
+        "Vyřízení dokladů potřebných k pohřbu",
+        "Úprava a uložení zesnulého",
+        "Základní rakev"
+      ],
+      "excludes": [
+        "Převoz zesnulého (podle vzdálenosti)",
+        "Květinová výzdoba",
+        "Tisk smutečních oznámení"
       ]
     },
     {

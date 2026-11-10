@@ -1,12 +1,14 @@
 ---
 /**
  * <head> metadata. Prototype builds and pages passing `noindex` (e.g. /cenik/ with demo prices)
- * get robots noindex,nofollow. Use inside <head>; templates add their own styles/fonts.
+ * get robots noindex,nofollow, and so does every notice marked noindex (its path is in the
+ * integration's noindexPaths, which also keeps it out of sitemap.xml), whatever the template passes.
+ * Use inside <head>; templates add their own styles/fonts.
  * Browser icons are linked only when the site's public/ folder has them (core/media/site-icons.ts).
  */
 import type { ImageMetadata } from "astro";
 import { getImage } from "astro:assets";
-import { icons } from "virtual:site-core/data";
+import { icons, noindexPaths } from "virtual:site-core/data";
 import { SITE_ICON_FILES } from "../media/site-icons.ts";
 import type { SiteContext } from "../content/view-models.ts";
 
@@ -27,7 +29,12 @@ if (title !== null && title !== brand) {
 }
 const base = site.config.siteUrl.replace(/\/$/, "");
 const canonical = `${base}${Astro.url.pathname}`;
-const robots = site.mode === "prototype" || noindex ? "noindex,nofollow" : "index,follow";
+let pathname = Astro.url.pathname;
+if (!pathname.endsWith("/")) {
+  pathname = `${pathname}/`;
+}
+const pathIsNoindex = noindexPaths.includes(pathname);
+const robots = site.mode === "prototype" || noindex || pathIsNoindex ? "noindex,nofollow" : "index,follow";
 let imageUrl: string | null = null;
 if (image !== null) {
   const optimized = await getImage({ src: image, width: 1200, format: "jpeg" });

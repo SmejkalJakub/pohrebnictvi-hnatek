@@ -1,13 +1,25 @@
 /**
  * Content Layer collections. A template's src/content.config.ts is just:
  *   export { collections } from "@core/content/collections.ts";
- * Collections whose directory does not exist (e.g. articles for Hnátek) are not defined.
+ * Collections whose directory does not exist (e.g. articles for Hnátek, or notices, people, faq and
+ * documents on a site without those features) are not defined.
  */
 import { existsSync } from "node:fs";
 import path from "node:path";
 import { defineCollection } from "astro:content";
 import { glob } from "astro/loaders";
-import { Article, Coffin, FlowerArrangement, Guidance, Page, Service } from "./schemas.ts";
+import {
+  Article,
+  Coffin,
+  DocumentEntry,
+  Faq,
+  FlowerArrangement,
+  Guidance,
+  Notice,
+  Page,
+  Person,
+  Service,
+} from "./schemas.ts";
 import { resolveSiteRoot, sitePaths } from "../paths.ts";
 
 const { contentDir } = sitePaths(resolveSiteRoot());
@@ -23,6 +35,10 @@ const definitions = {
   coffins: defineCollection({ loader: markdownIn("coffins"), schema: Coffin }),
   flowers: defineCollection({ loader: markdownIn("flowers"), schema: FlowerArrangement }),
   articles: defineCollection({ loader: markdownIn("articles"), schema: Article }),
+  notices: defineCollection({ loader: markdownIn("notices"), schema: Notice }),
+  people: defineCollection({ loader: markdownIn("people"), schema: Person }),
+  faq: defineCollection({ loader: markdownIn("faq"), schema: Faq }),
+  documents: defineCollection({ loader: markdownIn("documents"), schema: DocumentEntry }),
 };
 
 type Definitions = typeof definitions;

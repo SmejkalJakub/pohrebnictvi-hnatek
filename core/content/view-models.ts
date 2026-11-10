@@ -11,6 +11,7 @@ import {
   type Contact,
   type EmergencyTransport,
   type Guidance,
+  type LegalInfo,
   type OfficeHours,
   type Page,
   type PageId,
@@ -20,8 +21,10 @@ import {
 } from "./schemas.ts";
 import { formatOfficeHours, type HoursRow } from "../format/hours.ts";
 import { isPageEnabled } from "../gate/visibility.ts";
+import { buildLegalLink, type LegalLink } from "./optional-views.ts";
 
 export type { TemplateManifest } from "./config.ts";
+export * from "./optional-views.ts";
 
 export interface NavItem {
   id: PageId;
@@ -45,6 +48,10 @@ export interface SiteContext {
   nav: NavItem[];
   pricingVisible: boolean;
   missing: MissingFact[];
+  /** site/legal.json (ADR, complaints contact), or null. */
+  legal: LegalInfo | null;
+  /** Footer link to /pravni-informace/ when legal info and its page exist (research L10). */
+  legalLink: LegalLink | null;
 }
 
 export interface PricingView extends Pricing {
@@ -55,6 +62,8 @@ export interface PricingView extends Pricing {
 export const NAV_ORDER: readonly PageId[] = [
   "home",
   "jak-postupovat",
+  // Only while features.notices is on (and the template supports it).
+  "oznameni",
   "sluzby",
   "rakve",
   "kvetiny",
@@ -117,7 +126,9 @@ export function buildSiteContext(input: {
   emergency: EmergencyTransport;
   pricing: Pricing;
   pages: readonly { id: string; data: Page }[];
+  legal?: LegalInfo | null;
 }): SiteContext {
+  const legal = input.legal ?? null;
   return {
     mode: input.mode,
     config: input.config,
@@ -129,6 +140,8 @@ export function buildSiteContext(input: {
     nav: buildNav(input.pages, input),
     pricingVisible: input.pricing.visible,
     missing: buildMissingFacts(input.company),
+    legal,
+    legalLink: buildLegalLink(legal, input.pages),
   };
 }
 

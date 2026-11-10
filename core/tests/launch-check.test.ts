@@ -43,6 +43,8 @@ function fullApprovals(source: ValidatedContent) {
     ...source.guidance,
     ...source.coffins,
     ...source.flowers,
+    ...source.faq,
+    ...source.documents,
   ]) {
     copy[entry.file.replace("src/content/", "")] = { status: "APPROVED", ...signOff };
   }

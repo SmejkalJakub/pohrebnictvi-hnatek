@@ -37,8 +37,9 @@ export async function generatePagesConfigForSite(input: SiteCmsInput): Promise<S
   }
   const config = generatePagesConfig({
     manifest,
-    features: { articles: content.config.features.articles },
+    features: content.config.features,
     pageIds: content.pages.map((page) => page.id),
+    legal: content.legal !== null,
   });
   const yaml = renderPagesYaml(config, { templateId: manifest.id, templateVersion: manifest.version });
   return { config, yaml };

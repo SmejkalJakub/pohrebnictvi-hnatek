@@ -6,12 +6,14 @@ import { z } from "astro/zod";
 import {
   Day,
   Email,
+  HttpsUrl,
   Id,
   IsoDate,
   Order,
   Phone,
   Time,
   Url,
+  YearOrDate,
   asciiSlug,
   flag,
   labelField,
@@ -320,6 +322,11 @@ export const PAGE_IDS = [
   "cenik",
   "ochrana-osobnich-udaju",
   "clanky",
+  // Optional pages for the content types of research §8 (content-contract §5):
+  "oznameni", // index of notices; required while features.notices is on
+  "pro-ucastniky", // guests of a funeral; required while features.guestInfo is on
+  "pohreb-predem", // planning ahead; required while features.prePlanning is on
+  "pravni-informace", // legal information (ADR, complaints, documents); optional
 ] as const;
 export const PageId = z.enum(PAGE_IDS);
 export type PageId = z.infer<typeof PageId>;
@@ -435,6 +442,193 @@ export const Article = z.object({
 export type Article = z.infer<typeof Article>;
 
 // ---------------------------------------------------------------------------
+// §6.13–§6.17 Optional content types (research funeral-ux.md §8). Each is switched on per site by
+// site.config features and must be supported by the template manifest (G-005).
+// ---------------------------------------------------------------------------
+
+/** A PDF in src/assets/documents/ (bare name or CMS path; core normalises, G-075 checks it exists). */
+export const DocumentFile = z
+  .string()
+  .trim()
+  .min(1, "Vyberte soubor.")
+  .regex(/\.pdf$/i, "Nahrajte soubor ve formátu PDF.");
+
+function emptyObjectToNull(value: unknown): unknown {
+  if (value === undefined || value === null || value === "") {
+    return null;
+  }
+  if (typeof value === "object" && !Array.isArray(value)) {
+    const filled = Object.values(value as Record<string, unknown>).some(
+      (inner) => inner !== null && inner !== undefined && inner !== "",
+    );
+    if (!filled) {
+      return null;
+    }
+  }
+  return value;
+}
+
+export const NOTICE_CEREMONY_TYPES = ["civil", "church", "without-ceremony", "private"] as const;
+export type NoticeCeremonyType = (typeof NOTICE_CEREMONY_TYPES)[number];
+
+/** Ceremony types that announce a public farewell, so date, time and place are required. */
+const PUBLIC_CEREMONY_TYPES: readonly NoticeCeremonyType[] = ["civil", "church"];
+
+export const NoticeCeremony = z
+  .object({
+    type: z.enum(NOTICE_CEREMONY_TYPES, "Vyberte druh rozloučení."),
+    date: nullable(IsoDate),
+    time: nullable(Time),
+    placeName: optionalText(120),
+    address: optionalText(200),
+    mapUrl: nullable(Url),
+  })
+  .superRefine((ceremony, ctx) => {
+    if (!PUBLIC_CEREMONY_TYPES.includes(ceremony.type)) {
+      return;
+    }
+    if (ceremony.date === null) {
+      issue(ctx, ["date"], "Doplňte datum obřadu.");
+    }
+    if (ceremony.time === null) {
+      issue(ctx, ["time"], "Doplňte čas obřadu.");
+    }
+    if (ceremony.placeName === null) {
+      issue(ctx, ["placeName"], "Doplňte místo obřadu.");
+    }
+  });
+export type NoticeCeremony = z.infer<typeof NoticeCeremony>;
+
+export const CONSENT_BASES = ["objednavka", "souhlas"] as const;
+
+/** Who ordered the notice and on what basis (research L12). Never rendered (view models omit it). */
+export const NoticeConsent = z.object({
+  orderedBy: text(120),
+  date: IsoDate,
+  basis: z.enum(CONSENT_BASES, "Vyberte právní základ: objednávka, nebo souhlas."),
+});
+export type NoticeConsent = z.infer<typeof NoticeConsent>;
+
+const NOTICE_SHAPE = {
+  fullName: text(120),
+  born: nullable(YearOrDate),
+  died: YearOrDate,
+  photo: OptionalImage,
+  parteImage: OptionalImage,
+  partePdf: nullable(DocumentFile),
+  ceremony: z.preprocess(emptyObjectToNull, NoticeCeremony.nullable()).default(null),
+  // Link only, never an embed; the stream is run by the hall or crematorium (research L14).
+  livestreamUrl: nullable(HttpsUrl),
+  familyNote: optionalText(600),
+  // "Kondolenci můžete zaslat prostřednictvím pohřební služby" with the office e-mail.
+  condolencesViaOffice: flag(false),
+  publishFrom: nullable(IsoDate),
+  publishUntil: IsoDate,
+  noindex: flag(true),
+  listed: flag(true),
+  published: z.boolean().default(true),
+  placeholder: z.boolean().default(false),
+  consent: z.preprocess(emptyObjectToNull, NoticeConsent.nullable()).default(null),
+};
+
+function unknownNoticeKeys(issueData: { code?: string; keys?: readonly PropertyKey[] }): string | undefined {
+  if (issueData.code !== "unrecognized_keys") {
+    return undefined;
+  }
+  const keys = (issueData.keys ?? []).map((key) => String(key)).join(", ");
+  return `Oznámení nesmí obsahovat pole ${keys}: žádné ceny, služby ani propagaci (zákon o regulaci reklamy).`;
+}
+
+/**
+ * Smuteční oznámení / obřad (routes /oznameni/ and /oznameni/<slug>/). A strict object: there are
+ * no price, service or promotional fields, and unknown keys fail the schema (research L1).
+ */
+export const Notice = z
+  .strictObject(NOTICE_SHAPE, { error: unknownNoticeKeys })
+  .superRefine((notice, ctx) => {
+    if (notice.born !== null && notice.born.slice(0, 4) > notice.died.slice(0, 4)) {
+      issue(ctx, ["born"], "Datum narození musí předcházet datu úmrtí.");
+    }
+    if (notice.born !== null && notice.born.length === 10 && notice.died.length === 10) {
+      if (notice.born > notice.died) {
+        issue(ctx, ["born"], "Datum narození musí předcházet datu úmrtí.");
+      }
+    }
+    if (notice.publishFrom !== null && notice.publishFrom > notice.publishUntil) {
+      issue(ctx, ["publishUntil"], "Konec zveřejnění musí být stejný nebo pozdější než začátek.");
+    }
+  });
+export type Notice = z.infer<typeof Notice>;
+
+/** Lidé: staff shown on the site. Consent is recorded in provenance/approvals.json (G-074). */
+export const Person = z.object({
+  name: text(120),
+  role: text(120),
+  photo: OptionalImage,
+  phone: nullable(Phone),
+  order: Order,
+  published: z.boolean().default(true),
+  placeholder: z.boolean().default(false),
+});
+export type Person = z.infer<typeof Person>;
+
+export const FAQ_TOPICS = [
+  "first-steps",
+  "arrangements",
+  "ceremony",
+  "cremation-urn",
+  "documents",
+  "costs",
+  "other",
+] as const;
+export type FaqTopic = (typeof FAQ_TOPICS)[number];
+
+/** Časté otázky. The Markdown body is the answer. */
+export const Faq = z.object({
+  question: text(200),
+  topic: z.enum(FAQ_TOPICS),
+  order: Order,
+  published: z.boolean().default(true),
+  placeholder: z.boolean().default(false),
+});
+export type Faq = z.infer<typeof Faq>;
+
+export const DOCUMENT_KINDS = [
+  "rad-pohrebni-sluzby",
+  "obchodni-podminky",
+  "reklamacni-rad",
+  "other",
+] as const;
+export type DocumentKind = (typeof DOCUMENT_KINDS)[number];
+
+/** Dokumenty ke stažení (research L3, L10). The PDF is copied to /dokumenty/<file> as it is. */
+export const DocumentEntry = z.object({
+  title: text(120),
+  file: DocumentFile,
+  kind: z.enum(DOCUMENT_KINDS),
+  validFrom: nullable(IsoDate),
+  order: Order,
+  published: z.boolean().default(true),
+  placeholder: z.boolean().default(false),
+});
+export type DocumentEntry = z.infer<typeof DocumentEntry>;
+
+export const DEFAULT_ADR_NAME = "Česká obchodní inspekce";
+export const DEFAULT_ADR_URL = "https://adr.coi.cz";
+
+/** Právní informace (site/legal.json, optional): the ADR body and complaints contact (research L10). */
+export const LegalInfo = z.object({
+  adr: objectOrEmpty(
+    z.object({
+      name: z.preprocess(emptyToUndefined, text(120).default(DEFAULT_ADR_NAME)),
+      url: z.preprocess(emptyToUndefined, Url.default(DEFAULT_ADR_URL)),
+    }),
+  ),
+  complaintsContact: optionalText(400),
+});
+export type LegalInfo = z.infer<typeof LegalInfo>;
+
+// ---------------------------------------------------------------------------
 // §6.11 Pricing
 // ---------------------------------------------------------------------------
 
@@ -461,6 +655,9 @@ export const PriceGroup = z.object({
   title: text(80),
   description: optionalText(240),
   items: z.array(PriceItem).min(1, "Skupina musí mít alespoň jednu položku."),
+  // "Co je v ceně" (research §8): what the group's price includes and what is still to choose.
+  includes: z.array(text(160)).default([]),
+  excludes: z.array(text(160)).default([]),
 });
 export type PriceGroup = z.infer<typeof PriceGroup>;
 
@@ -577,6 +774,13 @@ export const SINGLETON_SCHEMAS = {
 export type SingletonName = keyof typeof SINGLETON_SCHEMAS;
 export const SINGLETON_NAMES = Object.keys(SINGLETON_SCHEMAS) as SingletonName[];
 
+/** Singletons a site may omit (the file is then simply absent and the value is null). */
+export const OPTIONAL_SINGLETON_SCHEMAS = {
+  legal: LegalInfo,
+} as const;
+export type OptionalSingletonName = keyof typeof OPTIONAL_SINGLETON_SCHEMAS;
+export const OPTIONAL_SINGLETON_NAMES = Object.keys(OPTIONAL_SINGLETON_SCHEMAS) as OptionalSingletonName[];
+
 export const COLLECTION_SCHEMAS = {
   pages: Page,
   services: Service,
@@ -584,6 +788,10 @@ export const COLLECTION_SCHEMAS = {
   coffins: Coffin,
   flowers: FlowerArrangement,
   articles: Article,
+  notices: Notice,
+  people: Person,
+  faq: Faq,
+  documents: DocumentEntry,
 } as const;
 export type CollectionName = keyof typeof COLLECTION_SCHEMAS;
 export const COLLECTION_NAMES = Object.keys(COLLECTION_SCHEMAS) as CollectionName[];

@@ -46,5 +46,27 @@ export function makeProductionReady(source: ValidatedContent): ValidatedContent 
     entry.data.review.reviewedAt = "2026-10-01";
     entry.data.review.reviewedBy = "Odborný recenzent";
   }
+  // Optional content types: no pinned date (G-073), expired notices deleted (G-071), no
+  // placeholders or placeholder images, and a recorded consent for every person (G-074).
+  content.config.pinnedBuildDate = null;
+  content.notices = content.notices.filter((entry) => entry.data.publishUntil >= PRODUCTION_BUILD_DATE);
+  for (const entry of [...content.notices, ...content.people, ...content.faq, ...content.documents]) {
+    entry.data.placeholder = false;
+  }
+  for (const entry of content.notices) {
+    entry.data.photo = null;
+    entry.data.parteImage = null;
+  }
+  for (const entry of content.people) {
+    entry.data.photo = null;
+    content.peopleConsents[`people/${entry.id}.md`] = {
+      consentAt: "2026-10-01",
+      recordedBy: "Operátor (test)",
+      method: "písemný souhlas",
+    };
+  }
   return content;
 }
+
+/** The date production-ready test content is checked on (the fixture pins 2026-11-10 for prototype). */
+export const PRODUCTION_BUILD_DATE = "2026-11-05";

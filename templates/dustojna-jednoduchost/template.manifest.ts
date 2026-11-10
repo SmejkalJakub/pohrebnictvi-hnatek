@@ -13,6 +13,14 @@ const manifest = {
     contactForm: false,
     serviceDetailPages: true,
     mapEmbed: false,
+    // Optional content types (research §8): not implemented by this template yet.
+    notices: false,
+    people: false,
+    faq: false,
+    documents: false,
+    guestInfo: false,
+    prePlanning: false,
+    priceInclusions: false,
   },
 
   homepageSections: {

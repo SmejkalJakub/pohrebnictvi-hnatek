@@ -240,6 +240,13 @@ describe("SiteConfig and manifest", () => {
       contactForm: false,
       serviceDetailPages: false,
       mapEmbed: false,
+      notices: false,
+      people: false,
+      faq: false,
+      documents: false,
+      guestInfo: false,
+      prePlanning: false,
+      priceInclusions: false,
     },
     homepageSections: {
       available: ["hero", "services", "contact-summary", "family-story"],
@@ -252,7 +259,18 @@ describe("SiteConfig and manifest", () => {
   };
 
   it("defaults features to articles off and map as link", () => {
-    expect(config.features).toEqual({ articles: false, contactForm: false, map: "link" });
+    expect(config.features).toEqual({
+      articles: false,
+      contactForm: false,
+      map: "link",
+      notices: false,
+      people: false,
+      faq: false,
+      documents: false,
+      guestInfo: false,
+      prePlanning: false,
+    });
+    expect(config.pinnedBuildDate).toBeNull();
   });
 
   it("accepts declared options", () => {

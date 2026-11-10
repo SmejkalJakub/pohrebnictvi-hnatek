@@ -4,13 +4,25 @@
  */
 import { formatPhone } from "../format/phone.ts";
 import { checkMarkdownBody } from "../markdown/restrict-body.ts";
+import { normalizeDocumentFile } from "../media/documents.ts";
 import { normalizeMediaFile } from "../media/normalize.ts";
 import type { SiteMode } from "../mode.ts";
 import type { TemplateManifest } from "../content/config.ts";
 import { PLACEHOLDER_SITE_URL } from "../content/config.ts";
-import { REQUIRED_PAGE_IDS, type ImageRef } from "../content/schemas.ts";
+import { resolveBuildDate } from "../content/build-date.ts";
+import { hasRecordedConsent, personConsentKey } from "../content/provenance.ts";
+import { REQUIRED_PAGE_IDS, type ImageRef, type PageId } from "../content/schemas.ts";
 import type { ContentEntry, SchemaProblem, ValidatedContent } from "../content/snapshot.ts";
-import { isPageEnabled, isEntryPublished, type Publishable } from "./visibility.ts";
+import {
+  FEATURE_PAGES,
+  isCollectionEnabled,
+  isEntryPublished,
+  isFeatureEntryPublished,
+  isNoticeLive,
+  isPageEnabled,
+  noticeState,
+  type Publishable,
+} from "./visibility.ts";
 
 export type Level = "error" | "warning" | "marker" | "off";
 
@@ -47,6 +59,22 @@ export const RULES = {
   "G-051": { title: "Articles only with a supporting template", prototype: "error", production: "error" },
   "G-060": { title: "Contact form needs endpoint and privacy page", prototype: "error", production: "error" },
   "G-061": { title: "Map embed needs privacy page", prototype: "error", production: "error" },
+  // Optional content types (research funeral-ux.md §4a, §8; content-contract §8).
+  "G-070": { title: "Published notice has a consent record", prototype: "error", production: "error" },
+  "G-071": { title: "Expired notice is not built", prototype: "warning", production: "warning" },
+  "G-072": {
+    title: "Notice body has no promotional or external links",
+    prototype: "error",
+    production: "error",
+  },
+  "G-073": { title: "No pinned build date in production", prototype: "off", production: "error" },
+  "G-074": { title: "Published person has recorded consent", prototype: "warning", production: "error" },
+  "G-075": { title: "Referenced document file exists", prototype: "error", production: "error" },
+  "G-076": {
+    title: "Legal information has its page",
+    prototype: "warning",
+    production: "warning",
+  },
 } as const satisfies Record<string, { title: string; prototype: Level; production: Level }>;
 
 export type RuleId = keyof typeof RULES;
@@ -66,6 +94,11 @@ export interface GateOptions {
   mode: SiteMode;
   /** Injected clock for G-041 (tests). */
   now?: Date;
+  /**
+   * "Today" for notice publication windows (YYYY-MM-DD). Defaults to the config's pinnedBuildDate,
+   * then to `now` in Europe/Prague; runGateForSite also honours SITE_BUILD_DATE.
+   */
+  buildDate?: string;
   /** When present, G-051 uses its `supports.articles`; without a manifest articles are unsupported. */
   manifest?: TemplateManifest;
 }
@@ -97,7 +130,7 @@ function collectEntryImages<T extends Publishable & { image: ImageRef | null }>(
 }
 
 /** Every image that can appear on the published site. */
-export function collectPublishedImages(content: ValidatedContent): ImageUse[] {
+export function collectPublishedImages(content: ValidatedContent, buildDate?: string): ImageUse[] {
   const uses: ImageUse[] = [];
   if (content.company.logo !== null) {
     uses.push({ file: content.files.company, path: "logo", image: content.company.logo });
@@ -117,7 +150,48 @@ export function collectPublishedImages(content: ValidatedContent): ImageUse[] {
   uses.push(...collectEntryImages(content.coffins, content));
   uses.push(...collectEntryImages(content.flowers, content));
   uses.push(...collectEntryImages(content.articles, content));
+  uses.push(...collectFeatureImages(content, buildDate ?? buildDateOf(content)));
   return uses;
+}
+
+/** Notice and person images of the given entries (photo, printed parte). */
+function featureImageUses(
+  notices: readonly ContentEntry<{ photo: ImageRef | null; parteImage: ImageRef | null }>[],
+  people: readonly ContentEntry<{ photo: ImageRef | null }>[],
+): ImageUse[] {
+  const uses: ImageUse[] = [];
+  for (const notice of notices) {
+    if (notice.data.photo !== null) {
+      uses.push({ file: notice.file, path: "photo", image: notice.data.photo });
+    }
+    if (notice.data.parteImage !== null) {
+      uses.push({ file: notice.file, path: "parteImage", image: notice.data.parteImage });
+    }
+  }
+  for (const person of people) {
+    if (person.data.photo !== null) {
+      uses.push({ file: person.file, path: "photo", image: person.data.photo });
+    }
+  }
+  return uses;
+}
+
+/** Images of live notices and published people (only while their features are on). */
+function collectFeatureImages(content: ValidatedContent, buildDate: string): ImageUse[] {
+  const notices = content.notices.filter((entry) => isNoticeLive(entry.data, content, buildDate));
+  const people = content.people.filter((entry) => isFeatureEntryPublished("people", entry, content));
+  return featureImageUses(notices, people);
+}
+
+/** The build date the gate uses when the caller did not pass one (pinned config date or today). */
+function buildDateOf(
+  content: ValidatedContent,
+  options: Pick<GateOptions, "buildDate" | "now"> = {},
+): string {
+  if (options.buildDate !== undefined) {
+    return options.buildDate;
+  }
+  return resolveBuildDate({ pinned: content.config.pinnedBuildDate, now: options.now }).date;
 }
 
 function allEntries(content: ValidatedContent): ContentEntry<Publishable & { placeholder: boolean }>[] {
@@ -127,6 +201,30 @@ function allEntries(content: ValidatedContent): ContentEntry<Publishable & { pla
     ...content.coffins,
     ...content.flowers,
     ...content.articles,
+  ];
+}
+
+/** Entries of every collection, including the optional ones (for Markdown body checks). */
+function everyEntry(content: ValidatedContent): ContentEntry<unknown>[] {
+  return [
+    ...allEntries(content),
+    ...content.notices,
+    ...content.people,
+    ...content.faq,
+    ...content.documents,
+  ];
+}
+
+/** Entries of optional collections that will be built (feature on, published, notice live). */
+function builtFeatureEntries(
+  content: ValidatedContent,
+  buildDate: string,
+): ContentEntry<{ placeholder: boolean }>[] {
+  return [
+    ...content.notices.filter((entry) => isNoticeLive(entry.data, content, buildDate)),
+    ...content.people.filter((entry) => isFeatureEntryPublished("people", entry, content)),
+    ...content.faq.filter((entry) => isFeatureEntryPublished("faq", entry, content)),
+    ...content.documents.filter((entry) => isFeatureEntryPublished("documents", entry, content)),
   ];
 }
 
@@ -157,7 +255,41 @@ function checkStructure(content: ValidatedContent, out: Candidate[]): void {
       });
     }
   }
+  for (const [pageId, feature] of Object.entries(FEATURE_PAGES) as [PageId, string][]) {
+    if (isPageEnabled(pageId, content) && !present.has(pageId)) {
+      out.push({
+        rule: "G-002",
+        file: `src/content/pages/${pageId}.md`,
+        path: "",
+        cs: `Stránka je povinná, když je zapnutá funkce ${feature}.`,
+        en: `Page file is required while features.${feature} is on.`,
+      });
+    }
+  }
   const privacyPresent = present.has("ochrana-osobnich-udaju");
+  if (content.legal !== null && !present.has("pravni-informace")) {
+    out.push({
+      rule: "G-076",
+      file: "src/content/site/legal.json",
+      path: "",
+      cs: "Právní informace jsou vyplněné, ale chybí stránka pravni-informace, takže se na webu nezobrazí.",
+      en: "legal.json exists but pages/pravni-informace.md does not, so it is never shown.",
+    });
+  }
+
+  const documentFiles = new Set(content.documentFiles);
+  for (const use of collectDocumentUses(content)) {
+    const name = normalizeDocumentFile(use.document);
+    if (!documentFiles.has(name)) {
+      out.push({
+        rule: "G-075",
+        file: use.file,
+        path: use.path,
+        cs: `Dokument "${name}" není ve složce src/assets/documents.`,
+        en: `Document "${name}" not found in src/assets/documents.`,
+      });
+    }
+  }
 
   const mediaFiles = new Set(content.mediaFiles);
   for (const use of collectAllImages(content)) {
@@ -243,14 +375,26 @@ function bodyRule(kind: string): RuleId {
   return "G-034";
 }
 
-/** Media file names referenced by any content (published or not): the only files the site imports. */
+/**
+ * Media file names referenced by any content (published or not): the only files the site imports.
+ * Notice and people images count only while their features are on, so a template that does not
+ * render them emits nothing extra.
+ */
 export function collectReferencedMediaFiles(content: ValidatedContent): string[] {
   const files = new Set<string>();
   for (const use of collectAllImages(content)) {
+    const disabledNotice = !isCollectionEnabled("notices", content) && use.file.startsWith(NOTICES_DIR);
+    const disabledPerson = !isCollectionEnabled("people", content) && use.file.startsWith(PEOPLE_DIR);
+    if (disabledNotice || disabledPerson) {
+      continue;
+    }
     files.add(normalizeMediaFile(use.image.file));
   }
   return [...files].sort();
 }
+
+const NOTICES_DIR = "src/content/notices/";
+const PEOPLE_DIR = "src/content/people/";
 
 function collectAllImages(content: ValidatedContent): ImageUse[] {
   const uses: ImageUse[] = [];
@@ -271,7 +415,52 @@ function collectAllImages(content: ValidatedContent): ImageUse[] {
       uses.push({ file: entry.file, path: "image", image: entry.data.image });
     }
   }
+  uses.push(...featureImageUses(content.notices, content.people));
   return uses;
+}
+
+interface DocumentUse {
+  file: string;
+  path: string;
+  document: string;
+}
+
+/** Every PDF referenced by content, published or not (a missing file is an error even for drafts). */
+function collectDocumentUses(content: ValidatedContent): DocumentUse[] {
+  const uses: DocumentUse[] = [];
+  for (const entry of content.documents) {
+    uses.push({ file: entry.file, path: "file", document: entry.data.file });
+  }
+  for (const notice of content.notices) {
+    if (notice.data.partePdf !== null) {
+      uses.push({ file: notice.file, path: "partePdf", document: notice.data.partePdf });
+    }
+  }
+  return uses;
+}
+
+/**
+ * PDFs the built site serves: published documents (feature on) at /dokumenty/<file> and the
+ * printed parte of live notices at /oznameni/<slug>/<file>. The integration copies exactly these.
+ */
+export function collectPublishedDocuments(
+  content: ValidatedContent,
+  buildDate: string,
+): { file: string; href: string }[] {
+  const published: { file: string; href: string }[] = [];
+  for (const entry of content.documents) {
+    if (isFeatureEntryPublished("documents", entry, content)) {
+      const file = normalizeDocumentFile(entry.data.file);
+      published.push({ file, href: `/dokumenty/${file}` });
+    }
+  }
+  for (const notice of content.notices) {
+    if (notice.data.partePdf !== null && isNoticeLive(notice.data, content, buildDate)) {
+      const file = normalizeDocumentFile(notice.data.partePdf);
+      published.push({ file, href: `/oznameni/${notice.id}/${file}` });
+    }
+  }
+  return published;
 }
 
 function checkFacts(content: ValidatedContent, out: Candidate[]): void {
@@ -367,7 +556,7 @@ function checkPricing(content: ValidatedContent, out: Candidate[]): void {
 }
 
 function checkBodies(content: ValidatedContent, out: Candidate[]): void {
-  const entries: ContentEntry<unknown>[] = [...content.pages, ...allEntries(content)];
+  const entries: ContentEntry<unknown>[] = [...content.pages, ...everyEntry(content)];
   for (const entry of entries) {
     for (const issue of checkMarkdownBody(entry.body)) {
       const rule = bodyRule(issue.kind);
@@ -382,7 +571,7 @@ function checkBodies(content: ValidatedContent, out: Candidate[]): void {
   }
 }
 
-function checkPlaceholdersAndImages(content: ValidatedContent, out: Candidate[]): void {
+function checkPlaceholdersAndImages(content: ValidatedContent, buildDate: string, out: Candidate[]): void {
   for (const page of content.pages) {
     if (isPageEnabled(page.id, content) && page.data.placeholder) {
       out.push({
@@ -394,8 +583,12 @@ function checkPlaceholdersAndImages(content: ValidatedContent, out: Candidate[])
       });
     }
   }
-  for (const entry of allEntries(content)) {
-    if (isEntryPublished(entry, content) && entry.data.placeholder) {
+  const built = [
+    ...allEntries(content).filter((entry) => isEntryPublished(entry, content)),
+    ...builtFeatureEntries(content, buildDate),
+  ];
+  for (const entry of built) {
+    if (entry.data.placeholder) {
       out.push({
         rule: "G-031",
         file: entry.file,
@@ -405,7 +598,7 @@ function checkPlaceholdersAndImages(content: ValidatedContent, out: Candidate[])
       });
     }
   }
-  for (const use of collectPublishedImages(content)) {
+  for (const use of collectPublishedImages(content, buildDate)) {
     if (use.image.source === "placeholder") {
       out.push({
         rule: "G-032",
@@ -485,6 +678,105 @@ function checkArticles(
   }
 }
 
+/** Internal routes that promote the business; a death notice must not link to them (research L1). */
+const PROMOTIONAL_ROUTES = ["/sluzby", "/cenik", "/rakve", "/kvetiny", "/pohreb-predem", "/clanky"];
+
+/** Link targets in a Markdown body: [text](target), <https://…> and bare URLs. */
+export function markdownLinkTargets(body: string): string[] {
+  const targets: string[] = [];
+  const patterns = [/\]\(\s*<?([^)\s>]+)/g, /<((?:https?:)?\/\/[^>\s]+)>/g, /(?:^|\s)(https?:\/\/[^\s)]+)/g];
+  for (const pattern of patterns) {
+    for (const match of body.matchAll(pattern)) {
+      const target = match[1];
+      if (target !== undefined) {
+        targets.push(target);
+      }
+    }
+  }
+  return [...new Set(targets)];
+}
+
+function isPromotionalTarget(target: string): boolean {
+  if (/^(https?:)?\/\//i.test(target)) {
+    return true;
+  }
+  const route = target.toLowerCase();
+  return PROMOTIONAL_ROUTES.some(
+    (prefix) => route === prefix || route.startsWith(`${prefix}/`) || route.startsWith(`${prefix}#`),
+  );
+}
+
+function checkNotices(content: ValidatedContent, buildDate: string, out: Candidate[]): void {
+  for (const notice of content.notices) {
+    const state = noticeState(notice.data, content, buildDate);
+    if (state === "off" || state === "draft") {
+      continue;
+    }
+    if (state === "expired") {
+      out.push({
+        rule: "G-071",
+        file: notice.file,
+        path: "publishUntil",
+        cs: `Zveřejnění skončilo ${notice.data.publishUntil}; oznámení se nesestaví. Soubor můžete smazat.`,
+        en: `Notice expired on ${notice.data.publishUntil} (build date ${buildDate}); it is not built.`,
+      });
+      continue;
+    }
+    if (notice.data.consent === null) {
+      out.push({
+        rule: "G-070",
+        file: notice.file,
+        path: "consent",
+        cs: "Chybí souhlas objednatele (kdo oznámení objednal, kdy a na jakém základě). Bez něj nelze oznámení zveřejnit.",
+        en: "Published notice has no consent record (orderedBy, date, basis).",
+      });
+    }
+    for (const target of markdownLinkTargets(notice.body)) {
+      if (isPromotionalTarget(target)) {
+        out.push({
+          rule: "G-072",
+          file: notice.file,
+          path: "body",
+          cs: `Oznámení nesmí odkazovat na služby, ceník ani jiné weby (${target}). Přenos obřadu patří do pole „Odkaz na přenos“.`,
+          en: `Notice body links to a promotional route or another site: ${target}.`,
+        });
+      }
+    }
+  }
+}
+
+function checkPeople(content: ValidatedContent, out: Candidate[]): void {
+  if (!isCollectionEnabled("people", content)) {
+    return;
+  }
+  for (const person of content.people) {
+    if (!isEntryPublished(person, content)) {
+      continue;
+    }
+    if (!hasRecordedConsent(content.peopleConsents, person.id)) {
+      out.push({
+        rule: "G-074",
+        file: person.file,
+        path: "",
+        cs: `Chybí záznam o souhlasu se zveřejněním (approvals.json → people["${personConsentKey(person.id)}"]).`,
+        en: "Published person has no consent record in provenance/approvals.json.",
+      });
+    }
+  }
+}
+
+function checkBuildDate(content: ValidatedContent, out: Candidate[]): void {
+  if (content.config.pinnedBuildDate !== null) {
+    out.push({
+      rule: "G-073",
+      file: "src/site.config.ts",
+      path: "pinnedBuildDate",
+      cs: "Datum sestavení je v konfiguraci pevně nastavené; v produkci jej odeberte, jinak oznámení nikdy neskončí.",
+      en: "pinnedBuildDate is set; remove it for production builds.",
+    });
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Runner
 // ---------------------------------------------------------------------------
@@ -503,13 +795,17 @@ export function schemaFindings(problems: SchemaProblem[], mode: SiteMode): Findi
 
 export function runGate(content: ValidatedContent, options: GateOptions): Finding[] {
   const candidates: Candidate[] = [];
+  const buildDate = buildDateOf(content, options);
   checkStructure(content, candidates);
   checkFacts(content, candidates);
   checkPricing(content, candidates);
   checkBodies(content, candidates);
-  checkPlaceholdersAndImages(content, candidates);
+  checkPlaceholdersAndImages(content, buildDate, candidates);
   checkGuidance(content, options.now ?? new Date(), candidates);
   checkArticles(content, options.manifest, candidates);
+  checkNotices(content, buildDate, candidates);
+  checkPeople(content, candidates);
+  checkBuildDate(content, candidates);
 
   const findings: Finding[] = [];
   for (const candidate of candidates) {

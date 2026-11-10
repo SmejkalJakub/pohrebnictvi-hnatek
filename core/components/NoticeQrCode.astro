@@ -1,0 +1,17 @@
+---
+/**
+ * Printable QR code of a notice URL (research §8), generated at build time as inline SVG: black
+ * modules on white with a quiet zone, no classes or styles. Size it with CSS on the wrapper
+ * (`class` prop or [data-notice-qr]); keep it at least about 2.5 cm wide in print.
+ * The same SVG is also written to /oznameni/<slug>/qr.svg for printing (link it via notice.qr.href).
+ */
+import type { NoticeView } from "../content/optional-views.ts";
+
+interface Props {
+  notice: NoticeView;
+  class?: string;
+}
+
+const { notice, class: className } = Astro.props;
+---
+<span class={className} data-notice-qr set:html={notice.qr.svg} />

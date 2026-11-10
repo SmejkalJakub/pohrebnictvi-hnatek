@@ -1,0 +1,26 @@
+---
+/**
+ * The VAT note shown wherever prices are (research L9: consumer prices are final, including VAT).
+ * Every template renders it on /cenik/ and on any page that shows a <PriceValue>
+ * (template-contract §6). While pricing.vatNote is missing, prototype builds show the "[Doplnit]"
+ * marker; production cannot get here without it (G-021).
+ */
+import type { Pricing } from "../content/schemas.ts";
+import MissingFact from "./MissingFact.astro";
+
+interface Props {
+  pricing: Pick<Pricing, "vatNote">;
+  class?: string;
+}
+
+const { pricing, class: className } = Astro.props;
+---
+{
+  pricing.vatNote !== null ? (
+    <p class={className} data-vat-note>{pricing.vatNote}</p>
+  ) : (
+    <p class={className} data-vat-note>
+      <MissingFact name="poznámka k DPH (ceny včetně DPH)" />
+    </p>
+  )
+}

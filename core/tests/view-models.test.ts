@@ -27,6 +27,8 @@ describe("navigation", () => {
     expect(context(fixture).nav.map((item) => item.href)).toEqual([
       "/",
       "/jak-postupovat/",
+      // The fixture switches features.notices on; templates without notices never see it.
+      "/oznameni/",
       "/sluzby/",
       "/rakve/",
       "/kvetiny/",

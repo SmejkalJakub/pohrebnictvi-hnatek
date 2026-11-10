@@ -8,10 +8,13 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { z } from "astro/zod";
 import { normalizeMediaFile } from "../media/normalize.ts";
+import { PeopleConsents, findProvenanceDir } from "../content/provenance.ts";
 import type { ValidatedContent } from "../content/snapshot.ts";
 import { runGateForSite } from "./run.ts";
 import { collectPublishedImages, type Finding } from "./rules.ts";
-import { isEntryPublished, isPageEnabled } from "./visibility.ts";
+import { isEntryPublished, isFeatureEntryPublished, isPageEnabled } from "./visibility.ts";
+
+export { findProvenanceDir };
 
 // ---------------------------------------------------------------------------
 // Ledger and approvals schemas (provenance/facts.json, provenance/approvals.json)
@@ -60,6 +63,8 @@ export const Approvals = z.object({
     )
     .default({}),
   images: z.record(z.string(), z.object({ rightsEvidence: z.string().nullable().default(null) })).default({}),
+  // Staff consent to appear on the site, keyed "people/<id>.md" (G-074, research L12).
+  people: PeopleConsents.default({}),
 });
 export type Approvals = z.infer<typeof Approvals>;
 
@@ -67,12 +72,19 @@ export type Approvals = z.infer<typeof Approvals>;
 // Fact addressing: "<file>.<path>", array members by id (content-contract §3.2)
 // ---------------------------------------------------------------------------
 
-const FACT_FILES = ["company", "contact", "office-hours", "emergency"] as const;
+const FACT_FILES = ["company", "contact", "office-hours", "emergency", "legal", "people"] as const;
 type FactFile = (typeof FACT_FILES)[number];
 
 function factRoot(content: ValidatedContent, file: FactFile): unknown {
   if (file === "company") {
     return content.company;
+  }
+  if (file === "legal") {
+    return content.legal ?? undefined;
+  }
+  if (file === "people") {
+    // Addressed by entry id like any array member: people.<id>.phone
+    return content.people.map((entry) => ({ id: entry.id, ...entry.data }));
   }
   if (file === "contact") {
     return content.contact;
@@ -144,7 +156,24 @@ export function collectTrackedFacts(content: ValidatedContent): { key: string; v
     add("emergency.availability", content.emergency.availability);
     add("emergency.serviceArea", content.emergency.serviceArea);
   }
+  if (content.legal !== null && isLegalPageShown(content)) {
+    add("legal.adr.name", content.legal.adr.name);
+    add("legal.adr.url", content.legal.adr.url);
+    add("legal.complaintsContact", content.legal.complaintsContact);
+  }
+  for (const person of content.people) {
+    if (!isFeatureEntryPublished("people", person, content)) {
+      continue;
+    }
+    add(`people.${person.id}.name`, person.data.name);
+    add(`people.${person.id}.role`, person.data.role);
+    add(`people.${person.id}.phone`, person.data.phone);
+  }
   return facts;
+}
+
+function isLegalPageShown(content: ValidatedContent): boolean {
+  return content.pages.some((page) => page.id === "pravni-informace");
 }
 
 /** Stable comparison: object keys sorted, `id` keys ignored (ids are addressing, not facts). */
@@ -280,6 +309,10 @@ export function checkLedger(
       ...content.flowers,
       ...content.articles,
     ].filter((entry) => isEntryPublished(entry, content)),
+    // FAQ answers and document entries are copy the client approves; notices are ordered per case
+    // and carry their own consent record (G-070), so they are not part of the launch sign-off.
+    ...content.faq.filter((entry) => isFeatureEntryPublished("faq", entry, content)),
+    ...content.documents.filter((entry) => isFeatureEntryPublished("documents", entry, content)),
   ];
   for (const entry of copyFiles) {
     const key = entry.file.replace(/^src\/content\//, "");
@@ -332,21 +365,6 @@ export function checkLedger(
   }
 
   return findings;
-}
-
-/**
- * Pre-handover the ledger lives in <root>/provenance; an exported site archives it in
- * <root>/docs/provenance (template-contract §9), so the launch check also runs inside an export.
- */
-export function findProvenanceDir(paths: { root: string; provenanceDir: string }): string {
-  if (existsSync(paths.provenanceDir)) {
-    return paths.provenanceDir;
-  }
-  const archived = path.join(paths.root, "docs", "provenance");
-  if (existsSync(archived)) {
-    return archived;
-  }
-  return paths.provenanceDir;
 }
 
 async function readJson(file: string): Promise<unknown> {

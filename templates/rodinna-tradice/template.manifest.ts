@@ -16,6 +16,14 @@ const manifest = {
     // One long /sluzby/ page with anchors (/sluzby/#<slug>); no /sluzby/<slug>/ paths are emitted.
     serviceDetailPages: false,
     mapEmbed: false,
+    // Optional content types (research §8): not implemented by this template yet.
+    notices: false,
+    people: false,
+    faq: false,
+    documents: false,
+    guestInfo: false,
+    prePlanning: false,
+    priceInclusions: false,
   },
 
   homepageSections: {

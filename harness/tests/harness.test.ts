@@ -37,7 +37,14 @@ async function build(
   try {
     const result = await run(ASTRO, ["build"], {
       cwd: HARNESS,
-      env: { ...process.env, SITE_ROOT: siteRoot, SITE_MODE: mode, HARNESS_OUT_DIR: outDir },
+      // The fixture's notice dates are relative to 2026-11-10; production builds cannot pin it in config.
+      env: {
+        ...process.env,
+        SITE_ROOT: siteRoot,
+        SITE_MODE: mode,
+        HARNESS_OUT_DIR: outDir,
+        SITE_BUILD_DATE: "2026-11-10",
+      },
       maxBuffer: 20 * 1024 * 1024,
     });
     return { ok: true, output: result.stdout + result.stderr, outDir };
@@ -73,22 +80,46 @@ async function productionReadyFixture(): Promise<string> {
   const config = path.join(root, "src", "site.config.ts");
   const configSource = (await readFile(config, "utf8"))
     .replace("https://example.invalid", "https://www.pohrebni-sluzba-vzor.cz")
-    .replace(/^import type .*$/m, "");
+    .replace(/^import type .*$/m, "")
+    .replace(/^\s*pinnedBuildDate: .*$/m, "");
   await writeFile(config, configSource.replace(" satisfies SiteConfigInput", ""), "utf8");
-  for (const collection of ["pages", "services", "guidance", "coffins", "flowers"]) {
+  const collections = [
+    "pages",
+    "services",
+    "guidance",
+    "coffins",
+    "flowers",
+    "notices",
+    "people",
+    "faq",
+    "documents",
+  ];
+  for (const collection of collections) {
     const dir = path.join(root, "src", "content", collection);
     for (const name of await readdir(dir)) {
       const file = path.join(dir, name);
       let source = await readFile(file, "utf8");
       source = source.replace("placeholder: true", "placeholder: false");
-      // Drop placeholder images entirely (image blocks are the 5 indented lines after "image:"/"heroImage:").
-      source = source.replace(/^(image|heroImage):\n(  .*\n)+/m, "");
+      // Drop placeholder images entirely (an image block is the indented lines after its key).
+      source = source.replace(/^(image|heroImage|photo|parteImage):\n(  .*\n)+/m, "");
       source = source
         .replace("reviewedBy: null", 'reviewedBy: "Odborník"')
         .replace("reviewedAt: null", "reviewedAt: 2026-10-01");
       await writeFile(file, source, "utf8");
     }
   }
+  // Staff consent recorded for every person (G-074).
+  const approvalsFile = path.join(root, "provenance", "approvals.json");
+  const approvals = JSON.parse(await readFile(approvalsFile, "utf8"));
+  approvals.people = {};
+  for (const name of await readdir(path.join(root, "src", "content", "people"))) {
+    approvals.people[`people/${name}`] = {
+      consentAt: "2026-10-01",
+      recordedBy: "Operátor",
+      method: "písemně",
+    };
+  }
+  await writeFile(approvalsFile, JSON.stringify(approvals), "utf8");
   // A CMS editor may type an H1 in a body; core demotes it at render (G-035 warns only).
   const home = path.join(root, "src", "content", "pages", "home.md");
   const homeSource = await readFile(home, "utf8");
@@ -151,8 +182,13 @@ describe("prototype build of the neutral fixture", () => {
 
   it("gives Markdown headings ASCII ids and emits only referenced images", async () => {
     expect(await html("index.html")).toContain('<h2 id="jsme-tu-pro-vas"');
+    // Every fixture graphic is referenced (placeholder-4x5 by notices and people), so check the rule
+    // the other way round: nothing outside the referenced set is emitted.
     const assets = await readdir(path.join(DIST, "_astro"));
-    expect(assets.some((file) => file.includes("placeholder-4x5"))).toBe(false);
+    const images = assets.filter((file) => /\.(png|jpe?g|webp|avif)$/.test(file));
+    for (const file of images) {
+      expect(file).toMatch(/^placeholder-(1x1|3x2|4x3|4x5)\./);
+    }
   });
 
   it("emits structured data without prices", async () => {
@@ -164,12 +200,49 @@ describe("prototype build of the neutral fixture", () => {
   });
 });
 
+describe("notices and other optional content (prototype)", () => {
+  it("builds live notices only: no expired or draft notice, an index, a QR code next to each", () => {
+    for (const id of ["jan-vzorovy", "marie-ukazkova", "josef-prikladny"]) {
+      expect(existsSync(path.join(DIST, "oznameni", id, "index.html")), id).toBe(true);
+      expect(existsSync(path.join(DIST, "oznameni", id, "qr.svg")), id).toBe(true);
+    }
+    expect(existsSync(path.join(DIST, "oznameni", "anna-drivejsi"))).toBe(false);
+    expect(existsSync(path.join(DIST, "oznameni", "karel-rozpracovany"))).toBe(false);
+    expect(existsSync(path.join(DIST, "oznameni", "index.html"))).toBe(true);
+  });
+
+  it("renders the notice with its QR code and without anything promotional", async () => {
+    const page = await html("oznameni/jan-vzorovy/index.html");
+    expect(page).toContain("data-notice-qr");
+    expect(page).toMatch(/<svg [^>]*role="img"><title>QR kód s odkazem na oznámení: Jan Vzorový<\/title>/);
+    expect(page).toContain("Sledovat přenos obřadu");
+    const article = page.slice(page.indexOf("<article"), page.indexOf("</article>"));
+    expect(article).not.toMatch(/\/sluzby\/|\/cenik\/|data-price|Objednejte/);
+    const qr = await html("oznameni/jan-vzorovy/qr.svg");
+    expect(qr).toMatch(/^<svg xmlns="http:\/\/www.w3.org\/2000\/svg"/);
+    expect(qr).toContain("<title>QR kód s odkazem na oznámení: Jan Vzorový</title>");
+  });
+
+  it("copies published PDFs as they are and links the legal page from every page", async () => {
+    const source = await readFile(path.join(FIXTURE, "src", "assets", "documents", "reklamacni-rad.pdf"));
+    expect(await readFile(path.join(DIST, "dokumenty", "reklamacni-rad.pdf"))).toEqual(source);
+    expect(existsSync(path.join(DIST, "oznameni", "marie-ukazkova", "parte-marie-ukazkova.pdf"))).toBe(true);
+    expect(await html("index.html")).toContain(
+      '<a href="/pravni-informace/" data-legal-link>Právní informace</a>',
+    );
+    const legal = await html("pravni-informace/index.html");
+    expect(legal).toContain('href="https://adr.coi.cz"');
+    expect(legal).toContain('href="/dokumenty/rad-pohrebni-sluzby.pdf"');
+    expect(legal).toContain("Kdy si mohu vyzvednout urnu?");
+  });
+});
+
 describe("production builds", () => {
   it("refuse the fixture as it is", async () => {
     const result = await build(FIXTURE, "production");
     expect(result.ok).toBe(false);
     expect(result.output).toContain("Publication gate failed in production mode");
-    for (const rule of ["G-011", "G-012", "G-020", "G-021", "G-031", "G-032", "G-040"]) {
+    for (const rule of ["G-011", "G-012", "G-020", "G-021", "G-031", "G-032", "G-040", "G-073", "G-074"]) {
       expect(result.output).toContain(rule);
     }
   }, 120_000);
@@ -193,5 +266,16 @@ describe("production builds", () => {
     expect(await html("robots.txt", result.outDir)).toContain(
       "Sitemap: https://www.pohrebni-sluzba-vzor.cz/sitemap.xml",
     );
+    // Notices: noindex ones get robots noindex and stay out of the sitemap; others are indexable.
+    const hidden = await html("oznameni/jan-vzorovy/index.html", result.outDir);
+    expect(hidden).toContain('<meta name="robots" content="noindex,nofollow">');
+    expect(sitemap).not.toContain("/oznameni/jan-vzorovy/");
+    expect(sitemap).not.toContain("/oznameni/josef-prikladny/");
+    const indexed = await html("oznameni/marie-ukazkova/index.html", result.outDir);
+    expect(indexed).toContain('<meta name="robots" content="index,follow">');
+    expect(sitemap).toContain("<loc>https://www.pohrebni-sluzba-vzor.cz/oznameni/marie-ukazkova/</loc>");
+    expect(sitemap).toContain("<loc>https://www.pohrebni-sluzba-vzor.cz/oznameni/</loc>");
+    const qr = await html("oznameni/marie-ukazkova/qr.svg", result.outDir);
+    expect(qr).toContain("<svg");
   }, 120_000);
 });

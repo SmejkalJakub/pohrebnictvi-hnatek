@@ -34,5 +34,8 @@ const { site, title = null, description, noindex = false } = Astro.props;
     <main id="obsah">
       <slot />
     </main>
+    <footer>
+      {site.legalLink !== null ? <a href={site.legalLink.href} data-legal-link>{site.legalLink.label}</a> : null}
+    </footer>
   </body>
 </html>

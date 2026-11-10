@@ -5,7 +5,7 @@
  * `import type`, so Node can load them directly (type stripping) without a bundler.
  */
 import { z } from "astro/zod";
-import { Id, Url, nullable } from "./primitives.ts";
+import { Id, IsoDate, Url, nullable } from "./primitives.ts";
 
 export const HOMEPAGE_SECTIONS = [
   "hero",
@@ -29,8 +29,21 @@ export const SiteConfig = z
       articles: z.boolean().default(false),
       contactForm: z.boolean().default(false),
       map: z.enum(["link", "embed-on-click"]).default("link"),
+      // Optional content types (content-contract §6.13–§6.17); each needs template support (G-005).
+      notices: z.boolean().default(false),
+      people: z.boolean().default(false),
+      faq: z.boolean().default(false),
+      documents: z.boolean().default(false),
+      guestInfo: z.boolean().default(false),
+      prePlanning: z.boolean().default(false),
     }),
     contactFormEndpoint: nullable(Url).default(null),
+    /**
+     * Fixed "today" for deterministic fixture and template-development builds (notice publication
+     * windows, upcoming ceremonies). Prototype only: the production gate rejects it (G-073).
+     * SITE_BUILD_DATE in the environment takes precedence.
+     */
+    pinnedBuildDate: nullable(IsoDate).default(null),
     homepage: z.object({
       sections: z.array(z.enum(HOMEPAGE_SECTIONS)).min(1),
     }),
@@ -64,6 +77,17 @@ export interface ImageSlotDeclaration {
   field?: string;
 }
 
+/** Optional content types: a site.config feature switch and a manifest `supports` flag of the same name. */
+export const CONTENT_FEATURES = [
+  "notices",
+  "people",
+  "faq",
+  "documents",
+  "guestInfo",
+  "prePlanning",
+] as const;
+export type ContentFeature = (typeof CONTENT_FEATURES)[number];
+
 export interface TemplateManifest {
   id: string;
   name: string;
@@ -76,6 +100,20 @@ export interface TemplateManifest {
     serviceDetailPages: boolean;
     /** Click-to-load map embed (features.map = "embed-on-click"). */
     mapEmbed: boolean;
+    /** Smuteční oznámení: /oznameni/ and /oznameni/<slug>/ (features.notices). */
+    notices: boolean;
+    /** Lidé: the people collection (features.people). */
+    people: boolean;
+    /** Časté otázky: the faq collection (features.faq). */
+    faq: boolean;
+    /** Dokumenty ke stažení: the documents collection (features.documents). */
+    documents: boolean;
+    /** Pro účastníky pohřbu: the page pro-ucastniky (features.guestInfo). */
+    guestInfo: boolean;
+    /** Pohřeb předem: the page pohreb-predem (features.prePlanning). */
+    prePlanning: boolean;
+    /** Renders pricing groups' includes[] / excludes[]; the CMS hides those lists otherwise. */
+    priceInclusions: boolean;
   };
   homepageSections: {
     available: readonly HomepageSection[];
@@ -137,6 +175,14 @@ export function checkConfigAgainstManifest(config: SiteConfig, manifest: Templat
   }
   if (config.features.map === "embed-on-click" && !manifest.supports.mapEmbed) {
     issues.push({ path: "features.map", message: 'Template does not support an embedded map; use "link".' });
+  }
+  for (const feature of CONTENT_FEATURES) {
+    if (config.features[feature] && !manifest.supports[feature]) {
+      issues.push({
+        path: `features.${feature}`,
+        message: `Template does not support "${feature}"; switch the feature off or choose another template.`,
+      });
+    }
   }
   return issues;
 }

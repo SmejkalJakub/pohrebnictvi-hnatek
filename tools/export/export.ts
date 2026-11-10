@@ -323,7 +323,14 @@ function cmsMenu(config: PagesConfig): string {
     return [`${indent}- **${entry.label}** (\`${entry.path}\`)`];
   };
   const lines = config.content.flatMap((entry) => describe(entry, ""));
-  lines.push(`- **${config.media.label}** – nahrané obrázky (\`${config.media.input}/\`)`);
+  const mediaFolders = Array.isArray(config.media) ? config.media : [config.media];
+  for (const media of mediaFolders) {
+    let kind = "nahrané obrázky";
+    if (media.name === "documents") {
+      kind = "nahrané dokumenty PDF";
+    }
+    lines.push(`- **${media.label}** – ${kind} (\`${media.input}/\`)`);
+  }
   lines.push(
     ...config.actions.map(
       (action) => `- Akce **${action.label}** (\`.github/workflows/${action.workflow}\`)`,
@@ -496,6 +503,11 @@ export async function exportSite(options: ExportOptions): Promise<ExportResult> 
 
   log(`Client ${clientDir} → src/content, src/assets/media, src/site.config.ts, docs/provenance`);
   await copyTree(clientContent, path.join(outDir, "src", "content"), () => true);
+  // PDFs for download (documents collection, notice parte), copied to dist as they are.
+  const clientDocuments = path.join(clientDir, "src", "assets", "documents");
+  if (existsSync(clientDocuments)) {
+    await copyTree(clientDocuments, path.join(outDir, "src", "assets", "documents"), () => true);
+  }
   const clientMedia = path.join(clientDir, "src", "assets", "media");
   if (existsSync(clientMedia)) {
     await copyTree(clientMedia, path.join(outDir, "src", "assets", "media"), () => true);

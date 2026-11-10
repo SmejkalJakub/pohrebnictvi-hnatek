@@ -1,4 +1,5 @@
 /** Load a site from disk, validate it and run the gate: the single entry point for CLIs and the build. */
+import { resolveBuildDate } from "../content/build-date.ts";
 import { checkConfigAgainstManifest, type TemplateManifest } from "../content/config.ts";
 import { loadValidatedContent, type ValidatedContent } from "../content/snapshot.ts";
 import type { SiteMode } from "../mode.ts";
@@ -13,6 +14,8 @@ export interface GateRunOptions {
   mode: SiteMode;
   now?: Date;
   manifest?: TemplateManifest;
+  /** Build date (YYYY-MM-DD); defaults to SITE_BUILD_DATE, then the config's pinnedBuildDate, then today. */
+  buildDate?: string;
   /** Absolute path of a site.config.ts overriding <root>/src/site.config.ts (SITE_CONFIG). */
   configFile?: string | null;
 }
@@ -40,7 +43,15 @@ export async function runGateForSite(root: string, options: GateRunOptions): Pro
   if (content === null) {
     return { content: null, findings: schemaFindings(problems, options.mode) };
   }
-  const findings = runGate(content, options);
+  let buildDate = options.buildDate;
+  if (buildDate === undefined) {
+    buildDate = resolveBuildDate({
+      env: process.env.SITE_BUILD_DATE,
+      pinned: content.config.pinnedBuildDate,
+      now: options.now,
+    }).date;
+  }
+  const findings = runGate(content, { ...options, buildDate });
   if (options.manifest !== undefined) {
     findings.push(...manifestFindings(content, options.manifest, options.mode));
   }

@@ -7,13 +7,15 @@
  * placeholder, every price demo), the placeholder graphics in src/assets/media, a site.config.ts
  * with the template's default options and homepage order, and a provenance ledger in which every
  * fact the launch check tracks is UNKNOWN. The result passes validate in prototype mode.
- * Refuses to touch an existing client.
+ * Optional content types (notices, people, FAQ, documents, guest and pre-planning pages, legal
+ * information) are copied only when the template supports them; their features stay off until
+ * /site-build switches them on. Refuses to touch an existing client.
  */
 import { existsSync } from "node:fs";
 import { cp, mkdir, readdir, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import type { TemplateManifest } from "../../core/content/config.ts";
+import type { ContentFeature, TemplateManifest } from "../../core/content/config.ts";
 import { loadValidatedContent, type ValidatedContent } from "../../core/content/snapshot.ts";
 import { parseArgs, requiredFlag } from "../lib/args.ts";
 import { CORE_DIR, REPO_ROOT, loadManifest } from "../lib/repo.ts";
@@ -62,7 +64,41 @@ export function trackedFactKeys(content: ValidatedContent): string[] {
     keys.push(`office-hours.weekly.${group.id}`);
   }
   keys.push("office-hours.holidayNote", "emergency.phone", "emergency.availability", "emergency.serviceArea");
+  if (content.legal !== null) {
+    keys.push("legal.adr.name", "legal.adr.url", "legal.complaintsContact");
+  }
+  for (const person of content.people) {
+    keys.push(`people.${person.id}.name`, `people.${person.id}.role`, `people.${person.id}.phone`);
+  }
   return keys;
+}
+
+/** Fixture paths (relative to src/content) that belong to an optional feature. */
+const OPTIONAL_CONTENT: Record<string, ContentFeature> = {
+  notices: "notices",
+  people: "people",
+  faq: "faq",
+  documents: "documents",
+  "pages/oznameni.md": "notices",
+  "pages/pro-ucastniky.md": "guestInfo",
+  "pages/pohreb-predem.md": "prePlanning",
+};
+
+/** Legal information is not a feature: it is copied when the template renders /pravni-informace/. */
+const LEGAL_CONTENT = ["pages/pravni-informace.md", "site/legal.json"];
+
+/** Whether a fixture file or directory (relative to src/content) is copied for this template. */
+export function copiesContent(manifest: TemplateManifest, relative: string): boolean {
+  const normalised = relative.split(path.sep).join("/");
+  for (const [prefix, feature] of Object.entries(OPTIONAL_CONTENT)) {
+    if (normalised === prefix || normalised.startsWith(`${prefix}/`)) {
+      return manifest.supports[feature];
+    }
+  }
+  if (LEGAL_CONTENT.includes(normalised)) {
+    return manifest.pageFields["pravni-informace"] !== undefined;
+  }
+  return true;
 }
 
 function siteConfigSource(manifest: TemplateManifest, configFile: string): string {
@@ -126,6 +162,8 @@ function approvalsSkeleton(content: ValidatedContent): { approvals: unknown; cop
     ...content.guidance,
     ...content.coffins,
     ...content.flowers,
+    ...content.faq,
+    ...content.documents,
   ];
   const copy: Record<string, unknown> = {};
   for (const entry of entries) {
@@ -141,6 +179,13 @@ function approvalsSkeleton(content: ValidatedContent): { approvals: unknown; cop
     pricing: { status: "NOT_APPROVED", approvedBy: null, approvedAt: null, method: null },
     guidance,
     images: {},
+    // Staff consent, one record per person (G-074); only the operator fills it in.
+    people: Object.fromEntries(
+      content.people.map((person) => [
+        `people/${person.id}.md`,
+        { consentAt: null, recordedBy: null, method: null },
+      ]),
+    ),
   };
   return { approvals, copyKeys: Object.keys(copy) };
 }
@@ -156,9 +201,18 @@ export async function scaffoldClient(options: ScaffoldOptions): Promise<Scaffold
   await mkdir(clientsDir, { recursive: true });
   await mkdir(dir);
   try {
-    await cp(path.join(NEUTRAL_FIXTURE, "src", "content"), path.join(dir, "src", "content"), {
+    const fixtureContent = path.join(NEUTRAL_FIXTURE, "src", "content");
+    await cp(fixtureContent, path.join(dir, "src", "content"), {
       recursive: true,
+      filter: (source) => copiesContent(manifest, path.relative(fixtureContent, source)),
     });
+    if (manifest.supports.documents || manifest.supports.notices) {
+      await cp(
+        path.join(NEUTRAL_FIXTURE, "src", "assets", "documents"),
+        path.join(dir, "src", "assets", "documents"),
+        { recursive: true },
+      );
+    }
     // Only the neutral placeholder graphics the skeleton content references; client media replaces them.
     await cp(path.join(NEUTRAL_FIXTURE, "src", "assets", "media"), path.join(dir, "src", "assets", "media"), {
       recursive: true,

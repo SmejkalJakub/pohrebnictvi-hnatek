@@ -57,6 +57,24 @@ export function nullable<T extends z.ZodType>(schema: T) {
 
 export const Email = z.email("Zadejte platnou e-mailovou adresu.");
 export const Url = z.url("Zadejte celou adresu včetně https://.");
+/** A link that must use HTTPS (e.g. a ceremony livestream run by the hall or crematorium). */
+export const HttpsUrl = z.url({
+  protocol: /^https$/,
+  error: "Zadejte celou adresu začínající https://.",
+});
+
+/** Year ("1941") or full date ("1941-04-03"): notices may give either (research §8). */
+export const YearOrDate = z.preprocess(
+  yearOrDateToString,
+  z.string().regex(/^\d{4}(-\d{2}-\d{2})?$/, "Zadejte rok (RRRR) nebo datum (RRRR-MM-DD)."),
+);
+
+function yearOrDateToString(value: unknown): unknown {
+  if (typeof value === "number" && Number.isInteger(value)) {
+    return String(value);
+  }
+  return dateToIsoString(value);
+}
 
 export const Order = z.number().int().min(0).max(999).default(100);
 
