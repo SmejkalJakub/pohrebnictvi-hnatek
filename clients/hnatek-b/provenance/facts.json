@@ -1,0 +1,216 @@
+{
+  "client": "hnatek-b",
+  "createdAt": "2026-11-09",
+  "facts": {
+    "company.brandName": {
+      "value": "Pohřebnictví Hnátek",
+      "status": "VERIFIED",
+      "source": "https://pohrebnictvihnatek.cz/",
+      "retrievedAt": "2026-11-09",
+      "verifiedBy": "Jakub Smejkal",
+      "verifiedAt": "2026-11-09",
+      "note": "Confirmed in writing by the client (answers in notes/research.md and in chat, 2026-11-09). Answer 3: 'Pohřebnictví Hnátek is the brand name'."
+    },
+    "company.legalName": {
+      "value": "POHŘEBNICTVÍ HNÁTEK s.r.o.",
+      "status": "EXISTING_WEBSITE",
+      "source": "https://or.justice.cz/ias/ui/rejstrik-$firma?ico=08862711",
+      "retrievedAt": "2026-11-09",
+      "verifiedBy": null,
+      "verifiedAt": null,
+      "note": "public register; same spelling as the homepage heading. The website footer writes 'Pohřebnictví Hnátek s.r.o.' (mixed case)."
+    },
+    "company.legalIds.ico": {
+      "value": "08862711",
+      "status": "EXISTING_WEBSITE",
+      "source": "https://pohrebnictvihnatek.cz/kontakty/",
+      "retrievedAt": "2026-11-09",
+      "verifiedBy": null,
+      "verifiedAt": null,
+      "note": "Website shows 'IČ: 088 62 711'; matches ARES (https://ares.gov.cz/ekonomicke-subjekty-v-be/rest/ekonomicke-subjekty/08862711)."
+    },
+    "company.legalIds.dic": {
+      "value": "CZ08862711",
+      "status": "EXISTING_WEBSITE",
+      "source": "https://pohrebnictvihnatek.cz/kontakty/",
+      "retrievedAt": "2026-11-09",
+      "verifiedBy": null,
+      "verifiedAt": null,
+      "note": "Matches ARES; ARES lists the VAT (DPH) registration as active."
+    },
+    "company.legalIds.registryEntry": {
+      "value": "C 115877 vedená u Krajského soudu v Brně",
+      "status": "EXISTING_WEBSITE",
+      "source": "https://or.justice.cz/ias/ui/rejstrik-$firma?ico=08862711",
+      "retrievedAt": "2026-11-09",
+      "verifiedBy": null,
+      "verifiedAt": null,
+      "note": "public register; not shown on the current website."
+    },
+    "company.legalIds.registeredOffice": {
+      "value": {
+        "street": "Dědická 38/22",
+        "city": "Vyškov",
+        "postalCode": "682 01",
+        "country": "CZ"
+      },
+      "status": "VERIFIED",
+      "source": "https://or.justice.cz/ias/ui/rejstrik-$firma?ico=08862711",
+      "retrievedAt": "2026-11-09",
+      "verifiedBy": "Jakub Smejkal",
+      "verifiedAt": "2026-11-09",
+      "note": "Confirmed in writing by the client (answers in notes/research.md and in chat, 2026-11-09). Answer 1: '38/22 Dědická is the real address' (the website's 'ev.č.' form is wrong). Value from the commercial register."
+    },
+    "company.tradition.publicWording": {
+      "value": "Rodinná firma se 40 letou tradicí",
+      "status": "CLIENT_PROVIDED",
+      "source": "Jakub Smejkal (client), written answers 2026-11-09",
+      "retrievedAt": "2026-11-09",
+      "verifiedBy": null,
+      "verifiedAt": null,
+      "note": "Exact wording chosen by the client on 2026-11-09 (answer 11: family-owned, 'around 40 years'). The client chose to keep '40 letou' with a space over the standard '40letou' (2026-11-09). Use verbatim."
+    },
+    "company.tradition.foundedYear": {
+      "value": null,
+      "status": "UNKNOWN",
+      "source": null,
+      "retrievedAt": "2026-11-09",
+      "verifiedBy": null,
+      "verifiedAt": null,
+      "note": "Client says 'around 40 years' (answer 11), which is not a year. The 2020 incorporation date must not be used (U1)."
+    },
+    "company.familyOwned": {
+      "value": true,
+      "status": "CLIENT_PROVIDED",
+      "source": "Jakub Smejkal (client), written answers 2026-11-09",
+      "retrievedAt": "2026-11-09",
+      "verifiedBy": null,
+      "verifiedAt": null,
+      "note": "Answer 11: 'it is family owned'. The original owner passed the firm to his granddaughter in 2026; the client agreed to mention the handover without names."
+    },
+    "contact.locations.vyskov.address": {
+      "value": {
+        "street": "Dědická 38/22",
+        "city": "Vyškov",
+        "postalCode": "682 01",
+        "country": "CZ"
+      },
+      "status": "VERIFIED",
+      "source": "https://or.justice.cz/ias/ui/rejstrik-$firma?ico=08862711",
+      "retrievedAt": "2026-11-09",
+      "verifiedBy": "Jakub Smejkal",
+      "verifiedAt": "2026-11-09",
+      "note": "Confirmed in writing by the client (answers in notes/research.md and in chat, 2026-11-09). Answer 1: '38/22 Dědická is the real address'; the office, flower shop and registered office are in the same building (answer 9)."
+    },
+    "contact.locations.vyskov.geo": {
+      "value": {
+        "lat": 49.2847786,
+        "lng": 16.9882785
+      },
+      "status": "EXISTING_WEBSITE",
+      "source": "https://mapy.com/cs/zakladni?source=addr&id=10371336&x=16.9882785&y=49.2847786&z=17",
+      "retrievedAt": "2026-11-09",
+      "verifiedBy": null,
+      "verifiedAt": null,
+      "note": "Mapy.com address search, exact match: 'Dědická 38/22, 682 01 Vyškov - Pazderna', with POHŘEBNICTVÍ HNÁTEK listed at that address. Not from the old website: its link (https://mapy.com/s/bejobanobu, 'Dědická ev. č. 22') points to the wrong spot (answer 2). Use the new link as mapUrl. Client to confirm the pin."
+    },
+    "contact.phones.kancelar.number": {
+      "value": "+420517352020",
+      "status": "EXISTING_WEBSITE",
+      "source": "https://pohrebnictvihnatek.cz/kontakty/",
+      "retrievedAt": "2026-11-09",
+      "verifiedBy": null,
+      "verifiedAt": null,
+      "note": "Listed first under 'Kancelář' (shown as '+420 517 352 020'); also in the site header. Not explicitly re-confirmed in the 2026-11-09 answers."
+    },
+    "contact.phones.kancelar-mobil.number": {
+      "value": "+420739404909",
+      "status": "VERIFIED",
+      "source": "https://pohrebnictvihnatek.cz/kontakty/",
+      "retrievedAt": "2026-11-09",
+      "verifiedBy": "Jakub Smejkal",
+      "verifiedAt": "2026-11-09",
+      "note": "Confirmed in writing by the client (answers in notes/research.md and in chat, 2026-11-09). Answer 5: confirmed as the office mobile."
+    },
+    "contact.phones.kvetiny.number": {
+      "value": "+420731175835",
+      "status": "VERIFIED",
+      "source": "https://pohrebnictvihnatek.cz/kontakty/",
+      "retrievedAt": "2026-11-09",
+      "verifiedBy": "Jakub Smejkal",
+      "verifiedAt": "2026-11-09",
+      "note": "Confirmed in writing by the client (answers in notes/research.md and in chat, 2026-11-09). Answer 9: the flower shop (vazárna květin) is the client's own, in the same building, open Mon–Fri 07:00–15:30."
+    },
+    "contact.emails.kancelar.address": {
+      "value": "pohrebnictvi@vyskov.cz",
+      "status": "VERIFIED",
+      "source": "https://pohrebnictvihnatek.cz/",
+      "retrievedAt": "2026-11-09",
+      "verifiedBy": "Jakub Smejkal",
+      "verifiedAt": "2026-11-09",
+      "note": "Confirmed in writing by the client (answers in notes/research.md and in chat, 2026-11-09). Answer 10: still the preferred e-mail."
+    },
+    "office-hours.weekly.pracovni-dny": {
+      "value": {
+        "id": "pracovni-dny",
+        "days": [
+          "mon",
+          "tue",
+          "wed",
+          "thu",
+          "fri"
+        ],
+        "open": "07:00",
+        "close": "15:30",
+        "breaks": [
+          {
+            "from": "12:00",
+            "to": "12:30"
+          }
+        ]
+      },
+      "status": "EXISTING_WEBSITE",
+      "source": "https://pohrebnictvihnatek.cz/kontakty/",
+      "retrievedAt": "2026-11-09",
+      "verifiedBy": null,
+      "verifiedAt": null,
+      "note": "Website heading 'PRACOVNÍ DOBA': 'PO - PÁ: 07:00 - 15:30, polední přestávka: 12:00 - 12:30'. Weekends not listed. potrebne-informace adds: funeral arrangements need an office visit by 14:00 (U23: phones during the break?). Answer 7: callers should not call during the 12:00–12:30 break (keep the break visible). The hours themselves were not re-confirmed."
+    },
+    "office-hours.holidayNote": {
+      "value": "Ve státní svátky je kancelář zavřená.",
+      "status": "CLIENT_PROVIDED",
+      "source": "Jakub Smejkal (client), written answers 2026-11-09",
+      "retrievedAt": "2026-11-09",
+      "verifiedBy": null,
+      "verifiedAt": null,
+      "note": "Answer 8: closed on public holidays; transports stay nonstop. Our Czech wording, not yet approved. The client suggested a contact form for these days (out of scope until U9)."
+    },
+    "emergency.phone": {
+      "value": "+420720283499",
+      "status": "VERIFIED",
+      "source": "https://pohrebnictvihnatek.cz/kontakty/",
+      "retrievedAt": "2026-11-09",
+      "verifiedBy": "Jakub Smejkal",
+      "verifiedAt": "2026-11-09",
+      "note": "Confirmed in writing by the client (answers in notes/research.md and in chat, 2026-11-09). Answer 6: answers around the clock for transport."
+    },
+    "emergency.availability": {
+      "value": "24/7",
+      "status": "VERIFIED",
+      "source": "https://pohrebnictvihnatek.cz/",
+      "retrievedAt": "2026-11-09",
+      "verifiedBy": "Jakub Smejkal",
+      "verifiedAt": "2026-11-09",
+      "note": "Confirmed in writing by the client (answers in notes/research.md and in chat, 2026-11-09). Answers 6 and 8: transports are nonstop."
+    },
+    "emergency.serviceArea": {
+      "value": "Česko i zahraničí, např. Německo a Rakousko",
+      "status": "CLIENT_PROVIDED",
+      "source": "Jakub Smejkal (client), written answers 2026-11-09",
+      "retrievedAt": "2026-11-09",
+      "verifiedBy": null,
+      "verifiedAt": null,
+      "note": "Answer 6: 'the area is international, germany, austria etc'. Our Czech wording, not yet approved."
+    }
+  }
+}

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128" role="img" aria-label="Pohřebnictví Hnátek — logo">
+<defs>
+ <linearGradient id="evergreen" x1="0" y1="0" x2="0.95" y2="1">
+ <stop offset="0" stop-color="#0e3424"/><stop offset="0.58" stop-color="#16452e"/><stop offset="1" stop-color="#0b2f21"/>
+ </linearGradient>
+ <linearGradient id="gold" x1="0" y1="0" x2="0.2" y2="1">
+ <stop offset="0" stop-color="#D8B65D"/><stop offset="0.7" stop-color="#C39B3F"/><stop offset="1" stop-color="#AA7F32"/>
+ </linearGradient>
+ <linearGradient id="silver" x1="0" y1="0" x2="0.3" y2="1">
+ <stop offset="0" stop-color="#A7ACAA"/><stop offset="1" stop-color="#898F8E"/>
+ </linearGradient>
+ </defs>
+
+<rect width="128" height="128" fill="#113C2A"/><g transform="translate(17 17) scale(0.735)"><g id="icon">
+ <path d="M24 19 C10 34 7 52 11 71 C15 89 24 101 41 108 C24 95 18 77 18 61 C18 43 24 28 40 18Z" fill="#F8F6F1"/>
+ <path d="M88 19 C105 30 111 45 110 63 C110 82 102 96 87 107 C102 95 109 78 103 59 C101 42 95 30 88 19Z" fill="#F8F6F1"/>
+ <path d="M46 41 L56 41 L56 89 L46 89Z M72 41 L82 41 L82 89 L72 89Z" fill="#F8F6F1"/>
+ <path d="M55 59 C62 69 68 69 73 59 L73 66 C67 75 62 75 55 66 Z" fill="#CDD2D0"/>
+ <path d="M55 69 C61 80 68 80 73 69 L73 74 C66 86 62 86 55 74Z" fill="#CDD2D0"/>
+ <path d="M64 13 C70 22 74 29 69 36 C66 40 61 40 58 36 C54 30 60 20 64 13Z" fill="#D2AC56"/>
+ </g></g>
+</svg>

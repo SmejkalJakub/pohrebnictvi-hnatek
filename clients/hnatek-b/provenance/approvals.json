@@ -1,0 +1,400 @@
+{
+  "facts": {
+    "company.tradition.publicWording": {
+      "approvedBy": "Jakub Smejkal",
+      "approvedAt": "2026-11-09"
+    },
+    "company.familyOwned": {
+      "approvedBy": "Jakub Smejkal",
+      "approvedAt": "2026-11-09"
+    }
+  },
+  "copy": {
+    "pages/cenik.md": {
+      "status": "DRAFT",
+      "approvedBy": null,
+      "approvedAt": null
+    },
+    "pages/home.md": {
+      "status": "DRAFT",
+      "approvedBy": null,
+      "approvedAt": null
+    },
+    "pages/jak-postupovat.md": {
+      "status": "DRAFT",
+      "approvedBy": null,
+      "approvedAt": null
+    },
+    "pages/kontakt.md": {
+      "status": "DRAFT",
+      "approvedBy": null,
+      "approvedAt": null
+    },
+    "pages/kvetiny.md": {
+      "status": "DRAFT",
+      "approvedBy": null,
+      "approvedAt": null
+    },
+    "pages/o-nas.md": {
+      "status": "DRAFT",
+      "approvedBy": null,
+      "approvedAt": null
+    },
+    "pages/ochrana-osobnich-udaju.md": {
+      "status": "DRAFT",
+      "approvedBy": null,
+      "approvedAt": null
+    },
+    "pages/rakve.md": {
+      "status": "DRAFT",
+      "approvedBy": null,
+      "approvedAt": null
+    },
+    "pages/sluzby.md": {
+      "status": "DRAFT",
+      "approvedBy": null,
+      "approvedAt": null
+    },
+    "services/kvetinove-vazby.md": {
+      "status": "DRAFT",
+      "approvedBy": null,
+      "approvedAt": null
+    },
+    "services/prevoz-zesnulych.md": {
+      "status": "DRAFT",
+      "approvedBy": null,
+      "approvedAt": null
+    },
+    "services/rozlouceni-v-kostele.md": {
+      "status": "DRAFT",
+      "approvedBy": null,
+      "approvedAt": null
+    },
+    "services/rozlouceni-v-obradni-sini.md": {
+      "status": "DRAFT",
+      "approvedBy": null,
+      "approvedAt": null
+    },
+    "services/smutecni-oznameni.md": {
+      "status": "DRAFT",
+      "approvedBy": null,
+      "approvedAt": null
+    },
+    "services/urny.md": {
+      "status": "DRAFT",
+      "approvedBy": null,
+      "approvedAt": null
+    },
+    "services/vyrizeni-formalit.md": {
+      "status": "DRAFT",
+      "approvedBy": null,
+      "approvedAt": null
+    },
+    "services/zpopelneni-bez-obradu.md": {
+      "status": "DRAFT",
+      "approvedBy": null,
+      "approvedAt": null
+    },
+    "guidance/doklady.md": {
+      "status": "DRAFT",
+      "approvedBy": null,
+      "approvedAt": null
+    },
+    "guidance/po-pohrbu.md": {
+      "status": "DRAFT",
+      "approvedBy": null,
+      "approvedAt": null
+    },
+    "guidance/sjednani-pohrbu.md": {
+      "status": "DRAFT",
+      "approvedBy": null,
+      "approvedAt": null
+    },
+    "guidance/ulozeni-urny.md": {
+      "status": "DRAFT",
+      "approvedBy": null,
+      "approvedAt": null
+    },
+    "guidance/umrti-doma.md": {
+      "status": "DRAFT",
+      "approvedBy": null,
+      "approvedAt": null
+    },
+    "guidance/umrti-v-nemocnici.md": {
+      "status": "DRAFT",
+      "approvedBy": null,
+      "approvedAt": null
+    },
+    "guidance/volba-obradu.md": {
+      "status": "DRAFT",
+      "approvedBy": null,
+      "approvedAt": null
+    },
+    "coffins/rakev-e-601.md": {
+      "status": "DRAFT",
+      "approvedBy": null,
+      "approvedAt": null
+    },
+    "coffins/rakev-e-691.md": {
+      "status": "DRAFT",
+      "approvedBy": null,
+      "approvedAt": null
+    },
+    "coffins/rakev-k-370.md": {
+      "status": "DRAFT",
+      "approvedBy": null,
+      "approvedAt": null
+    },
+    "coffins/rakev-pa-109.md": {
+      "status": "DRAFT",
+      "approvedBy": null,
+      "approvedAt": null
+    },
+    "coffins/rakev-pa-140-lg.md": {
+      "status": "DRAFT",
+      "approvedBy": null,
+      "approvedAt": null
+    },
+    "coffins/rakev-pa-160-lg.md": {
+      "status": "DRAFT",
+      "approvedBy": null,
+      "approvedAt": null
+    },
+    "coffins/rakev-pa-170-lg.md": {
+      "status": "DRAFT",
+      "approvedBy": null,
+      "approvedAt": null
+    },
+    "coffins/rakev-pa-2097.md": {
+      "status": "DRAFT",
+      "approvedBy": null,
+      "approvedAt": null
+    },
+    "coffins/rakev-pa-311.md": {
+      "status": "DRAFT",
+      "approvedBy": null,
+      "approvedAt": null
+    },
+    "coffins/rakev-pa-364.md": {
+      "status": "DRAFT",
+      "approvedBy": null,
+      "approvedAt": null
+    },
+    "coffins/rakev-pa-365.md": {
+      "status": "DRAFT",
+      "approvedBy": null,
+      "approvedAt": null
+    },
+    "coffins/rakev-pa-367.md": {
+      "status": "DRAFT",
+      "approvedBy": null,
+      "approvedAt": null
+    },
+    "coffins/rakev-pa-374.md": {
+      "status": "DRAFT",
+      "approvedBy": null,
+      "approvedAt": null
+    },
+    "coffins/rakev-pa-375.md": {
+      "status": "DRAFT",
+      "approvedBy": null,
+      "approvedAt": null
+    },
+    "coffins/rakev-pa-377.md": {
+      "status": "DRAFT",
+      "approvedBy": null,
+      "approvedAt": null
+    },
+    "coffins/rakev-pa-960-st.md": {
+      "status": "DRAFT",
+      "approvedBy": null,
+      "approvedAt": null
+    },
+    "flowers/na-rakev-bila.md": {
+      "status": "DRAFT",
+      "approvedBy": null,
+      "approvedAt": null
+    },
+    "flowers/na-rakev-ruzova.md": {
+      "status": "DRAFT",
+      "approvedBy": null,
+      "approvedAt": null
+    },
+    "flowers/na-rakev-zluta.md": {
+      "status": "DRAFT",
+      "approvedBy": null,
+      "approvedAt": null
+    },
+    "flowers/umela-cervena.md": {
+      "status": "DRAFT",
+      "approvedBy": null,
+      "approvedAt": null
+    },
+    "flowers/umela-ruzova.md": {
+      "status": "DRAFT",
+      "approvedBy": null,
+      "approvedAt": null
+    },
+    "flowers/vazba-bila.md": {
+      "status": "DRAFT",
+      "approvedBy": null,
+      "approvedAt": null
+    },
+    "flowers/vazba-cervena.md": {
+      "status": "DRAFT",
+      "approvedBy": null,
+      "approvedAt": null
+    },
+    "flowers/vazba-cerveno-bila.md": {
+      "status": "DRAFT",
+      "approvedBy": null,
+      "approvedAt": null
+    },
+    "flowers/vazba-oranzova.md": {
+      "status": "DRAFT",
+      "approvedBy": null,
+      "approvedAt": null
+    },
+    "flowers/vazba-ruzova.md": {
+      "status": "DRAFT",
+      "approvedBy": null,
+      "approvedAt": null
+    },
+    "flowers/vazba-zluto-bila.md": {
+      "status": "DRAFT",
+      "approvedBy": null,
+      "approvedAt": null
+    }
+  },
+  "pricing": {
+    "status": "NOT_APPROVED",
+    "approvedBy": null,
+    "approvedAt": null,
+    "method": null
+  },
+  "guidance": {
+    "guidance/doklady.md": {
+      "reviewedBy": null,
+      "reviewedAt": null
+    },
+    "guidance/po-pohrbu.md": {
+      "reviewedBy": null,
+      "reviewedAt": null
+    },
+    "guidance/sjednani-pohrbu.md": {
+      "reviewedBy": null,
+      "reviewedAt": null
+    },
+    "guidance/ulozeni-urny.md": {
+      "reviewedBy": null,
+      "reviewedAt": null
+    },
+    "guidance/umrti-doma.md": {
+      "reviewedBy": null,
+      "reviewedAt": null
+    },
+    "guidance/umrti-v-nemocnici.md": {
+      "reviewedBy": null,
+      "reviewedAt": null
+    },
+    "guidance/volba-obradu.md": {
+      "reviewedBy": null,
+      "reviewedAt": null
+    }
+  },
+  "images": {
+    "src/assets/media/logo-hnatek.webp": {
+      "rightsEvidence": "New logo supplied by the client, Jakub Smejkal, on 2026-11-09 for use on the website (chat message with the file)."
+    },
+    "src/assets/media/budova-kancelare.jpg": {
+      "rightsEvidence": "Photo from the client's old website (pohrebnictvihnatek.cz). Client (Jakub Smejkal) permitted reuse of photos from the old site on 2026-11-09 (research answer 4)."
+    },
+    "src/assets/media/kvetiny-na-rakev-bila.jpg": {
+      "rightsEvidence": "Photo from the client's old website (pohrebnictvihnatek.cz). Client (Jakub Smejkal) permitted reuse of photos from the old site on 2026-11-09 (research answer 4)."
+    },
+    "src/assets/media/kvetiny-na-rakev-ruzova.jpg": {
+      "rightsEvidence": "Photo from the client's old website (pohrebnictvihnatek.cz). Client (Jakub Smejkal) permitted reuse of photos from the old site on 2026-11-09 (research answer 4)."
+    },
+    "src/assets/media/kvetiny-na-rakev-zluta.jpg": {
+      "rightsEvidence": "Photo from the client's old website (pohrebnictvihnatek.cz). Client (Jakub Smejkal) permitted reuse of photos from the old site on 2026-11-09 (research answer 4)."
+    },
+    "src/assets/media/kvetiny-umela-cervena.jpg": {
+      "rightsEvidence": "Photo from the client's old website (pohrebnictvihnatek.cz). Client (Jakub Smejkal) permitted reuse of photos from the old site on 2026-11-09 (research answer 4)."
+    },
+    "src/assets/media/kvetiny-umela-ruzova.jpg": {
+      "rightsEvidence": "Photo from the client's old website (pohrebnictvihnatek.cz). Client (Jakub Smejkal) permitted reuse of photos from the old site on 2026-11-09 (research answer 4)."
+    },
+    "src/assets/media/kvetiny-vazba-bila.jpg": {
+      "rightsEvidence": "Photo from the client's old website (pohrebnictvihnatek.cz). Client (Jakub Smejkal) permitted reuse of photos from the old site on 2026-11-09 (research answer 4)."
+    },
+    "src/assets/media/kvetiny-vazba-cervena.jpg": {
+      "rightsEvidence": "Photo from the client's old website (pohrebnictvihnatek.cz). Client (Jakub Smejkal) permitted reuse of photos from the old site on 2026-11-09 (research answer 4)."
+    },
+    "src/assets/media/kvetiny-vazba-cerveno-bila.jpg": {
+      "rightsEvidence": "Photo from the client's old website (pohrebnictvihnatek.cz). Client (Jakub Smejkal) permitted reuse of photos from the old site on 2026-11-09 (research answer 4)."
+    },
+    "src/assets/media/kvetiny-vazba-oranzova.jpg": {
+      "rightsEvidence": "Photo from the client's old website (pohrebnictvihnatek.cz). Client (Jakub Smejkal) permitted reuse of photos from the old site on 2026-11-09 (research answer 4)."
+    },
+    "src/assets/media/kvetiny-vazba-ruzova.jpg": {
+      "rightsEvidence": "Photo from the client's old website (pohrebnictvihnatek.cz). Client (Jakub Smejkal) permitted reuse of photos from the old site on 2026-11-09 (research answer 4)."
+    },
+    "src/assets/media/kvetiny-vazba-zluto-bila.jpg": {
+      "rightsEvidence": "Photo from the client's old website (pohrebnictvihnatek.cz). Client (Jakub Smejkal) permitted reuse of photos from the old site on 2026-11-09 (research answer 4)."
+    },
+    "src/assets/media/rakev-e-601.jpg": {
+      "rightsEvidence": "Manufacturer photo (MOSER LEGNO) from the client's old website. Client (Jakub Smejkal) confirmed on 2026-11-09 that they may use these photos (research answer 13). Padded with white to 4:3, otherwise unchanged."
+    },
+    "src/assets/media/rakev-e-691.jpg": {
+      "rightsEvidence": "Manufacturer photo (MOSER LEGNO) from the client's old website. Client (Jakub Smejkal) confirmed on 2026-11-09 that they may use these photos (research answer 13). Padded with white to 4:3, otherwise unchanged."
+    },
+    "src/assets/media/rakev-k-370.jpg": {
+      "rightsEvidence": "Manufacturer photo (MOSER LEGNO) from the client's old website. Client (Jakub Smejkal) confirmed on 2026-11-09 that they may use these photos (research answer 13). Padded with white to 4:3, otherwise unchanged."
+    },
+    "src/assets/media/rakev-pa-109.jpg": {
+      "rightsEvidence": "Manufacturer photo (MOSER LEGNO) from the client's old website. Client (Jakub Smejkal) confirmed on 2026-11-09 that they may use these photos (research answer 13). Padded with white to 4:3, otherwise unchanged."
+    },
+    "src/assets/media/rakev-pa-140-lg.jpg": {
+      "rightsEvidence": "Manufacturer photo (MOSER LEGNO) from the client's old website. Client (Jakub Smejkal) confirmed on 2026-11-09 that they may use these photos (research answer 13). Padded with white to 4:3, otherwise unchanged."
+    },
+    "src/assets/media/rakev-pa-160-lg.jpg": {
+      "rightsEvidence": "Manufacturer photo (MOSER LEGNO) from the client's old website. Client (Jakub Smejkal) confirmed on 2026-11-09 that they may use these photos (research answer 13). Padded with white to 4:3, otherwise unchanged."
+    },
+    "src/assets/media/rakev-pa-170-lg.jpg": {
+      "rightsEvidence": "Manufacturer photo (MOSER LEGNO) from the client's old website. Client (Jakub Smejkal) confirmed on 2026-11-09 that they may use these photos (research answer 13). Padded with white to 4:3, otherwise unchanged."
+    },
+    "src/assets/media/rakev-pa-2097.jpg": {
+      "rightsEvidence": "Manufacturer photo (MOSER LEGNO) from the client's old website. Client (Jakub Smejkal) confirmed on 2026-11-09 that they may use these photos (research answer 13). Padded with white to 4:3, otherwise unchanged."
+    },
+    "src/assets/media/rakev-pa-311.jpg": {
+      "rightsEvidence": "Manufacturer photo (MOSER LEGNO) from the client's old website. Client (Jakub Smejkal) confirmed on 2026-11-09 that they may use these photos (research answer 13). Padded with white to 4:3, otherwise unchanged."
+    },
+    "src/assets/media/rakev-pa-364.jpg": {
+      "rightsEvidence": "Manufacturer photo (MOSER LEGNO) from the client's old website. Client (Jakub Smejkal) confirmed on 2026-11-09 that they may use these photos (research answer 13). Padded with white to 4:3, otherwise unchanged."
+    },
+    "src/assets/media/rakev-pa-365.jpg": {
+      "rightsEvidence": "Manufacturer photo (MOSER LEGNO) from the client's old website. Client (Jakub Smejkal) confirmed on 2026-11-09 that they may use these photos (research answer 13). Padded with white to 4:3, otherwise unchanged."
+    },
+    "src/assets/media/rakev-pa-367.jpg": {
+      "rightsEvidence": "Manufacturer photo (MOSER LEGNO) from the client's old website. Client (Jakub Smejkal) confirmed on 2026-11-09 that they may use these photos (research answer 13). Padded with white to 4:3, otherwise unchanged."
+    },
+    "src/assets/media/rakev-pa-374.jpg": {
+      "rightsEvidence": "Manufacturer photo (MOSER LEGNO) from the client's old website. Client (Jakub Smejkal) confirmed on 2026-11-09 that they may use these photos (research answer 13). Padded with white to 4:3, otherwise unchanged."
+    },
+    "src/assets/media/rakev-pa-375.jpg": {
+      "rightsEvidence": "Manufacturer photo (MOSER LEGNO) from the client's old website. Client (Jakub Smejkal) confirmed on 2026-11-09 that they may use these photos (research answer 13). Padded with white to 4:3, otherwise unchanged."
+    },
+    "src/assets/media/rakev-pa-377.jpg": {
+      "rightsEvidence": "Manufacturer photo (MOSER LEGNO) from the client's old website. Client (Jakub Smejkal) confirmed on 2026-11-09 that they may use these photos (research answer 13). Padded with white to 4:3, otherwise unchanged."
+    },
+    "src/assets/media/rakev-pa-960-st.jpg": {
+      "rightsEvidence": "Manufacturer photo (MOSER LEGNO) from the client's old website. Client (Jakub Smejkal) confirmed on 2026-11-09 that they may use these photos (research answer 13). Padded with white to 4:3, otherwise unchanged."
+    },
+    "src/assets/media/logo-hnatek-horizontal.svg": {
+      "rightsEvidence": "Compact horizontal logo (hnatek-horizontal-compact.svg) from the logo web pack the client (Jakub Smejkal) supplied on 2026-11-09 (Pohrebnictvi_Hnatek_logo_web_assets.zip); full pack kept in clients/hnatek/brand/."
+    },
+    "src/assets/media/budova-kancelare-4x3.jpg": {
+      "rightsEvidence": "Photo from the client's old website (pohrebnictvihnatek.cz). Client (Jakub Smejkal) permitted reuse of photos from the old site on 2026-11-09 (research answer 4)."
+    }
+  }
+}
