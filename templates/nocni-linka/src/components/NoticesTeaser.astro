@@ -1,0 +1,19 @@
+---
+/**
+ * Home statement pointing to Oznámení a obřady. It names nobody: the home page stays a page
+ * about the business and never "informs about a death" (research L1). Rendered right after the
+ * hero while notices are on; core has no homepage section id for it (proposal in the S6 notes).
+ */
+import Statement from "./Statement.astro";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  kicker: string;
+}
+
+const { kicker } = Astro.props;
+---
+<Statement id="oznameni-uvod" kicker={kicker} heading={ui.noticesHeading} class="home-st" data-home-notices>
+  <p class="st-text">{ui.noticesText}</p>
+  <a href="/oznameni/" class="st-link">{ui.noticesLink}</a>
+</Statement>

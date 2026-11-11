@@ -1,0 +1,113 @@
+---
+/**
+ * The navigation: a vertical ruled list in the rail (desktop), and the "Obsah" menu on mobile,
+ * opening in the flow under the nonstop panel with 24 px bold ruled rows. The toggle sits inside
+ * the nav (so focus moves from it into the list) and is placed top right of the header by CSS.
+ */
+import type { RailLink } from "../lib/site.ts";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  links: RailLink[];
+  neutral: boolean;
+}
+
+const { links, neutral } = Astro.props;
+---
+<nav class="rail-nav" aria-label={ui.mainNav} data-neutral={neutral ? "true" : "false"}>
+  <button type="button" class="menu-toggle" aria-expanded="false" aria-controls="obsah-menu" data-menu-toggle>
+    {ui.menuOpen}
+  </button>
+  <ul id="obsah-menu" class="rail-list">
+    {
+      links.map((link) => (
+        <li>
+          <a href={link.href} aria-current={link.current ? "page" : undefined}>
+            {link.label}
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+</nav>
+
+<style>
+  .menu-toggle {
+    position: absolute;
+    top: 0.625rem;
+    right: var(--gutter);
+    min-height: 3rem;
+    padding: 0 1rem;
+    border: 2px solid var(--ink);
+    border-radius: 0;
+    background: transparent;
+    color: var(--ink);
+    font: 700 1.125rem/1 var(--font);
+    cursor: pointer;
+  }
+
+  .rail-list {
+    display: none;
+    margin: 0;
+    padding: 1.25rem var(--gutter) 0.5rem;
+    list-style: none;
+  }
+
+  .rail-list[data-open],
+  :global(html.no-js) .rail-list {
+    display: block;
+  }
+
+  :global(html.no-js) .menu-toggle {
+    display: none;
+  }
+
+  .rail-list a {
+    display: block;
+    padding-block: 0.75rem;
+    border-top: 1px solid var(--rule);
+    font-size: 1.5rem;
+    font-weight: 700;
+    line-height: 1.25;
+  }
+
+  .rail-list li:last-child a {
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .rail-list a[aria-current="page"] {
+    text-decoration-thickness: 3px;
+  }
+
+  @media (min-width: 64rem) {
+    .menu-toggle {
+      display: none;
+    }
+
+    .rail-nav {
+      margin-top: 4.5rem;
+    }
+
+    .rail-nav[data-neutral="true"] {
+      margin-top: 4rem;
+    }
+
+    .rail-list {
+      display: block;
+      padding: 0;
+    }
+
+    .rail-list a {
+      padding-block: 0.625rem;
+      font-size: 1.25rem;
+      font-weight: 400;
+      line-height: 1.4;
+      text-underline-offset: 5px;
+    }
+
+    .rail-list a[aria-current="page"] {
+      font-weight: 700;
+      text-decoration-thickness: 1px;
+    }
+  }
+</style>

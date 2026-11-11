@@ -1,0 +1,13 @@
+---
+/**
+ * A Markdown body where each ## opens a statement (1 px rule, heading). Renders nothing when the
+ * page has no body, so pages never show an empty block.
+ */
+interface Props {
+  show: boolean;
+  class?: string;
+}
+
+const { show, class: className } = Astro.props;
+---
+{show ? <div class:list={["prose", className]}><slot /></div> : null}

@@ -1,0 +1,78 @@
+---
+/**
+ * One price group as one statement. With inclusion lists, the group's first item is the headline
+ * price (56 px heading in ink, never amber), followed by "V ceně je zahrnuto / Není zahrnuto";
+ * every other item goes into a ruled table. Prices only through <PriceValue>.
+ */
+import type { PriceGroup } from "@core/content/schemas.ts";
+import PriceValue from "@core/components/PriceValue.astro";
+import InclusionColumns from "./InclusionColumns.astro";
+import RuledItemTable from "./RuledItemTable.astro";
+
+interface Props {
+  group: PriceGroup;
+}
+
+const { group } = Astro.props;
+const hasInclusions = group.includes.length > 0 || group.excludes.length > 0;
+let headline = null;
+let rest = group.items;
+if (hasInclusions) {
+  headline = group.items[0] ?? null;
+  rest = group.items.slice(1);
+}
+const headingId = `${group.id}-nadpis`;
+---
+<section id={group.id} class="st price-group" aria-labelledby={headingId} data-price-group={group.id}>
+  <h2 id={headingId} class="kicker group-name">{group.title}</h2>
+  {group.description !== null ? <p class="st-text muted">{group.description}</p> : null}
+  {
+    headline !== null ? (
+      <p class="headline">
+        <span class="headline-label">{headline.label}</span>
+        <PriceValue item={headline} class="headline-price" />
+      </p>
+    ) : null
+  }
+  {headline !== null && headline.description !== null ? <p class="st-text muted">{headline.description}</p> : null}
+  <InclusionColumns includes={group.includes} excludes={group.excludes} />
+  {rest.length > 0 ? <RuledItemTable items={rest} caption={group.title} /> : null}
+</section>
+
+<style>
+  .group-name {
+    font-size: 1.25rem;
+    line-height: 1.5;
+  }
+
+  .headline {
+    margin-top: 0.5rem;
+  }
+
+  .headline-label {
+    display: block;
+    font-size: 1.25rem;
+    font-weight: 700;
+  }
+
+  .price-group :global(.headline-price) {
+    display: block;
+    font-size: 2.375rem;
+    font-weight: 700;
+    line-height: 1.05;
+  }
+
+  .price-group :global(.headline-price [data-price-amount]) {
+    white-space: nowrap;
+  }
+
+  @media (min-width: 64rem) {
+    .headline-label {
+      font-size: 1.5rem;
+    }
+
+    .price-group :global(.headline-price) {
+      font-size: 3.5rem;
+    }
+  }
+</style>

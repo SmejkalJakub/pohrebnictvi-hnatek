@@ -1,0 +1,151 @@
+---
+/**
+ * The large-type agenda: one statement per day (the date as a 30 px heading; "time · name" on one
+ * line, the name as the link; place, type and "přenos" muted), then "Bez veřejného obřadu".
+ */
+import PlaceholderMark from "@core/components/PlaceholderMark.astro";
+import type { AgendaDay } from "../lib/notices.ts";
+import type { NoticeView } from "@core/content/view-models.ts";
+import { capitalise, ui } from "../i18n/cs.ts";
+
+interface Props {
+  days: AgendaDay[];
+  withoutPublic: NoticeView[];
+}
+
+const { days, withoutPublic } = Astro.props;
+
+function details(view: NoticeView): string {
+  const parts: string[] = [];
+  if (view.ceremony !== null && view.ceremony.placeName !== null) {
+    parts.push(view.ceremony.placeName);
+  }
+  if (view.ceremony !== null) {
+    parts.push(view.ceremony.typeLabel.toLowerCase());
+  }
+  if (view.livestreamUrl !== null) {
+    parts.push(ui.livestreamShort);
+  }
+  return parts.join(" · ");
+}
+---
+{
+  days.map((day) => (
+    <section class="st agenda-day" aria-labelledby={`den-${day.date}`}>
+      <h3 id={`den-${day.date}`} class="agenda-date">
+        {capitalise(day.weekday)} {day.dateText}
+      </h3>
+      <ul class="agenda-list">
+        {day.notices.map((view) => (
+          <li class="agenda-item" data-notice={view.id}>
+            <PlaceholderMark active={view.placeholder} as="div">
+              <p class="agenda-line">
+                {view.ceremony !== null && view.ceremony.timeText !== null ? (
+                  <span class="agenda-time">{view.ceremony.timeText}</span>
+                ) : null}
+                <a href={view.href}>{view.fullName}</a>
+              </p>
+              <p class="muted agenda-meta">{details(view)}</p>
+            </PlaceholderMark>
+          </li>
+        ))}
+      </ul>
+    </section>
+  ))
+}
+{
+  withoutPublic.length > 0 ? (
+    <section class="st agenda-day" aria-labelledby="bez-obradu">
+      <h3 id="bez-obradu" class="agenda-date">{ui.noticesWithoutCeremony}</h3>
+      <ul class="agenda-list">
+        {withoutPublic.map((view) => (
+          <li class="agenda-item" data-notice={view.id}>
+            <PlaceholderMark active={view.placeholder} as="div">
+              <p class="agenda-line">
+                <a href={view.href}>{view.fullName}</a>
+              </p>
+              {view.ceremony !== null ? <p class="muted agenda-meta">{view.ceremony.typeLabel.toLowerCase()}</p> : null}
+            </PlaceholderMark>
+          </li>
+        ))}
+      </ul>
+    </section>
+  ) : null
+}
+
+<style>
+  .agenda-day {
+    margin-top: 1.75rem;
+    padding-top: 1rem;
+  }
+
+  .agenda-date {
+    font-size: 1.5rem;
+    line-height: 1.2;
+  }
+
+  .agenda-list {
+    padding: 0;
+    list-style: none;
+  }
+
+  .agenda-item {
+    margin-top: 0.5rem;
+  }
+
+  .agenda-line {
+    font-size: 1.5rem;
+    font-weight: 700;
+    line-height: 1.25;
+  }
+
+  .agenda-time::after {
+    content: " · ";
+  }
+
+  .agenda-meta {
+    font-size: 1.125rem;
+  }
+
+  @media (min-width: 64rem) {
+    .agenda-day {
+      margin-top: 2.5rem;
+      padding-top: 1.375rem;
+    }
+
+    .agenda-date {
+      font-size: 1.875rem;
+    }
+
+    .agenda-item {
+      margin-top: 1rem;
+    }
+
+    .agenda-line {
+      display: grid;
+      grid-template-columns: 8.75rem minmax(0, 1fr);
+      gap: 1.5rem;
+      font-size: 1.875rem;
+    }
+
+    .agenda-line:not(:has(.agenda-time)) {
+      display: block;
+    }
+
+    .agenda-time::after {
+      content: none;
+    }
+
+    .agenda-meta {
+      font-size: 1.25rem;
+    }
+
+    .agenda-line + .agenda-meta {
+      padding-left: 10.25rem;
+    }
+
+    .agenda-line:not(:has(.agenda-time)) + .agenda-meta {
+      padding-left: 0;
+    }
+  }
+</style>

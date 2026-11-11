@@ -1,0 +1,120 @@
+---
+/**
+ * Page shell for Template C "Noční linka". Options become data attributes on <html>.
+ * Frame: the rail is the page header (sticky side column ≥ 64 rem; name row + nonstop panel +
+ * in-flow menu below), the content scrolls beside it. The footer sits after the frame, so the
+ * sticky rail lets go before it and never covers footer links.
+ * `neutral` switches the chrome to its notice form (research L1): no amber, no service wording,
+ * reduced navigation.
+ */
+import "../styles/global.css";
+import SeoHead from "@core/components/SeoHead.astro";
+import StructuredData from "@core/components/StructuredData.astro";
+import PrototypeBanner from "@core/components/PrototypeBanner.astro";
+import type { ImageMetadata } from "astro";
+import { getDocuments, getFaq, getOptionalPage, hasPage } from "@core/content/load.ts";
+import type { NavItem, SiteContext } from "@core/content/view-models.ts";
+import schibstedLatin from "@fontsource/schibsted-grotesk/files/schibsted-grotesk-latin-700-normal.woff2?url";
+import schibstedLatinExt from "@fontsource/schibsted-grotesk/files/schibsted-grotesk-latin-ext-700-normal.woff2?url";
+import hankenLatin from "@fontsource/hanken-grotesk/files/hanken-grotesk-latin-700-normal.woff2?url";
+import hankenLatinExt from "@fontsource/hanken-grotesk/files/hanken-grotesk-latin-ext-700-normal.woff2?url";
+import NightRail from "../components/NightRail.astro";
+import NightFooter from "../components/NightFooter.astro";
+import { resolveOptions } from "../lib/options.ts";
+import { fullNav, neutralNav } from "../lib/site.ts";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  site: SiteContext;
+  /** Page title without the brand name; null on the homepage. */
+  title?: string | null;
+  description: string;
+  noindex?: boolean;
+  image?: ImageMetadata | null;
+  /** Notice list and notice pages: neutral rail, reduced nav, neutral footer. */
+  neutral?: boolean;
+}
+
+const { site, title = null, description, noindex = false, image = null, neutral = false } = Astro.props;
+const options = resolveOptions(site.config);
+const path = Astro.url.pathname;
+
+async function optionalNavItem(id: "pro-ucastniky" | "pohreb-predem", enabled: boolean): Promise<NavItem | null> {
+  if (!enabled) {
+    return null;
+  }
+  const page = await getOptionalPage(id);
+  if (page === null) {
+    return null;
+  }
+  return { id, label: page.data.navLabel, href: `/${id}/` };
+}
+
+const guestInfo = await optionalNavItem("pro-ucastniky", site.config.features.guestInfo);
+const prePlanning = await optionalNavItem("pohreb-predem", site.config.features.prePlanning);
+const faq = await getFaq();
+let links = fullNav(site, path, { guestInfo, prePlanning, hasFaq: faq.length > 0 });
+if (neutral) {
+  links = neutralNav(site, path);
+}
+const documents = await getDocuments();
+const hasPrivacyPage = await hasPage("ochrana-osobnich-udaju");
+
+/* Preload the 700 face (H1 and the nonstop number: the largest paint is text). */
+let preloads = [schibstedLatin, schibstedLatinExt];
+if (options.fontPair === "hanken-grotesk") {
+  preloads = [hankenLatin, hankenLatinExt];
+}
+const menuLabels = JSON.stringify({ open: ui.menuOpen, close: ui.menuClose });
+---
+<html
+  lang="cs"
+  class="no-js"
+  data-palette={options.palette}
+  data-font={options.fontPair}
+  data-hero={options.heroVariant}
+  data-emphasis={options.emergencyEmphasis}
+>
+  <head>
+    {preloads.map((href) => <link rel="preload" href={href} as="font" type="font/woff2" crossorigin />)}
+    <SeoHead site={site} title={title} description={description} noindex={noindex} image={image} />
+    <script is:inline>
+      document.documentElement.classList.replace("no-js", "js");
+    </script>
+    <StructuredData site={site} />
+  </head>
+  <body>
+    <PrototypeBanner />
+    <a href="#obsah" class="skip-link">{ui.skipLink}</a>
+    <div class="frame">
+      <NightRail site={site} links={links} neutral={neutral} />
+      <main id="obsah" tabindex="-1" class="content">
+        <slot />
+      </main>
+    </div>
+    <NightFooter site={site} neutral={neutral} documents={documents} hasPrivacyPage={hasPrivacyPage} />
+    <script is:inline define:vars={{ menuLabels }}>
+      const labels = JSON.parse(menuLabels);
+      for (const toggle of document.querySelectorAll("[data-menu-toggle]")) {
+        const list = document.getElementById(toggle.getAttribute("aria-controls"));
+        if (list === null) {
+          continue;
+        }
+        const setOpen = (open) => {
+          toggle.setAttribute("aria-expanded", String(open));
+          toggle.textContent = open ? labels.close : labels.open;
+          list.toggleAttribute("data-open", open);
+        };
+        toggle.addEventListener("click", () => {
+          setOpen(toggle.getAttribute("aria-expanded") !== "true");
+        });
+        document.addEventListener("keydown", (event) => {
+          if (event.key === "Escape" && toggle.getAttribute("aria-expanded") === "true") {
+            setOpen(false);
+            toggle.focus();
+          }
+        });
+      }
+    </script>
+  </body>
+</html>

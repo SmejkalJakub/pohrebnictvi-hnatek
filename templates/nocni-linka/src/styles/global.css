@@ -1,0 +1,570 @@
+/*
+ * Noční linka: global styles. Plain CSS (no utility framework). Values come from
+ * docs/designs/nocni-linka/html/*.html and tokens.json. Sizes are in rem (16 px root) so text
+ * scales with the browser setting and at 200 % zoom.
+ *
+ * Separation device: darkness and space, and one 1 px rule at the top of each statement.
+ * Amber (--signal) is used for the nonstop number only. No radius, shadows, gradients or motion.
+ */
+@import "./fonts.css";
+@import "./print.css";
+
+:root,
+:root[data-palette="noc"] {
+  --ground: #121614;
+  --rail: #1b211e;
+  --ink: #f1eee6;
+  --muted: #b9bdb5;
+  --signal: #f0b54a;
+  --rule: #6f7771;
+}
+
+:root[data-palette="grafit"] {
+  --ground: #1c1d20;
+  --rail: #25272b;
+  --ink: #f2f1ee;
+  --muted: #bdbec2;
+  --signal: #e9a77a;
+  --rule: #75777c;
+}
+
+:root {
+  --font: "Schibsted Grotesk", ui-sans-serif, system-ui, sans-serif;
+  /* Spacing scale (px): 8 · 16 · 32 · 64 · 96 · 160 */
+  --s1: 0.5rem;
+  --s2: 1rem;
+  --s3: 2rem;
+  --s4: 4rem;
+  --s5: 6rem;
+  --s6: 10rem;
+  --gutter: 1rem;
+  --rail-w: 27.5rem;
+  /*
+   * The nonstop number never wraps, so its size follows the room it has: "+420 000 000 199" in
+   * bold is 8.9 em wide in Schibsted Grotesk and 8.1 em in Hanken Grotesk (measured); 9 em keeps
+   * a margin. Rail: 38 px when the rail is 440 px; panel: 36 px from 375 px, less below.
+   */
+  --num-max-rail: 2.375rem;
+  --num-max-panel: 2.25rem;
+  --num-rail: min(var(--num-max-rail), calc((var(--rail-w) - 5rem) / 9));
+  --num-panel: min(var(--num-max-panel), calc((100vw - 2 * var(--gutter)) / 9));
+  color-scheme: dark;
+}
+
+:root[data-font="hanken-grotesk"] {
+  --font: "Hanken Grotesk", ui-sans-serif, system-ui, sans-serif;
+}
+
+/*
+ * High emphasis: a wider rail (512 px from 1280 px) and a 48 px number, the largest that fits
+ * without wrapping (the comp's 60 px would be about 535 px wide). The home hero repeats the number.
+ */
+:root[data-emphasis="high"] {
+  --num-max-rail: 3rem;
+  --num-max-panel: 2.5rem;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  background: var(--ground);
+}
+
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: 1.25rem;
+  line-height: 1.5;
+  font-kerning: normal;
+  overflow-wrap: break-word;
+}
+
+h1,
+h2,
+h3,
+h4,
+p,
+ul,
+ol,
+dl,
+dd,
+figure {
+  margin: 0;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-weight: 700;
+  line-height: 1.08;
+  text-wrap: balance;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+a {
+  color: var(--ink);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.3125em;
+}
+
+a:hover {
+  text-decoration-thickness: 2px;
+}
+
+:focus-visible {
+  outline: 3px solid var(--ink);
+  outline-offset: 3px;
+}
+
+/* The nonstop link is the one place where the focus ring is amber. */
+[data-emergency-link]:focus-visible {
+  outline-color: var(--signal);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.nowrap {
+  white-space: nowrap;
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+.skip-link {
+  position: absolute;
+  left: var(--gutter);
+  top: -100vh;
+  z-index: 10;
+  padding: 0.75rem 1rem;
+  background: var(--ink);
+  color: var(--ground);
+  font-weight: 700;
+}
+
+.skip-link:focus {
+  top: var(--gutter);
+}
+
+/* ---------------------------------------------------------------------------
+ * Core safety components (styled through their data hooks only; text stays)
+ * ------------------------------------------------------------------------- */
+
+[data-prototype-banner] {
+  padding: 0.5rem var(--gutter);
+  border-bottom: 1px solid var(--rule);
+  background: var(--ground);
+  color: var(--muted);
+  font-size: 1.125rem;
+}
+
+[data-placeholder-label],
+[data-unreviewed-mark],
+[data-missing-fact],
+[data-demo-label] {
+  display: inline-block;
+  padding: 0 0.375rem;
+  border: 1px dashed var(--muted);
+  color: var(--muted);
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.5;
+  letter-spacing: 0.02em;
+  vertical-align: middle;
+}
+
+[data-placeholder="content"] > [data-placeholder-label],
+[data-placeholder="image"] > [data-placeholder-label] {
+  margin-bottom: 0.5rem;
+}
+
+[data-demo-label] {
+  font-size: 1rem;
+  margin-left: 0.25rem;
+}
+
+[data-notice-qr] svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* ---------------------------------------------------------------------------
+ * Page frame: the rail is the header. Desktop: [rail | content], footer below both.
+ * ------------------------------------------------------------------------- */
+
+.frame {
+  min-height: 100vh;
+}
+
+.content {
+  padding: 0 var(--gutter) var(--s5);
+}
+
+.content-inner {
+  max-width: 46rem;
+}
+
+@media (min-width: 40rem) {
+  :root {
+    --gutter: 2rem;
+  }
+}
+
+@media (min-width: 64rem) {
+  :root {
+    --rail-w: clamp(25rem, 34.375vw, 27.5rem);
+  }
+
+  :root[data-emphasis="high"] {
+    --rail-w: clamp(25rem, 40vw, 32rem);
+  }
+
+  .frame {
+    background: var(--rail);
+  }
+
+  .content {
+    align-self: stretch;
+    background: var(--ground);
+  }
+
+  .frame {
+    display: grid;
+    grid-template-columns: var(--rail-w) minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .content {
+    min-width: 0;
+    padding: var(--s5) clamp(4rem, 7.5vw, 6rem) var(--s6);
+  }
+
+  .content-inner {
+    max-width: 52rem;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * Statements: kicker, one heading, a few sentences, one link
+ * ------------------------------------------------------------------------- */
+
+.kicker {
+  color: var(--muted);
+  font-size: 1.25rem;
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+.page-title {
+  margin-top: 0.375rem;
+  font-size: 2.5rem;
+  line-height: 1.06;
+}
+
+.page-lead {
+  margin-top: var(--s2);
+  max-width: 30em;
+}
+
+.page-head {
+  padding-top: 2rem;
+}
+
+.st {
+  margin-top: 2.75rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--rule);
+}
+
+.st-heading {
+  margin-top: 0.375rem;
+  font-size: 1.875rem;
+  line-height: 1.1;
+}
+
+.st-heading-sm {
+  font-size: 1.625rem;
+}
+
+.st-text {
+  margin-top: 0.625rem;
+  max-width: 34em;
+}
+
+.st-text + .st-text {
+  margin-top: 0.5rem;
+}
+
+.st-link {
+  display: inline-block;
+  margin-top: 0.875rem;
+  padding-block: 0.25rem;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.small {
+  font-size: 1.125rem;
+}
+
+.lead {
+  font-size: 1.25rem;
+}
+
+@media (min-width: 40rem) {
+  .page-title {
+    font-size: 3.25rem;
+  }
+
+  .st-heading {
+    font-size: 2.5rem;
+  }
+}
+
+@media (min-width: 64rem) {
+  .page-head {
+    padding-top: 0;
+  }
+
+  .page-title {
+    margin-top: 0.75rem;
+    font-size: 4.75rem;
+    line-height: 1.04;
+    letter-spacing: -0.01em;
+  }
+
+  .page-title-sm {
+    font-size: 3.5rem;
+    line-height: 1.05;
+  }
+
+  .page-lead {
+    margin-top: var(--s3);
+    font-size: 1.375rem;
+  }
+
+  .st {
+    margin-top: 4.5rem;
+    padding-top: 3.5rem;
+  }
+
+  .st-heading {
+    margin-top: 0.5rem;
+    font-size: 3.5rem;
+    line-height: 1.05;
+  }
+
+  .st-heading-sm {
+    font-size: 1.875rem;
+    line-height: 1.1;
+  }
+
+  .st-text {
+    margin-top: 1.125rem;
+    font-size: 1.375rem;
+  }
+
+  .st-link {
+    margin-top: 1rem;
+    font-size: 1.375rem;
+  }
+
+  .lead {
+    font-size: 1.5rem;
+  }
+}
+
+/* Markdown bodies: each ## opens a statement (rule, heading), the rest stays calm. */
+.prose > * + * {
+  margin-top: 1rem;
+}
+
+.prose h2 {
+  margin-top: 2.75rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--rule);
+  font-size: 1.625rem;
+  line-height: 1.12;
+}
+
+.prose h3 {
+  margin-top: 1.75rem;
+  font-size: 1.375rem;
+}
+
+.prose h2 + *,
+.prose h3 + * {
+  margin-top: 0.5rem;
+}
+
+.prose ul,
+.prose ol {
+  padding-left: 1.375rem;
+}
+
+.prose li + li {
+  margin-top: 0.375rem;
+}
+
+.prose {
+  max-width: 34em;
+}
+
+@media (min-width: 64rem) {
+  .prose h2 {
+    margin-top: 4rem;
+    padding-top: 2rem;
+    font-size: 1.875rem;
+  }
+}
+
+/* Plain lists inside statements */
+.plain-list {
+  padding-left: 1.375rem;
+}
+
+.plain-list li + li {
+  margin-top: 0.25rem;
+}
+
+/* Ruled rows (office hours, links, documents) */
+.rows {
+  margin-top: 0.75rem;
+  padding: 0;
+  list-style: none;
+}
+
+.rows > * {
+  padding-block: 0.5rem;
+  border-top: 1px solid var(--rule);
+}
+
+.rows > *:last-child {
+  border-bottom: 1px solid var(--rule);
+}
+
+.link-rows {
+  padding: 0;
+  list-style: none;
+}
+
+.link-rows a {
+  display: block;
+  padding-block: 0.75rem;
+  border-top: 1px solid var(--rule);
+  font-weight: 700;
+}
+
+.link-rows li:last-child a {
+  border-bottom: 1px solid var(--rule);
+}
+
+/* A large bordered link (situation picker, 58 px) */
+.big-links {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.625rem;
+  padding: 0;
+  list-style: none;
+}
+
+.big-link {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  min-height: 3.625rem;
+  padding: 0.5rem 1rem;
+  border: 2px solid var(--ink);
+  font-size: 1.375rem;
+  font-weight: 700;
+  line-height: 1.2;
+  text-decoration: none;
+}
+
+.big-link .picked-word {
+  display: none;
+  font-size: 1.125rem;
+  font-weight: 700;
+}
+
+/*
+ * Phone numbers never wrap; a label before the number may. Phone links are 44 px tap targets:
+ * inline-block + padding, never flex, because a flex container drops the space between a label
+ * text run and the number span ("Kancelář+420 …").
+ */
+[data-part="number"],
+[data-phone-link]:not(:has(span)) {
+  white-space: nowrap;
+}
+
+[data-phone-link] {
+  display: inline-block;
+  padding-block: 0.6rem;
+}
+
+/* Home: statements 96 px apart on mobile; on desktop each fills its own band of space. */
+.home-st {
+  margin-top: 6rem;
+  padding-top: 1.75rem;
+}
+
+.inline-links {
+  margin-top: 0.875rem;
+  font-size: 1.375rem;
+  line-height: 1.7;
+}
+
+@media (min-width: 64rem) {
+  .home-st {
+    margin-top: 0;
+    padding: 4.5rem 0 6rem;
+  }
+
+  .inline-links {
+    font-size: 1.5rem;
+  }
+}
+
+.print-only {
+  display: none;
+}

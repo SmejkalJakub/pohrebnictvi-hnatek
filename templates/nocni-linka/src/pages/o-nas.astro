@@ -1,0 +1,56 @@
+---
+/** O nás: the title statement, the tradition wording, one optional 4:3 photo, the body as statements. */
+import { Image } from "astro:assets";
+import PlaceholderMark from "@core/components/PlaceholderMark.astro";
+import { getPage, getSiteContext } from "@core/content/load.ts";
+import { resolveOptionalImage } from "@core/media/resolve.ts";
+import NightLayout from "../layouts/NightLayout.astro";
+import TitleStatement from "../components/TitleStatement.astro";
+import StatementProse from "../components/StatementProse.astro";
+import { ui } from "../i18n/cs.ts";
+import { seoTitle } from "../lib/site.ts";
+
+const site = await getSiteContext();
+const page = await getPage("o-nas");
+const photo = resolveOptionalImage(page.data.heroImage);
+const tradition = site.company.tradition.publicWording;
+const Body = page.Content;
+---
+<NightLayout
+  site={site}
+  title={seoTitle(page.data)}
+  description={page.data.metaDescription ?? page.data.title}
+  image={photo?.src ?? null}
+>
+  <TitleStatement kicker={ui.storyKicker} title={page.data.title} lead={page.data.lead} placeholder={page.data.placeholder}>
+    {tradition !== null ? <p class="st-text muted">{tradition}</p> : null}
+  </TitleStatement>
+  {
+    photo !== null ? (
+      <figure class="about-photo">
+        <PlaceholderMark active={photo.isPlaceholder} kind="image" as="div">
+          <Image
+            src={photo.src}
+            alt={photo.alt}
+            widths={[480, 800, 1200]}
+            sizes="(min-width: 64rem) 46rem, 100vw"
+            style={`object-position: ${photo.objectPosition}`}
+          />
+        </PlaceholderMark>
+        {photo.caption !== null ? <figcaption class="muted small">{photo.caption}</figcaption> : null}
+      </figure>
+    ) : null
+  }
+  <StatementProse show={page.hasBody}><Body /></StatementProse>
+</NightLayout>
+
+<style>
+  .about-photo {
+    max-width: 46rem;
+    margin-top: 2.5rem;
+  }
+
+  .about-photo figcaption {
+    margin-top: 0.5rem;
+  }
+</style>

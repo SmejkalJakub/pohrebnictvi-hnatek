@@ -1,0 +1,110 @@
+---
+/**
+ * Oznámení a obřady (only while features.notices is on): the agenda list and one page per live
+ * notice. Both use the neutral chrome (research L1, ⚖ pending a lawyer's view): no amber, no
+ * service wording, reduced navigation, no service links or prices anywhere on these pages.
+ */
+import { buildDate, getNoticeIndex, getNotices, getOptionalPage, getSiteContext, type LoadedNotice } from "@core/content/load.ts";
+import NightLayout from "../../layouts/NightLayout.astro";
+import CeremonyAgenda from "../../components/CeremonyAgenda.astro";
+import RecentNotices from "../../components/RecentNotices.astro";
+import NoticeFacts from "../../components/NoticeFacts.astro";
+import StatementProse from "../../components/StatementProse.astro";
+import PlaceholderMark from "@core/components/PlaceholderMark.astro";
+import { buildAgenda } from "../../lib/notices.ts";
+import { ui } from "../../i18n/cs.ts";
+
+export async function getStaticPaths() {
+  const site = await getSiteContext();
+  const page = await getOptionalPage("oznameni");
+  if (!site.config.features.notices || page === null) {
+    return [];
+  }
+  const notices = await getNotices();
+  return [
+    { params: { path: undefined }, props: { notice: null } },
+    ...notices.map((notice) => ({ params: { path: notice.view.id }, props: { notice } })),
+  ];
+}
+
+interface Props {
+  notice: LoadedNotice | null;
+}
+
+const { notice } = Astro.props;
+const site = await getSiteContext();
+const page = await getOptionalPage("oznameni");
+const index = await getNoticeIndex();
+const agenda = buildAgenda(index, buildDate);
+let title: string = ui.noticesUpcoming;
+let description: string = ui.noticesUpcoming;
+let lead: string | null = null;
+let hasBody = false;
+let placeholder = false;
+if (page !== null) {
+  title = page.data.title;
+  description = page.data.metaDescription ?? page.data.title;
+  lead = page.data.lead;
+  hasBody = page.hasBody;
+  placeholder = page.data.placeholder;
+}
+const Body = page?.Content;
+const isEmpty = agenda.days.length === 0 && agenda.withoutPublic.length === 0 && agenda.recent.length === 0;
+---
+{
+  notice === null ? (
+    <NightLayout site={site} title={title} description={description} neutral>
+      <div class="page-head">
+        <PlaceholderMark active={placeholder} as="div">
+          <h1 class="page-title">{title}</h1>
+          {lead !== null ? <p class="page-lead muted">{lead}</p> : null}
+        </PlaceholderMark>
+      </div>
+      {isEmpty ? <p class="st-text">{ui.noticesEmpty}</p> : null}
+      {agenda.days.length > 0 || agenda.withoutPublic.length > 0 ? (
+        <section class="notices-part" aria-labelledby="nadchazejici">
+          <h2 id="nadchazejici" class="kicker part-heading">{ui.noticesUpcoming}</h2>
+          <CeremonyAgenda days={agenda.days} withoutPublic={agenda.withoutPublic} />
+        </section>
+      ) : null}
+      {agenda.recent.length > 0 ? (
+        <section class="notices-part" aria-labelledby="nedavna">
+          <h2 id="nedavna" class="kicker part-heading">{ui.noticesRecent}</h2>
+          <RecentNotices notices={agenda.recent} />
+        </section>
+      ) : null}
+      {Body !== undefined ? <StatementProse show={hasBody} class="notices-body"><Body /></StatementProse> : null}
+    </NightLayout>
+  ) : (
+    <NightLayout
+      site={site}
+      title={notice.view.fullName}
+      description={`${title}: ${notice.view.fullName}`}
+      noindex={notice.view.noindex}
+      neutral
+    >
+      <NoticeFacts notice={notice} />
+    </NightLayout>
+  )
+}
+
+<style>
+  .notices-part {
+    margin-top: 2.5rem;
+  }
+
+  :global(.notices-body) {
+    margin-top: 3rem;
+  }
+
+  .part-heading {
+    font-size: 1.25rem;
+    font-weight: 400;
+  }
+
+  @media (min-width: 64rem) {
+    .notices-part {
+      margin-top: 4rem;
+    }
+  }
+</style>

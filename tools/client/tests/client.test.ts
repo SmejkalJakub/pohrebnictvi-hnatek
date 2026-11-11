@@ -13,7 +13,7 @@ import { verifyExpectation } from "../export.ts";
 import { scaffoldClient } from "../new.ts";
 import { validateClient } from "../validate.ts";
 
-const TEMPLATES = ["rodinna-tradice", "dustojna-jednoduchost"] as const;
+const TEMPLATES = ["rodinna-tradice", "dustojna-jednoduchost", "nocni-linka"] as const;
 
 let clientsDir: string;
 

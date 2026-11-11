@@ -49,6 +49,7 @@ Read first: `clients/<id>/provenance/facts.json`, `clients/<id>/notes/research.m
 Edit `src/site.config.ts`. Only values the manifest declares are allowed (G-005).
 
 - Template: `rodinna-tradice` for a traditional, family, letterhead tone (serif, long-form, typographic hero); `dustojna-jednoduchost` for a practical, sober tone (sans-serif, phased checklist, mobile bottom bar, service detail pages). Changing template = change `template`, then reset `options` and `homepage.sections` to that manifest's values.
+- `nocni-linka` (C, Noční linka) for a client whose first job is the night call and who wants a quiet, very sparse site: dark ground, one large sans (Schibsted or Hanken Grotesk), a sticky side rail with the nonstop number on desktop, one statement per section, no photos on home. It is the only template that **supports every optional content type** (notices with a neutral notice chrome, people on Kontakt, FAQ on Jak postupovat, documents in the footer and on Právní informace, guest and pre-planning pages, price inclusions); switch each on only when the client has the content. Its image slots: `company.logo` (must be the **light/white** logo variant; leave it null and the brand name is set as text when the client has none), `about.story` 4:3 (the only photo outside lists), `coffin.item` 4:3, `flower.item` 1:1, `person.photo` 4:5, `notice.photo` 4:5, `notice.parte` (natural aspect). Options: `palette` `noc` (green-black, amber number; sits next to green + gold logos) or `grafit` (neutral graphite, apricot number); `fontPair` `schibsted-grotesk` or `hanken-grotesk`; `heroVariant` only `statement`. Rail navigation labels come from `navLabel`: situation-led labels read best here ("Když někdo zemřel" for jak-postupovat, "Lidé a kancelář" for kontakt).
 - `palette`: pick the accent closest to the logo's main colour (see `docs/design-differentiation.md` §8: green logo → `ivory-forest` or `slate-forest`). Logo colours with low contrast stay inside the logo; never ask for new colours.
 - `fontPair`: serif-led brand → the template's serif pairing; geometric or plain logo → the sans pairing.
 - `heroVariant`: the image variant only when a suitable real photo exists.
@@ -60,7 +61,7 @@ Edit `src/site.config.ts`. Only values the manifest declares are allowed (G-005)
 
 - Download the logo and chosen photos listed in `notes/research.md` into `src/assets/media/` (ASCII file names, jpg/png/webp/svg).
 - Logo: `company.logo` = `{ "file": "logo.svg", "alt": "<brandName>", "source": "existing-website", "depicts": "actual-business" }`.
-- Place photos only in slots the template's `imageSlots` declares (`home.hero` → `pages/home.md` `heroImage`, `about.story` → `pages/o-nas.md` `heroImage`, `coffin.item`, `flower.item`, `service.inline` for A). Match the slot aspect where possible and set `focus`.
+- Place photos only in slots the template's `imageSlots` declares (`home.hero` → `pages/home.md` `heroImage`, `about.story` → `pages/o-nas.md` `heroImage`, `coffin.item`, `flower.item`, `service.inline` for A, `person.photo` and `notice.photo` for C). Match the slot aspect where possible and set `focus`. C has no `home.hero`: leave `pages/home.md` without `heroImage`.
 - Remove placeholder images you replaced; delete unused `placeholder-*.png` files only when nothing references them (G-003).
 
 ## 4. Iterate

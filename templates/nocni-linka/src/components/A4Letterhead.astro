@@ -1,0 +1,52 @@
+---
+/**
+ * Print-only parts of the A4 price list (print is always light): the letterhead line on top and
+ * the contact + legal identification footer at the bottom. Hidden on screen.
+ */
+import type { SiteContext } from "@core/content/view-models.ts";
+import { formatAddressInline } from "@core/format/address.ts";
+import { formatPhone } from "@core/format/phone.ts";
+import { mainLocation, primaryOfficePhone } from "../lib/site.ts";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  site: SiteContext;
+  part: "head" | "foot";
+  path: string;
+}
+
+const { site, part, path } = Astro.props;
+const address = formatAddressInline(mainLocation(site).address);
+const office = primaryOfficePhone(site);
+const email = site.contact.emails[0]?.address ?? null;
+const ids = site.company.legalIds;
+const host = site.config.siteUrl.replace(/^https?:\/\//, "").replace(/\/$/, "");
+const legalParts = [site.company.legalName];
+if (ids.ico !== null) {
+  legalParts.push(`${ui.ico} ${ids.ico}`);
+}
+if (ids.registryEntry !== null) {
+  legalParts.push(ids.registryEntry);
+}
+legalParts.push(`${ui.printedFrom} ${host}${path}`);
+const contactParts = [`${office.label} ${formatPhone(office.number).display}`];
+if (site.emergency.enabled) {
+  contactParts.push(`${site.emergency.label} ${formatPhone(site.emergency.phone).display}`);
+}
+if (email !== null) {
+  contactParts.push(email);
+}
+---
+{
+  part === "head" ? (
+    <div class="print-only a4-head" aria-hidden="true">
+      <p class="a4-brand">{site.company.brandName}</p>
+      <p>{address}</p>
+    </div>
+  ) : (
+    <div class="print-only a4-foot" aria-hidden="true">
+      <p>{contactParts.join(" · ")}</p>
+      <p>{legalParts.join(" · ")}</p>
+    </div>
+  )
+}

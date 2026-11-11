@@ -1,0 +1,76 @@
+---
+/**
+ * Office hours as ruled rows under their own heading (data-office-hours, never shared with the
+ * nonstop line). Breaks show as their own row, as drawn on Kontakt.
+ */
+import type { SiteContext } from "@core/content/view-models.ts";
+import { formatCzechDate } from "@core/format/date.ts";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  site: SiteContext;
+  id: string;
+  /** Heading level inside the surrounding statement. */
+  level?: 2 | 3;
+  size?: "default" | "small";
+}
+
+const { site, id, level = 2, size = "small" } = Astro.props;
+const Heading = `h${level}` as "h2" | "h3";
+const hours = site.officeHours;
+---
+<div class="hour-block" data-office-hours>
+  <Heading id={id} class:list={["st-heading", { "st-heading-sm": size === "small" }]}>{ui.hoursHeading}</Heading>
+  <dl class="rows hour-rows">
+    {
+      site.officeHoursRows.map((row) => (
+        <div class="hour-row">
+          <dt>
+            <abbr title={row.daysLong}>{row.days}</abbr>
+          </dt>
+          <dd class="nowrap">{row.text}</dd>
+          {row.note !== null ? <dd class="hour-note muted">{row.note}</dd> : null}
+        </div>
+      ))
+    }
+  </dl>
+  {hours.holidayNote !== null ? <p class="muted small hour-after">{hours.holidayNote}</p> : null}
+  {hours.outsideHoursNote !== null ? <p class="muted small hour-after">{hours.outsideHoursNote}</p> : null}
+  {
+    hours.exceptions.length > 0 ? (
+      <div class="hour-after">
+        <p class="small">{ui.exceptionsHeading}</p>
+        <ul class="plain-list small muted">
+          {hours.exceptions.map((exception) => (
+            <li>
+              {formatCzechDate(exception.from)}–{formatCzechDate(exception.to)}
+              {exception.note !== null ? ` · ${exception.note}` : ""}
+            </li>
+          ))}
+        </ul>
+      </div>
+    ) : null
+  }
+</div>
+
+<style>
+  .hour-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 0 1rem;
+  }
+
+  .hour-row abbr {
+    text-decoration: none;
+  }
+
+  .hour-note {
+    flex-basis: 100%;
+    font-size: 1.125rem;
+  }
+
+  .hour-after {
+    margin-top: 0.5rem;
+  }
+</style>

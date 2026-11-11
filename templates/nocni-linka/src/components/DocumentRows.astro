@@ -1,0 +1,41 @@
+---
+/** Downloadable documents as ruled rows: title link, kind, "PDF", valid from. */
+import PlaceholderMark from "@core/components/PlaceholderMark.astro";
+import type { DocumentView } from "@core/content/view-models.ts";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  documents: DocumentView[];
+}
+
+const { documents } = Astro.props;
+---
+<ul class="rows docs">
+  {
+    documents.map((document) => (
+      <li>
+        <PlaceholderMark active={document.placeholder} as="div">
+          <a href={document.href} class="doc-link">
+            {document.title}
+          </a>
+          <p class="muted small">
+            {document.kindLabel} · {ui.pdf}
+            {document.validFromText !== null ? ` · ${ui.validFrom} ${document.validFromText}` : ""}
+          </p>
+        </PlaceholderMark>
+      </li>
+    ))
+  }
+</ul>
+
+<style>
+  .docs {
+    margin-top: 1rem;
+  }
+
+  .doc-link {
+    display: inline-block;
+    padding-block: 0.6rem;
+    font-weight: 700;
+  }
+</style>

@@ -1,0 +1,44 @@
+---
+/**
+ * Právní informace (research L10), built from Kontakt: statements for mimosoudní řešení sporů
+ * (ADR), reklamace and dokumenty ke stažení, then the page body. Emitted only when the page
+ * exists (the manifest declares pageFields["pravni-informace"]).
+ */
+import { getDocuments, getOptionalPage, getSiteContext } from "@core/content/load.ts";
+import NightLayout from "../../layouts/NightLayout.astro";
+import TitleStatement from "../../components/TitleStatement.astro";
+import Statement from "../../components/Statement.astro";
+import AdrStatement from "../../components/AdrStatement.astro";
+import DocumentRows from "../../components/DocumentRows.astro";
+import StatementProse from "../../components/StatementProse.astro";
+import { ui } from "../../i18n/cs.ts";
+import { seoTitle } from "../../lib/site.ts";
+
+export async function getStaticPaths() {
+  const page = await getOptionalPage("pravni-informace");
+  if (page === null) {
+    return [];
+  }
+  return [{ params: { path: undefined } }];
+}
+
+const site = await getSiteContext();
+const page = await getOptionalPage("pravni-informace");
+if (page === null) {
+  throw new Error("unreachable: page missing");
+}
+const documents = await getDocuments();
+const Body = page.Content;
+---
+<NightLayout site={site} title={seoTitle(page.data)} description={page.data.metaDescription ?? page.data.title}>
+  <TitleStatement title={page.data.title} lead={page.data.lead} placeholder={page.data.placeholder} size="small" />
+  {site.legal !== null ? <AdrStatement legal={site.legal} /> : null}
+  {
+    documents.length > 0 ? (
+      <Statement id="dokumenty" heading={ui.documentsHeading} size="small">
+        <DocumentRows documents={documents} />
+      </Statement>
+    ) : null
+  }
+  <StatementProse show={page.hasBody}><Body /></StatementProse>
+</NightLayout>

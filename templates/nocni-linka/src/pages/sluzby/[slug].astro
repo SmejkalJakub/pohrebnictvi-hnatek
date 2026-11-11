@@ -1,0 +1,77 @@
+---
+/**
+ * Service detail: the statement pattern of the index (kicker = category, the title, two
+ * sentences), the body, what the linked price group includes and excludes, and a link to the
+ * price list. No prices here, so no VAT note is needed. Transport repeats the nonstop number.
+ */
+import type { CollectionEntry } from "astro:content";
+import { getPricing, getServices, getSiteContext, render } from "@core/content/load.ts";
+import NightLayout from "../../layouts/NightLayout.astro";
+import TitleStatement from "../../components/TitleStatement.astro";
+import StatementProse from "../../components/StatementProse.astro";
+import Statement from "../../components/Statement.astro";
+import InclusionColumns from "../../components/InclusionColumns.astro";
+import RailNumber from "../../components/RailNumber.astro";
+import { serviceCategoryLabels, ui } from "../../i18n/cs.ts";
+import { priceGroupFor } from "../../lib/site.ts";
+
+export async function getStaticPaths() {
+  const services = await getServices();
+  return services.map((service) => ({ params: { slug: service.id }, props: { service } }));
+}
+
+interface Props {
+  service: CollectionEntry<"services">;
+}
+
+const { service } = Astro.props;
+const site = await getSiteContext();
+const pricing = await getPricing();
+const group = priceGroupFor(pricing, service.data.priceGroupId);
+const { Content } = await render(service);
+const hasBody = (service.body ?? "").trim() !== "";
+let showPriceLink = false;
+if (site.pricingVisible && group !== null) {
+  showPriceLink = true;
+}
+let hasInclusions = false;
+if (group !== null && (group.includes.length > 0 || group.excludes.length > 0)) {
+  hasInclusions = true;
+}
+---
+<NightLayout site={site} title={service.data.title} description={service.data.summary}>
+  <TitleStatement
+    kicker={serviceCategoryLabels[service.data.category]}
+    title={service.data.title}
+    lead={service.data.summary}
+    placeholder={service.data.placeholder}
+  />
+  {service.data.category === "transport" ? <RailNumber emergency={site.emergency} inline /> : null}
+  <StatementProse show={hasBody}><Content /></StatementProse>
+  {
+    hasInclusions && group !== null ? (
+      <Statement id="co-je-v-cene" kicker={group.title} heading={ui.includesLink} size="small">
+        <InclusionColumns includes={group.includes} excludes={group.excludes} />
+        {showPriceLink ? (
+          <a href={`/cenik/#${group.id}`} class="st-link">
+            {ui.priceLink}
+          </a>
+        ) : null}
+      </Statement>
+    ) : null
+  }
+  {
+    !hasInclusions && showPriceLink && group !== null ? (
+      <p class="st-text">
+        <a href={`/cenik/#${group.id}`}>{ui.priceLink}</a>
+      </p>
+    ) : null
+  }
+  <p class="back"><a href="/sluzby/">{ui.allServicesBack}</a></p>
+</NightLayout>
+
+<style>
+  .back {
+    margin-top: 3rem;
+  }
+</style>

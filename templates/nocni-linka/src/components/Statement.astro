@@ -1,0 +1,35 @@
+---
+/**
+ * One statement: a <section> with a 1 px rule on top, a muted kicker, one heading and its slot.
+ * The only separation device of the template (with darkness and space). Statements are as tall
+ * as their content. Extra attributes (data-section, data-office-hours, …) pass through.
+ */
+interface Props {
+  id: string;
+  kicker?: string | null;
+  heading?: string | null;
+  level?: 2 | 3;
+  /** "small": 30/26 px heading (contact, guests, people); default: 56–60 px on desktop. */
+  size?: "default" | "small";
+  class?: string;
+  [attribute: `data-${string}`]: string | boolean | undefined;
+}
+
+const { id, kicker = null, heading = null, level = 2, size = "default", class: className, ...rest } = Astro.props;
+const Heading = `h${level}` as "h2" | "h3";
+let labelledBy: string | undefined = undefined;
+if (heading !== null) {
+  labelledBy = `${id}-nadpis`;
+}
+---
+<section id={id} class:list={["st", className]} aria-labelledby={labelledBy} {...rest}>
+  {kicker !== null ? <p class="kicker">{kicker}</p> : null}
+  {
+    heading !== null ? (
+      <Heading id={labelledBy} class:list={["st-heading", { "st-heading-sm": size === "small" }]}>
+        {heading}
+      </Heading>
+    ) : null
+  }
+  <slot />
+</section>

@@ -1,0 +1,78 @@
+---
+/**
+ * Home hero: one text statement, one screen tall on desktop (the only statement with a
+ * min-height). Kicker "Když někdo zemřel", the page title as h1, the lead, one link into the
+ * guide. Never an image (design guardrail). With emergencyEmphasis "high" the nonstop number is
+ * repeated inside the statement.
+ */
+import PlaceholderMark from "@core/components/PlaceholderMark.astro";
+import type { EmergencyTransport } from "@core/content/schemas.ts";
+import RailNumber from "./RailNumber.astro";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  title: string;
+  lead: string | null;
+  placeholder: boolean;
+  emergency: EmergencyTransport;
+  high: boolean;
+}
+
+const { title, lead, placeholder, emergency, high } = Astro.props;
+---
+<section class="opening" data-section="hero" data-hero aria-labelledby="uvod-nadpis">
+  <PlaceholderMark active={placeholder} as="div">
+    <p class="kicker">{ui.heroKicker}</p>
+    <h1 id="uvod-nadpis" class="opening-title">{title}</h1>
+    {lead !== null ? <p class="opening-lead">{lead}</p> : null}
+  </PlaceholderMark>
+  {high ? <RailNumber emergency={emergency} inline /> : null}
+  <a href="/jak-postupovat/" class="st-link opening-link">{ui.heroLink}</a>
+</section>
+
+<style>
+  .opening {
+    padding-top: 2.5rem;
+  }
+
+  .opening-title {
+    margin-top: 0.5rem;
+    font-size: 2.5rem;
+    line-height: 1.06;
+  }
+
+  .opening-lead {
+    margin-top: 1.125rem;
+    max-width: 30em;
+  }
+
+  @media (min-width: 40rem) {
+    .opening-title {
+      font-size: 3.5rem;
+    }
+  }
+
+  @media (min-width: 64rem) {
+    .opening {
+      min-height: calc(100vh - 6rem);
+      padding-top: 2.5rem;
+      padding-bottom: 4.5rem;
+    }
+
+    .opening-title {
+      margin-top: 0.875rem;
+      font-size: 4.75rem;
+      line-height: 1.04;
+      letter-spacing: -0.01em;
+    }
+
+    .opening-lead {
+      margin-top: 2rem;
+      font-size: 1.5rem;
+    }
+
+    .opening-link {
+      margin-top: 1.75rem;
+    }
+  }
+</style>

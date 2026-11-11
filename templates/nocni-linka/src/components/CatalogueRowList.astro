@@ -1,0 +1,115 @@
+---
+/**
+ * Coffins and flowers, built from the Lidé page: with images, one item per ruled row (thumbnail
+ * left, 30 px name, muted details, summary); without any image, two ruled columns of names.
+ * An item without a photo among others gets no empty frame.
+ */
+import { Image } from "astro:assets";
+import PlaceholderMark from "@core/components/PlaceholderMark.astro";
+import type { ImageRef } from "@core/content/schemas.ts";
+import { resolveOptionalImage } from "@core/media/resolve.ts";
+
+export interface CatalogueRow {
+  id: string;
+  name: string;
+  meta: string | null;
+  summary: string | null;
+  image: ImageRef | null;
+  placeholder: boolean;
+}
+
+interface Props {
+  items: CatalogueRow[];
+  /** Thumbnail box in px (4:3 coffins, 1:1 flowers). */
+  thumb: { width: number; height: number };
+}
+
+const { items, thumb } = Astro.props;
+const rows = items.map((item) => ({ item, image: resolveOptionalImage(item.image) }));
+const withImages = rows.some((row) => row.image !== null);
+---
+<ul class:list={["catalogue", { "catalogue-images": withImages, "catalogue-names": !withImages }]}>
+  {
+    rows.map(({ item, image }) => (
+      <li id={item.id} class="catalogue-item">
+        <PlaceholderMark active={item.placeholder} as="div">
+          <div class="catalogue-row">
+            {image !== null ? (
+              <Image
+                src={image.src}
+                alt={image.alt}
+                width={thumb.width}
+                height={thumb.height}
+                densities={[1, 2]}
+                class="catalogue-thumb"
+                style={`aspect-ratio: ${thumb.width} / ${thumb.height}; object-position: ${image.objectPosition}`}
+              />
+            ) : null}
+            <div>
+              <h2 class="catalogue-name">{item.name}</h2>
+              {item.meta !== null ? <p class="muted">{item.meta}</p> : null}
+              {item.summary !== null ? <p class="catalogue-summary">{item.summary}</p> : null}
+            </div>
+          </div>
+        </PlaceholderMark>
+      </li>
+    ))
+  }
+</ul>
+
+<style>
+  .catalogue {
+    display: grid;
+    gap: 1.75rem;
+    margin-top: 2.5rem;
+    padding: 0;
+    list-style: none;
+  }
+
+  .catalogue-item {
+    padding-top: 1rem;
+    border-top: 1px solid var(--rule);
+  }
+
+  .catalogue-images .catalogue-row {
+    display: flex;
+    gap: 1.25rem;
+    align-items: flex-start;
+  }
+
+  .catalogue :global(.catalogue-thumb) {
+    flex: none;
+    width: 6.5rem;
+    height: auto;
+    object-fit: cover;
+  }
+
+  .catalogue-name {
+    font-size: 1.625rem;
+    line-height: 1.1;
+  }
+
+  .catalogue-name + .muted {
+    margin-top: 0.25rem;
+  }
+
+  .catalogue-summary {
+    margin-top: 0.5rem;
+    max-width: 34em;
+  }
+
+  @media (min-width: 48rem) {
+    .catalogue-names {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 2.25rem 3rem;
+    }
+
+    .catalogue :global(.catalogue-thumb) {
+      width: 8.75rem;
+    }
+
+    .catalogue-name {
+      font-size: 1.875rem;
+    }
+  }
+</style>

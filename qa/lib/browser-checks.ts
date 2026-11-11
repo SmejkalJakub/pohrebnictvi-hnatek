@@ -282,3 +282,64 @@ export function openAllDetails(): number {
   }
   return all.length;
 }
+
+/**
+ * Phone and nonstop links whose label is glued to the number on screen ("Kancelář+420 …", "Telefon nonstop+420"):
+ * a letter and the following "+" or digit on the same line with less than 0.15 em between them.
+ */
+export function gluedPhoneLabels(): string[] {
+  // A label and its number must read as two words. `innerText` cannot be trusted for this: inside a flex container
+  // the label and the number become separate flex items, `innerText` puts a newline between them, and yet the space
+  // in the source is dropped on screen ("Telefon nonstop+420"). So this measures the rendered gap instead.
+  const glued: string[] = [];
+  const links = Array.from(document.querySelectorAll<HTMLElement>('a[href^="tel:"], [data-emergency-link]'));
+  for (const link of links) {
+    const characters: { char: string; rect: DOMRect }[] = [];
+    const walker = document.createTreeWalker(link, NodeFilter.SHOW_TEXT);
+    let node = walker.nextNode();
+    while (node) {
+      const text = node.textContent ?? "";
+      for (let index = 0; index < text.length; index += 1) {
+        const char = text[index] ?? "";
+        if (/\s/u.test(char)) {
+          continue;
+        }
+        const range = document.createRange();
+        range.setStart(node, index);
+        range.setEnd(node, index + 1);
+        const rect = range.getBoundingClientRect();
+        if (rect.width > 0) {
+          characters.push({ char, rect });
+        }
+      }
+      node = walker.nextNode();
+    }
+    const fontSize = Number.parseFloat(getComputedStyle(link).fontSize);
+    for (let index = 1; index < characters.length; index += 1) {
+      const before = characters[index - 1];
+      const after = characters[index];
+      if (!before || !after) {
+        continue;
+      }
+      const labelMeetsNumber = /\p{L}/u.test(before.char) && /[+\d]/u.test(after.char);
+      if (!labelMeetsNumber) {
+        continue;
+      }
+      // Stacked parts (a label above a large number) can overlap vertically, so compare centres and direction.
+      const afterCentre = after.rect.top + after.rect.height / 2;
+      const beforeCentre = before.rect.top + before.rect.height / 2;
+      const sameLine =
+        after.rect.left >= before.rect.left &&
+        afterCentre > before.rect.top &&
+        afterCentre < before.rect.bottom &&
+        beforeCentre > after.rect.top &&
+        beforeCentre < after.rect.bottom;
+      const gap = after.rect.left - before.rect.right;
+      if (sameLine && gap < fontSize * 0.15) {
+        glued.push(`${JSON.stringify(link.textContent?.replace(/\s+/g, " ").trim())} gap ${gap.toFixed(1)} px → ${link.getAttribute("href") ?? ""}`);
+        break;
+      }
+    }
+  }
+  return glued;
+}

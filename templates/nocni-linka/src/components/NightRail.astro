@@ -1,0 +1,119 @@
+---
+/**
+ * The rail is the page header. ≥ 64 rem: a sticky side column with the name, the nonstop number
+ * and the vertical navigation. Below: a name row with the "Obsah" toggle (placed top right), the
+ * nonstop panel on the rail colour, and the menu opening in the flow under the panel, so the
+ * number never leaves the screen. DOM order is name → number → nav (toggle + list), so Tab moves
+ * from the toggle straight into the opened list. Without JS the list is simply shown.
+ */
+import { Image } from "astro:assets";
+import { resolveOptionalImage } from "@core/media/resolve.ts";
+import type { SiteContext } from "@core/content/view-models.ts";
+import RailNumber from "./RailNumber.astro";
+import NeutralLine from "./NeutralLine.astro";
+import RailNav from "./RailNav.astro";
+import { mainLocation } from "../lib/site.ts";
+import type { RailLink } from "../lib/site.ts";
+
+interface Props {
+  site: SiteContext;
+  links: RailLink[];
+  neutral: boolean;
+}
+
+const { site, links, neutral } = Astro.props;
+const logo = resolveOptionalImage(site.company.logo);
+let place = mainLocation(site).address.city;
+if (site.emergency.serviceArea !== null) {
+  place = site.emergency.serviceArea;
+}
+---
+<header class="rail" data-rail data-neutral={neutral ? "true" : "false"}>
+  <div class="rail-id">
+    <a href="/" class="wordmark">
+      {
+        logo !== null ? (
+          <>
+            <Image src={logo.src} alt="" height={56} class="wordmark-logo" loading="eager" />
+            <span class="visually-hidden">{site.company.brandName}</span>
+          </>
+        ) : (
+          site.company.brandName
+        )
+      }
+    </a>
+    <p class="rail-place">{place}</p>
+  </div>
+  {neutral ? <NeutralLine site={site} /> : <RailNumber emergency={site.emergency} />}
+  <RailNav links={links} neutral={neutral} />
+</header>
+
+<style>
+  .rail {
+    position: relative;
+    background: var(--ground);
+  }
+
+  .rail-id {
+    display: flex;
+    align-items: center;
+    min-height: 4.25rem;
+    padding: 0.625rem 7.5rem 0.625rem var(--gutter);
+  }
+
+  .wordmark {
+    color: var(--ink);
+    font-size: 1.1875rem;
+    font-weight: 700;
+    line-height: 1.2;
+    text-decoration: none;
+  }
+
+  .wordmark :global(.wordmark-logo) {
+    width: auto;
+    max-width: 100%;
+    height: 2.75rem;
+  }
+
+  .rail-place {
+    display: none;
+  }
+
+  @media (min-width: 64rem) {
+    .rail {
+      position: sticky;
+      top: 0;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow-y: auto;
+      padding: 2.5rem;
+      background: var(--rail);
+    }
+
+    .rail > :global(*) {
+      flex-shrink: 0;
+    }
+
+    .rail-id {
+      display: block;
+      min-height: 0;
+      padding: 0;
+    }
+
+    .wordmark {
+      font-size: 1.375rem;
+    }
+
+    .wordmark :global(.wordmark-logo) {
+      height: 3.5rem;
+    }
+
+    .rail-place {
+      display: block;
+      margin-top: 0.25rem;
+      color: var(--muted);
+      font-size: 1.125rem;
+    }
+  }
+</style>

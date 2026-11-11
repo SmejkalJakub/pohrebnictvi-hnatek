@@ -7,6 +7,7 @@ import {
   checkHoursSeparation,
   describeEmergencyLinks,
   describeFocus,
+  gluedPhoneLabels,
   headingOutline,
   horizontalOverflow,
   openAllDetails,
@@ -233,6 +234,15 @@ for (const t of templates) {
               result.scrollWidth,
               `${size.width} px overflow: ${result.offenders.join(", ")}`,
             ).toBeLessThanOrEqual(result.clientWidth);
+          }
+        });
+
+        test(`9 phone links keep a space between label and number ${route.path}`, async ({ page }) => {
+          for (const size of [viewports[0], viewports[1]]) {
+            await page.setViewportSize({ width: size.width, height: size.height });
+            await open(page, route);
+            const glued = await page.evaluate(gluedPhoneLabels);
+            expect(glued, `${size.width} px: ${glued.join("\n")}`).toEqual([]);
           }
         });
 

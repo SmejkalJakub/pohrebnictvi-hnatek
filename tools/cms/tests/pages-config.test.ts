@@ -8,7 +8,9 @@ import { REPO_ROOT, loadManifest } from "../../lib/repo.ts";
 import { PLACEHOLDER_IMAGE_LABEL, generatePagesConfig, renderPagesYaml } from "../pages-config.ts";
 
 const FIXTURE = path.join(REPO_ROOT, "fixtures", "neutral");
-const TEMPLATES = ["rodinna-tradice", "dustojna-jednoduchost"] as const;
+const TEMPLATES = ["rodinna-tradice", "dustojna-jednoduchost", "nocni-linka"] as const;
+/** Templates that declare every optional content type off (A and B, 2026-11-10). */
+const WITHOUT_OPTIONAL_TYPES = ["rodinna-tradice", "dustojna-jednoduchost"] as const;
 
 interface Field {
   name: string;
@@ -46,8 +48,13 @@ async function pageIds(): Promise<string[]> {
 }
 
 /** Fixture pages the template renders (A and B declare no pageFields for the optional pages). */
+/** Pages whose CMS entry also needs their feature on; generated() leaves every feature off. */
+const FEATURE_PAGES = ["oznameni", "pro-ucastniky", "pohreb-predem"];
+
 async function templatePageIds(manifest: TemplateManifest): Promise<string[]> {
-  return (await pageIds()).filter((pageId) => manifest.pageFields[pageId] !== undefined);
+  return (await pageIds()).filter(
+    (pageId) => manifest.pageFields[pageId] !== undefined && !FEATURE_PAGES.includes(pageId),
+  );
 }
 
 async function generated(manifest: TemplateManifest, articles = false): Promise<ParsedConfig> {
@@ -406,7 +413,7 @@ async function generatedFull(): Promise<ParsedConfig & { media: unknown }> {
 
 describe("optional content types in the CMS", () => {
   it("adds no optional collection, page, legal entry or PDF folder for A and B", async () => {
-    for (const templateId of TEMPLATES) {
+    for (const templateId of WITHOUT_OPTIONAL_TYPES) {
       const yaml = JSON.stringify(await generated(await loadManifest(templateId)));
       for (const forbidden of [
         "notices",

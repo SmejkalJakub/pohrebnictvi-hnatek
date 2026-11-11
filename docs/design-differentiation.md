@@ -1,8 +1,8 @@
-# Design differentiation: `rodinna-tradice` vs `dustojna-jednoduchost`
+# Design differentiation: `rodinna-tradice`, `dustojna-jednoduchost` and `nocni-linka`
 
 **Status:** Phase 1 contract, draft 1 (2026-11-05).
 
-This document defines the two pilot templates **structurally**: page compositions, navigation, information architecture and component inventories. It also states the shared brand constraints and the checklist and scorecard used in Phase 2 QA and in the Phase 4 comparison.
+This document defines the templates **structurally**: page compositions, navigation, information architecture and component inventories. It also states the shared brand constraints and the checklist and scorecard used in Phase 2 QA and in the Phase 4 comparison.
 
 Related: [template-contract.md](template-contract.md) · [content-contract.md](content-contract.md)
 
@@ -94,6 +94,42 @@ Related: [template-contract.md](template-contract.md) · [content-contract.md](c
 
 `StickyHeaderWithEmergency`, `MobileActionBar`, `PracticalHero`, `CtaTier`, `FirstStepsStepper`, `ServiceIndexList`, `ServiceDetailLayout`, `PhasedChecklist`, `UniformCatalogueGrid`, `InfoRow`, `FactSheet`, `PriceTable`, `PrintStyles`.
 
+## 3a. Template C: Noční linka (the night line)
+
+**Status:** built 2026-11-10 (S6, `docs/notes/s6-nocni-linka.md`) from the approved round-2 design F in `docs/designs/nocni-linka/`.
+
+**Concept:** for the person who opens the site at two in the morning. Dark, quiet and very large. On desktop a sticky side rail holds the name, the nonstop number and the navigation; the content scrolls beside it as single statements (muted kicker, one large heading, a sentence or two, one link). Nothing competes with the number: amber is used for it and for nothing else.
+
+### 3a.1 Chrome
+
+- **The rail is the header.** One `<header>`: from 64 rem a sticky 440 px column on the rail colour (name, place, "Nonstop převoz zesnulých" + the number in 38 px amber with a 3 px underline, the vertical ruled nav). Below 64 rem a name row with an "Obsah" button and, directly under it, the nonstop panel on the rail colour; the menu opens in the flow under the panel (24 px bold ruled rows), so the number never leaves the screen.
+- **Neutral form on notice pages** (`/oznameni/…`): the rail and panel are replaced by "Oznámení zveřejňuje <brand>." and an ink "Telefon nonstop <number>" link; the nav is reduced to Oznámení · Kontakt · Úvodní stránka; the footer drops the Dokumenty column and the amber. ⚖ L1 review.
+- **Footer** on the rail colour: name and address · office hours (own heading) · nonstop line (own heading) · Dokumenty, then the legal row (identification, ADR, Právní informace, privacy).
+- **Options:** `palette` `noc` (default) / `grafit`; `fontPair` `schibsted-grotesk` (default) / `hanken-grotesk`; `heroVariant` only `statement` (home never has a photo); `emergencyEmphasis` `high` widens the rail to 512 px and sets the number at 48 px, and repeats the number inside the home hero.
+
+### 3a.2 Page compositions
+
+| Page | Composition |
+| --- | --- |
+| **Home** | Statements in `homepage.sections` order; default hero → services → next-steps → family-story → contact-summary. The hero is one screen tall on desktop (kicker "Když někdo zemřel", H1, lead, one link). A notices statement (no names) follows the hero while notices are on. Featured services are one statement each; next-steps is the 58 px "Kde blízký člověk zemřel?" picker. |
+| **Jak postupovat** | Inverted picker with the word "vybráno", "Zobrazeno N z M kroků", one step per statement ("Krok n z N · phase", 28 px native checkboxes, body in `<details>`, emergency steps repeat the panel, "Další krok"), then Časté otázky by topic. |
+| **Služby** | Featured services as statements, the rest as "Další služby" inline links; **index + detail pages** built the same way, with "V ceně je zahrnuto / Není zahrnuto" from the linked price group. |
+| **Ceník** | VAT note bold in the lead, the demo notice in the site's only 1 px box, one statement per group with the headline price as a 56 px heading in ink and the two inclusion lists, other items in a ruled table. Prints light on A4. |
+| **Kontakt** | Address, then separate statements: Úřední hodiny, Telefony a e-mail, Převoz zesnulých, Lidé (photo rows or ruled name columns, no initials). |
+| **Oznámení** | Large-type agenda: the date as heading, "time · name" on one line, place and type muted; "Bez veřejného obřadu"; "Nedávná oznámení". Notice page: name, dates, 26 px ceremony sentence, map, livestream link, family note, condolences instruction, parte, QR on white. |
+| **Rakve, Květiny** | Built from Lidé: ruled rows with a small thumbnail, or ruled name columns without images. |
+| **O nás, Pro účastníky, Pohřeb předem, Právní informace, privacy, 404** | Title statement, then the Markdown body where each `##` opens a statement; Právní informace adds ADR, Reklamace and the documents as ruled rows. |
+
+### 3a.3 Visual system
+
+- **Palette `noc`:** ground `#121614`, rail `#1B211E`, ink `#F1EEE6`, muted `#B9BDB5`, signal (amber, nonstop number only) `#F0B54A`, rule `#6F7771`. **`grafit`:** `#1C1D20`, `#25272B`, `#F2F1EE`, `#BDBEC2`, `#E9A77A`, `#75777C`. Contrast in `docs/notes/s6-nocni-linka.md`.
+- **Type:** one grotesque, 400/700; body 20 px, lead 24, H1 76/40 (1280/375), statement H2 56–60/30–34.
+- **Separation:** darkness and space; one 1 px rule at the top of each statement. No cards, boxes, icons, radius, photos on home, light sections or a second accent. Print is always light.
+
+### 3a.4 Unique components (C only)
+
+`NightRail`, `RailNumber`, `NeutralLine`, `RailNav`, `NightFooter`, `Statement`, `TitleStatement`, `StatementProse`, `Shown`, `OpeningStatement`, `NoticesTeaser`, `FeaturedStatements`, `PlaceLinks`, `OfficeStatement`, `StoryStatement`, `CatalogueLinksLine`, `StepStatement`, `TopicQuestions`, `GroupPriceStatement`, `InclusionColumns`, `RuledItemTable`, `A4Letterhead`, `CeremonyAgenda`, `RecentNotices`, `NoticeFacts`, `QrSquare`, `HourRows`, `PeopleRows`, `CatalogueRowList`, `EmptyCatalogue`, `DocumentRows`, `AdrStatement`.
+
 ## 4. Mobile homepage sketches (375 px, first ~2 screens)
 
 ```
@@ -123,26 +159,28 @@ A · Rodinná tradice                     B · Důstojná jednoduchost
 
 ## 5. Structural differentiation matrix
 
-| Dimension | A: Rodinná tradice | B: Důstojná jednoduchost |
-| --- | --- | --- |
-| Header | centred letterhead, nav under the wordmark | left logo, right nav, sticky |
-| Emergency CTA pattern | dark utility strip above the header (sticky on mobile) | header button + fixed mobile bottom action bar |
-| Mobile navigation | in-flow full-height list | dropdown under the sticky header |
-| Homepage order | hero → family story → services (prose) → first steps → visit us | hero with CTA tier → first steps → services index → contact info row → background |
-| Hero | editorial, asymmetric, image or typographic panel | practical, text-first, CTA block, optional image after the CTAs |
-| Services IA | one long page with anchors, no detail pages | index plus detail pages |
-| Guidance format | narrative article, numbered sections, margin TOC | phased checklist, `<details>`, print styles |
-| Catalogues | editorial figure gallery, varied rhythm | uniform equal-height grid |
-| Pricing | definition lists with dot leaders | tables with captions, reflowing on mobile |
-| About | long-form, prominent, drop cap | fact sheet first, story secondary |
-| Footer | three-column "rich letter" with emergency block | compact two-row footer |
-| Typography | classic serif display + humanist body | sans throughout (optional serif H1) |
-| Image use | larger, fewer, captioned, warm | minimal, functional, uniform crops |
-| Separation device | hairline rules, small caps labels | 1 px lines, tinted bands, 8 px rhythm |
+| Dimension | A: Rodinná tradice | B: Důstojná jednoduchost | C: Noční linka |
+| --- | --- | --- | --- |
+| Header | centred letterhead, nav under the wordmark | left logo, right nav, sticky | the header is a sticky side rail (desktop); name row + "Obsah" (mobile) |
+| Emergency CTA pattern | dark utility strip above the header (sticky on mobile) | header button + fixed mobile bottom action bar | the rail itself (desktop); panel under the name row (mobile); neutral ink line on notice pages |
+| Mobile navigation | in-flow full-height list | dropdown under the sticky header | in-flow ruled list under the nonstop panel |
+| Homepage order | hero → family story → services (prose) → first steps → visit us | hero with CTA tier → first steps → services index → contact info row → background | hero → (notices) → featured services → situation picker → family → office |
+| Hero | editorial, asymmetric, image or typographic panel | practical, text-first, CTA block, optional image after the CTAs | one text statement, one screen tall, never an image |
+| Services IA | one long page with anchors, no detail pages | index plus detail pages | statement index + statement detail pages, other services as inline links |
+| Guidance format | narrative article, numbered sections, margin TOC | phased checklist, `<details>`, print styles | one step per statement, inverted picker with "vybráno", step tally |
+| Catalogues | editorial figure gallery, varied rhythm | uniform equal-height grid | ruled rows with small thumbnails, or ruled name columns |
+| Pricing | definition lists with dot leaders | tables with captions, reflowing on mobile | one statement per group, price as a 56 px heading, inclusion lists |
+| About | long-form, prominent, drop cap | fact sheet first, story secondary | statements, one optional 4:3 photo |
+| Footer | three-column "rich letter" with emergency block | compact two-row footer | four columns on the rail colour + legal row with ADR |
+| Typography | classic serif display + humanist body | sans throughout (optional serif H1) | one newspaper grotesque, 400/700, 76 px H1 |
+| Image use | larger, fewer, captioned, warm | minimal, functional, uniform crops | none on home; people, catalogues, notices only |
+| Separation device | hairline rules, small caps labels | 1 px lines, tinted bands, 8 px rhythm | darkness and space; one rule on top of each statement |
+| Colour mood | warm paper, umber | cool slate, forest | dark ground, warm off-white, amber for the number only |
+| Notices listing | – (not supported) | – (not supported) | large-type agenda by date; neutral chrome |
 
 ## 6. Differentiation checklist (Phase 2 exit and Phase 4)
 
-A template pair passes only if **every** item is true:
+Every pair of templates passes only if **every** item is true (QA checks the structural items for each pair):
 
 - [ ] The two `src/components/` directories share **no** component files, and the only shared imports are `@core/*`.
 - [ ] For the same content, homepage section order differs in at least 3 positions, and the hero DOM structure differs (verified from the HTML outline, not from CSS).

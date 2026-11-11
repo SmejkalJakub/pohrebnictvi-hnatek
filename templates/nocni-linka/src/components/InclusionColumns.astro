@@ -1,0 +1,64 @@
+---
+/** "V ceně je zahrnuto" / "Není zahrnuto": two lists side by side (stacked on narrow screens). */
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  includes: string[];
+  excludes: string[];
+  level?: 3 | 4;
+}
+
+const { includes, excludes, level = 3 } = Astro.props;
+const Heading = `h${level}` as "h3" | "h4";
+---
+{
+  includes.length > 0 || excludes.length > 0 ? (
+    <div class="inclusions" data-inclusions>
+      {includes.length > 0 ? (
+        <div>
+          <Heading class="inc-heading">{ui.included}</Heading>
+          <ul class="plain-list inc-list">
+            {includes.map((item) => (
+              <li>{item}</li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+      {excludes.length > 0 ? (
+        <div>
+          <Heading class="inc-heading">{ui.excluded}</Heading>
+          <ul class="plain-list inc-list">
+            {excludes.map((item) => (
+              <li>{item}</li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+    </div>
+  ) : null
+}
+
+<style>
+  .inclusions {
+    display: grid;
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+  }
+
+  .inc-heading {
+    font-size: 1.375rem;
+    line-height: 1.3;
+  }
+
+  .inc-list {
+    margin-top: 0.625rem;
+  }
+
+  @media (min-width: 48rem) {
+    .inclusions {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 3rem;
+      margin-top: 2rem;
+    }
+  }
+</style>

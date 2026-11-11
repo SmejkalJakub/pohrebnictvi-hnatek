@@ -1,0 +1,159 @@
+---
+/**
+ * One guide step as one statement: kicker "Krok n z N · phase" (n from a CSS counter, so it
+ * stays continuous when the filter hides steps; N per situation), heading, who it applies to,
+ * the summary, native checkboxes, the body in <details>, the contact prompt and "Další krok".
+ */
+import type { CollectionEntry } from "astro:content";
+import PhoneLink from "@core/components/PhoneLink.astro";
+import { render } from "@core/content/load.ts";
+import PlaceholderMark from "@core/components/PlaceholderMark.astro";
+import UnreviewedMark from "@core/components/UnreviewedMark.astro";
+import { situationsAttribute, type SpecificSituation } from "@core/content/guidance-flow.ts";
+import type { SiteContext } from "@core/content/view-models.ts";
+import { formatPhone } from "@core/format/phone.ts";
+import RailNumber from "./RailNumber.astro";
+import { guidancePhaseLabels, situationPhrases, ui } from "../i18n/cs.ts";
+import { primaryOfficePhone } from "../lib/site.ts";
+
+interface Props {
+  site: SiteContext;
+  entry: CollectionEntry<"guidance">;
+  /** Steps shown for each situation, and in total ("z N"). */
+  totals: { all: number; bySituation: Partial<Record<SpecificSituation, number>> };
+  next: CollectionEntry<"guidance"> | null;
+}
+
+const { site, entry, totals, next } = Astro.props;
+const data = entry.data;
+const office = primaryOfficePhone(site);
+const officeDisplay = formatPhone(office.number).display;
+const named = data.situations.filter((situation) => situation !== "any") as SpecificSituation[];
+let appliesTo: string | null = null;
+if (named.length > 0) {
+  appliesTo = `${ui.appliesTo} ${named.map((situation) => situationPhrases[situation]).join(", ")}.`;
+}
+const headingId = `${entry.id}-nadpis`;
+const { Content } = await render(entry);
+---
+<li id={entry.id} class="step st" data-guide-step data-situations={situationsAttribute(entry)}>
+  <p class="kicker">
+    {ui.step}{" "}<span class="step-n"></span>{" "}<span class="step-of" data-of="all">{ui.stepOf(totals.all)}</span>{
+      Object.entries(totals.bySituation).map(([situation, total]) => (
+        <span class="step-of" data-of={situation}>
+          {ui.stepOf(total ?? 0)}
+        </span>
+      ))
+    }{" · "}{guidancePhaseLabels[data.phase]}
+  </p>
+  <h2 id={headingId} class="st-heading step-title">{data.title}</h2>
+  <PlaceholderMark active={data.placeholder} as="div">
+    {appliesTo !== null ? <p class="muted small step-applies">{appliesTo}</p> : null}
+    <p class="st-text">{data.summary}</p>
+    <UnreviewedMark reviewedAt={data.review.reviewedAt} />
+  </PlaceholderMark>
+  {
+    data.checklist.length > 0 ? (
+      <ul class="checks" aria-label={ui.checklist}>
+        {data.checklist.map((item, index) => (
+          <li>
+            <label class="check">
+              <input type="checkbox" name={`${entry.id}-${index}`} />
+              <span>{item}</span>
+            </label>
+          </li>
+        ))}
+      </ul>
+    ) : null
+  }
+  <details class="step-more">
+    <summary>{ui.readMore}</summary>
+    <div class="prose step-body"><Content /></div>
+  </details>
+  {data.contactPrompt === "emergency" ? <RailNumber emergency={site.emergency} inline /> : null}
+  {
+    data.contactPrompt === "office" ? (
+      <p class="st-text">
+        {ui.officePrompt}:{" "}
+        <PhoneLink number={office.number}>{office.label}{" "}<span class="nowrap">{officeDisplay}</span></PhoneLink>
+      </p>
+    ) : null
+  }
+  {
+    next !== null ? (
+      <a href={`#${next.id}`} class="st-link">
+        {ui.nextStep}
+        <span class="visually-hidden">: {next.data.title}</span>
+      </a>
+    ) : null
+  }
+</li>
+
+<style>
+  .step {
+    counter-increment: step;
+    list-style: none;
+  }
+
+  .step-n::before {
+    content: counter(step);
+  }
+
+  .step-of:not([data-of="all"]) {
+    display: none;
+  }
+
+  .step-title {
+    font-size: 1.875rem;
+  }
+
+  .step-applies {
+    margin-top: 0.25rem;
+  }
+
+  .checks {
+    margin-top: 0.75rem;
+    padding: 0;
+    list-style: none;
+  }
+
+  .check {
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-start;
+    padding-block: 0.5rem;
+    cursor: pointer;
+  }
+
+  .check input {
+    flex: none;
+    width: 1.75rem;
+    height: 1.75rem;
+    margin: 0.125rem 0 0;
+    accent-color: var(--ink);
+  }
+
+  .step-more {
+    margin-top: 0.75rem;
+  }
+
+  .step-more summary {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.75rem;
+    font-weight: 700;
+    text-decoration: underline;
+    text-underline-offset: 0.3125em;
+    cursor: pointer;
+  }
+
+  .step-body {
+    margin-top: 0.5rem;
+  }
+
+  @media (min-width: 64rem) {
+    .step-title {
+      font-size: 3rem;
+    }
+  }
+</style>

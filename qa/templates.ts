@@ -1,4 +1,4 @@
-// Shared QA data: the two pilot templates, their preview ports and route discovery from dist/.
+// Shared QA data: every template, its preview port and route discovery from dist/.
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { dirname, join, relative, sep } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -6,9 +6,9 @@ import { fileURLToPath } from "node:url";
 export const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
 
 export interface TemplateUnderTest {
-  id: "rodinna-tradice" | "dustojna-jednoduchost";
+  id: "rodinna-tradice" | "dustojna-jednoduchost" | "nocni-linka";
   /** Short letter used in the design docs. */
-  letter: "A" | "B";
+  letter: "A" | "B" | "C";
   port: number;
   dir: string;
   dist: string;
@@ -28,7 +28,19 @@ function template(
 export const templates: TemplateUnderTest[] = [
   template("rodinna-tradice", "A", 4411),
   template("dustojna-jednoduchost", "B", 4412),
+  template("nocni-linka", "C", 4413),
 ];
+
+/** Every unordered pair of templates (design-differentiation §6 applies to each pair). */
+export function templatePairs(): [TemplateUnderTest, TemplateUnderTest][] {
+  const pairs: [TemplateUnderTest, TemplateUnderTest][] = [];
+  templates.forEach((first, i) => {
+    for (const second of templates.slice(i + 1)) {
+      pairs.push([first, second]);
+    }
+  });
+  return pairs;
+}
 
 export function baseUrlFor(t: TemplateUnderTest): string {
   return `http://127.0.0.1:${t.port}`;
@@ -99,7 +111,7 @@ interface EmergencyFixture {
   phone: string;
 }
 
-/** The fixture both templates build against (read-only). */
+/** The fixture every template builds against (read-only). */
 export const emergency: EmergencyFixture = JSON.parse(
   readFileSync(join(repoRoot, "fixtures/neutral/src/content/site/emergency.json"), "utf8"),
 ) as EmergencyFixture;

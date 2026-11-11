@@ -1,0 +1,117 @@
+---
+/**
+ * Lidé. With photos: one person per row, a 4:5 portrait (112 × 140) beside a 30 px name, the
+ * role and an optional direct line. Without any photo: two ruled columns of names, no initials.
+ * A person without a photo among others with photos gets no empty frame.
+ */
+import { Image } from "astro:assets";
+import PlaceholderMark from "@core/components/PlaceholderMark.astro";
+import type { PersonView } from "@core/content/view-models.ts";
+import { resolveOptionalImage } from "@core/media/resolve.ts";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  people: PersonView[];
+}
+
+const { people } = Astro.props;
+const rows = people.map((person) => ({ person, photo: resolveOptionalImage(person.photo) }));
+const withPhotos = rows.some((row) => row.photo !== null);
+---
+<ul class:list={["people", { "people-photos": withPhotos, "people-names": !withPhotos }]} data-people>
+  {
+    rows.map(({ person, photo }) => (
+      <li class="person" data-person={person.id}>
+        <PlaceholderMark active={person.placeholder} as="div">
+          <div class="person-row">
+          {photo !== null ? (
+            <Image
+              src={photo.src}
+              alt={photo.alt}
+              width={112}
+              height={140}
+              densities={[1, 2]}
+              class="person-photo"
+              style={`object-position: ${photo.objectPosition}`}
+            />
+          ) : null}
+          <div class="person-text">
+            <p class="person-name">{person.name}</p>
+            <p class="muted">{person.role}</p>
+            {person.phone !== null ? (
+              <p class="person-phone">
+                <a href={person.phone.href} data-phone-link>
+                  {ui.directLine}{" "}<span class="nowrap">{person.phone.display}</span>
+                </a>
+              </p>
+            ) : null}
+          </div>
+          </div>
+        </PlaceholderMark>
+      </li>
+    ))
+  }
+</ul>
+
+<style>
+  .people {
+    display: grid;
+    gap: 1.75rem;
+    margin-top: 1.5rem;
+    padding: 0;
+    list-style: none;
+  }
+
+  .people-names .person {
+    padding-top: 0.875rem;
+    border-top: 1px solid var(--rule);
+  }
+
+  .people-photos .person-row {
+    display: flex;
+    gap: 1.5rem;
+    align-items: flex-start;
+  }
+
+  .people :global(.person-photo) {
+    flex: none;
+    width: 5.5rem;
+    height: auto;
+    aspect-ratio: 4 / 5;
+    object-fit: cover;
+  }
+
+  .person-name {
+    font-size: 1.625rem;
+    font-weight: 700;
+    line-height: 1.1;
+  }
+
+  .person-text .muted {
+    margin-top: 0.375rem;
+  }
+
+  .person-phone {
+    margin-top: 0.375rem;
+  }
+
+  .person-phone a {
+    display: inline-block;
+    padding-block: 0.6rem;
+  }
+
+  @media (min-width: 48rem) {
+    .people-names {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 2.25rem 3rem;
+    }
+
+    .people :global(.person-photo) {
+      width: 7rem;
+    }
+
+    .person-name {
+      font-size: 1.875rem;
+    }
+  }
+</style>

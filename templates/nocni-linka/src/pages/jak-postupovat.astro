@@ -1,0 +1,129 @@
+---
+/**
+ * Jak postupovat: the "Kde blízký člověk zemřel?" picker (links + CSS :has(:target), no JS), a
+ * tally of the steps shown, then one step per statement, then Časté otázky (#caste-otazky).
+ */
+import { getFaq, getGuidance, getPage, getSiteContext } from "@core/content/load.ts";
+import {
+  SITUATION_ANCHOR,
+  chooserSituations,
+  nextGuidanceStep,
+  showsFor,
+  type SpecificSituation,
+} from "@core/content/guidance-flow.ts";
+import NightLayout from "../layouts/NightLayout.astro";
+import TitleStatement from "../components/TitleStatement.astro";
+import PlaceLinks from "../components/PlaceLinks.astro";
+import StepStatement from "../components/StepStatement.astro";
+import StatementProse from "../components/StatementProse.astro";
+import TopicQuestions from "../components/TopicQuestions.astro";
+import { ui } from "../i18n/cs.ts";
+import { seoTitle } from "../lib/site.ts";
+
+const ALL_ANCHOR = "postup";
+const site = await getSiteContext();
+const page = await getPage("jak-postupovat");
+const guidance = await getGuidance();
+const faq = await getFaq();
+const situations = chooserSituations(guidance);
+const Body = page.Content;
+
+const bySituation: Partial<Record<SpecificSituation, number>> = {};
+for (const situation of situations) {
+  bySituation[situation] = guidance.filter((entry) => showsFor(entry, situation)).length;
+}
+const totals = { all: guidance.length, bySituation };
+
+/* Filter rules, one block per offered situation (the selectors depend on the anchors). */
+const filterCss = situations
+  .map((situation) => {
+    const target = `[data-guide]:has(#${SITUATION_ANCHOR[situation]}:target)`;
+    const hidden = `:not([data-situations~="any"]):not([data-situations~="${situation}"])`;
+    return [
+      `${target} [data-guide-step]${hidden} { display: none; }`,
+      `${target} [data-tally="${situation}"] { display: block; }`,
+      `${target} [data-of="all"] { display: none; }`,
+      `${target} [data-of="${situation}"] { display: inline; }`,
+      `${target} [data-place="${situation}"] { background: var(--ink); color: var(--ground); }`,
+      `${target} [data-place="${situation}"] .arrow { display: none; }`,
+      `${target} [data-place="${situation}"] .picked-word { display: inline; }`,
+    ].join("\n");
+  })
+  .join("\n");
+---
+<NightLayout site={site} title={seoTitle(page.data)} description={page.data.metaDescription ?? page.data.title}>
+  <TitleStatement kicker={ui.heroKicker} title={page.data.title} lead={page.data.lead} placeholder={page.data.placeholder} />
+  <div data-guide class="guide">
+    <style is:inline set:html={filterCss}></style>
+    {situations.map((situation) => <span id={SITUATION_ANCHOR[situation]} class="guide-target"></span>)}
+    <span id={ALL_ANCHOR} class="guide-target"></span>
+    {
+      situations.length > 0 ? (
+        <div class="guide-pick">
+          <h2 id="kde-zemrel" class="pick-heading">{ui.pickerHeading}</h2>
+          <PlaceLinks situations={situations} base="" labelledBy="kde-zemrel" />
+          {situations.map((situation) => (
+            <p class="tally small" data-tally={situation}>
+              {ui.tally(bySituation[situation] ?? 0, guidance.length)}{" "}
+              <a href={`#${ALL_ANCHOR}`}>{ui.showAll}</a>
+            </p>
+          ))}
+        </div>
+      ) : null
+    }
+    <StatementProse show={page.hasBody} class="guide-intro"><Body /></StatementProse>
+    <ol class="steps">
+      {
+        guidance.map((entry, index) => (
+          <StepStatement site={site} entry={entry} totals={totals} next={nextGuidanceStep(guidance, index)} />
+        ))
+      }
+    </ol>
+  </div>
+  {
+    faq.length > 0 ? (
+      <section id="caste-otazky" class="st faq" aria-labelledby="caste-otazky-nadpis">
+        <h2 id="caste-otazky-nadpis" class="st-heading">{ui.faqHeading}</h2>
+        <TopicQuestions groups={faq} idPrefix="otazky" />
+      </section>
+    ) : null
+  }
+</NightLayout>
+
+<style>
+  .guide-target {
+    display: block;
+    scroll-margin-top: 1rem;
+  }
+
+  .guide-pick {
+    max-width: 34rem;
+    margin-top: 1.5rem;
+  }
+
+  .pick-heading {
+    font-size: 1.25rem;
+    line-height: 1.5;
+  }
+
+  .tally {
+    display: none;
+    margin-top: 0.875rem;
+  }
+
+  .steps {
+    margin: 0;
+    padding: 0;
+    counter-reset: step;
+  }
+
+  .faq :global(.st:first-of-type) {
+    margin-top: 2rem;
+  }
+
+  @media (min-width: 64rem) {
+    .guide-pick {
+      margin-top: 3rem;
+    }
+  }
+</style>

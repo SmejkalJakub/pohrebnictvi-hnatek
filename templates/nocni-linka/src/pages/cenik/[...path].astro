@@ -1,0 +1,87 @@
+---
+/**
+ * Ceník (conditional route: no file when pricing is hidden). Lead with the VAT note in bold
+ * (research L9), the demo notice in the site's only 1 px box, then one statement per price group.
+ * Prints light on A4 (styles/print.css): letterhead, groups, contacts and legal identification.
+ */
+import DemoPricingNotice from "@core/components/DemoPricingNotice.astro";
+import VatNote from "@core/components/VatNote.astro";
+import { getPage, getPricing, getSiteContext } from "@core/content/load.ts";
+import { formatCzechDate } from "@core/format/date.ts";
+import NightLayout from "../../layouts/NightLayout.astro";
+import TitleStatement from "../../components/TitleStatement.astro";
+import GroupPriceStatement from "../../components/GroupPriceStatement.astro";
+import StatementProse from "../../components/StatementProse.astro";
+import A4Letterhead from "../../components/A4Letterhead.astro";
+import { ui } from "../../i18n/cs.ts";
+import { seoTitle } from "../../lib/site.ts";
+
+export async function getStaticPaths() {
+  const pricing = await getPricing();
+  if (pricing === null) {
+    return [];
+  }
+  return [{ params: { path: undefined } }];
+}
+
+const site = await getSiteContext();
+const page = await getPage("cenik");
+const pricing = await getPricing();
+if (pricing === null) {
+  throw new Error("unreachable: pricing hidden");
+}
+const Body = page.Content;
+---
+<NightLayout
+  site={site}
+  title={seoTitle(page.data)}
+  description={page.data.metaDescription ?? page.data.title}
+  noindex={pricing.hasDemo}
+>
+  <A4Letterhead site={site} part="head" path="/cenik/" />
+  <TitleStatement kicker={page.data.navLabel} title={page.data.title} placeholder={page.data.placeholder}>
+    <div class="price-lead">
+      <VatNote pricing={pricing} class="vat-note" />
+      {page.data.lead !== null ? <p class="lead">{page.data.lead}</p> : null}
+      {pricing.generalNote !== null ? <p>{pricing.generalNote}</p> : null}
+      {pricing.validFrom !== null ? <p class="muted small">{ui.priceValidFrom(formatCzechDate(pricing.validFrom))}</p> : null}
+    </div>
+    <DemoPricingNotice pricing={pricing} brandName={site.company.brandName} class="demo-box" />
+    <p class="muted small print-hint no-print">{ui.printHint}</p>
+  </TitleStatement>
+  {pricing.groups.map((group) => <GroupPriceStatement group={group} />)}
+  <StatementProse show={page.hasBody}><Body /></StatementProse>
+  <A4Letterhead site={site} part="foot" path="/cenik/" />
+</NightLayout>
+
+<style>
+  .price-lead {
+    display: grid;
+    gap: 0.5rem;
+    max-width: 34em;
+    margin-top: 1.25rem;
+  }
+
+  .price-lead :global(.vat-note) {
+    font-weight: 700;
+  }
+
+  :global(.demo-box) {
+    max-width: 40rem;
+    margin-top: 1.25rem;
+    padding: 0.875rem 1rem;
+    border: 1px solid var(--rule);
+    font-size: 1.125rem;
+  }
+
+  .print-hint {
+    margin-top: 1rem;
+  }
+
+  @media (min-width: 64rem) {
+    .price-lead {
+      margin-top: 2rem;
+      font-size: 1.375rem;
+    }
+  }
+</style>

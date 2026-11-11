@@ -1,0 +1,34 @@
+---
+/** Rakve: catalogue rows (4:3 thumbnails) or ruled name columns; handles zero entries. */
+import { getCoffins, getPage, getSiteContext } from "@core/content/load.ts";
+import NightLayout from "../layouts/NightLayout.astro";
+import TitleStatement from "../components/TitleStatement.astro";
+import CatalogueRowList from "../components/CatalogueRowList.astro";
+import EmptyCatalogue from "../components/EmptyCatalogue.astro";
+import StatementProse from "../components/StatementProse.astro";
+import { ui } from "../i18n/cs.ts";
+import { seoTitle } from "../lib/site.ts";
+
+const site = await getSiteContext();
+const page = await getPage("rakve");
+const coffins = await getCoffins();
+const items = coffins.map((entry) => {
+  const meta = [entry.data.material, entry.data.code !== null ? `${ui.code} ${entry.data.code}` : null]
+    .filter((part) => part !== null)
+    .join(" · ");
+  return {
+    id: entry.id,
+    name: entry.data.name,
+    meta: meta === "" ? null : meta,
+    summary: entry.data.summary,
+    image: entry.data.image,
+    placeholder: entry.data.placeholder,
+  };
+});
+const Body = page.Content;
+---
+<NightLayout site={site} title={seoTitle(page.data)} description={page.data.metaDescription ?? page.data.title}>
+  <TitleStatement kicker={page.data.navLabel} title={page.data.title} lead={page.data.lead} placeholder={page.data.placeholder} />
+  <StatementProse show={page.hasBody}><Body /></StatementProse>
+  {items.length > 0 ? <CatalogueRowList items={items} thumb={{ width: 140, height: 105 }} /> : <EmptyCatalogue site={site} />}
+</NightLayout>

@@ -1,0 +1,52 @@
+---
+/** The notice's build-time QR code (core) on a white square, with the print instruction. */
+import NoticeQrCode from "@core/components/NoticeQrCode.astro";
+import type { NoticeView } from "@core/content/view-models.ts";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  view: NoticeView;
+}
+
+const { view } = Astro.props;
+---
+<section class="st qr" aria-labelledby="qr-nadpis">
+  <h2 id="qr-nadpis" class="visually-hidden">{ui.qrHeading}</h2>
+  <div class="qr-row">
+    <NoticeQrCode notice={view} class="qr-code" />
+    <div>
+      <p class="no-print">{ui.qrText}</p>
+      <p class="qr-file no-print"><a href={view.qr.href}>{ui.qrFile}</a></p>
+    </div>
+  </div>
+</section>
+
+<style>
+  .qr {
+    margin-top: 2rem;
+    padding-top: 1.25rem;
+  }
+
+  .qr-row {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+
+  .qr :global(.qr-code) {
+    display: block;
+    flex: none;
+    width: 6.5rem;
+    padding: 0.25rem;
+    background: #fff;
+  }
+
+  .qr-row p {
+    font-size: 1.125rem;
+  }
+
+  .qr-file a {
+    display: inline-block;
+    padding-block: 0.6rem;
+  }
+</style>

@@ -1,0 +1,31 @@
+---
+/**
+ * Pohřeb předem (features.prePlanning; built from the Pro účastníky pattern, no sign-up of any kind):
+ * the title statement, then the Markdown body where each ## opens a short statement.
+ */
+import { getOptionalPage, getSiteContext } from "@core/content/load.ts";
+import NightLayout from "../../layouts/NightLayout.astro";
+import TitleStatement from "../../components/TitleStatement.astro";
+import StatementProse from "../../components/StatementProse.astro";
+import { seoTitle } from "../../lib/site.ts";
+
+export async function getStaticPaths() {
+  const site = await getSiteContext();
+  const page = await getOptionalPage("pohreb-predem");
+  if (!site.config.features.prePlanning || page === null) {
+    return [];
+  }
+  return [{ params: { path: undefined } }];
+}
+
+const site = await getSiteContext();
+const page = await getOptionalPage("pohreb-predem");
+if (page === null) {
+  throw new Error("unreachable: page missing");
+}
+const Body = page.Content;
+---
+<NightLayout site={site} title={seoTitle(page.data)} description={page.data.metaDescription ?? page.data.title}>
+  <TitleStatement kicker={page.data.navLabel} title={page.data.title} lead={page.data.lead} placeholder={page.data.placeholder} />
+  <StatementProse show={page.hasBody} class="short-statements"><Body /></StatementProse>
+</NightLayout>
