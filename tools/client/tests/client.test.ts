@@ -11,10 +11,10 @@ import { loadManifest } from "../../lib/repo.ts";
 import { planAstroRun } from "../astro.ts";
 import { assertClientId, errorRules, gateClient, loadClient } from "../clients.ts";
 import { verifyExpectation } from "../export.ts";
-import { scaffoldClient } from "../new.ts";
+import { copiesContent, scaffoldClient } from "../new.ts";
 import { validateClient } from "../validate.ts";
 
-const TEMPLATES = ["rodinna-tradice", "dustojna-jednoduchost", "nocni-linka", "plny-prehled"] as const;
+const TEMPLATES = ["rodinna-tradice", "dustojna-jednoduchost", "nocni-linka", "plny-prehled", "ticha-krajina"] as const;
 
 let clientsDir: string;
 
@@ -146,5 +146,22 @@ describe("verifyExpectation", () => {
 
   it("expects a passing production build when nothing blocks it", () => {
     expect(verifyExpectation([])).toEqual({ production: "pass", rules: [] });
+  });
+});
+
+describe("client:new and the landscape photo set", () => {
+  it("copies site/landscapes.json only for a template that supports landscapes", async () => {
+    for (const templateId of TEMPLATES) {
+      const manifest = await loadManifest(templateId);
+      expect(copiesContent(manifest, "site/landscapes.json"), templateId).toBe(manifest.supports.landscapes);
+    }
+    expect((await loadManifest("ticha-krajina")).supports.landscapes).toBe(true);
+  });
+
+  it("starts the landscape feature off, with the file in place for the CMS", async () => {
+    const site = await loadClient("test-ticha-krajina", clientsDir);
+    expect(site.config.features.landscapes).toBe(false);
+    expect(existsSync(path.join(clientsDir, "test-ticha-krajina", "src/content/site/landscapes.json"))).toBe(true);
+    expect(existsSync(path.join(clientsDir, "test-rodinna-tradice", "src/content/site/landscapes.json"))).toBe(false);
   });
 });

@@ -1,0 +1,25 @@
+---
+/** Služby: one long page with anchors, broken by landscape bands (supports.serviceDetailPages: false). */
+import { getLandscapes, getPage, getPricing, getServices, getSiteContext } from "@core/content/load.ts";
+import QuietLayout from "../../layouts/QuietLayout.astro";
+import OpeningText from "../../components/OpeningText.astro";
+import StampLine from "../../components/StampLine.astro";
+import ServicePassages from "../../components/ServicePassages.astro";
+import ProsePassages from "../../components/ProsePassages.astro";
+import { resolveOptions } from "../../lib/options.ts";
+import { seoDescription, seoTitle } from "../../lib/site.ts";
+
+const site = await getSiteContext();
+const options = resolveOptions(site.config);
+const page = await getPage("sluzby");
+const services = await getServices();
+const pricing = await getPricing();
+const landscapes = await getLandscapes();
+const Body = page.Content;
+---
+<QuietLayout site={site} title={seoTitle(page.data)} description={seoDescription(page.data)}>
+  <OpeningText title={page.data.title} lead={page.data.lead} placeholder={page.data.placeholder} />
+  <StampLine emergency={site.emergency} place="opening" high={options.emergencyEmphasis === "high"} />
+  <ServicePassages services={services} pricing={pricing} landscapes={landscapes} />
+  {page.hasBody ? <ProsePassages idPrefix="sluzby-text"><Body /></ProsePassages> : null}
+</QuietLayout>

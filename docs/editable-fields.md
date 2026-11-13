@@ -223,9 +223,21 @@ CMS menu "Oznámení a obřady". Notices are ordered per case, usually after han
 | `complaintsContact` | draft | **CMS** | text ≤ 400 | |
 | pages `oznameni`, `pro-ucastniky`, `pohreb-predem`, `pravni-informace` | draft | **CMS** like §4.5, while their feature is on and the template declares their `pageFields` | | `pohreb-predem`: no sign-up or e-mail capture (research L1) |
 
+### 4.17 Landscape photos (`site/landscapes.json`, only while `features.landscapes` is on)
+
+CMS entry **"Krajiny"** in the group "Firma a kontakt" (template E; added 2026-11-13).
+
+| Field | Agent | Client CMS | Widget / validation | Notes |
+| --- | --- | --- | --- | --- |
+| `images[]` | placeholders only (never a photo the agent found, bought or generated) | **CMS**: add, remove, reorder (0–12) | collapsible list, summary `{place}` | the list order is the band order; the first photo opens the home page |
+| `images[].image` | — | **CMS** | the inline `ImageRef` of §4.10; file help: "Na šířku, alespoň 2560 px." | `licensed-stock` rejected by the schema; rights as §4.10 |
+| `images[].place` | — | **CMS**, required | string ≤ 120 | shown under the band, e.g. "Drahanská vrchovina nad Vyškovem" |
+
+The list's help text carries the guardrail the schema cannot check: *"Fotografie krajiny nebo budov z vašeho okolí, vlastní nebo zakázkové. Na fotografii nesmí být lidé, západ slunce, mraky ani květiny. Nepoužívejte fotobanky ani obrázky vytvořené počítačem. Na webu se nikdy nezobrazí na začátku stránky. Bez fotografií zůstane mezi oddíly volné místo."* The owner checks the photos against it before launch. The Kontakt building photo is the page field `secondaryImage` of `pages/kontakt.md` (§4.5), not part of this list.
+
 ### 4.11 Never in the CMS
 
-`site.config.ts` (template, options, homepage order, features, `siteUrl`, `pinnedBuildDate`), `template.manifest.ts`, everything under `src/core/`, `src/layouts/`, `src/components/`, `src/pages/`, `src/styles/`, `astro.config.mjs`, `package*.json`, `.pages.yml` itself, deployment settings, `docs/provenance/` (including the staff consent records), the `articles/` collection (absent for Hnátek), every optional collection or page whose feature is off, and the `emergency.label`, `emergency.availability` and `emergency.enabled` fields.
+`site.config.ts` (template, options, homepage order, features, `siteUrl`, `pinnedBuildDate`), `template.manifest.ts`, everything under `src/core/`, `src/layouts/`, `src/components/`, `src/pages/`, `src/styles/`, `astro.config.mjs`, `package*.json`, `.pages.yml` itself, deployment settings, `docs/provenance/` (including the staff consent records), the `articles/` collection (absent for Hnátek), every optional collection, page or singleton whose feature is off (including `site/landscapes.json`), and the `emergency.label`, `emergency.availability` and `emergency.enabled` fields.
 
 ## 5. CMS validation and failure handling
 

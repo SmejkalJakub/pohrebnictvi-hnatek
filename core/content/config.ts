@@ -43,6 +43,8 @@ export const SiteConfig = z
       documents: z.boolean().default(false),
       guestInfo: z.boolean().default(false),
       prePlanning: z.boolean().default(false),
+      // Landscape photo bands from site/landscapes.json (content-contract §6.18).
+      landscapes: z.boolean().default(false),
     }),
     contactFormEndpoint: nullable(Url).default(null),
     /**
@@ -92,6 +94,7 @@ export const CONTENT_FEATURES = [
   "documents",
   "guestInfo",
   "prePlanning",
+  "landscapes",
 ] as const;
 export type ContentFeature = (typeof CONTENT_FEATURES)[number];
 
@@ -129,6 +132,8 @@ export interface TemplateManifest {
     prePlanning: boolean;
     /** Renders pricing groups' includes[] / excludes[]; the CMS hides those lists otherwise. */
     priceInclusions: boolean;
+    /** Krajiny: full-bleed photos from site/landscapes.json between sections (features.landscapes). */
+    landscapes: boolean;
   };
   homepageSections: {
     available: readonly HomepageSection[];

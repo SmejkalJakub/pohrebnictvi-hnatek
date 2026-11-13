@@ -6,9 +6,9 @@ import { fileURLToPath } from "node:url";
 export const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
 
 export interface TemplateUnderTest {
-  id: "rodinna-tradice" | "dustojna-jednoduchost" | "nocni-linka" | "plny-prehled";
+  id: "rodinna-tradice" | "dustojna-jednoduchost" | "nocni-linka" | "plny-prehled" | "ticha-krajina";
   /** Short letter used in the design docs. */
-  letter: "A" | "B" | "C" | "D";
+  letter: "A" | "B" | "C" | "D" | "E";
   port: number;
   dir: string;
   dist: string;
@@ -30,6 +30,7 @@ export const templates: TemplateUnderTest[] = [
   template("dustojna-jednoduchost", "B", 4412),
   template("nocni-linka", "C", 4413),
   template("plny-prehled", "D", 4414),
+  template("ticha-krajina", "E", 4415),
 ];
 
 /** Every unordered pair of templates (design-differentiation §6 applies to each pair). */

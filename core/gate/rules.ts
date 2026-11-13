@@ -75,6 +75,11 @@ export const RULES = {
     prototype: "warning",
     production: "warning",
   },
+  "G-077": {
+    title: "Landscape set present while the feature is on",
+    prototype: "error",
+    production: "error",
+  },
 } as const satisfies Record<string, { title: string; prototype: Level; production: Level }>;
 
 export type RuleId = keyof typeof RULES;
@@ -151,7 +156,24 @@ export function collectPublishedImages(content: ValidatedContent, buildDate?: st
   uses.push(...collectEntryImages(content.flowers, content));
   uses.push(...collectEntryImages(content.articles, content));
   uses.push(...collectFeatureImages(content, buildDate ?? buildDateOf(content)));
+  if (content.config.features.landscapes) {
+    uses.push(...landscapeImageUses(content));
+  }
   return uses;
+}
+
+const LANDSCAPES_FILE = "src/content/site/landscapes.json";
+
+/** Photos of site/landscapes.json (content-contract §6.18), whatever the feature switch says. */
+function landscapeImageUses(content: ValidatedContent): ImageUse[] {
+  if (content.landscapes === null) {
+    return [];
+  }
+  return content.landscapes.images.map((entry, index) => ({
+    file: LANDSCAPES_FILE,
+    path: `images.${index}.image`,
+    image: entry.image,
+  }));
 }
 
 /** Notice and person images of the given entries (photo, printed parte). */
@@ -265,6 +287,15 @@ function checkStructure(content: ValidatedContent, out: Candidate[]): void {
         en: `Page file is required while features.${feature} is on.`,
       });
     }
+  }
+  if (content.config.features.landscapes && content.landscapes === null) {
+    out.push({
+      rule: "G-077",
+      file: LANDSCAPES_FILE,
+      path: "",
+      cs: 'Funkce "landscapes" je zapnutá, ale soubor site/landscapes.json chybí. Vytvořte jej (i prázdný: { "images": [] }), jinak do něj nepůjde v CMS přidat fotografie.',
+      en: 'features.landscapes is on but site/landscapes.json is missing; create it (even { "images": [] }) so the CMS can edit it.',
+    });
   }
   const privacyPresent = present.has("ochrana-osobnich-udaju");
   if (content.legal !== null && !present.has("pravni-informace")) {
@@ -385,7 +416,8 @@ export function collectReferencedMediaFiles(content: ValidatedContent): string[]
   for (const use of collectAllImages(content)) {
     const disabledNotice = !isCollectionEnabled("notices", content) && use.file.startsWith(NOTICES_DIR);
     const disabledPerson = !isCollectionEnabled("people", content) && use.file.startsWith(PEOPLE_DIR);
-    if (disabledNotice || disabledPerson) {
+    const disabledLandscape = !content.config.features.landscapes && use.file === LANDSCAPES_FILE;
+    if (disabledNotice || disabledPerson || disabledLandscape) {
       continue;
     }
     files.add(normalizeMediaFile(use.image.file));
@@ -416,6 +448,7 @@ function collectAllImages(content: ValidatedContent): ImageUse[] {
     }
   }
   uses.push(...featureImageUses(content.notices, content.people));
+  uses.push(...landscapeImageUses(content));
   return uses;
 }
 

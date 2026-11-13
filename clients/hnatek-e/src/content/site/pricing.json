@@ -1,0 +1,107 @@
+{
+  "visible": true,
+  "currency": "CZK",
+  "vatNote": null,
+  "validFrom": null,
+  "generalNote": "Konečnou cenu vždy upřesníme při osobním sjednání pohřbu v kanceláři.",
+  "groups": [
+    {
+      "id": "pohreb",
+      "title": "Pohřeb a rozloučení",
+      "description": "Sjednání a zajištění pohřbu včetně potřebných dokladů.",
+      "items": [
+        {
+          "id": "rozlouceni-v-obradni-sini",
+          "label": "Rozloučení v obřadní síni",
+          "description": "S hudbou a civilním řečníkem.",
+          "kind": "from",
+          "amount": 18900,
+          "amountMax": null,
+          "unit": null,
+          "status": "demo"
+        },
+        {
+          "id": "rozlouceni-v-kostele",
+          "label": "Rozloučení v kostele nebo kapli",
+          "description": null,
+          "kind": "from",
+          "amount": 17900,
+          "amountMax": null,
+          "unit": null,
+          "status": "demo"
+        },
+        {
+          "id": "zpopelneni-bez-obradu",
+          "label": "Zpopelnění bez obřadu",
+          "description": null,
+          "kind": "from",
+          "amount": 9900,
+          "amountMax": null,
+          "unit": null,
+          "status": "demo"
+        }
+      ]
+    },
+    {
+      "id": "prevoz",
+      "title": "Převoz zesnulých",
+      "description": null,
+      "items": [
+        {
+          "id": "prevoz-km",
+          "label": "Převoz zesnulého",
+          "description": "Účtuje se podle vzdálenosti.",
+          "kind": "fixed",
+          "amount": 38,
+          "amountMax": null,
+          "unit": "za km",
+          "status": "demo"
+        },
+        {
+          "id": "prevoz-zahranici",
+          "label": "Převoz ze zahraničí",
+          "description": null,
+          "kind": "on-request",
+          "amount": null,
+          "amountMax": null,
+          "unit": null,
+          "status": "demo"
+        }
+      ]
+    },
+    {
+      "id": "urny",
+      "title": "Urny",
+      "description": null,
+      "items": [
+        {
+          "id": "ulozeni-urny",
+          "label": "Uložení urny v kanceláři po uplynutí prvního měsíce",
+          "description": "První měsíc je uložení bez poplatku.",
+          "kind": "fixed",
+          "amount": 300,
+          "amountMax": null,
+          "unit": "za měsíc",
+          "status": "demo"
+        }
+      ]
+    },
+    {
+      "id": "kvetiny",
+      "title": "Květiny",
+      "description": null,
+      "items": [
+        {
+          "id": "smutecni-vazba",
+          "label": "Smuteční vazba nebo kytice na rakev",
+          "description": "Podle velikosti a druhu květin.",
+          "kind": "on-request",
+          "amount": null,
+          "amountMax": null,
+          "unit": null,
+          "status": "demo"
+        }
+      ]
+    }
+  ]
+}

@@ -10,6 +10,8 @@ declare module "virtual:site-core/data" {
   export const pricing: unknown;
   /** site/legal.json, or null when the site has none. */
   export const legal: unknown;
+  /** site/landscapes.json, or null when the site has none. */
+  export const landscapes: unknown;
   export const mode: "prototype" | "production";
   export const siteUrl: string | null;
   /** "Today" for notice windows (YYYY-MM-DD): SITE_BUILD_DATE, pinnedBuildDate or the Prague date. */

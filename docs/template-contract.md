@@ -100,6 +100,7 @@ export default {
     guestInfo: false,             // the page pro-ucastniky
     prePlanning: false,           // the page pohreb-predem
     priceInclusions: false,       // renders pricing groups' includes[] / excludes[] (CMS shows them only then)
+    landscapes: false,            // full-bleed photos from site/landscapes.json between sections (template E)
   },
 
   homepageSections: {
@@ -134,6 +135,8 @@ export default {
 **Homepage section ids** (`HOMEPAGE_SECTIONS` in `core/content/config.ts`): `hero`, `family-story`, `services`, `next-steps`, `contact-summary`, `catalogue-links`, and the directory sections added for template D (2026-11-11): `price-summary` (a price excerpt with the VAT note), `people`, `notices` (a link with a count, never names: L1), `documents` and `faq`. A manifest offers only the ids it renders, and `constraints` (`first`, `required`) are per template; nothing requires `hero` or `contact-summary` globally. `people`, `notices`, `documents` and `faq` are valid only while their feature (`features.<id>`) is on: G-005 rejects them otherwise, so a manifest should list them only when it supports that feature. `price-summary` depends on content the client can change in the CMS (`pricing.visible`), so it never fails a build: the template renders nothing for it while pricing is hidden, like `/cenik/`.
 
 Templates A and B declare every optional flag `false` (2026-11-10). A template that renders `/pravni-informace/` declares `pageFields["pravni-informace"]`; that is what makes the CMS show the legal-information entry and what obliges the footer link (§6). Image slots for notices and people use the prefixes `notice.` and `person.` (for example `"notice.photo"`, `"person.photo"`); without them the CMS keeps those image fields hidden.
+
+**Landscape photo set (added 2026-11-13 for template E).** `supports.landscapes` pairs with `features.landscapes` like the content types above (G-005 rejects the feature without support). A supporting template renders the photos of `site/landscapes.json` (`getLandscapes()`, content-contract §6.18) as full-bleed bands between sections and declares the slot `"landscape.band"` (E: aspect `32:11`). Bands are never in the first viewport, so the LCP element stays text, and a page must read as complete with no photos. Notice pages never show them (L1). Templates A–D declare `landscapes: false`.
 
 Every value in `options` must be fully implemented and must pass contrast and layout QA. The agent cannot ask for values outside the declared set (`site.config.ts` is validated against the manifest).
 

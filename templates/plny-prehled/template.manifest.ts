@@ -24,6 +24,7 @@ const manifest = {
     guestInfo: true,
     prePlanning: true,
     priceInclusions: true,
+    landscapes: false,
   },
 
   // The home page is a directory, not a story: no hero, no family story, and no contact block

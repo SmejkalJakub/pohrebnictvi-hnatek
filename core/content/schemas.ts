@@ -629,6 +629,42 @@ export const LegalInfo = z.object({
 export type LegalInfo = z.infer<typeof LegalInfo>;
 
 // ---------------------------------------------------------------------------
+// §6.18 Krajiny (site/landscapes.json, optional; features.landscapes)
+// ---------------------------------------------------------------------------
+
+export const MAX_LANDSCAPE_IMAGES = 12;
+
+/**
+ * One commissioned photograph of the client's region (a landscape or a building) for the
+ * full-bleed bands between page sections. The visible line under a band is `place`, then
+ * `image.caption` and `image.credit` when filled. Stock photos are not allowed: the bands only
+ * work as the client's own surroundings.
+ */
+export const LandscapeImage = z
+  .object({
+    image: ImageRef,
+    place: text(120),
+  })
+  .superRefine((entry, ctx) => {
+    if (entry.image.source === "licensed-stock") {
+      issue(
+        ctx,
+        ["image", "source"],
+        "Krajiny musí být vlastní nebo zakázkové fotografie z vašeho okolí, ne z fotobanky.",
+      );
+    }
+  });
+export type LandscapeImage = z.infer<typeof LandscapeImage>;
+
+export const LandscapeSet = z.object({
+  images: z
+    .array(LandscapeImage)
+    .max(MAX_LANDSCAPE_IMAGES, `Nejvýše ${MAX_LANDSCAPE_IMAGES} fotografií.`)
+    .default([]),
+});
+export type LandscapeSet = z.infer<typeof LandscapeSet>;
+
+// ---------------------------------------------------------------------------
 // §6.11 Pricing
 // ---------------------------------------------------------------------------
 
@@ -777,6 +813,7 @@ export const SINGLETON_NAMES = Object.keys(SINGLETON_SCHEMAS) as SingletonName[]
 /** Singletons a site may omit (the file is then simply absent and the value is null). */
 export const OPTIONAL_SINGLETON_SCHEMAS = {
   legal: LegalInfo,
+  landscapes: LandscapeSet,
 } as const;
 export type OptionalSingletonName = keyof typeof OPTIONAL_SINGLETON_SCHEMAS;
 export const OPTIONAL_SINGLETON_NAMES = Object.keys(OPTIONAL_SINGLETON_SCHEMAS) as OptionalSingletonName[];

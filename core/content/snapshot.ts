@@ -28,6 +28,7 @@ import {
   type Faq,
   type FlowerArrangement,
   type Guidance,
+  type LandscapeSet,
   type LegalInfo,
   type Notice,
   type OfficeHours,
@@ -231,6 +232,8 @@ export interface ValidatedContent {
   documents: ContentEntry<DocumentEntry>[];
   /** site/legal.json, or null when the site has none. */
   legal: LegalInfo | null;
+  /** site/landscapes.json (photos for landscape bands), or null when the site has none. */
+  landscapes: LandscapeSet | null;
   mediaFiles: string[];
   documentFiles: string[];
   articlesDirExists: boolean;
@@ -295,6 +298,11 @@ export function validateSnapshot(raw: RawSnapshot): ValidationResult {
   if (legalFile !== undefined) {
     legal = parseWith(OPTIONAL_SINGLETON_SCHEMAS.legal, legalFile, problems);
   }
+  let landscapes: LandscapeSet | null = null;
+  const landscapesFile = raw.optionalSingletons.landscapes;
+  if (landscapesFile !== undefined) {
+    landscapes = parseWith(OPTIONAL_SINGLETON_SCHEMAS.landscapes, landscapesFile, problems);
+  }
 
   const collections: Record<CollectionName, ContentEntry<unknown>[]> = {
     pages: [],
@@ -352,6 +360,7 @@ export function validateSnapshot(raw: RawSnapshot): ValidationResult {
       faq: collections.faq as ContentEntry<Faq>[],
       documents: collections.documents as ContentEntry<DocumentEntry>[],
       legal,
+      landscapes,
       mediaFiles: raw.mediaFiles,
       documentFiles: raw.documentFiles,
       articlesDirExists: raw.articlesDirExists,

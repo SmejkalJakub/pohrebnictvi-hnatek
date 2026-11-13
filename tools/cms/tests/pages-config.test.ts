@@ -5,10 +5,17 @@ import { parse } from "yaml";
 import type { TemplateManifest } from "../../../core/content/config.ts";
 import { splitFrontmatter } from "../../../core/content/snapshot.ts";
 import { REPO_ROOT, loadManifest } from "../../lib/repo.ts";
-import { PLACEHOLDER_IMAGE_LABEL, generatePagesConfig, renderPagesYaml } from "../pages-config.ts";
+import { MAX_LANDSCAPE_IMAGES } from "../../../core/content/schemas.ts";
+import {
+  LANDSCAPES_HELP,
+  MAX_LANDSCAPES,
+  PLACEHOLDER_IMAGE_LABEL,
+  generatePagesConfig,
+  renderPagesYaml,
+} from "../pages-config.ts";
 
 const FIXTURE = path.join(REPO_ROOT, "fixtures", "neutral");
-const TEMPLATES = ["rodinna-tradice", "dustojna-jednoduchost", "nocni-linka", "plny-prehled"] as const;
+const TEMPLATES = ["rodinna-tradice", "dustojna-jednoduchost", "nocni-linka", "plny-prehled", "ticha-krajina"] as const;
 /** Templates that declare every optional content type off (A and B, 2026-11-10). */
 const WITHOUT_OPTIONAL_TYPES = ["rodinna-tradice", "dustojna-jednoduchost"] as const;
 
@@ -381,6 +388,7 @@ async function fullManifest(): Promise<TemplateManifest> {
       guestInfo: true,
       prePlanning: true,
       priceInclusions: true,
+      landscapes: false,
     },
     imageSlots: {
       ...base.imageSlots,
@@ -484,5 +492,51 @@ describe("optional content types in the CMS", () => {
       }
     }
     expect(problems).toEqual([]);
+  });
+});
+
+describe("landscape photos in the CMS (Krajiny)", () => {
+  async function withLandscapes(supported: boolean, on: boolean): Promise<ParsedConfig> {
+    const manifest = await fullManifest();
+    manifest.supports = { ...manifest.supports, landscapes: supported };
+    const config = generatePagesConfig({
+      manifest,
+      features: { ...ALL_FEATURES, landscapes: on },
+      pageIds: await pageIds(),
+      legal: true,
+    });
+    return parse(renderPagesYaml(config, { templateId: "full", templateVersion: "0.0.0" })) as ParsedConfig;
+  }
+
+  it("appears only while the feature is on and the template supports it", async () => {
+    expect(JSON.stringify(await withLandscapes(true, false))).not.toContain("landscapes.json");
+    expect(JSON.stringify(await withLandscapes(false, true))).not.toContain("landscapes.json");
+    const config = await withLandscapes(true, true);
+    const krajiny = entry(config, "landscapes");
+    expect(krajiny.label).toBe("Krajiny");
+    expect(krajiny.path).toBe("src/content/site/landscapes.json");
+    expect(krajiny.operations).toEqual({ create: false, delete: false, rename: false });
+  });
+
+  it("states the guardrail and the limits on the photo list", async () => {
+    const images = field(entry(await withLandscapes(true, true), "landscapes").fields, "images") as Field & {
+      description?: string;
+      list?: { max?: number };
+    };
+    expect(MAX_LANDSCAPES).toBe(MAX_LANDSCAPE_IMAGES);
+    expect(images.list).toMatchObject({ max: MAX_LANDSCAPES });
+    expect(images.description).toBe(LANDSCAPES_HELP);
+    for (const rule of ["lidé", "západ slunce", "mraky", "květiny", "fotobanky", "počítačem"]) {
+      expect(LANDSCAPES_HELP).toContain(rule);
+    }
+    expect(field(images.fields, "place").required).toBe(true);
+    const file = field(field(images.fields, "image").fields, "file") as Field & { description?: string };
+    expect(file.description).toContain("2560 px");
+  });
+
+  it("declares every key of the fixture's landscapes.json", async () => {
+    const config = await withLandscapes(true, true);
+    const data = await fixtureFile("src/content/site/landscapes.json");
+    expect(undeclaredKeys(data, entry(config, "landscapes").fields, "landscapes")).toEqual([]);
   });
 });

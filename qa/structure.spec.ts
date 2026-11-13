@@ -107,7 +107,10 @@ async function homeStructure(
       return `${tag}(${children.join(",")})`;
     };
     const main = document.querySelector("main");
-    const sections = Array.from(main?.children ?? []).map((child) => {
+    // Interludes between sections (E's landscape bands and stamp lines, marked data-interlude) are
+    // decoration, not sections: they are left out so no template passes the order check by them.
+    const children = Array.from(main?.children ?? []).filter((child) => !child.hasAttribute("data-interlude"));
+    const sections = children.map((child) => {
       const section = child.getAttribute("data-section");
       if (section !== null) {
         return section;
@@ -393,6 +396,44 @@ test.describe("law: notices, footer identification, VAT note", () => {
         }
       }
     }
+    expect(problems, problems.join("\n")).toEqual([]);
+  });
+
+  test("landscape bands: never on notice pages, never in the first viewport (E)", async ({ page }) => {
+    const problems: string[] = [];
+    const report: Record<string, Record<string, number>> = {};
+    for (const t of templates) {
+      for (const route of discoverRoutes(t)) {
+        const html = builtHtml(t, route.path);
+        const bands = (html.match(/\bdata-band\b/g) ?? []).length;
+        if (route.path.startsWith("/oznameni/")) {
+          if (/\bdata-interlude\b/.test(html)) {
+            problems.push(`${t.id} ${route.path}: a landscape band or stamp line on a notice page (L1)`);
+          }
+          continue;
+        }
+        if (bands === 0) {
+          continue;
+        }
+        report[t.id] = { ...(report[t.id] ?? {}), [route.path]: bands };
+        for (const size of [
+          { width: 375, height: 667 },
+          { width: 1280, height: 800 },
+        ]) {
+          await page.setViewportSize(size);
+          await page.goto(`${baseUrlFor(t)}${route.path}`);
+          const tops = await page.evaluate(() =>
+            Array.from(document.querySelectorAll("[data-band]")).map((band) => band.getBoundingClientRect().top),
+          );
+          for (const top of tops) {
+            if (top < size.height) {
+              problems.push(`${t.id} ${route.path} @${size.width}: a band starts at ${Math.round(top)} px, inside the first viewport`);
+            }
+          }
+        }
+      }
+    }
+    record("landscapeBands", report);
     expect(problems, problems.join("\n")).toEqual([]);
   });
 

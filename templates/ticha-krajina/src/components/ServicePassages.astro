@@ -1,0 +1,137 @@
+---
+/**
+ * Služby as one long page with anchors (no detail pages): one grid passage per featured service
+ * (`id` = the service id, so /sluzby/#<id> lands on it), then one "Další služby" passage holding
+ * the other services under their own anchors. Each shows its summary, body, the inclusion lists
+ * of its price group and a "Co je v ceně" link to the price list; no prices on this page.
+ * A landscape band after every second passage.
+ */
+import type { CollectionEntry } from "astro:content";
+import PlaceholderMark from "@core/components/PlaceholderMark.astro";
+import { render } from "@core/content/load.ts";
+import type { LandscapeImage } from "@core/content/schemas.ts";
+import type { PricingView } from "@core/content/view-models.ts";
+import GridPassage from "./GridPassage.astro";
+import InclusionLists from "./InclusionLists.astro";
+import LandscapeBand from "./LandscapeBand.astro";
+import { bandAfterAlternate, bandCaption, photosForBands } from "../lib/bands.ts";
+import { priceGroupFor } from "../lib/site.ts";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  services: CollectionEntry<"services">[];
+  pricing: PricingView | null;
+  landscapes: LandscapeImage[];
+}
+
+const { services, pricing, landscapes } = Astro.props;
+let featured = services.filter((service) => service.data.featured);
+if (featured.length === 0) {
+  featured = services.slice(0, 1);
+}
+const others = services.filter((service) => !featured.includes(service));
+
+const items = [];
+for (const service of services) {
+  const { Content } = await render(service);
+  const group = priceGroupFor(pricing, service.data.priceGroupId);
+  items.push({
+    service,
+    Content,
+    hasBody: (service.body ?? "").trim() !== "",
+    group,
+  });
+}
+const byId = new Map(items.map((item) => [item.service.id, item]));
+const passageCount = featured.length + (others.length > 0 ? 1 : 0);
+const bandAfter = Array.from({ length: passageCount }, (_, index) => bandAfterAlternate(index, passageCount));
+const photos = photosForBands(landscapes, "sluzby", bandAfter.filter((value) => value).length);
+
+function photoFor(index: number): LandscapeImage | null {
+  const slot = bandAfter.slice(0, index).filter((value) => value).length;
+  return photos[slot] ?? null;
+}
+---
+{
+  featured.map((service, index) => {
+    const item = byId.get(service.id);
+    const photo = photoFor(index);
+    if (item === undefined) {
+      return null;
+    }
+    const Body = item.Content;
+    return (
+      <>
+        <GridPassage id={service.id} heading={service.data.title}>
+          <PlaceholderMark active={service.data.placeholder} as="div">
+            <p>{service.data.summary}</p>
+            {item.hasBody ? (
+              <div class="prose">
+                <Body />
+              </div>
+            ) : null}
+          </PlaceholderMark>
+          {item.group !== null ? <InclusionLists includes={item.group.includes} excludes={item.group.excludes} /> : null}
+          {item.group !== null ? (
+            <p class="sans">
+              <a href={`/cenik/#${item.group.id}`} class="go">{ui.includesLink}</a>
+            </p>
+          ) : null}
+        </GridPassage>
+        {bandAfter[index] === true ? (
+          <LandscapeBand image={photo === null ? null : photo.image} caption={photo === null ? null : bandCaption(photo, ui.photoBy)} />
+        ) : null}
+      </>
+    );
+  })
+}
+{
+  others.length > 0 ? (
+    <GridPassage id="dalsi-sluzby" heading={ui.moreServices}>
+      {others.map((service) => {
+        const item = byId.get(service.id);
+        if (item === undefined) {
+          return null;
+        }
+        const Body = item.Content;
+        return (
+          <article id={service.id} class="other" aria-labelledby={`${service.id}-nadpis`}>
+            <h3 id={`${service.id}-nadpis`} class="other-title">{service.data.title}</h3>
+            <PlaceholderMark active={service.data.placeholder} as="div">
+              <p>{service.data.summary}</p>
+              {item.hasBody ? (
+                <details class="more">
+                  <summary>{ui.readMore}</summary>
+                  <div class="prose">
+                    <Body />
+                  </div>
+                </details>
+              ) : null}
+            </PlaceholderMark>
+            {item.group !== null ? (
+              <p class="sans">
+                <a href={`/cenik/#${item.group.id}`} class="go">{ui.includesLink}</a>
+              </p>
+            ) : null}
+          </article>
+        );
+      })}
+    </GridPassage>
+  ) : null
+}
+
+<style>
+  .other + .other {
+    margin-top: 1.75rem;
+  }
+
+  .other-title {
+    font-size: 1.375rem;
+    font-weight: 600;
+    line-height: 1.3;
+  }
+
+  .other {
+    scroll-margin-top: 1rem;
+  }
+</style>

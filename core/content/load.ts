@@ -9,9 +9,11 @@ import {
   Company,
   Contact,
   EmergencyTransport,
+  LandscapeSet,
   LegalInfo,
   OfficeHours,
   Pricing,
+  type LandscapeImage,
   type PageId,
 } from "./schemas.ts";
 import { isCollectionEnabled, isNoticeLive } from "../gate/visibility.ts";
@@ -200,6 +202,18 @@ export async function getDocuments(): Promise<DocumentView[]> {
     return [];
   }
   return sortDocuments(await getCollection("documents")).map(buildDocumentView);
+}
+
+/**
+ * The client's landscape photos in list order (content-contract §6.18), for full-bleed bands.
+ * Empty while features.landscapes is off or the site has no site/landscapes.json.
+ */
+export async function getLandscapes(): Promise<LandscapeImage[]> {
+  const site = await getSiteContext();
+  if (!site.config.features.landscapes || data.landscapes === null) {
+    return [];
+  }
+  return parseOrThrow("landscapes.json", LandscapeSet, data.landscapes).images;
 }
 
 export async function getPricing(): Promise<PricingView | null> {

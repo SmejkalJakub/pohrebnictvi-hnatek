@@ -1190,6 +1190,42 @@ function legalEntry(): CmsFileEntry {
   ]);
 }
 
+/** Mirrors core MAX_LANDSCAPE_IMAGES (checked in tests). */
+export const MAX_LANDSCAPES = 12;
+
+/** Guardrail of the landscape bands (content-contract §6.18), shown above the photo list. */
+export const LANDSCAPES_HELP =
+  "Fotografie krajiny nebo budov z vašeho okolí, vlastní nebo zakázkové. Na fotografii nesmí být lidé, " +
+  "západ slunce, mraky ani květiny. Nepoužívejte fotobanky ani obrázky vytvořené počítačem. Na webu se " +
+  "nikdy nezobrazí na začátku stránky. Bez fotografií zůstane mezi oddíly volné místo.";
+
+/** site/landscapes.json: the photos for the full-bleed bands between sections (features.landscapes). */
+function landscapesEntry(): CmsFileEntry {
+  const image = imageRef("image", "Fotografie", true);
+  image.fields = (image.fields ?? []).map((field) => {
+    if (field.name !== "file") {
+      return field;
+    }
+    return { ...field, description: "JPEG, PNG nebo WebP, nejlépe do 8 MB. Na šířku, alespoň 2560 px." };
+  });
+  return jsonFile("landscapes", "Krajiny", "landscapes.json", [
+    listOf(
+      "images",
+      "Fotografie krajiny",
+      [
+        image,
+        str("place", "Místo", {
+          required: true,
+          max: 120,
+          description: "Kde fotografie vznikla. Příklad: Drahanská vrchovina nad Vyškovem.",
+        }),
+      ],
+      { min: 0, max: MAX_LANDSCAPES, collapsible: { collapsed: true, summary: "{place}" } },
+      { description: LANDSCAPES_HELP },
+    ),
+  ]);
+}
+
 // ---------------------------------------------------------------------------
 // Whole config
 // ---------------------------------------------------------------------------
@@ -1203,6 +1239,9 @@ export function generatePagesConfig(input: PagesConfigInput): PagesConfig {
   const companyItems: CmsFileEntry[] = [companyEntry(), contactEntry(), officeHoursEntry()];
   if (showLegal) {
     companyItems.push(legalEntry());
+  }
+  if (enabled("landscapes")) {
+    companyItems.push(landscapesEntry());
   }
   const content: CmsContentEntry[] = [
     emergencyEntry(),

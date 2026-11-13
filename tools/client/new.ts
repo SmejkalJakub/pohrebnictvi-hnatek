@@ -1,14 +1,14 @@
 /**
  * Scaffold a new client site (docs/client-workflow.md).
  *
- *   npm run client:new -- <id> --template <rodinna-tradice|dustojna-jednoduchost|nocni-linka|plny-prehled>
+ *   npm run client:new -- <id> --template <rodinna-tradice|dustojna-jednoduchost|nocni-linka|plny-prehled|ticha-krajina>
  *
  * Creates clients/<id>/ from the neutral fixture: content in src/content (every entry still
  * placeholder, every price demo), the placeholder graphics in src/assets/media, a site.config.ts
  * with the template's default options and homepage order, and a provenance ledger in which every
  * fact the launch check tracks is UNKNOWN. The result passes validate in prototype mode.
- * Optional content types (notices, people, FAQ, documents, guest and pre-planning pages, legal
- * information) are copied only when the template supports them; their features stay off until
+ * Optional content types (notices, people, FAQ, documents, guest and pre-planning pages, landscape
+ * photos, legal information) are copied only when the template supports them; their features stay off until
  * /site-build switches them on. Refuses to touch an existing client.
  */
 import { existsSync } from "node:fs";
@@ -82,6 +82,7 @@ const OPTIONAL_CONTENT: Record<string, ContentFeature> = {
   "pages/oznameni.md": "notices",
   "pages/pro-ucastniky.md": "guestInfo",
   "pages/pohreb-predem.md": "prePlanning",
+  "site/landscapes.json": "landscapes",
 };
 
 /** Legal information is not a feature: it is copied when the template renders /pravni-informace/. */
@@ -247,7 +248,7 @@ async function main(): Promise<void> {
   const args = parseArgs(process.argv.slice(2));
   const id = args.positional[0];
   if (id === undefined) {
-    throw new Error("Usage: npm run client:new -- <id> --template <rodinna-tradice|dustojna-jednoduchost|nocni-linka|plny-prehled>");
+    throw new Error("Usage: npm run client:new -- <id> --template <rodinna-tradice|dustojna-jednoduchost|nocni-linka|plny-prehled|ticha-krajina>");
   }
   const result = await scaffoldClient({ id, templateId: requiredFlag(args, "template") });
   const relative = path.relative(REPO_ROOT, result.dir);

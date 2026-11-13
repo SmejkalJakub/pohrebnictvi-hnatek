@@ -1,0 +1,88 @@
+---
+/**
+ * "Kde blízký člověk zemřel? doma · v nemocnici · …": the situation picker as a sentence of
+ * words, each a ≥ 44 px target linking to the filtered guide (/jak-postupovat/#situace-…, CSS
+ * :has(:target), no JavaScript). On the guide the picked word loses its underline, gains a 3 px
+ * accent bar and says "(vybráno)" (rules in GuideNarrative's filter CSS).
+ */
+import { SITUATION_ANCHOR, type SpecificSituation } from "@core/content/guidance-flow.ts";
+import { situationWords, ui } from "../i18n/cs.ts";
+
+interface Props {
+  situations: SpecificSituation[];
+  /** "" on the guide itself, "/jak-postupovat/" elsewhere. */
+  base: string;
+  questionId: string;
+  /** Home: one running sentence with middle dots; guide: the question on its own line. */
+  inline?: boolean;
+}
+
+const { situations, base, questionId, inline = false } = Astro.props;
+---
+<div class="pick" data-inline={inline ? "true" : "false"}>
+  <p id={questionId} class="pick-question">{ui.pickerQuestion}</p>
+  <ul class="pick-words" role="list" aria-labelledby={questionId}>
+    {
+      situations.map((situation, index) => (
+        <li>
+          <a href={`${base}#${SITUATION_ANCHOR[situation]}`} class="pick-word" data-place={situation}>
+            <span>{situationWords[situation]}</span>
+            <span class="pick-mark"> {ui.picked}</span>
+          </a>
+          {inline && index < situations.length - 1 ? <span class="pick-sep" aria-hidden="true">·</span> : null}
+        </li>
+      ))
+    }
+  </ul>
+</div>
+
+<style>
+  .pick {
+    font-family: var(--sans);
+    font-size: 1.125rem;
+    font-weight: 500;
+    line-height: 1.5;
+  }
+
+  .pick[data-inline="true"] {
+    display: flex;
+    flex-wrap: wrap;
+    column-gap: 0.375rem;
+    align-items: baseline;
+  }
+
+  .pick-question {
+    padding-block: 0.625rem;
+  }
+
+  .pick[data-inline="false"] .pick-question {
+    padding-bottom: 0;
+  }
+
+  .pick-words {
+    display: flex;
+    flex-wrap: wrap;
+    column-gap: 0.875rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .pick[data-inline="true"] .pick-words {
+    column-gap: 0.375rem;
+  }
+
+  .pick-sep {
+    margin-left: 0.375rem;
+  }
+
+  .pick-word {
+    display: inline-block;
+    padding-block: 0.625rem;
+    text-underline-offset: 0.25em;
+  }
+
+  .pick-mark {
+    display: none;
+  }
+</style>

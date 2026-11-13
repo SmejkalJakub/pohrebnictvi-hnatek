@@ -24,6 +24,7 @@ const manifest = {
     guestInfo: true,
     prePlanning: true,
     priceInclusions: true,
+    landscapes: false,
   },
 
   homepageSections: {

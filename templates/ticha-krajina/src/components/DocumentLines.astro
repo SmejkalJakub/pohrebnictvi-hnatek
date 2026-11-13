@@ -1,0 +1,44 @@
+---
+/** Downloadable documents as hairline rows: title link, kind, "PDF", valid from. */
+import PlaceholderMark from "@core/components/PlaceholderMark.astro";
+import type { DocumentView } from "@core/content/view-models.ts";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  documents: DocumentView[];
+}
+
+const { documents } = Astro.props;
+---
+<ul class="doc-lines" role="list">
+  {
+    documents.map((document) => (
+      <li>
+        <PlaceholderMark active={document.placeholder} as="div">
+          <a href={document.href} class="go">{document.title}</a>
+          <p class="label">
+            {document.kindLabel} · {ui.pdf}
+            {document.validFromText !== null ? ` · ${ui.validFrom} ${document.validFromText}` : ""}
+          </p>
+        </PlaceholderMark>
+      </li>
+    ))
+  }
+</ul>
+
+<style>
+  .doc-lines {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .doc-lines > li {
+    padding-block: 0.5rem 0.75rem;
+    border-top: 1px solid var(--rule);
+  }
+
+  .doc-lines > li:last-child {
+    border-bottom: 1px solid var(--rule);
+  }
+</style>

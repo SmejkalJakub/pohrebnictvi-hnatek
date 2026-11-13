@@ -278,6 +278,7 @@ describe("G-005 config against the template manifest", () => {
       guestInfo: true,
       prePlanning: true,
       priceInclusions: true,
+      landscapes: false,
     },
     homepageSections: {
       available: ["hero", "next-steps", "services", "contact-summary", "family-story"],
