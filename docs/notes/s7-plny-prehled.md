@@ -1,5 +1,7 @@
 # S7 · Template D `plny-prehled` (Plný přehled): plan
 
+**Superseded:** rejected by the owner on 2026-11-13; replaced by D `dve-cesty` ([docs/notes/s10-dve-cesty.md](s10-dve-cesty.md)). Kept for the record; `templates/plny-prehled/` was removed.
+
 **Status:** plan approved by the owner 2026-11-11 ("Approve, build it": every [review] item as proposed, default palette `seda-a-terakota`, the S6 collections fix left out); built the same day. Build results are in §10. Built from Prompt 2 in [docs/prompts/new-templates.md](../prompts/new-templates.md), with the approved round-2 design H in [docs/designs/plny-prehled/](../designs/plny-prehled/README.md) as the design input (comps per palette, `html/*.html` for exact values, `tokens.json` / `TOKENS.md`). Template C `nocni-linka` exists on this branch and is treated as a peer: no imports, no shared component names, and every pairwise check covers D against A, B and C.
 
 Decisions that need the owner's yes are marked **[review]**. Everything else follows the comps, the contract or an existing pattern. **This template needs core changes (§2): they are proposed here and nothing is edited until they are approved.**

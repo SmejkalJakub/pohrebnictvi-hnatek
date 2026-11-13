@@ -12,7 +12,8 @@ Source canvas (private, owner’s account): https://claude.ai/artifact/SAzhHqwcH
 | --- | --- | --- |
 | F | [nocni-linka/](nocni-linka/README.md) · Noční linka | dark; sticky side rail with the number; one statement per screen |
 | G | [ticha-krajina/](ticha-krajina/README.md) · Tichá krajina | airy long scroll; full-bleed local landscapes between sections |
-| H | [plny-prehled/](plny-prehled/README.md) · Plný přehled | dense one-screen directory; tables; highlighted nonstop box |
+| H | [plny-prehled/](plny-prehled/README.md) · Plný přehled | dense one-screen directory; tables; highlighted nonstop box. **Superseded:** built as D, rejected by the owner on 2026-11-13 |
+| D3 | [dve-cesty/](dve-cesty/README.md) · Dvě cesty | the home splits by situation (navy “Teď hned” · stone “S předstihem”); a path switch keeps the two apart site-wide. Built as D (2026-11-13) |
 | I | [rodinny-rozhovor/](rodinny-rozhovor/README.md) · Rodinný rozhovor | questions and answers on warm colour fields; pen drawings |
 
 Board letters F–I are canvas labels only. Assign the template letter when a direction is built.
