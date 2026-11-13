@@ -1,0 +1,32 @@
+{
+  "images": [
+    {
+      "image": {
+        "file": "placeholder-32x11.png",
+        "alt": "Neutrální zástupný obrázek místo fotografie krajiny",
+        "source": "placeholder",
+        "depicts": "placeholder"
+      },
+      "place": "Zástupné místo 1"
+    },
+    {
+      "image": {
+        "file": "placeholder-32x11.png",
+        "alt": "Neutrální zástupný obrázek místo fotografie krajiny",
+        "caption": "Zástupný popisek",
+        "source": "placeholder",
+        "depicts": "placeholder"
+      },
+      "place": "Zástupné místo 2"
+    },
+    {
+      "image": {
+        "file": "placeholder-32x11.png",
+        "alt": "Neutrální zástupný obrázek místo fotografie budovy",
+        "source": "placeholder",
+        "depicts": "placeholder"
+      },
+      "place": "Zástupné místo 3"
+    }
+  ]
+}

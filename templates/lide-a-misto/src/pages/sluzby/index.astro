@@ -1,0 +1,65 @@
+---
+/**
+ * Služby: one long page (no detail pages). The opening with the nonstop block, the anchor row,
+ * one block per service with its photo as a numbered figure when it has one, the page body and a
+ * closing line with the office phone.
+ */
+import PhoneLink from "@core/components/PhoneLink.astro";
+import { getPage, getPricing, getServices, getSiteContext } from "@core/content/load.ts";
+import { formatPhone } from "@core/format/phone.ts";
+import EssayLayout from "../../layouts/EssayLayout.astro";
+import PageOpening from "../../components/PageOpening.astro";
+import AnchorRow from "../../components/AnchorRow.astro";
+import ServiceSection from "../../components/ServiceSection.astro";
+import RuledProse from "../../components/RuledProse.astro";
+import { FigureCounter } from "../../lib/figures.ts";
+import { primaryOfficePhone, priceGroupFor, seoDescription, seoTitle } from "../../lib/site.ts";
+import { ui } from "../../i18n/cs.ts";
+
+const site = await getSiteContext();
+const page = await getPage("sluzby");
+const services = await getServices();
+const pricing = await getPricing();
+const office = primaryOfficePhone(site);
+const counter = new FigureCounter();
+const blocks = services.map((service) => {
+  let number: string | null = null;
+  if (service.data.image !== null) {
+    number = counter.take();
+  }
+  return { service, number, group: priceGroupFor(pricing, service.data.priceGroupId) };
+});
+const anchors = services.map((service) => ({ href: `#${service.id}`, label: service.data.title }));
+const Body = page.Content;
+---
+<EssayLayout site={site} title={seoTitle(page.data)} description={seoDescription(page.data)}>
+  <PageOpening title={page.data.title} lead={page.data.lead} placeholder={page.data.placeholder} emergency={site.emergency} />
+  {anchors.length > 1 ? <AnchorRow label={ui.anchorsLabel} links={anchors} /> : null}
+  {blocks.map((block) => <ServiceSection service={block.service} group={block.group} number={block.number} />)}
+  {page.hasBody ? <RuledProse id="sluzby-text"><Body /></RuledProse> : null}
+  <div class="frame undecided">
+    <div class="split thin">
+      <p class="undecided-title">{ui.undecidedHeading}</p>
+      <p>
+        {ui.undecidedText}{" "}
+        <PhoneLink number={office.number}>{office.label}{" "}<span class="nowrap">{formatPhone(office.number).display}</span></PhoneLink>
+      </p>
+    </div>
+  </div>
+</EssayLayout>
+
+<style>
+  .undecided {
+    margin-top: var(--section);
+  }
+
+  .thin {
+    padding-top: 1rem;
+    border-top: 1px solid var(--ink);
+  }
+
+  .undecided-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+  }
+</style>

@@ -1,0 +1,29 @@
+---
+/**
+ * Jak postupovat: the opening, the stamp line, the place picker as a sentence of words, the steps
+ * as a narrative by phase, then Časté otázky (#caste-otazky). A task page: no landscape bands.
+ */
+import { getFaq, getGuidance, getPage, getSiteContext } from "@core/content/load.ts";
+import QuietLayout from "../layouts/QuietLayout.astro";
+import OpeningText from "../components/OpeningText.astro";
+import StampLine from "../components/StampLine.astro";
+import GuideNarrative from "../components/GuideNarrative.astro";
+import ProsePassages from "../components/ProsePassages.astro";
+import QuestionsPassage from "../components/QuestionsPassage.astro";
+import { resolveOptions } from "../lib/options.ts";
+import { seoDescription, seoTitle } from "../lib/site.ts";
+
+const site = await getSiteContext();
+const options = resolveOptions(site.config);
+const page = await getPage("jak-postupovat");
+const guidance = await getGuidance();
+const faq = await getFaq();
+const Body = page.Content;
+---
+<QuietLayout site={site} title={seoTitle(page.data)} description={seoDescription(page.data)}>
+  <OpeningText title={page.data.title} lead={page.data.lead} placeholder={page.data.placeholder} />
+  <StampLine emergency={site.emergency} place="opening" high={options.emergencyEmphasis === "high"} />
+  <GuideNarrative site={site} guidance={guidance} />
+  {page.hasBody ? <ProsePassages idPrefix="postup-text"><Body /></ProsePassages> : null}
+  {faq.length > 0 ? <QuestionsPassage groups={faq} /> : null}
+</QuietLayout>

@@ -1,0 +1,25 @@
+---
+/** A Markdown page body in the text column; every ## opens a block under a 3 px rule (global .prose). */
+interface Props {
+  id?: string;
+}
+
+const { id } = Astro.props;
+---
+<div id={id} class="frame ruled-prose">
+  <div class="prose">
+    <slot />
+  </div>
+</div>
+
+<style>
+  .ruled-prose {
+    margin-top: var(--section);
+  }
+
+  @media (min-width: 64rem) {
+    .ruled-prose {
+      padding-left: calc(var(--gutter) + var(--label-col) + var(--gap));
+    }
+  }
+</style>

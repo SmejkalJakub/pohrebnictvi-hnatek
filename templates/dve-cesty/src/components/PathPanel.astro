@@ -1,0 +1,210 @@
+---
+/**
+ * The opening of every path page, full bleed in the path's colour.
+ * Teď hned ("now"): navy; the path label, the H1, the lead and the slot on the left, the nonstop
+ * number on the right (stacked below 64 rem, number right after the H1 so it sits in the first
+ * screen). On Kontakt the panel is the emergency block itself (data-emergency-block, service area).
+ * S předstihem ("ahead"): stone; label, H1, lead and the slot, then the ruled nonstop line last
+ * (below 64 rem the line follows the H1 and the slot, before the lead).
+ * At 1280 both start with "V této cestě" and the path's pages.
+ */
+import PlaceholderMark from "@core/components/PlaceholderMark.astro";
+import type { EmergencyTransport } from "@core/content/schemas.ts";
+import NowNumber from "./NowNumber.astro";
+import AheadNonstopLine from "./AheadNonstopLine.astro";
+import PathSubnav from "./PathSubnav.astro";
+import type { PathLink } from "../lib/site.ts";
+import { nbsp } from "../lib/site.ts";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  tone: "now" | "ahead";
+  title: string;
+  lead?: string | null;
+  placeholder?: boolean;
+  links: PathLink[];
+  emergency: EmergencyTransport;
+  /** Kontakt: the panel is the separately headed emergency block, with the service area. */
+  emergencyBlock?: boolean;
+  serviceArea?: string | null;
+}
+
+const {
+  tone,
+  title,
+  lead = null,
+  placeholder = false,
+  links,
+  emergency,
+  emergencyBlock = false,
+  serviceArea = null,
+} = Astro.props;
+let label: string = ui.aheadLabel;
+if (tone === "now") {
+  label = ui.nowLabel;
+}
+const hasSlot = Astro.slots.has("default");
+---
+<section
+  class="panel"
+  data-tone={tone}
+  data-panel={tone}
+  aria-labelledby="titulek"
+  data-emergency-block={emergencyBlock ? "" : undefined}
+>
+  <PathSubnav links={links} />
+  <div class="panel-grid">
+    <div class="panel-main">
+      <p class="path-label">{label}</p>
+      <h1 id="titulek" class="panel-title">{title}</h1>
+      {
+        tone === "now" ? (
+          <div class="panel-number">
+            <NowNumber emergency={emergency} />
+            {serviceArea !== null ? (
+              <p class="panel-area">
+                {ui.serviceAreaPrefix} {nbsp(serviceArea)}
+              </p>
+            ) : null}
+          </div>
+        ) : null
+      }
+      {
+        lead !== null ? (
+          <div class="panel-lead">
+            <PlaceholderMark active={placeholder} as="div">
+              <p>{nbsp(lead)}</p>
+            </PlaceholderMark>
+          </div>
+        ) : null
+      }
+      {hasSlot ? <div class="panel-extra"><slot /></div> : null}
+    </div>
+  </div>
+  {tone === "ahead" ? <AheadNonstopLine emergency={emergency} /> : null}
+</section>
+
+<style>
+  .panel {
+    padding: 1.375rem var(--gutter) 1.625rem;
+  }
+
+  .panel-main > * + * {
+    margin-top: 0.75rem;
+  }
+
+  .panel-title {
+    font-size: var(--h1);
+    line-height: 1.18;
+    letter-spacing: -0.01em;
+  }
+
+  .panel-number {
+    padding-top: 0.875rem;
+    border-top: 1px solid var(--navy-rule);
+  }
+
+  .panel-area {
+    margin-top: 0.25rem;
+  }
+
+  .panel .panel-lead {
+    font-size: 1.125rem;
+    line-height: 1.55;
+  }
+
+  .panel-extra > :global(* + *) {
+    margin-top: 0.5rem;
+  }
+
+  /* S předstihem below 64 rem: the ruled nonstop line moves up to follow the H1 (and Ceník's VAT
+     note), so it stays in the first screen however long the title and lead are (QA test 1, the
+     S8 lesson). At 1280 it is the panel's last element, as drawn. */
+  @media (max-width: 63.99rem) {
+    .panel[data-tone="ahead"] {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .panel[data-tone="ahead"] .panel-grid,
+    .panel[data-tone="ahead"] .panel-main {
+      display: contents;
+    }
+
+    .panel[data-tone="ahead"] .path-label {
+      order: 1;
+    }
+
+    .panel[data-tone="ahead"] .panel-title {
+      order: 2;
+    }
+
+    .panel[data-tone="ahead"] .panel-extra {
+      order: 3;
+    }
+
+    .panel[data-tone="ahead"] > :global(.ahead-line) {
+      order: 4;
+      margin-top: 1rem;
+    }
+
+    .panel[data-tone="ahead"] .panel-lead {
+      order: 5;
+      margin-top: 1rem;
+    }
+  }
+
+  @media (min-width: 64rem) {
+    .panel {
+      padding: 1.375rem var(--gutter) 2.75rem;
+    }
+
+    .panel .panel-lead {
+      max-width: 48rem;
+      font-size: 1.1875rem;
+    }
+
+    /* Teď hned at 1280: H1 and lead left, the number right, bottom-aligned (Kontakt board). */
+    .panel[data-tone="now"] .panel-main {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-areas:
+        "label number"
+        "title number"
+        "lead number"
+        "extra number";
+      column-gap: 3.5rem;
+      align-items: end;
+    }
+
+    .panel[data-tone="now"] .panel-main > * {
+      margin-top: 0;
+    }
+
+    .panel[data-tone="now"] .path-label {
+      grid-area: label;
+    }
+
+    .panel[data-tone="now"] .panel-title {
+      grid-area: title;
+      margin-top: 0.75rem;
+    }
+
+    .panel[data-tone="now"] .panel-lead {
+      grid-area: lead;
+      margin-top: 0.75rem;
+    }
+
+    .panel[data-tone="now"] .panel-extra {
+      grid-area: extra;
+      margin-top: 0.75rem;
+    }
+
+    .panel[data-tone="now"] .panel-number {
+      grid-area: number;
+      align-self: end;
+      padding-top: 0;
+      border-top: 0;
+    }
+  }
+</style>

@@ -1,0 +1,38 @@
+{
+  "v": 3,
+  "createdOnFiles": { "v": 1, "at": "2026-11-13T09:30:00Z" },
+  "title": "Šablona D – nové směry",
+  "launch": { "view": "canvas" },
+  "pages": [],
+  "boards": {
+    "Main.dc.html": { "x": 0, "y": 300, "w": 1280, "h": 2300, "title": "D1 Parte · domů 1280" },
+    "parte-home-375.dc.html": { "x": 1360, "y": 300, "w": 375, "h": 2600, "title": "D1 Parte · domů 375" },
+    "parte-notice-375.dc.html": { "x": 1815, "y": 300, "w": 375, "h": 1700, "title": "D1 Parte · oznámení 375" },
+    "lide-home-1280.dc.html": { "x": 0, "y": 3280, "w": 1280, "h": 2500, "title": "D2 Lidé a místo · domů 1280" },
+    "lide-home-375.dc.html": { "x": 1360, "y": 3280, "w": 375, "h": 2900, "title": "D2 Lidé a místo · domů 375" },
+    "lide-notice-375.dc.html": { "x": 1815, "y": 3280, "w": 375, "h": 1700, "title": "D2 Lidé a místo · oznámení 375" },
+    "cesty-home-1280.dc.html": { "x": 0, "y": 6560, "w": 1280, "h": 2100, "title": "D3 Dvě cesty · domů 1280" },
+    "cesty-home-375.dc.html": { "x": 1360, "y": 6560, "w": 375, "h": 2400, "title": "D3 Dvě cesty · domů 375" },
+    "cesty-notice-375.dc.html": { "x": 1815, "y": 6560, "w": 375, "h": 1700, "title": "D3 Dvě cesty · oznámení 375" }
+  },
+  "order": [
+    "Main.dc.html",
+    "parte-home-375.dc.html",
+    "parte-notice-375.dc.html",
+    "lide-home-1280.dc.html",
+    "lide-home-375.dc.html",
+    "lide-notice-375.dc.html",
+    "cesty-home-1280.dc.html",
+    "cesty-home-375.dc.html",
+    "cesty-notice-375.dc.html"
+  ],
+  "notes": {
+    "t1": { "x": 0, "y": 40, "text": "D1 Parte: celý web jako smuteční oznámení", "kind": "title1", "maxW": 2190 },
+    "s1": { "x": 2270, "y": 300, "w": 440, "size": "m", "fill": "gray", "text": "Jedna myšlenka: web má formu českého parte. Vše na ose, černý dvojitý rámeček, klasické patkové písmo, kapitálky, římské číslice. Žádné fotografie, žádná barva kromě černé.\n\nNonstop: orámovaný řádek uprostřed úvodu (jediný rámeček na stránce).\nKancelář: samostatný blok níže, nikdy v rámečku s nonstop.\nOznámení: sama stránka je parte; na úvodní stránce jen odkaz a počet.\n\nPísmo: Libre Caslon Text. Barvy: papír #FFFFFF, inkoust #151515, šedá #555. Liší se od A (asymetrie, Garamond, teplý papír, fotky), od C (tma), od E/F (barevné plochy, fotky, kresby)." },
+    "t2": { "x": 0, "y": 3020, "text": "D2 Lidé a místo: dokumentární fotografie lidí a provozovny", "kind": "title1", "maxW": 2190 },
+    "s2": { "x": 2270, "y": 3280, "w": 440, "size": "m", "fill": "gray", "text": "Jedna myšlenka: firmu představují skuteční lidé a místa, jako fotoreportáž s číslovanými popisky (01 Kancelář na náměstí, 02 Obřadní síň …). Bez fotografií se mřížka mění v číslovaný seznam míst s adresami.\n\nNonstop: velké číslo v levém sloupci úvodu, zelený podtržený odkaz.\nKancelář: vlastní sloupec s hodinami.\nOznámení: bez fotek provozovny, nanejvýš fotografie zesnulého se souhlasem.\n\nPísmo: Archivo (normální + zúžený řez pro popisky). Barvy: #F7F7F4, #161616, zelená #1F4D45. Fotografie jsou zakázkové; tady jen označené zástupné rámečky." },
+    "t3": { "x": 0, "y": 6300, "text": "D3 Dvě cesty: hned teď, nebo s předstihem", "kind": "title1", "maxW": 2190 },
+    "s3": { "x": 2270, "y": 6560, "w": 440, "size": "m", "fill": "gray", "text": "Jedna myšlenka: úvodní obrazovka se dělí podle situace návštěvníka. Vlevo tmavá polovina \"Někdo právě zemřel\" (číslo a tři první kroky), vpravo světlá \"Chci se informovat nebo připravit\" (ceny, bez obřadu, předem, otázky). Celý web drží obě cesty: každá stránka patří jedné z nich a v hlavičce je přepínač.\n\nNonstop: obsah tmavé poloviny, na mobilu hned pod nadpisem.\nKancelář: v pravé cestě a na Kontaktu, nikdy v tmavém poli.\n\nPísmo: Manrope. Barvy: noční modrá #1C2940, kámen #ECE7DF, bílá." }
+  },
+  "designSystems": []
+}

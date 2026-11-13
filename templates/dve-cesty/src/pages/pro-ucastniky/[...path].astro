@@ -1,0 +1,41 @@
+---
+/**
+ * Pro účastníky pohřbu: what to know before the ceremony (only while features.guestInfo is on). No prices, no service teasers.
+ * The stone opening with the ruled nonstop line, then the body split at `##` into sections under
+ * 1 px rules.
+ */
+import { getOptionalPage, getSiteContext } from "@core/content/load.ts";
+import CestyLayout from "../../layouts/CestyLayout.astro";
+import PathPanel from "../../components/PathPanel.astro";
+import ProseSections from "../../components/ProseSections.astro";
+import { getPathLinks } from "../../lib/page-links.ts";
+import { seoDescription, seoTitle } from "../../lib/site.ts";
+
+export async function getStaticPaths() {
+  const site = await getSiteContext();
+  const page = await getOptionalPage("pro-ucastniky");
+  if (!site.config.features.guestInfo || page === null) {
+    return [];
+  }
+  return [{ params: { path: undefined } }];
+}
+
+const site = await getSiteContext();
+const page = await getOptionalPage("pro-ucastniky");
+if (page === null) {
+  throw new Error("unreachable: page missing");
+}
+const links = await getPathLinks(site, Astro.url.pathname, "ahead");
+const Body = page.Content;
+---
+<CestyLayout site={site} path="ahead" title={seoTitle(page.data)} description={seoDescription(page.data)}>
+  <PathPanel
+    tone="ahead"
+    title={page.data.title}
+    lead={page.data.lead}
+    placeholder={page.data.placeholder}
+    links={links}
+    emergency={site.emergency}
+  />
+  {page.hasBody ? <ProseSections><Body /></ProseSections> : null}
+</CestyLayout>

@@ -1,0 +1,65 @@
+---
+/**
+ * "Kde blízký člověk zemřel?" as full-width ruled link rows (≥ 44 px each) to the filtered guide
+ * (/jak-postupovat/#situace-…, CSS :has(:target), no JavaScript). Used on the guide itself and as
+ * the home "next-steps" section. On the guide the picked row is filled navy with "(vybráno)"
+ * (rules in PhaseSteps' filter CSS).
+ */
+import { SITUATION_ANCHOR, type SpecificSituation } from "@core/content/guidance-flow.ts";
+import { situationRows, ui } from "../i18n/cs.ts";
+
+interface Props {
+  situations: SpecificSituation[];
+  /** "" on the guide itself, "/jak-postupovat/" elsewhere. */
+  base: string;
+  questionId: string;
+  /** Home: a section of its own with the h2; guide: the h2 sits inside the guide. */
+  asSection?: boolean;
+}
+
+const { situations, base, questionId, asSection = false } = Astro.props;
+---
+{
+  asSection ? (
+    <section class="home-wide" data-section="next-steps" aria-labelledby={questionId}>
+      <h2 id={questionId} class="col-heading">{ui.pickerQuestion}</h2>
+      <ul class="ruled place-rows" role="list">
+        {situations.map((situation) => (
+          <li>
+            <a href={`${base}#${SITUATION_ANCHOR[situation]}`} class="place-row" data-place={situation}>
+              {situationRows[situation]}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </section>
+  ) : (
+    <ul class="ruled place-rows" role="list" aria-labelledby={questionId}>
+      {situations.map((situation) => (
+        <li>
+          <a href={`${base}#${SITUATION_ANCHOR[situation]}`} class="place-row" data-place={situation}>
+            <span>{situationRows[situation]}</span>
+            <span class="pick-mark"> {ui.picked}</span>
+          </a>
+        </li>
+      ))}
+    </ul>
+  )
+}
+
+<style>
+  .place-rows > li {
+    padding: 0;
+  }
+
+  .place-row {
+    display: block;
+    padding: 0.8125rem 0;
+    font-size: 1.25rem;
+    font-weight: 700;
+  }
+
+  .pick-mark {
+    display: none;
+  }
+</style>

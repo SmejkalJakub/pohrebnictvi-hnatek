@@ -1,0 +1,27 @@
+---
+/** Ochrana osobních údajů (only when the page exists): the opening, then the body as ruled prose. */
+import { getOptionalPage, getSiteContext } from "@core/content/load.ts";
+import EssayLayout from "../../layouts/EssayLayout.astro";
+import PageOpening from "../../components/PageOpening.astro";
+import RuledProse from "../../components/RuledProse.astro";
+import { seoDescription, seoTitle } from "../../lib/site.ts";
+
+export async function getStaticPaths() {
+  const page = await getOptionalPage("ochrana-osobnich-udaju");
+  if (page === null) {
+    return [];
+  }
+  return [{ params: { path: undefined } }];
+}
+
+const site = await getSiteContext();
+const page = await getOptionalPage("ochrana-osobnich-udaju");
+if (page === null) {
+  throw new Error("unreachable: page missing");
+}
+const Body = page.Content;
+---
+<EssayLayout site={site} title={seoTitle(page.data)} description={seoDescription(page.data)}>
+  <PageOpening title={page.data.title} lead={page.data.lead} placeholder={page.data.placeholder} emergency={site.emergency} />
+  {page.hasBody ? <RuledProse id="ochrana-osobnich-udaju-text"><Body /></RuledProse> : null}
+</EssayLayout>

@@ -1,0 +1,43 @@
+---
+/**
+ * Home "contact-summary": the office as one statement (address, map link, office phone and
+ * office hours under their own heading). The nonstop line is not here: it is the rail.
+ */
+import PhoneLink from "@core/components/PhoneLink.astro";
+import type { SiteContext } from "@core/content/view-models.ts";
+import { formatAddressLines } from "@core/format/address.ts";
+import { formatPhone } from "@core/format/phone.ts";
+import HourRows from "./HourRows.astro";
+import Statement from "./Statement.astro";
+import { mainLocation, mapHref, primaryOfficePhone } from "../lib/site.ts";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  site: SiteContext;
+}
+
+const { site } = Astro.props;
+const location = mainLocation(site);
+const [street, cityLine] = formatAddressLines(location.address);
+const map = mapHref(location);
+const office = primaryOfficePhone(site);
+const officeDisplay = formatPhone(office.number).display;
+---
+<Statement id="kancelar" kicker={ui.officeKicker} heading={location.name} class="home-st" data-section="contact-summary">
+  <p class="st-text">{street}<br />{cityLine}</p>
+  {map !== null ? <a href={map} class="st-link">{ui.mapLink}</a> : null}
+  <p class="st-text">
+    <PhoneLink number={office.number}>{office.label}{" "}<span class="nowrap">{officeDisplay}</span></PhoneLink>
+  </p>
+  <div class="office-hours">
+    <HourRows site={site} id="kancelar-hodiny" level={3} />
+  </div>
+  <a href="/kontakt/" class="st-link">{ui.officeLink}</a>
+</Statement>
+
+<style>
+  .office-hours {
+    max-width: 28rem;
+    margin-top: 2rem;
+  }
+</style>

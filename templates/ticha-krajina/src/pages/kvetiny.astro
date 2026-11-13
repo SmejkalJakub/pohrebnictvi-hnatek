@@ -1,0 +1,52 @@
+---
+/**
+ * Květiny: one arrangement per row (1:1 image beside the name) or names two per row; ends with
+ * the flowers phone passage. Handles zero entries.
+ */
+import PhoneLink from "@core/components/PhoneLink.astro";
+import { getFlowers, getPage, getSiteContext } from "@core/content/load.ts";
+import { formatPhone } from "@core/format/phone.ts";
+import QuietLayout from "../layouts/QuietLayout.astro";
+import OpeningText from "../components/OpeningText.astro";
+import StampLine from "../components/StampLine.astro";
+import CatalogueQuietRows from "../components/CatalogueQuietRows.astro";
+import GridPassage from "../components/GridPassage.astro";
+import ProsePassages from "../components/ProsePassages.astro";
+import { resolveOptions } from "../lib/options.ts";
+import { flowerPhones, primaryOfficePhone, seoDescription, seoTitle } from "../lib/site.ts";
+import { flowerTypeLabels, ui } from "../i18n/cs.ts";
+
+const site = await getSiteContext();
+const options = resolveOptions(site.config);
+const page = await getPage("kvetiny");
+const flowers = await getFlowers();
+const items = flowers.map((entry) => ({
+  id: entry.id,
+  name: entry.data.title,
+  detail: flowerTypeLabels[entry.data.type],
+  summary: entry.data.summary,
+  image: entry.data.image,
+  placeholder: entry.data.placeholder,
+}));
+let phones = flowerPhones(site);
+if (phones.length === 0) {
+  phones = [primaryOfficePhone(site)];
+}
+const Body = page.Content;
+---
+<QuietLayout site={site} title={seoTitle(page.data)} description={seoDescription(page.data)}>
+  <OpeningText title={page.data.title} lead={page.data.lead} placeholder={page.data.placeholder} />
+  <StampLine emergency={site.emergency} place="opening" high={options.emergencyEmphasis === "high"} />
+  <CatalogueQuietRows site={site} items={items} aspect="1:1" />
+  {page.hasBody ? <ProsePassages idPrefix="kvetiny-text"><Body /></ProsePassages> : null}
+  <GridPassage id="objednavka" heading={ui.flowersOrder}>
+    <p>{ui.flowersOrderText}</p>
+    {
+      phones.map((phone) => (
+        <p>
+          <PhoneLink number={phone.number}>{phone.label}{" "}<span class="nowrap">{formatPhone(phone.number).display}</span></PhoneLink>
+        </p>
+      ))
+    }
+  </GridPassage>
+</QuietLayout>

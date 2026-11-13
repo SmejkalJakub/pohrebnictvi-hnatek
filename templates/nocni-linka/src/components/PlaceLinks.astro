@@ -1,0 +1,31 @@
+---
+/**
+ * "Kde blízký člověk zemřel?": four full-width 58 px bordered links. Each one opens the guide
+ * filtered to that situation through a fragment (:target), no JavaScript. On the guide itself
+ * the picked link is inverted and says "vybráno" in words (rules in StepStatement's filter CSS).
+ */
+import { SITUATION_ANCHOR, type SpecificSituation } from "@core/content/guidance-flow.ts";
+import { situationLabels, ui } from "../i18n/cs.ts";
+
+interface Props {
+  situations: SpecificSituation[];
+  /** "" on the guide itself, "/jak-postupovat/" elsewhere. */
+  base: string;
+  labelledBy: string;
+}
+
+const { situations, base, labelledBy } = Astro.props;
+---
+<ul class="big-links" role="list" aria-labelledby={labelledBy} data-place-links>
+  {
+    situations.map((situation) => (
+      <li>
+        <a href={`${base}#${SITUATION_ANCHOR[situation]}`} class="big-link" data-place={situation}>
+          <span>{situationLabels[situation]}</span>
+          <span class="arrow" aria-hidden="true">→</span>
+          <span class="picked-word">{ui.picked}</span>
+        </a>
+      </li>
+    ))
+  }
+</ul>

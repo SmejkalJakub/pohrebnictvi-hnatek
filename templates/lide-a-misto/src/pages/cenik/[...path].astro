@@ -1,0 +1,117 @@
+---
+/**
+ * Ceník (conditional route: no file while pricing is hidden). The opening: H1, the VAT note as a
+ * bold lead (research L9), validity, the demo notice and the Ctrl/Cmd + P hint, with the nonstop
+ * block beside it; the anchor row of groups; every group (label column + ruled table + inclusion
+ * lists); the VAT note again; the page body. No photos. Prints on A4 (styles/print.css).
+ */
+import DemoPricingNotice from "@core/components/DemoPricingNotice.astro";
+import VatNote from "@core/components/VatNote.astro";
+import { getPage, getPricing, getSiteContext } from "@core/content/load.ts";
+import { formatAddressInline } from "@core/format/address.ts";
+import { formatCzechDate } from "@core/format/date.ts";
+import { formatPhone } from "@core/format/phone.ts";
+import EssayLayout from "../../layouts/EssayLayout.astro";
+import PageOpening from "../../components/PageOpening.astro";
+import AnchorRow from "../../components/AnchorRow.astro";
+import PriceGroupRows from "../../components/PriceGroupRows.astro";
+import RuledProse from "../../components/RuledProse.astro";
+import { mainLocation, primaryOfficePhone, seoDescription, seoTitle } from "../../lib/site.ts";
+import { ui } from "../../i18n/cs.ts";
+
+export async function getStaticPaths() {
+  const pricing = await getPricing();
+  if (pricing === null) {
+    return [];
+  }
+  return [{ params: { path: undefined } }];
+}
+
+const site = await getSiteContext();
+const page = await getPage("cenik");
+const pricing = await getPricing();
+if (pricing === null) {
+  throw new Error("unreachable: pricing hidden");
+}
+const office = primaryOfficePhone(site);
+const printUrl = `${site.config.siteUrl.replace(/^https?:\/\//, "").replace(/\/$/, "")}/cenik/`;
+const anchors = pricing.groups.map((group) => ({ href: `#${group.id}`, label: group.title }));
+const Body = page.Content;
+---
+<EssayLayout site={site} title={seoTitle(page.data)} description={seoDescription(page.data)} noindex={pricing.hasDemo}>
+  <div class="frame print-only letterhead">
+    <p><b>{site.company.brandName}</b>, {formatAddressInline(mainLocation(site).address)}</p>
+    <p>{site.emergency.label}: {formatPhone(site.emergency.phone).display}</p>
+    <p>{office.label}: {formatPhone(office.number).display}</p>
+  </div>
+  <PageOpening title={page.data.title} placeholder={page.data.placeholder} emergency={site.emergency} numberFirst>
+    <VatNote pricing={pricing} class="vat-lead" />
+    {page.data.lead !== null ? <p>{page.data.lead}</p> : null}
+    {pricing.generalNote !== null ? <p>{pricing.generalNote}</p> : null}
+    {pricing.validFrom !== null ? <p>{ui.priceValidFrom(formatCzechDate(pricing.validFrom))}</p> : null}
+    <DemoPricingNotice pricing={pricing} brandName={site.company.brandName} class="demo-note" />
+    <p class="muted no-print">{ui.printHint}</p>
+  </PageOpening>
+  {anchors.length > 1 ? <AnchorRow label={ui.groupsLabel} links={anchors} /> : null}
+  {pricing.groups.map((group) => <PriceGroupRows group={group} />)}
+  <div class="frame vat-end">
+    <div class="ruled-thin split">
+      <VatNote pricing={pricing} class="vat-close" />
+    </div>
+  </div>
+  {page.hasBody ? <RuledProse id="cenik-text"><Body /></RuledProse> : null}
+  <p class="frame print-only printed-from">{ui.printedFrom} {printUrl}</p>
+</EssayLayout>
+
+<style>
+  :global(.vat-lead) {
+    font-size: 1.25rem;
+    font-weight: 700;
+    line-height: 1.45;
+  }
+
+  :global(.demo-note) {
+    max-width: 40rem;
+    padding: 0.5rem 0.875rem;
+    border: 1px dashed var(--muted);
+    color: var(--muted);
+  }
+
+  .vat-end {
+    margin-top: 3.5rem;
+  }
+
+  .ruled-thin {
+    padding-top: 1rem;
+    border-top: 1px solid var(--ink);
+  }
+
+  :global(.vat-close) {
+    font-size: 1.25rem;
+    font-weight: 700;
+  }
+
+  @media (min-width: 64rem) {
+    :global(.vat-lead) {
+      font-size: 1.375rem;
+    }
+  }
+
+  @media print {
+    .letterhead {
+      margin-bottom: 4mm;
+      padding-bottom: 3mm;
+      border-bottom: 2px solid #161616;
+      font-size: 11pt;
+    }
+
+    :global(.demo-note) {
+      border-color: #161616;
+    }
+
+    .printed-from {
+      margin-top: 6mm;
+      font-size: 10pt;
+    }
+  }
+</style>

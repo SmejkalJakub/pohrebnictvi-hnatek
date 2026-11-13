@@ -4,7 +4,7 @@
  */
 import { beforeAll, describe, expect, it } from "vitest";
 import { resolveBuildDate, pragueDate } from "../content/build-date.ts";
-import { SiteConfig, checkConfigAgainstManifest, type TemplateManifest } from "../content/config.ts";
+import { SiteConfig, checkConfigAgainstManifest, defaultSectionsFor, type TemplateManifest } from "../content/config.ts";
 import {
   buildDocumentView,
   buildLegalLink,
@@ -186,6 +186,8 @@ describe("feature switches", () => {
       guestInfo: false,
       prePlanning: false,
       priceInclusions: false,
+      landscapes: false,
+      places: false,
     },
     homepageSections: {
       available: ["hero", "next-steps", "services", "contact-summary", "family-story"],
@@ -209,6 +211,76 @@ describe("feature switches", () => {
       ]),
     );
     expect(paths).not.toContain("features.people");
+  });
+
+  describe("directory homepage sections", () => {
+    const directory: TemplateManifest = {
+      ...manifest,
+      supports: { ...manifest.supports, notices: true, people: true, faq: true, documents: true },
+      homepageSections: {
+        available: ["next-steps", "price-summary", "people", "notices", "documents", "faq"],
+        default: ["next-steps", "price-summary", "people", "notices", "documents", "faq"],
+        constraints: { first: "next-steps", required: ["next-steps"] },
+      },
+    };
+    const sections = ["next-steps", "price-summary", "people", "notices", "documents", "faq"] as const;
+
+    function withSections(features: Partial<Record<"notices" | "people" | "faq" | "documents", boolean>>) {
+      const content = clone(fixture);
+      content.config.features = { ...content.config.features, guestInfo: false, prePlanning: false, ...features };
+      content.config.homepage.sections = [...sections];
+      return content.config;
+    }
+
+    it("parses every new section id", () => {
+      const parsed = SiteConfig.safeParse({
+        template: "harness",
+        siteUrl: "https://example.invalid",
+        features: {},
+        homepage: { sections: [...sections, "services", "catalogue-links"] },
+      });
+      expect(parsed.success).toBe(true);
+    });
+
+    it("accepts the feature-bound sections while their features are on", () => {
+      const config = withSections({ notices: true, people: true, faq: true, documents: true });
+      expect(checkConfigAgainstManifest(config, directory)).toEqual([]);
+    });
+
+    it("G-005 reports each feature-bound section while its feature is off", () => {
+      const config = withSections({ notices: false, people: false, faq: false, documents: true });
+      const messages = checkConfigAgainstManifest(config, directory)
+        .filter((issue) => issue.path === "homepage.sections")
+        .map((issue) => issue.message);
+      expect(messages).toEqual([
+        'Section "people" needs features.people; switch the feature on or remove the section.',
+        'Section "notices" needs features.notices; switch the feature on or remove the section.',
+        'Section "faq" needs features.faq; switch the feature on or remove the section.',
+      ]);
+    });
+
+    it("price-summary needs no feature (the template hides it while pricing is hidden)", () => {
+      const config = withSections({ notices: true, people: true, faq: true, documents: true });
+      config.homepage.sections = ["next-steps", "price-summary"];
+      expect(checkConfigAgainstManifest(config, directory)).toEqual([]);
+    });
+
+    it("defaultSectionsFor leaves out sections whose feature is off", () => {
+      expect(defaultSectionsFor(directory, {})).toEqual(["next-steps", "price-summary"]);
+      expect(defaultSectionsFor(directory, { people: true, faq: true })).toEqual([
+        "next-steps",
+        "price-summary",
+        "people",
+        "faq",
+      ]);
+      expect(defaultSectionsFor(manifest, {})).toEqual(manifest.homepageSections.default);
+    });
+
+    it("a template without a section still rejects it, whatever the features say", () => {
+      const config = withSections({ notices: true, people: true, faq: true, documents: true });
+      const paths = checkConfigAgainstManifest(config, { ...directory, homepageSections: manifest.homepageSections });
+      expect(paths.filter((issue) => issue.path === "homepage.sections").length).toBeGreaterThan(0);
+    });
   });
 
   it("feature pages exist only while their feature is on; legal information always", () => {

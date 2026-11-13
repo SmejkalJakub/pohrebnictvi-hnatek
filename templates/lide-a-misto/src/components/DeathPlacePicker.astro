@@ -1,0 +1,77 @@
+---
+/**
+ * "Kde blízký člověk zemřel?": full-width rows, 52 px tall, between 1 px rules, each a link to the
+ * filtered guide (#situace-…, core :has(:target) mechanism, no JavaScript). The picked row turns
+ * green with "(vybráno)" (rules in PhaseColumns' filter CSS). No numbers: two-digit numerals are
+ * for figures and places only.
+ */
+import { SITUATION_ANCHOR, type SpecificSituation } from "@core/content/guidance-flow.ts";
+import { situationRows, ui } from "../i18n/cs.ts";
+
+interface Props {
+  situations: SpecificSituation[];
+}
+
+const { situations } = Astro.props;
+---
+<div class="picker">
+  <h2 id="kde-zemrel" class="h2 picker-question">{ui.pickerQuestion}</h2>
+  <ul class="picker-rows" role="list" aria-labelledby="kde-zemrel">
+    {
+      situations.map((situation) => (
+        <li>
+          <a href={`#${SITUATION_ANCHOR[situation]}`} class="picker-row" data-place={situation}>
+            <span class="picker-word">{situationRows[situation]}</span>
+            <span class="pick-mark"> {ui.picked}</span>
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+</div>
+
+<style>
+  .picker-question {
+    margin-bottom: 0.375rem;
+  }
+
+  .picker-rows {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border-top: 1px solid var(--ink);
+  }
+
+  .picker-rows li {
+    border-bottom: 1px solid var(--ink);
+  }
+
+  .picker-row {
+    display: block;
+    min-height: 3.25rem;
+    padding: 0.75rem 0.75rem;
+    margin-inline: -0.75rem;
+    font-size: 1.25rem;
+    font-weight: 700;
+    line-height: 1.4;
+    text-decoration: none;
+  }
+
+  .picker-word {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.2em;
+  }
+
+  .pick-mark {
+    display: none;
+    font-size: 1.0625rem;
+    font-weight: 400;
+  }
+
+  @media (min-width: 64rem) {
+    .picker-rows {
+      max-width: 45rem;
+    }
+  }
+</style>

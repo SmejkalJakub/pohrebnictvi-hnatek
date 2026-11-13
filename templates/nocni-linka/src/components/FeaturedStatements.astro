@@ -1,0 +1,38 @@
+---
+/**
+ * Featured services, one statement each: kicker, the service title as heading, its summary, one
+ * link to its own page. Used for the home "services" section and the top of /sluzby/.
+ */
+import type { CollectionEntry } from "astro:content";
+import PlaceholderMark from "@core/components/PlaceholderMark.astro";
+import Statement from "./Statement.astro";
+import { serviceCategoryLabels, ui } from "../i18n/cs.ts";
+
+interface Props {
+  services: CollectionEntry<"services">[];
+  /** "home": kicker "Služby"; "index": kicker = the service category. */
+  context: "home" | "index";
+  class?: string;
+}
+
+const { services, context, class: className } = Astro.props;
+function kickerFor(service: CollectionEntry<"services">): string {
+  if (context === "home") {
+    return ui.servicesKicker;
+  }
+  return serviceCategoryLabels[service.data.category];
+}
+---
+{
+  services.map((service) => (
+    <Statement id={`sluzba-${service.id}`} kicker={kickerFor(service)} heading={service.data.title} class={className}>
+      <PlaceholderMark active={service.data.placeholder} as="div">
+        <p class="st-text">{service.data.summary}</p>
+      </PlaceholderMark>
+      <a href={`/sluzby/${service.id}/`} class="st-link">
+        {ui.serviceLink}
+        <span class="visually-hidden">: {service.data.title}</span>
+      </a>
+    </Statement>
+  ))
+}

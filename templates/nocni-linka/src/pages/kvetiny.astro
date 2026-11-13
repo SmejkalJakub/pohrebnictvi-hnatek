@@ -1,0 +1,48 @@
+---
+/** Květiny: catalogue rows (1:1 thumbnails) or ruled name columns, then the flower order line. */
+import PhoneLink from "@core/components/PhoneLink.astro";
+import { getFlowers, getPage, getSiteContext } from "@core/content/load.ts";
+import { formatPhone } from "@core/format/phone.ts";
+import NightLayout from "../layouts/NightLayout.astro";
+import TitleStatement from "../components/TitleStatement.astro";
+import CatalogueRowList from "../components/CatalogueRowList.astro";
+import EmptyCatalogue from "../components/EmptyCatalogue.astro";
+import Statement from "../components/Statement.astro";
+import StatementProse from "../components/StatementProse.astro";
+import { capitalise, flowerTypeLabels, ui } from "../i18n/cs.ts";
+import { flowerPhones, primaryOfficePhone, seoTitle } from "../lib/site.ts";
+
+const site = await getSiteContext();
+const page = await getPage("kvetiny");
+const flowers = await getFlowers();
+const items = flowers.map((entry) => ({
+  id: entry.id,
+  name: entry.data.title,
+  meta: capitalise(flowerTypeLabels[entry.data.type]),
+  summary: entry.data.summary,
+  image: entry.data.image,
+  placeholder: entry.data.placeholder,
+}));
+let phones = flowerPhones(site);
+if (phones.length === 0) {
+  phones = [primaryOfficePhone(site)];
+}
+const Body = page.Content;
+---
+<NightLayout site={site} title={seoTitle(page.data)} description={page.data.metaDescription ?? page.data.title}>
+  <TitleStatement kicker={page.data.navLabel} title={page.data.title} lead={page.data.lead} placeholder={page.data.placeholder} />
+  <StatementProse show={page.hasBody}><Body /></StatementProse>
+  {items.length > 0 ? <CatalogueRowList items={items} thumb={{ width: 120, height: 120 }} /> : <EmptyCatalogue site={site} />}
+  <Statement id="objednavka" heading={ui.flowersOrder} size="small">
+    <p class="st-text">{ui.flowersOrderText}</p>
+    {
+      phones.map((phone) => (
+        <p class="st-text">
+          <PhoneLink number={phone.number}>
+            {phone.label}{" "}<span class="nowrap">{formatPhone(phone.number).display}</span>
+          </PhoneLink>
+        </p>
+      ))
+    }
+  </Statement>
+</NightLayout>

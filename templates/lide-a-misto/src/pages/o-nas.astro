@@ -1,0 +1,164 @@
+---
+/**
+ * O nás a naše místa: the page of the template's idea. The opening with the nonstop block; the
+ * people photo bleeding to the right edge (heroImage, figure 01); Kdo jsme (body); Naše místa
+ * (#mista: numbered figures, or the numbered list without photos); Lidé (#lide: portraits, or the
+ * numbered table without photos; plan s11 §4.1); then Kancelář and links under 3 px rules.
+ * Figures are numbered across the page in reading order.
+ */
+import { getOptionalPage, getPage, getPeople, getPlaces, getSiteContext } from "@core/content/load.ts";
+import { formatAddressLines } from "@core/format/address.ts";
+import EssayLayout from "../layouts/EssayLayout.astro";
+import PageOpening from "../components/PageOpening.astro";
+import NumberedFigure from "../components/NumberedFigure.astro";
+import PlaceGrid from "../components/PlaceGrid.astro";
+import PlaceList from "../components/PlaceList.astro";
+import PortraitGrid from "../components/PortraitGrid.astro";
+import PeopleNumberTable from "../components/PeopleNumberTable.astro";
+import { FigureCounter } from "../lib/figures.ts";
+import { mainLocation, mapHref, seoDescription, seoTitle } from "../lib/site.ts";
+import { ui } from "../i18n/cs.ts";
+
+const site = await getSiteContext();
+const page = await getPage("o-nas");
+const places = await getPlaces();
+const people = await getPeople();
+const guestPage = site.config.features.guestInfo ? await getOptionalPage("pro-ucastniky") : null;
+const location = mainLocation(site);
+const [street, cityLine] = formatAddressLines(location.address);
+const map = mapHref(location);
+const hero = page.data.heroImage;
+const counter = new FigureCounter();
+let heroNumber: string | null = null;
+if (hero !== null) {
+  heroNumber = counter.take();
+}
+const placesWithPhotos = places.some((place) => place.image !== null);
+const placesStart = counter.peek();
+const peopleWithPhotos = people.some((person) => person.photo !== null);
+const peopleStart = placesStart + places.length;
+const Body = page.Content;
+---
+<EssayLayout site={site} title={seoTitle(page.data)} description={seoDescription(page.data)}>
+  <PageOpening title={page.data.title} lead={page.data.lead} placeholder={page.data.placeholder} emergency={site.emergency} />
+  {
+    hero !== null && heroNumber !== null ? (
+      <div class="about-hero">
+        <NumberedFigure
+          image={hero}
+          number={heroNumber}
+          text={hero.caption}
+          ratio="5 / 4"
+          ratioWide="12 / 5"
+          widths={[375, 750, 1200, 1600]}
+          sizes="(min-width: 80rem) calc(100vw - (100vw - 80rem) / 2 - 3.5rem), 100vw"
+        />
+      </div>
+    ) : null
+  }
+  {
+    page.hasBody ? (
+      <section class="frame split about-part" aria-labelledby="kdo-jsme">
+        <h2 id="kdo-jsme" class="h2">{ui.aboutHeading}</h2>
+        <div class="ruled prose about-body">
+          <Body />
+        </div>
+      </section>
+    ) : null
+  }
+  {
+    places.length > 0 ? (
+      <section id="mista" class="frame about-part" aria-labelledby="mista-nadpis">
+        <div class="section-head">
+          <h2 id="mista-nadpis" class="h2">{ui.ourPlaces}</h2>
+        </div>
+        {placesWithPhotos ? (
+          <PlaceGrid places={places} start={placesStart} layout="essay" />
+        ) : (
+          <PlaceList places={places} start={placesStart} layout="essay" />
+        )}
+      </section>
+    ) : null
+  }
+  {
+    people.length > 0 ? (
+      <section id="lide" class="frame about-part" aria-labelledby="lide-nadpis">
+        <div class="section-head">
+          <h2 id="lide-nadpis" class="h2">{ui.peopleHeading}</h2>
+        </div>
+        {peopleWithPhotos ? (
+          <PortraitGrid people={people} start={peopleStart} />
+        ) : (
+          <PeopleNumberTable people={people} start={peopleStart} caption={ui.peopleHeading} />
+        )}
+      </section>
+    ) : null
+  }
+  <div class="frame about-cols about-part">
+    <section class="ruled about-col" aria-labelledby="o-nas-kancelar">
+      <h2 id="o-nas-kancelar" class="h3">{ui.officeHeading}</h2>
+      <p>{street}<br />{cityLine}</p>
+      {map !== null ? <a href={map} class="go">{ui.mapLink}</a> : null}
+      <a href="/kontakt/" class="go">{ui.officeLink}</a>
+    </section>
+    {
+      guestPage !== null ? (
+        <section class="ruled about-col" aria-labelledby="o-nas-ucastnici">
+          <h2 id="o-nas-ucastnici" class="h3">{guestPage.data.title}</h2>
+          {guestPage.data.lead !== null ? <p>{guestPage.data.lead}</p> : null}
+          <a href="/pro-ucastniky/" class="go">{guestPage.data.navLabel}</a>
+        </section>
+      ) : null
+    }
+  </div>
+</EssayLayout>
+
+<style>
+  .about-hero {
+    margin-top: 2.5rem;
+  }
+
+  .about-hero :global(.fig-caption) {
+    padding-inline: var(--gutter);
+  }
+
+  /* The body sits under the block's own rule, so its first heading drops the second rule. */
+  .about-body > :global(h2:first-child) {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: 0;
+  }
+
+  .about-part {
+    margin-top: var(--section);
+    scroll-margin-top: 1rem;
+  }
+
+  .about-cols {
+    display: grid;
+    gap: 2rem;
+  }
+
+  .about-col {
+    display: flex;
+    flex-direction: column;
+    align-items: start;
+    gap: 0.5rem;
+  }
+
+  @media (min-width: 64rem) {
+    .about-hero {
+      margin-top: 3.5rem;
+      padding-left: max(var(--gutter), calc((100vw - 80rem) / 2 + var(--gutter)));
+    }
+
+    .about-hero :global(.fig-caption) {
+      padding-inline: 0 var(--gutter);
+    }
+
+    .about-cols {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      column-gap: 2.5rem;
+    }
+  }
+</style>

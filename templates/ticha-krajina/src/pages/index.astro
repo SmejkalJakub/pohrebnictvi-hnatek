@@ -1,0 +1,141 @@
+---
+/**
+ * Home: the text-only opening (hero), the stamp line, then the sections in
+ * site.config.homepage.sections order as grid passages, with landscape bands after the 1st, 3rd,
+ * 5th … section that follows the hero (never after the last one, never beside `notices`).
+ */
+import {
+  getGuidance,
+  getLandscapes,
+  getNoticeIndex,
+  getOptionalPage,
+  getPage,
+  getPeople,
+  getServices,
+  getSiteContext,
+} from "@core/content/load.ts";
+import { chooserSituations } from "@core/content/guidance-flow.ts";
+import type { HomepageSection } from "@core/content/config.ts";
+import QuietLayout from "../layouts/QuietLayout.astro";
+import OpeningText from "../components/OpeningText.astro";
+import StampLine from "../components/StampLine.astro";
+import FirstHoursPassage from "../components/FirstHoursPassage.astro";
+import ServicesPassage from "../components/ServicesPassage.astro";
+import FamilyPassage from "../components/FamilyPassage.astro";
+import PeoplePassage from "../components/PeoplePassage.astro";
+import OfficePassage from "../components/OfficePassage.astro";
+import CatalogueWords from "../components/CatalogueWords.astro";
+import NoticesCountLine from "../components/NoticesCountLine.astro";
+import LandscapeBand from "../components/LandscapeBand.astro";
+import { resolveOptions } from "../lib/options.ts";
+import { bandAfterAlternate, bandCaption, photosForBands } from "../lib/bands.ts";
+import { seoDescription } from "../lib/site.ts";
+import { ui } from "../i18n/cs.ts";
+
+const site = await getSiteContext();
+const options = resolveOptions(site.config);
+const home = await getPage("home");
+const about = await getPage("o-nas");
+const guide = await getPage("jak-postupovat");
+const services = await getServices();
+const guidance = await getGuidance();
+const people = await getPeople();
+const landscapes = await getLandscapes();
+const noticesPage = await getOptionalPage("oznameni");
+const noticeIndex = await getNoticeIndex();
+
+let featured = services.filter((service) => service.data.featured);
+if (featured.length === 0) {
+  featured = services.slice(0, 1);
+}
+const situations = chooserSituations(guidance);
+const firstHours = guidance.filter((entry) => entry.data.phase === "first-hours");
+let aboutText = about.data.lead;
+if (about.data.excerpt !== null) {
+  aboutText = about.data.excerpt;
+}
+const catalogueLinks = site.nav.filter((item) => item.id === "rakve" || item.id === "kvetiny");
+let noticesTitle = "";
+if (noticesPage !== null) {
+  noticesTitle = noticesPage.data.title;
+}
+
+/** Sections after the hero that have something to show, in the client's order. */
+function renders(section: HomepageSection): boolean {
+  if (section === "hero") {
+    return false;
+  }
+  if (section === "services") {
+    return featured.length > 0;
+  }
+  if (section === "people") {
+    return people.length > 0;
+  }
+  if (section === "catalogue-links") {
+    return catalogueLinks.length > 0;
+  }
+  if (section === "notices") {
+    return site.config.features.notices && noticesPage !== null;
+  }
+  return true;
+}
+
+const order = site.config.homepage.sections;
+const content = order.filter(renders);
+const bandAfter = content.map((section, index) => {
+  const next = content[index + 1];
+  if (section === "notices" || next === "notices") {
+    return false;
+  }
+  return bandAfterAlternate(index, content.length);
+});
+const photos = photosForBands(landscapes, "home", bandAfter.filter((value) => value).length);
+const bandIndex = new Map<number, number>();
+let counter = 0;
+bandAfter.forEach((value, index) => {
+  if (value) {
+    bandIndex.set(index, counter);
+    counter += 1;
+  }
+});
+
+function photoAt(index: number) {
+  const slot = bandIndex.get(index);
+  if (slot === undefined) {
+    return null;
+  }
+  return photos[slot] ?? null;
+}
+---
+<QuietLayout site={site} title={home.data.metaTitle} description={seoDescription(home.data)}>
+  {order.includes("hero") ? <OpeningText title={home.data.title} lead={home.data.lead} placeholder={home.data.placeholder} hero /> : null}
+  <StampLine emergency={site.emergency} place="opening" high={options.emergencyEmphasis === "high"} />
+  {
+    content.map((section, index) => {
+      const photo = photoAt(index);
+      return (
+        <>
+          {section === "next-steps" ? (
+            <FirstHoursPassage lead={guide.data.lead} situations={situations} firstHours={firstHours} />
+          ) : null}
+          {section === "services" ? <ServicesPassage services={featured} /> : null}
+          {section === "family-story" ? (
+            <FamilyPassage
+              title={about.data.title}
+              text={aboutText}
+              tradition={site.company.tradition.publicWording}
+              placeholder={about.data.placeholder}
+            />
+          ) : null}
+          {section === "people" ? <PeoplePassage people={people} /> : null}
+          {section === "contact-summary" ? <OfficePassage site={site} /> : null}
+          {section === "catalogue-links" ? <CatalogueWords links={catalogueLinks} /> : null}
+          {section === "notices" ? <NoticesCountLine title={noticesTitle} upcoming={noticeIndex.upcoming.length} /> : null}
+          {bandAfter[index] === true ? (
+            <LandscapeBand image={photo === null ? null : photo.image} caption={photo === null ? null : bandCaption(photo, ui.photoBy)} />
+          ) : null}
+        </>
+      );
+    })
+  }
+</QuietLayout>

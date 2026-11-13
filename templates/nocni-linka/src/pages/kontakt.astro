@@ -1,0 +1,109 @@
+---
+/**
+ * Kontakt ("Lidé a kancelář"): the office address, then separate statements for Úřední hodiny,
+ * Telefony a e-mail and Převoz zesnulých (its own heading; office hours never share it), and
+ * Lidé when people are on.
+ */
+import EmergencyPhoneLink from "@core/components/EmergencyPhoneLink.astro";
+import PhoneLink from "@core/components/PhoneLink.astro";
+import { getPage, getPeople, getSiteContext } from "@core/content/load.ts";
+import { formatAddressLines } from "@core/format/address.ts";
+import { formatPhone } from "@core/format/phone.ts";
+import NightLayout from "../layouts/NightLayout.astro";
+import TitleStatement from "../components/TitleStatement.astro";
+import HourRows from "../components/HourRows.astro";
+import Statement from "../components/Statement.astro";
+import PeopleRows from "../components/PeopleRows.astro";
+import StatementProse from "../components/StatementProse.astro";
+import { ui } from "../i18n/cs.ts";
+import { mainLocation, mapHref, seoTitle } from "../lib/site.ts";
+
+const site = await getSiteContext();
+const page = await getPage("kontakt");
+const people = await getPeople();
+const location = mainLocation(site);
+const [street, cityLine] = formatAddressLines(location.address);
+const map = mapHref(location);
+const phones = site.contact.phones.map((phone) => ({ ...phone, display: formatPhone(phone.number).display }));
+const Body = page.Content;
+---
+<NightLayout site={site} title={seoTitle(page.data)} description={page.data.metaDescription ?? page.data.title}>
+  <TitleStatement kicker={ui.contactKicker} title={page.data.title} lead={page.data.lead} placeholder={page.data.placeholder}>
+    <p class="address">{location.name}<br />{street}<br />{cityLine}</p>
+    {map !== null ? <a href={map} class="st-link">{ui.mapLink}</a> : null}
+    {location.accessNote !== null ? <p class="st-text muted">{location.accessNote}</p> : null}
+  </TitleStatement>
+  <section class="st" aria-labelledby="hodiny">
+    <HourRows site={site} id="hodiny" level={2} />
+  </section>
+  <Statement id="telefony" heading={ui.phonesHeading} size="small">
+    <ul class="contact-lines">
+      {
+        phones.map((phone) => (
+          <li>
+            <PhoneLink number={phone.number}>
+              {phone.label}{" "}<span class="nowrap">{phone.display}</span>
+            </PhoneLink>
+          </li>
+        ))
+      }
+      {
+        site.contact.emails.map((email) => (
+          <li>
+            <a href={`mailto:${email.address}`}>{email.address}</a>
+          </li>
+        ))
+      }
+    </ul>
+  </Statement>
+  {
+    site.emergency.enabled ? (
+      <Statement id="prevoz" heading={ui.transportHeading} size="small" data-emergency-block>
+        {site.emergency.shortNote !== null ? <p class="st-text">{site.emergency.shortNote}</p> : null}
+        {site.emergency.serviceArea !== null ? <p class="st-text">{site.emergency.serviceArea}</p> : null}
+        <p class="st-text">
+          <EmergencyPhoneLink emergency={site.emergency} variant="custom" class="transport-link">
+            {site.emergency.label}{" "}<span class="nowrap">{formatPhone(site.emergency.phone).display}</span>
+          </EmergencyPhoneLink>
+        </p>
+      </Statement>
+    ) : null
+  }
+  {
+    people.length > 0 ? (
+      <Statement id="lide" kicker={ui.peopleKicker} heading={ui.peopleHeading}>
+        <PeopleRows people={people} />
+      </Statement>
+    ) : null
+  }
+  <StatementProse show={page.hasBody}><Body /></StatementProse>
+</NightLayout>
+
+<style>
+  .address {
+    margin-top: 1.25rem;
+  }
+
+  .contact-lines {
+    margin-top: 0.75rem;
+    padding: 0;
+    list-style: none;
+  }
+
+  .contact-lines :global(a),
+  :global(.transport-link) {
+    display: inline-block;
+    padding-block: 0.6rem;
+  }
+
+  :global(.transport-link) {
+    color: var(--ink);
+  }
+
+  @media (min-width: 64rem) {
+    .address {
+      margin-top: 2rem;
+      font-size: 1.375rem;
+    }
+  }
+</style>

@@ -1,0 +1,57 @@
+---
+/** Coffins or flowers without any photo: a numbered ruled list (number · name · detail · summary). */
+import PlaceholderMark from "@core/components/PlaceholderMark.astro";
+import type { CatalogueItem } from "./CatalogueFigures.astro";
+import { figureNumber } from "../lib/figures.ts";
+
+interface Props {
+  items: CatalogueItem[];
+}
+
+const { items } = Astro.props;
+---
+<ol class="catalogue-rows" role="list">
+  {
+    items.map((item, index) => (
+      <li id={item.id} class="catalogue-row">
+        <span class="fig-num row-num" data-figure-number>{figureNumber(index + 1)}</span>
+        <PlaceholderMark active={item.placeholder} as="div" class="row-text">
+          <b class="row-name">{item.name}</b>
+          {item.detail !== null ? <span class="muted">{item.detail}</span> : null}
+          {item.summary !== null ? <p>{item.summary}</p> : null}
+        </PlaceholderMark>
+      </li>
+    ))
+  }
+</ol>
+
+<style>
+  .catalogue-rows {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border-top: 3px solid var(--ink);
+  }
+
+  .catalogue-row {
+    display: grid;
+    grid-template-columns: 3rem minmax(0, 1fr);
+    gap: 1rem;
+    padding-block: 1rem;
+    border-bottom: 1px solid var(--ink);
+  }
+
+  .row-num {
+    font-size: 1.375rem;
+  }
+
+  .catalogue-row :global(.row-text),
+  .catalogue-row > :global(.row-name) {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .row-name {
+    font-size: 1.25rem;
+  }
+</style>

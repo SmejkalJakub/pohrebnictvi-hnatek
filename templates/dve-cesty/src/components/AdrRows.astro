@@ -1,0 +1,30 @@
+---
+/** Právní informace: Mimosoudní řešení sporů (ADR body and link) and Reklamace as split sections (research L10). */
+import type { LegalInfo } from "@core/content/schemas.ts";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  legal: LegalInfo;
+}
+
+const { legal } = Astro.props;
+---
+<section id="spory" class="section split-section" aria-labelledby="spory-nadpis">
+  <div class="split-head">
+    <h2 id="spory-nadpis" class="section-heading">{ui.adrHeading}</h2>
+  </div>
+  <p class="narrow rule-top">
+    {ui.adrText} {legal.adr.name},{" "}
+    <a href={legal.adr.url} class="go">{legal.adr.url.replace(/^https?:\/\//, "")}</a>.
+  </p>
+</section>
+{
+  legal.complaintsContact !== null ? (
+    <section id="reklamace" class="section split-section" aria-labelledby="reklamace-nadpis">
+      <div class="split-head">
+        <h2 id="reklamace-nadpis" class="section-heading">{ui.complaintsHeading}</h2>
+      </div>
+      <p class="narrow rule-top">{legal.complaintsContact}</p>
+    </section>
+  ) : null
+}

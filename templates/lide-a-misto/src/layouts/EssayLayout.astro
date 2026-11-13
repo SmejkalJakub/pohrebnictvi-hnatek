@@ -1,0 +1,157 @@
+---
+/**
+ * Page shell for Template G "Lidé a místo". The emphasis option becomes a data attribute on <html>.
+ * The header (wordmark + subtitle, text navigation or the Menu button), the green strip under it
+ * when the emphasis is high, the page, then the footer.
+ * `neutral` switches the chrome to its notice form (research L1): the publisher sentence with the
+ * nonstop link, reduced navigation, no strip, the neutral footer.
+ */
+import "../styles/fonts.css";
+import "../styles/global.css";
+import "../styles/print.css";
+import SeoHead from "@core/components/SeoHead.astro";
+import StructuredData from "@core/components/StructuredData.astro";
+import PrototypeBanner from "@core/components/PrototypeBanner.astro";
+import type { ImageMetadata } from "astro";
+import { getDocuments, getFaq, getOptionalPage, getPeople, hasPage } from "@core/content/load.ts";
+import type { NavItem, SiteContext } from "@core/content/view-models.ts";
+import archivoLatin from "@fontsource-variable/archivo/files/archivo-latin-wght-normal.woff2?url";
+import archivoLatinExt from "@fontsource-variable/archivo/files/archivo-latin-ext-wght-normal.woff2?url";
+import EssayHeader from "../components/EssayHeader.astro";
+import EssayFooter, { type FooterLink } from "../components/EssayFooter.astro";
+import HighLineStrip from "../components/HighLineStrip.astro";
+import PublisherSentence from "../components/PublisherSentence.astro";
+import { resolveOptions } from "../lib/options.ts";
+import { fullNav, neutralNav } from "../lib/site.ts";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  site: SiteContext;
+  /** Page title without the brand name; null on the homepage. */
+  title?: string | null;
+  description: string;
+  noindex?: boolean;
+  image?: ImageMetadata | null;
+  /** Notice list and notice pages: publisher sentence, reduced nav, no strip, neutral footer. */
+  neutral?: boolean;
+  /** Extra class on <main> (the home uses a grid so price, office and notices sit side by side). */
+  mainClass?: string;
+}
+
+const {
+  site,
+  title = null,
+  description,
+  noindex = false,
+  image = null,
+  neutral = false,
+  mainClass,
+} = Astro.props;
+const options = resolveOptions(site.config);
+const path = Astro.url.pathname;
+
+async function optionalNavItem(id: "pro-ucastniky" | "pohreb-predem", enabled: boolean): Promise<NavItem | null> {
+  if (!enabled) {
+    return null;
+  }
+  const page = await getOptionalPage(id);
+  if (page === null) {
+    return null;
+  }
+  return { id, label: page.data.navLabel, href: `/${id}/` };
+}
+
+const documents = await getDocuments();
+const people = await getPeople();
+const faq = await getFaq();
+const hasLegalPage = await hasPage("pravni-informace");
+const hasPrivacyPage = await hasPage("ochrana-osobnich-udaju");
+const guestInfo = await optionalNavItem("pro-ucastniky", site.config.features.guestInfo);
+const prePlanning = await optionalNavItem("pohreb-predem", site.config.features.prePlanning);
+const hasDocuments = documents.length > 0 && hasLegalPage;
+let links = fullNav(site, path, {
+  guestInfo,
+  prePlanning,
+  hasPeople: people.length > 0,
+  hasFaq: faq.length > 0,
+  hasDocuments,
+});
+if (neutral) {
+  links = neutralNav(site, path);
+}
+
+const siteLinks: FooterLink[] = [];
+for (const item of [guestInfo, prePlanning]) {
+  if (item !== null) {
+    siteLinks.push({ href: item.href, label: item.label });
+  }
+}
+if (faq.length > 0) {
+  siteLinks.push({ href: "/jak-postupovat/#caste-otazky", label: ui.faqLink });
+}
+if (hasDocuments) {
+  siteLinks.push({ href: "/pravni-informace/#dokumenty", label: ui.documentsLink });
+}
+const about = site.nav.find((item) => item.id === "o-nas");
+if (about !== undefined) {
+  siteLinks.push({ href: about.href, label: about.label });
+}
+
+const high = options.emergencyEmphasis === "high" && !neutral;
+const menuLabels = JSON.stringify({ open: ui.menuOpen, close: ui.menuClose });
+---
+<html lang="cs" class="no-js" data-emphasis={options.emergencyEmphasis}>
+  <head>
+    <link rel="preload" href={archivoLatin} as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href={archivoLatinExt} as="font" type="font/woff2" crossorigin />
+    <SeoHead site={site} title={title} description={description} noindex={noindex} image={image} />
+    <script is:inline>
+      document.documentElement.classList.replace("no-js", "js");
+    </script>
+    <StructuredData site={site} />
+  </head>
+  <body>
+    <PrototypeBanner />
+    <a href="#obsah" class="skip-link">{ui.skipLink}</a>
+    <EssayHeader site={site} links={links} neutral={neutral} />
+    {high ? <HighLineStrip emergency={site.emergency} /> : null}
+    {neutral ? <PublisherSentence site={site} /> : null}
+    <main id="obsah" tabindex="-1" class={mainClass} data-neutral={neutral ? "true" : "false"}>
+      <slot />
+    </main>
+    <EssayFooter
+      site={site}
+      neutral={neutral}
+      documents={documents}
+      hasPrivacyPage={hasPrivacyPage}
+      siteLinks={siteLinks}
+    />
+    <script is:inline define:vars={{ menuLabels }}>
+      const labels = JSON.parse(menuLabels);
+      const toggle = document.querySelector("[data-menu-toggle]");
+      const panel = toggle === null ? null : document.getElementById(toggle.getAttribute("aria-controls"));
+      if (toggle !== null && panel !== null) {
+        const setOpen = (open) => {
+          toggle.setAttribute("aria-expanded", String(open));
+          toggle.textContent = open ? labels.close : labels.open;
+          panel.toggleAttribute("data-open", open);
+        };
+        toggle.addEventListener("click", () => {
+          setOpen(toggle.getAttribute("aria-expanded") !== "true");
+        });
+        document.addEventListener("keydown", (event) => {
+          if (event.key === "Escape" && toggle.getAttribute("aria-expanded") === "true") {
+            setOpen(false);
+            toggle.focus();
+          }
+        });
+      }
+    </script>
+  </body>
+</html>
+
+<style>
+  main:focus {
+    outline: none;
+  }
+</style>

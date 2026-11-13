@@ -1,0 +1,50 @@
+{
+  "locations": [
+    {
+      "id": "vyskov",
+      "name": "Kancelář Vyškov",
+      "address": {
+        "street": "Dědická 38/22",
+        "city": "Vyškov",
+        "postalCode": "682 01",
+        "country": "CZ"
+      },
+      "geo": {
+        "lat": 49.2847786,
+        "lng": 16.9882785
+      },
+      "mapUrl": "https://mapy.com/cs/zakladni?source=addr&id=10371336&x=16.9882785&y=49.2847786&z=17",
+      "accessNote": null
+    }
+  ],
+  "phones": [
+    {
+      "id": "kancelar",
+      "label": "Kancelář",
+      "number": "+420517352020",
+      "department": "office",
+      "locationId": "vyskov"
+    },
+    {
+      "id": "kancelar-mobil",
+      "label": "Kancelář – mobil",
+      "number": "+420739404909",
+      "department": "office",
+      "locationId": "vyskov"
+    },
+    {
+      "id": "kvetiny",
+      "label": "Vazárna květin",
+      "number": "+420731175835",
+      "department": "flowers",
+      "locationId": "vyskov"
+    }
+  ],
+  "emails": [
+    {
+      "id": "kancelar",
+      "label": "Kancelář",
+      "address": "pohrebnictvi@vyskov.cz"
+    }
+  ]
+}

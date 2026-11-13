@@ -1,0 +1,39 @@
+---
+/** 404: kicker "Chyba 404", one sentence, four ruled links. The rail keeps the nonstop number. */
+import { getSiteContext } from "@core/content/load.ts";
+import NightLayout from "../layouts/NightLayout.astro";
+import { ui } from "../i18n/cs.ts";
+
+const site = await getSiteContext();
+const wanted = ["jak-postupovat", "oznameni", "kontakt"] as const;
+const links = wanted
+  .map((id) => site.nav.find((item) => item.id === id))
+  .filter((item) => item !== undefined)
+  .map((item) => ({ label: item.label, href: item.href }));
+links.push({ label: ui.homeLink, href: "/" });
+---
+<NightLayout site={site} title={ui.notFoundTitle} description={ui.notFoundText} noindex>
+  <div class="page-head">
+    <p class="kicker">{ui.notFoundKicker}</p>
+    <h1 class="page-title">{ui.notFoundTitle}</h1>
+    <p class="page-lead">{ui.notFoundText}</p>
+  </div>
+  <nav aria-label={ui.notFoundNav} class="not-found-nav">
+    <ul class="link-rows">
+      {
+        links.map((link) => (
+          <li>
+            <a href={link.href}>{link.label}</a>
+          </li>
+        ))
+      }
+    </ul>
+  </nav>
+</NightLayout>
+
+<style>
+  .not-found-nav {
+    max-width: 34rem;
+    margin-top: 1.75rem;
+  }
+</style>

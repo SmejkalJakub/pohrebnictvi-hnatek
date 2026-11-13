@@ -1,0 +1,104 @@
+---
+/**
+ * People with photos: 3:4 portraits in four columns, each a numbered figure ("01 Name, role") with
+ * the direct phone under it. A person without a photo gets a text cell (number, name, role, phone)
+ * under a 1 px rule, never an empty frame. Numbers continue the page's figure count.
+ */
+import { Picture } from "astro:assets";
+import PhoneLink from "@core/components/PhoneLink.astro";
+import PlaceholderMark from "@core/components/PlaceholderMark.astro";
+import type { PersonView } from "@core/content/view-models.ts";
+import { resolveOptionalImage } from "@core/media/resolve.ts";
+import { figureNumber } from "../lib/figures.ts";
+
+interface Props {
+  people: PersonView[];
+  start: number;
+}
+
+const { people, start } = Astro.props;
+const cells = people.map((person, index) => ({
+  person,
+  number: figureNumber(start + index),
+  photo: resolveOptionalImage(person.photo),
+}));
+---
+<ul class="portraits" role="list">
+  {
+    cells.map((cell) => (
+      <li class="portrait" data-photo={cell.photo !== null ? "true" : "false"}>
+        <figure class="portrait-fig" data-figure={cell.photo !== null ? "" : undefined}>
+          {cell.photo !== null ? (
+            <PlaceholderMark active={cell.photo.isPlaceholder} kind="image" as="div">
+              <Picture
+                src={cell.photo.src}
+                alt={cell.photo.alt}
+                formats={["avif", "webp"]}
+                widths={[280, 420, 560]}
+                sizes="(min-width: 64rem) 17rem, (min-width: 48rem) 45vw, 100vw"
+                loading="lazy"
+                class="photo portrait-img"
+                style={`object-position: ${cell.photo.objectPosition}`}
+              />
+            </PlaceholderMark>
+          ) : null}
+          <figcaption class="portrait-caption">
+            <PlaceholderMark active={cell.person.placeholder} as="div">
+              <span class="fig-num" data-figure-number>{cell.number}</span>{" "}
+              <b class="portrait-name">{cell.person.name}</b>
+              <span class="portrait-role">{cell.person.role}</span>
+            </PlaceholderMark>
+          </figcaption>
+        </figure>
+        {cell.person.phone !== null ? (
+          <PhoneLink number={cell.person.phone.href.replace("tel:", "")} />
+        ) : null}
+      </li>
+    ))
+  }
+</ul>
+
+<style>
+  .portraits {
+    display: grid;
+    gap: 1.75rem 1.5rem;
+    margin: 0;
+    padding: 1.75rem 0 0;
+    list-style: none;
+  }
+
+  .portrait[data-photo="false"] .portrait-fig {
+    padding-top: 0.875rem;
+    border-top: 1px solid var(--ink);
+  }
+
+  .portrait :global(.portrait-img) {
+    aspect-ratio: 3 / 4;
+  }
+
+  .portrait-caption {
+    padding-top: 0.625rem;
+    line-height: 1.45;
+  }
+
+  .portrait-name {
+    font-size: 1.3125rem;
+  }
+
+  .portrait-role {
+    display: block;
+    color: var(--muted);
+  }
+
+  @media (min-width: 48rem) {
+    .portraits {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (min-width: 64rem) {
+    .portraits {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+</style>

@@ -3,6 +3,7 @@ import { mkdtemp, readFile, readdir, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { defaultSectionsFor } from "../../../core/content/config.ts";
 import { loadValidatedContent } from "../../../core/content/snapshot.ts";
 import { Approvals, Ledger, collectTrackedFacts } from "../../../core/gate/launch-check.ts";
 import { FIXTURE_PRODUCTION_RULES } from "../../export/verify.ts";
@@ -10,10 +11,17 @@ import { loadManifest } from "../../lib/repo.ts";
 import { planAstroRun } from "../astro.ts";
 import { assertClientId, errorRules, gateClient, loadClient } from "../clients.ts";
 import { verifyExpectation } from "../export.ts";
-import { scaffoldClient } from "../new.ts";
+import { copiesContent, scaffoldClient } from "../new.ts";
 import { validateClient } from "../validate.ts";
 
-const TEMPLATES = ["rodinna-tradice", "dustojna-jednoduchost"] as const;
+const TEMPLATES = [
+  "rodinna-tradice",
+  "dustojna-jednoduchost",
+  "nocni-linka",
+  "dve-cesty",
+  "ticha-krajina",
+  "lide-a-misto",
+] as const;
 
 let clientsDir: string;
 
@@ -56,7 +64,8 @@ describe.each(TEMPLATES)("client:new with %s", (templateId) => {
     const manifest = await loadManifest(templateId);
     expect(site.config.template).toBe(templateId);
     expect(site.config.siteUrl).toBe("https://example.invalid");
-    expect(site.config.homepage.sections).toEqual(manifest.homepageSections.default);
+    // Feature-bound sections (people, notices, documents, faq) wait until their feature is on.
+    expect(site.config.homepage.sections).toEqual(defaultSectionsFor(manifest, {}));
     const defaults = Object.fromEntries(
       Object.entries(manifest.options).map(([name, declaration]) => [name, declaration.default]),
     );
@@ -144,5 +153,39 @@ describe("verifyExpectation", () => {
 
   it("expects a passing production build when nothing blocks it", () => {
     expect(verifyExpectation([])).toEqual({ production: "pass", rules: [] });
+  });
+});
+
+describe("client:new and the landscape photo set", () => {
+  it("copies site/landscapes.json only for a template that supports landscapes", async () => {
+    for (const templateId of TEMPLATES) {
+      const manifest = await loadManifest(templateId);
+      expect(copiesContent(manifest, "site/landscapes.json"), templateId).toBe(manifest.supports.landscapes);
+    }
+    expect((await loadManifest("ticha-krajina")).supports.landscapes).toBe(true);
+  });
+
+  it("starts the landscape feature off, with the file in place for the CMS", async () => {
+    const site = await loadClient("test-ticha-krajina", clientsDir);
+    expect(site.config.features.landscapes).toBe(false);
+    expect(existsSync(path.join(clientsDir, "test-ticha-krajina", "src/content/site/landscapes.json"))).toBe(true);
+    expect(existsSync(path.join(clientsDir, "test-rodinna-tradice", "src/content/site/landscapes.json"))).toBe(false);
+  });
+});
+
+describe("client:new and the places set", () => {
+  it("copies site/places.json only for a template that supports places", async () => {
+    for (const templateId of TEMPLATES) {
+      const manifest = await loadManifest(templateId);
+      expect(copiesContent(manifest, "site/places.json"), templateId).toBe(manifest.supports.places);
+    }
+    expect((await loadManifest("lide-a-misto")).supports.places).toBe(true);
+  });
+
+  it("starts the places feature off, with the file in place for the CMS", async () => {
+    const site = await loadClient("test-lide-a-misto", clientsDir);
+    expect(site.config.features.places).toBe(false);
+    expect(existsSync(path.join(clientsDir, "test-lide-a-misto", "src/content/site/places.json"))).toBe(true);
+    expect(existsSync(path.join(clientsDir, "test-ticha-krajina", "src/content/site/places.json"))).toBe(false);
   });
 });

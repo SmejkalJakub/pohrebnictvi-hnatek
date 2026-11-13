@@ -1,0 +1,464 @@
+/*
+ * Template E "Tichá krajina": tokens, base, grid, stamp line, bands, core hooks.
+ * Values from docs/designs/ticha-krajina/html/*.html and tokens.json. Plain CSS (no Tailwind).
+ * Guardrails: no boxes, cards, tinted panels or borders around sections; no icons; no bold display
+ * headings; no centred layouts; no text on photos; space is the separator.
+ */
+
+:root,
+:root[data-palette="mlha"] {
+  --ground: #eef1f0;
+  --ink: #1b2422;
+  --muted: #4c5856;
+  --accent: #2f5160;
+  --on-accent: #ffffff;
+  --rule: #7e8a88;
+  --photo: #c9d2cf;
+}
+
+:root[data-palette="len"] {
+  --ground: #f3efe7;
+  --ink: #24211c;
+  --muted: #59534a;
+  --accent: #6b5a3a;
+  --on-accent: #ffffff;
+  --rule: #8f8676;
+  --photo: #d8cfbf;
+}
+
+:root {
+  --serif: "Spectral", Georgia, "Times New Roman", serif;
+  --sans: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --gutter: 1rem;
+  --s1: 0.75rem;
+  --s2: 1.5rem;
+  --s3: 3rem;
+  --s4: 6rem;
+  --s5: 9rem;
+  --h1: 2.375rem;
+  --h2: 1.875rem;
+  --num: 2.0625rem;
+  color-scheme: light;
+}
+
+:root[data-font="gelasio-figtree"] {
+  --serif: "Gelasio", Georgia, "Times New Roman", serif;
+}
+
+@media (min-width: 48rem) {
+  :root {
+    --gutter: 2rem;
+    --h1: 3.5rem;
+    --h2: 2.5rem;
+  }
+}
+
+@media (min-width: 64rem) {
+  :root {
+    --gutter: 4rem;
+    --h1: 4.5rem;
+    --h2: 2.75rem;
+    --num: 2.625rem;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * Base
+ * ------------------------------------------------------------------------- */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--serif);
+  font-size: 1.25rem;
+  font-weight: 400;
+  line-height: 1.65;
+  overflow-wrap: break-word;
+}
+
+p,
+h1,
+h2,
+h3,
+h4,
+ul,
+ol,
+dl,
+dd,
+figure,
+blockquote {
+  margin: 0;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-weight: 400;
+  line-height: 1.1;
+  text-wrap: balance;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+a {
+  color: var(--ink);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.25em;
+}
+
+a:hover {
+  text-decoration-thickness: 2px;
+}
+
+:focus-visible {
+  outline: 3px solid var(--ink);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.nowrap {
+  white-space: nowrap;
+}
+
+.sans {
+  font-family: var(--sans);
+  font-size: 1.125rem;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.lead {
+  font-size: 1.375rem;
+  line-height: 1.55;
+}
+
+.skip-link {
+  position: absolute;
+  left: var(--gutter);
+  top: -100vh;
+  z-index: 10;
+  padding: 0.75rem 1rem;
+  background: var(--ink);
+  color: var(--ground);
+  font-family: var(--sans);
+  font-weight: 500;
+}
+
+.skip-link:focus {
+  top: var(--gutter);
+}
+
+/* Every text link that stands alone is a 44 px target (inline-block + padding, never flex). */
+.go {
+  display: inline-block;
+  padding-block: 0.625rem;
+}
+
+/* ---------------------------------------------------------------------------
+ * Core safety components (styled through their data hooks only; text stays)
+ * ------------------------------------------------------------------------- */
+
+[data-prototype-banner] {
+  padding: 0.5rem var(--gutter);
+  border-bottom: 1px solid var(--rule);
+  color: var(--muted);
+  font-family: var(--sans);
+  font-size: 1.125rem;
+  font-weight: 500;
+}
+
+[data-placeholder-label],
+[data-unreviewed-mark],
+[data-missing-fact],
+[data-demo-label] {
+  display: inline-block;
+  padding: 0 0.375rem;
+  border: 1px dashed var(--muted);
+  color: var(--muted);
+  font-family: var(--sans);
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: 1.5;
+  letter-spacing: 0.02em;
+  vertical-align: middle;
+}
+
+[data-placeholder="content"] > [data-placeholder-label],
+[data-placeholder="image"] > [data-placeholder-label] {
+  margin-bottom: 0.5rem;
+}
+
+[data-demo-label] {
+  margin-left: 0.25rem;
+}
+
+[data-notice-qr] svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/*
+ * Phone numbers never wrap; a label before the number may. Phone links are 44 px targets:
+ * inline-block + padding, never flex (a flex container drops the space between a label text run
+ * and the number span: S6 lesson, QA test 9).
+ */
+[data-part="number"],
+[data-phone-link]:not(:has(span)) {
+  white-space: nowrap;
+}
+
+[data-phone-link] {
+  display: inline-block;
+  padding-block: 0.625rem;
+}
+
+/* ---------------------------------------------------------------------------
+ * The 12-column grid: heading in columns 1–4, text in 6–11 (one column below 48 rem)
+ * ------------------------------------------------------------------------- */
+
+.wrap {
+  padding-inline: var(--gutter);
+}
+
+.passage {
+  padding: var(--s3) var(--gutter) 0;
+}
+
+.passage-heading {
+  font-size: var(--h2);
+  line-height: 1.12;
+}
+
+.passage-body > * + * {
+  margin-top: 0.875rem;
+}
+
+.passage-body {
+  margin-top: 0.75rem;
+}
+
+.label {
+  color: var(--muted);
+  font-family: var(--sans);
+  font-size: 1.125rem;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+@media (min-width: 48rem) {
+  .grid12,
+  .passage {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    column-gap: 1.5rem;
+  }
+
+  .passage > .passage-head {
+    grid-column: 1 / span 4;
+  }
+
+  .passage > .passage-body {
+    grid-column: 6 / span 6;
+    margin-top: 0;
+  }
+
+  .passage > .passage-full {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (min-width: 64rem) {
+  .passage {
+    padding-top: var(--s4);
+  }
+}
+
+/* Page openings (inner pages): H1 in columns 1–7, lead in 9–12, bottom-aligned. */
+.opening {
+  padding: 1.625rem var(--gutter) 0;
+}
+
+.opening-title {
+  font-size: var(--h1);
+  line-height: 1.06;
+  letter-spacing: -0.01em;
+}
+
+.opening-side {
+  margin-top: 0.875rem;
+}
+
+.opening-side > * + * {
+  margin-top: 0.75rem;
+}
+
+@media (min-width: 48rem) {
+  .opening {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    column-gap: 1.5rem;
+    align-items: end;
+    padding-top: 4.5rem;
+  }
+
+  .opening > .opening-main {
+    grid-column: 1 / span 7;
+  }
+
+  .opening > .opening-side {
+    grid-column: 9 / span 4;
+    margin-top: 0;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * Prose (Markdown bodies)
+ * ------------------------------------------------------------------------- */
+
+.prose > * + * {
+  margin-top: 0.875rem;
+}
+
+.prose h2,
+.prose h3 {
+  margin-top: 2rem;
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.prose h2 + *,
+.prose h3 + * {
+  margin-top: 0.5rem;
+}
+
+.prose ul,
+.prose ol {
+  padding-left: 1.375rem;
+}
+
+.prose li + li {
+  margin-top: 0.375rem;
+}
+
+/* Plain bulleted lists in the comps (inclusions). */
+.dot-list {
+  padding-left: 1.375rem;
+}
+
+.dot-list li + li {
+  margin-top: 0.25rem;
+}
+
+/* ---------------------------------------------------------------------------
+ * Hairline tables (prices, office hours)
+ * ------------------------------------------------------------------------- */
+
+.hairlines {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.hairlines th,
+.hairlines td {
+  padding: 0.75rem 0;
+  border-top: 1px solid var(--rule);
+  vertical-align: top;
+  text-align: left;
+  font-weight: 400;
+}
+
+.hairlines .num {
+  padding-left: 1.5rem;
+  text-align: right;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* ---------------------------------------------------------------------------
+ * Checkboxes (guide)
+ * ------------------------------------------------------------------------- */
+
+.tick {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+  padding-block: 0.375rem;
+  font-size: 1.1875rem;
+  cursor: pointer;
+}
+
+.tick input {
+  flex: none;
+  width: 1.625rem;
+  height: 1.625rem;
+  margin: 0.1875rem 0 0;
+  accent-color: var(--accent);
+}
+
+/* ---------------------------------------------------------------------------
+ * Details (FAQ, step bodies)
+ * ------------------------------------------------------------------------- */
+
+details > summary {
+  cursor: pointer;
+}
+
+.more > summary {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  font-family: var(--sans);
+  font-size: 1.125rem;
+  font-weight: 500;
+  text-decoration: underline;
+  text-underline-offset: 0.3em;
+}
+
+.print-only {
+  display: none;
+}

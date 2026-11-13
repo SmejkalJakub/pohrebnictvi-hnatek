@@ -1,6 +1,7 @@
 ---
 /** Conditional route (template-contract §4): no file is emitted when pricing is hidden. */
 import DemoPricingNotice from "@core/components/DemoPricingNotice.astro";
+import VatNote from "@core/components/VatNote.astro";
 import { getPage, getPricing, getSiteContext } from "@core/content/load.ts";
 import Site from "../../layouts/Site.astro";
 import PageHeading from "../../components/PageHeading.astro";
@@ -31,7 +32,7 @@ const Body = page.Content;
       <div class="space-y-3">
         <DemoPricingNotice pricing={pricing} brandName={site.company.brandName} />
         {pricing.generalNote !== null ? <p class="max-w-[48rem]">{pricing.generalNote}</p> : null}
-        {pricing.vatNote !== null ? <p class="text-muted">{pricing.vatNote}</p> : null}
+        <VatNote pricing={pricing} class="text-muted" />
         {pricing.validFrom !== null ? <p class="text-muted">{ui.priceValidFrom} {formatIsoDate(pricing.validFrom)}</p> : null}
       </div>
       {pricing.groups.map((group) => <PriceTable group={group} />)}

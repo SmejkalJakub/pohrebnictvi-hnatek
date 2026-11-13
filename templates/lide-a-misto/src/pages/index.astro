@@ -1,0 +1,166 @@
+---
+/**
+ * Home: the people opening (hero), then the sections in site.config.homepage.sections order.
+ * Price, office and notices form one row of ruled columns when they follow each other
+ * (data-col); every other section spans the page. Figures are numbered from 01 on this page: the
+ * people photo, then the places.
+ */
+import {
+  getGuidance,
+  getNoticeIndex,
+  getOptionalPage,
+  getPage,
+  getPeople,
+  getPlaces,
+  getPricing,
+  getServices,
+  getSiteContext,
+} from "@core/content/load.ts";
+import type { HomepageSection } from "@core/content/config.ts";
+import EssayLayout from "../layouts/EssayLayout.astro";
+import PeopleHero from "../components/PeopleHero.astro";
+import PlacesSection from "../components/PlacesSection.astro";
+import FirstStepsRow from "../components/FirstStepsRow.astro";
+import ReceptionSection from "../components/ReceptionSection.astro";
+import ServiceLinksSection from "../components/ServiceLinksSection.astro";
+import PriceColumn from "../components/PriceColumn.astro";
+import ReceptionOffice from "../components/ReceptionOffice.astro";
+import NoticesColumn from "../components/NoticesColumn.astro";
+import CatalogueLinkRow from "../components/CatalogueLinkRow.astro";
+import { seoDescription } from "../lib/site.ts";
+import { ui } from "../i18n/cs.ts";
+
+const site = await getSiteContext();
+const home = await getPage("home");
+const about = await getPage("o-nas");
+const servicesPage = await getPage("sluzby");
+const services = await getServices();
+const guidance = await getGuidance();
+const people = await getPeople();
+const places = await getPlaces();
+const pricing = await getPricing();
+const cenik = await getOptionalPage("cenik");
+const noticesPage = await getOptionalPage("oznameni");
+const noticeIndex = await getNoticeIndex();
+
+let featured = services.filter((service) => service.data.featured);
+if (featured.length === 0) {
+  featured = services.slice(0, 3);
+}
+const firstHours = guidance.filter((entry) => entry.data.phase === "first-hours");
+let aboutText = about.data.lead ?? about.data.title;
+if (about.data.excerpt !== null) {
+  aboutText = about.data.excerpt;
+}
+const catalogueLinks = site.nav.filter((item) => item.id === "rakve" || item.id === "kvetiny");
+let noticesTitle: string = ui.noticesHeading;
+if (noticesPage !== null) {
+  noticesTitle = noticesPage.data.title;
+}
+let priceTitle: string = ui.priceHeading;
+if (cenik !== null) {
+  priceTitle = cenik.data.title;
+}
+const noticeCount = noticeIndex.upcoming.length + noticeIndex.recent.length;
+const heroImage = home.data.heroImage;
+let placesStart = 1;
+if (heroImage !== null) {
+  placesStart = 2;
+}
+
+/** Sections after the hero that have something to show, in the client's order. */
+function renders(section: HomepageSection): boolean {
+  if (section === "hero") {
+    return false;
+  }
+  if (section === "services") {
+    return featured.length > 0;
+  }
+  if (section === "people") {
+    return people.length > 0;
+  }
+  if (section === "catalogue-links") {
+    return catalogueLinks.length > 0;
+  }
+  if (section === "notices") {
+    return site.config.features.notices && noticesPage !== null;
+  }
+  if (section === "price-summary") {
+    return pricing !== null;
+  }
+  if (section === "next-steps") {
+    return firstHours.length > 0;
+  }
+  if (section === "documents" || section === "faq") {
+    return false;
+  }
+  return true;
+}
+
+const COLUMN_SECTIONS: readonly HomepageSection[] = ["price-summary", "contact-summary", "notices"];
+const order = site.config.homepage.sections;
+const content = order.filter(renders);
+
+/** Position (1–3) inside a run of adjacent column sections; null when the run has one section. */
+const columns = new Map<number, number | null>();
+let run: number[] = [];
+function closeRun(): void {
+  run.forEach((index, position) => {
+    if (run.length === 1) {
+      columns.set(index, null);
+    } else {
+      columns.set(index, (position % 3) + 1);
+    }
+  });
+  run = [];
+}
+content.forEach((section, index) => {
+  if (COLUMN_SECTIONS.includes(section)) {
+    run.push(index);
+  } else {
+    closeRun();
+  }
+});
+closeRun();
+
+function colOf(index: number): number | null {
+  return columns.get(index) ?? null;
+}
+---
+<EssayLayout site={site} title={home.data.metaTitle} description={seoDescription(home.data)} mainClass="home-grid">
+  {
+    order.includes("hero") ? (
+      <PeopleHero
+        title={home.data.title}
+        lead={home.data.lead}
+        placeholder={home.data.placeholder}
+        image={heroImage}
+        emergency={site.emergency}
+      />
+    ) : null
+  }
+  {
+    content.map((section, index) => (
+      <>
+        {section === "family-story" ? (
+          <PlacesSection
+            places={places}
+            start={placesStart}
+            aboutTitle={about.data.title}
+            aboutText={aboutText}
+            aboutPlaceholder={about.data.placeholder}
+          />
+        ) : null}
+        {section === "next-steps" ? <FirstStepsRow steps={firstHours} /> : null}
+        {section === "people" ? <ReceptionSection people={people} /> : null}
+        {section === "services" ? <ServiceLinksSection services={featured} title={servicesPage.data.title} /> : null}
+        {section === "price-summary" && pricing !== null ? (
+          <PriceColumn pricing={pricing} title={priceTitle} col={colOf(index)} />
+        ) : null}
+        {section === "contact-summary" ? <ReceptionOffice site={site} col={colOf(index)} /> : null}
+        {section === "notices" ? <NoticesColumn title={noticesTitle} count={noticeCount} col={colOf(index)} /> : null}
+        {section === "catalogue-links" ? <CatalogueLinkRow links={catalogueLinks} /> : null}
+      </>
+    ))
+  }
+</EssayLayout>

@@ -1,0 +1,64 @@
+---
+/** Služby: a short index of statements (featured services), then "Další služby" as inline links. */
+import { getPage, getServices, getSiteContext } from "@core/content/load.ts";
+import NightLayout from "../../layouts/NightLayout.astro";
+import TitleStatement from "../../components/TitleStatement.astro";
+import FeaturedStatements from "../../components/FeaturedStatements.astro";
+import Statement from "../../components/Statement.astro";
+import StatementProse from "../../components/StatementProse.astro";
+import { ui } from "../../i18n/cs.ts";
+import { seoTitle } from "../../lib/site.ts";
+
+const site = await getSiteContext();
+const page = await getPage("sluzby");
+const services = await getServices();
+let featured = services.filter((service) => service.data.featured);
+if (featured.length === 0) {
+  featured = services;
+}
+const others = services.filter((service) => !featured.includes(service));
+const Body = page.Content;
+---
+<NightLayout site={site} title={seoTitle(page.data)} description={page.data.metaDescription ?? page.data.title}>
+  <TitleStatement kicker={ui.servicesKicker} title={page.data.title} lead={page.data.lead} placeholder={page.data.placeholder} />
+  <FeaturedStatements services={featured} context="index" />
+  {
+    others.length > 0 ? (
+      <Statement id="dalsi-sluzby" heading={ui.moreServices} size="small">
+        <ul class="inline-list">
+          {others.map((service) => (
+            <li>
+              <a href={`/sluzby/${service.id}/`}>{service.data.title}</a>
+            </li>
+          ))}
+        </ul>
+      </Statement>
+    ) : null
+  }
+  <StatementProse show={page.hasBody}><Body /></StatementProse>
+</NightLayout>
+
+<style>
+  .inline-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 0.75rem;
+    margin-top: 0.875rem;
+    padding: 0;
+    list-style: none;
+    font-size: 1.375rem;
+    line-height: 1.8;
+  }
+
+  .inline-list li:not(:last-child)::after {
+    content: "·";
+    margin-left: 0.75rem;
+    color: var(--muted);
+  }
+
+  @media (min-width: 64rem) {
+    .inline-list {
+      font-size: 1.5rem;
+    }
+  }
+</style>

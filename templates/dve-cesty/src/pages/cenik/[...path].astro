@@ -1,0 +1,121 @@
+---
+/**
+ * Ceník (S předstihem; conditional route: no file while pricing is hidden). The stone opening:
+ * H1, the VAT note in bold right under it (research L9), then the ruled nonstop line, kept in the
+ * first screen at 375 px; below the panel the lead, the demo notice, validity and the print hint;
+ * then the groups with inclusion lists and "Jednotlivé položky" as a ruled table, the VAT note
+ * again. Prints as the drawn A4 sheet (styles/print.css).
+ */
+import DemoPricingNotice from "@core/components/DemoPricingNotice.astro";
+import VatNote from "@core/components/VatNote.astro";
+import { getPage, getPricing, getSiteContext } from "@core/content/load.ts";
+import { formatAddressInline } from "@core/format/address.ts";
+import { formatCzechDate } from "@core/format/date.ts";
+import { formatPhone } from "@core/format/phone.ts";
+import CestyLayout from "../../layouts/CestyLayout.astro";
+import PathPanel from "../../components/PathPanel.astro";
+import PriceGroupBlock from "../../components/PriceGroupBlock.astro";
+import ItemsRuledTable from "../../components/ItemsRuledTable.astro";
+import { getPathLinks } from "../../lib/page-links.ts";
+import { mainLocation, primaryOfficePhone, seoDescription, seoTitle } from "../../lib/site.ts";
+import { ui } from "../../i18n/cs.ts";
+
+export async function getStaticPaths() {
+  const pricing = await getPricing();
+  if (pricing === null) {
+    return [];
+  }
+  return [{ params: { path: undefined } }];
+}
+
+const site = await getSiteContext();
+const page = await getPage("cenik");
+const pricing = await getPricing();
+if (pricing === null) {
+  throw new Error("unreachable: pricing hidden");
+}
+const links = await getPathLinks(site, Astro.url.pathname, "ahead");
+const packages = pricing.groups.filter((group) => group.includes.length > 0 || group.excludes.length > 0);
+const plain = pricing.groups.filter((group) => !packages.includes(group));
+const plainItems = plain.flatMap((group) => group.items);
+const office = primaryOfficePhone(site);
+const printUrl = `${site.config.siteUrl.replace(/^https?:\/\//, "").replace(/\/$/, "")}/cenik/`;
+const Body = page.Content;
+---
+<CestyLayout site={site} path="ahead" title={seoTitle(page.data)} description={seoDescription(page.data)} noindex={pricing.hasDemo}>
+  <p class="print-only letterhead">
+    {formatAddressInline(mainLocation(site).address)} · {office.label}{" "}{formatPhone(office.number).display}
+  </p>
+  <PathPanel tone="ahead" title={page.data.title} placeholder={page.data.placeholder} links={links} emergency={site.emergency}>
+    <VatNote pricing={pricing} class="strong" />
+  </PathPanel>
+  <div class="section intro narrow">
+    {page.data.lead !== null ? <p class="intro-lead">{page.data.lead}</p> : null}
+    {pricing.generalNote !== null ? <p>{pricing.generalNote}</p> : null}
+    <DemoPricingNotice pricing={pricing} brandName={site.company.brandName} class="muted" />
+    {pricing.validFrom !== null ? <p class="muted">{ui.priceValidFrom(formatCzechDate(pricing.validFrom))}</p> : null}
+    <p class="muted no-print">{ui.printHint}</p>
+  </div>
+  {packages.map((group) => <PriceGroupBlock group={group} />)}
+  {
+    plainItems.length > 0 ? (
+      <section id="polozky" class="section items" aria-labelledby="polozky-nadpis">
+        <h2 id="polozky-nadpis" class="section-heading rule-top">{ui.otherItems}</h2>
+        <ItemsRuledTable items={plainItems} caption={ui.otherItems} withHead />
+      </section>
+    ) : null
+  }
+  <div class="section">
+    <VatNote pricing={pricing} class="strong" />
+  </div>
+  {
+    page.hasBody ? (
+      <div class="section prose narrow">
+        <Body />
+      </div>
+    ) : null
+  }
+  <div class="print-only print-close">
+    <p>
+      <strong>{site.emergency.label} {formatPhone(site.emergency.phone).display}</strong>
+      <br />
+      {ui.availability}
+    </p>
+    <section aria-labelledby="tisk-kancelar" data-office-hours>
+      <h2 id="tisk-kancelar" class="print-head">{ui.officeHeading}</h2>
+      <p>{site.officeHoursRows.map((row) => `${row.days} ${row.text}`).join(", ")}</p>
+    </section>
+  </div>
+  <p class="print-only printed-from">{ui.printedFrom} {printUrl}</p>
+</CestyLayout>
+
+<style>
+  .intro-lead {
+    font-size: 1.1875rem;
+  }
+
+  .items > * + * {
+    margin-top: 1rem;
+  }
+
+  @media print {
+    .letterhead,
+    .printed-from {
+      font-size: 9pt;
+    }
+
+    .print-close {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      column-gap: 8mm;
+      margin-top: 6mm;
+      padding-top: 3mm;
+      border-top: 2px solid #111111;
+      font-size: 10pt;
+    }
+
+    .print-head {
+      font-size: 10pt;
+    }
+  }
+</style>

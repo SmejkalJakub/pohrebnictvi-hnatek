@@ -21,6 +21,8 @@ const manifest = {
     guestInfo: false,
     prePlanning: false,
     priceInclusions: false,
+    landscapes: false,
+    places: false,
   },
 
   homepageSections: {

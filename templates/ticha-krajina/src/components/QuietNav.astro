@@ -1,0 +1,95 @@
+---
+/**
+ * The one navigation list. ≥ 64 rem: a plain text row (Figtree 18 px), current page marked with
+ * a 3 px accent bar instead of the underline. Below: the panel the "Menu" button opens, large light
+ * serif words separated by space only, then a stamp line (not on notice pages). The <nav>
+ * landmark is always present; only the panel inside it hides.
+ */
+import type { EmergencyTransport } from "@core/content/schemas.ts";
+import StampLine from "./StampLine.astro";
+import type { QuietLink } from "../lib/site.ts";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  id: string;
+  links: QuietLink[];
+  emergency: EmergencyTransport;
+  neutral: boolean;
+}
+
+const { id, links, emergency, neutral } = Astro.props;
+---
+<nav aria-label={ui.mainNav} class="quiet-nav">
+  <div id={id} class="menu-panel">
+    <ul class="nav-list" role="list">
+      {
+        links.map((link) => (
+          <li>
+            <a href={link.href} class="nav-link" aria-current={link.current ? "page" : undefined}>
+              {link.label}
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+    {neutral ? null : <StampLine emergency={emergency} place="menu" />}
+  </div>
+</nav>
+
+<style>
+  .nav-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .nav-link {
+    display: inline-block;
+    padding-block: 0.375rem;
+    font-size: 1.75rem;
+    line-height: 1.3;
+    text-underline-offset: 0.2em;
+  }
+
+  .nav-link[aria-current="page"] {
+    text-decoration: none;
+    border-bottom: 3px solid var(--accent);
+  }
+
+  .menu-panel {
+    padding: 1.25rem 0 0.5rem;
+  }
+
+  :global(.js) .menu-panel:not([data-open]) {
+    display: none;
+  }
+
+  @media (min-width: 64rem) {
+    :global(.js) .menu-panel:not([data-open]),
+    .menu-panel {
+      display: block;
+      padding: 0;
+    }
+
+    .nav-list {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      column-gap: 1.75rem;
+      row-gap: 0.25rem;
+    }
+
+    .nav-link {
+      padding-block: 0.5rem;
+      font-family: var(--sans);
+      font-size: 1.125rem;
+      font-weight: 500;
+      line-height: 1.5;
+      text-underline-offset: 0.3em;
+    }
+
+    .nav-link[aria-current="page"] {
+      padding-bottom: calc(0.5rem - 3px);
+    }
+  }
+</style>

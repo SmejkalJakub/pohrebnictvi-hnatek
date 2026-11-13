@@ -1,0 +1,71 @@
+---
+/** Časté otázky: one statement per topic, each question a <details> with its Markdown answer. */
+import type { CollectionEntry } from "astro:content";
+import PlaceholderMark from "@core/components/PlaceholderMark.astro";
+import { render } from "@core/content/load.ts";
+import type { FaqGroup } from "@core/content/view-models.ts";
+import Statement from "./Statement.astro";
+
+interface Props {
+  groups: FaqGroup<CollectionEntry<"faq">>[];
+  idPrefix: string;
+}
+
+const { groups, idPrefix } = Astro.props;
+const answers = new Map<string, Awaited<ReturnType<typeof render>>["Content"]>();
+for (const group of groups) {
+  for (const entry of group.entries) {
+    answers.set(entry.id, (await render(entry)).Content);
+  }
+}
+---
+{
+  groups.map((group) => (
+    <Statement id={`${idPrefix}-${group.topic}`} heading={group.label} size="small" level={3}>
+      <ul class="questions">
+        {group.entries.map((entry) => {
+          const Answer = answers.get(entry.id);
+          return (
+            <li>
+              <PlaceholderMark active={entry.data.placeholder} as="div">
+                <details class="question">
+                  <summary>{entry.data.question}</summary>
+                  <div class="prose answer">{Answer !== undefined ? <Answer /> : null}</div>
+                </details>
+              </PlaceholderMark>
+            </li>
+          );
+        })}
+      </ul>
+    </Statement>
+  ))
+}
+
+<style>
+  .questions {
+    margin-top: 0.75rem;
+    padding: 0;
+    list-style: none;
+  }
+
+  .questions > li {
+    border-top: 1px solid var(--rule);
+  }
+
+  .questions > li:last-child {
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .question summary {
+    display: flex;
+    align-items: center;
+    min-height: 2.75rem;
+    padding-block: 0.625rem;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .answer {
+    padding-bottom: 1rem;
+  }
+</style>

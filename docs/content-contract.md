@@ -30,6 +30,8 @@ src/
       emergency.json            # nonstop transport ONLY
       pricing.json
       legal.json                # OPTIONAL: ADR body and complaints contact (§6.17)
+      landscapes.json           # OPTIONAL: commissioned landscape photos for bands (§6.18)
+      places.json               # OPTIONAL: the firm's own places, photo optional (§6.19)
     pages/                      # one Markdown file per fixed route (page copy)
       home.md  jak-postupovat.md  sluzby.md  rakve.md  kvetiny.md
       o-nas.md  kontakt.md  cenik.md  ochrana-osobnich-udaju.md
@@ -152,6 +154,8 @@ After handover the client owns the content. CMS edits are by definition client-p
 | Optional: frequently asked questions | `faq/*.md` | `Faq` §6.15 |
 | Optional: documents for download | `documents/*.md` + PDFs in `assets/documents/` | `DocumentEntry` §6.16 |
 | Optional: legal information (ADR, complaints) | `site/legal.json` + `pages/pravni-informace.md` | `LegalInfo` §6.17 |
+| Optional: landscape photos for bands (template E) | `site/landscapes.json` | `LandscapeSet` §6.18 |
+| Optional: the firm's places (template G) | `site/places.json` | `PlaceSet` §6.19 |
 | Optional: guests of a funeral, planning ahead | `pages/pro-ucastniky.md`, `pages/pohreb-predem.md` | `Page` §6.6 |
 | What a price includes / excludes | `site/pricing.json` → `groups[].includes`, `excludes` | `Pricing` §6.11 |
 
@@ -664,6 +668,45 @@ export const LegalInfo = z.object({
 
 Consumer law requires telling consumers about the ADR body (research L10, ⚖). When `legal.json` and `pages/pravni-informace.md` both exist, `SiteContext.legalLink` is set and templates that render `/pravni-informace/` link it from the footer of every page. `legal.json` without the page warns (G-076), because nothing would show it. ADR name, URL and the complaints contact are tracked facts for the launch check.
 
+### 6.18 Landscape photos: krajiny (optional singleton, `site/landscapes.json`)
+
+Added 2026-11-13 for template E `ticha-krajina` (docs/notes/s8-ticha-krajina.md §2). A per-client set of commissioned photographs of the region (landscapes or buildings) for the full-bleed bands a supporting template draws between sections.
+
+```ts
+export const LandscapeImage = z.object({
+  image: ImageRef,      // §6.3; the design's "caption" is ImageRef.caption
+  place: text(120),     // "Drahanská vrchovina nad Vyškovem", shown under the band
+}); // source "licensed-stock" is rejected: only the client's own or commissioned photos
+export const LandscapeSet = z.object({ images: z.array(LandscapeImage).max(12).default([]) });
+```
+
+- **Switch:** `features.landscapes` in `site.config.ts` (agent-only, default off) with `supports.landscapes` in the manifest (G-005). While it is off, the file is ignored: its images are not imported or checked for G-032/G-033, and the CMS does not show it.
+- **Images:** while the feature is on, every photo is a published image: G-003 (file exists; checked even while off), G-032 (no placeholder in production), G-033 (rights confirmed), and the launch check's `approvals.images[<file>].rightsEvidence` (L-008) apply as to any other image.
+- **Guardrail (not checkable by the schema):** no people, sunsets, clouds or flowers; no stock or computer-generated images; never in the first viewport; no text on the photos. The CMS shows these rules as the list's help text, and the owner reviews the photos before launch.
+- **G-077:** the feature on without the file is an error in every mode, because the CMS cannot create files (S2 finding B8). An empty list (`{ "images": [] }`) is valid: bands then become space.
+- `client:new` copies the fixture's file (three neutral placeholders) only for a supporting template; the feature stays off until /site-build switches it on.
+
+### 6.19 The firm's places: naše místa (optional singleton, `site/places.json`)
+
+Added 2026-11-13 for template G `lide-a-misto` (docs/notes/s11-lide-a-misto.md §2). The real places where the firm looks after the dead and the families: the office, the ceremony hall, the hearse, the flower workshop, a cemetery it tends. Each place has a name, an optional address and sentence, and an optional photo. A place without a photo is still shown, as a numbered row with its address, never as an empty frame.
+
+```ts
+export const Place = z.object({
+  name: text(80),               // "Kancelář a vazárna květin"
+  address: optionalText(120),   // free text, not a tracked fact: "Dědická 38/22, Vyškov" or "u hřbitova"
+  note: optionalText(160),      // one sentence about the place
+  image: OptionalImage,         // §6.3
+}); // source "licensed-stock" and depicts "generic" are rejected: the firm's own places on its own or commissioned photos
+export const PlaceSet = z.object({ places: z.array(Place).max(12).default([]) });
+```
+
+- **Switch:** `features.places` in `site.config.ts` (agent-only, default off) with `supports.places` in the manifest (G-005). While it is off, the file is ignored: its images are not imported or checked for G-032/G-033, and the CMS does not show it.
+- **Images:** while the feature is on, every place photo is a published image: G-003 (file exists; checked even while off), G-032 (no placeholder in production), G-033 (rights confirmed), and the launch check's `approvals.images[<file>].rightsEvidence` (L-008) apply as to any other image.
+- **Address:** free text the owner edits. The office address that the launch check tracks stays in `contact.json`; a place's address repeats it at most.
+- **Guardrail (not checkable by the schema):** no mourners and no deceased in the photos; no stock or computer-generated images. The CMS shows this as the list's help text.
+- **G-080:** the feature on without the file is an error in every mode, because the CMS cannot create files. An empty list (`{ "places": [] }`) is valid: the template then omits the places block.
+- `client:new` copies the fixture's file (six neutral places, four with placeholder photos) only for a supporting template; the feature stays off until /site-build switches it on.
+
 ## 7. Cross-cutting content rules
 
 ### 7.1 Missing data
@@ -729,7 +772,7 @@ Gate rules. Each has an id; the `prototype` column gives its behaviour in protot
 | G-002 | Required page file present | fail | fail |
 | G-003 | Every referenced image file exists in `src/assets/media` (even on unpublished entries) | fail | fail |
 | G-004 | References resolve (`phones[].locationId`, `officeHours.locationId`, `services[].priceGroupId`) | fail | fail |
-| G-005 | `site.config.ts` uses only the options and homepage sections declared in the template manifest | fail | fail |
+| G-005 | `site.config.ts` uses only the options and homepage sections declared in the template manifest; the sections `people`, `notices`, `documents` and `faq` only while their feature is on | fail | fail |
 | G-010 | Required fact present: office hours not empty; each location has `mapUrl` or `geo` | marker | fail |
 | G-011 | `company.legalIds` (IČO, registered office, register entry) present | marker | fail |
 | G-012 | `siteUrl` is a real domain (not `example.invalid`) | – | fail |
@@ -755,6 +798,8 @@ Gate rules. Each has an id; the `prototype` column gives its behaviour in protot
 | G-074 | Published person without a consent record in `approvals.json` | warn | fail |
 | G-075 | Referenced PDF (document, parte) missing from `src/assets/documents` (even on drafts) | fail | fail |
 | G-076 | `legal.json` exists but `pages/pravni-informace.md` does not | warn | warn |
+| G-077 | `features.landscapes` is on but `site/landscapes.json` does not exist | fail | fail |
+| G-080 | `features.places` is on but `site/places.json` does not exist | fail | fail |
 
 G-002 also requires the page of every switched-on feature (`oznameni`, `pro-ucastniky`, `pohreb-predem`), and G-005 rejects a switched-on feature (`notices`, `people`, `faq`, `documents`, `guestInfo`, `prePlanning`) that the template manifest does not support. Content of a switched-off feature is still schema-checked (G-001), its files must exist (G-003, G-075), and its bodies follow §7.3, but it is never built and no other rule looks at it.
 

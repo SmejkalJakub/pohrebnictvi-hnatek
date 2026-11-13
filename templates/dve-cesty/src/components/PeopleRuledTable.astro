@@ -1,0 +1,67 @@
+---
+/**
+ * Lidé without photos: a ruled table of name · role · direct line (one column of rows on phones).
+ * Complete without photos by construction; no initials, no empty frames.
+ */
+import PlaceholderMark from "@core/components/PlaceholderMark.astro";
+import type { PersonView } from "@core/content/view-models.ts";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  people: PersonView[];
+}
+
+const { people } = Astro.props;
+---
+<table class="rtable people-table">
+  <caption class="visually-hidden">{ui.peopleHeading}</caption>
+  <tbody>
+    {
+      people.map((person) => (
+        <tr data-person={person.id}>
+          <th scope="row">
+            <PlaceholderMark active={person.placeholder} as="span">
+              {person.name}
+            </PlaceholderMark>
+          </th>
+          <td class="muted">{person.role}</td>
+          <td class="num">
+            {person.phone !== null ? (
+              <a href={person.phone.href} class="nowrap" data-phone-link>
+                {person.phone.display}
+              </a>
+            ) : null}
+          </td>
+        </tr>
+      ))
+    }
+  </tbody>
+</table>
+
+<style>
+  .people-table th {
+    font-size: 1.1875rem;
+    font-weight: 800;
+  }
+
+  @media (max-width: 47.99rem) {
+    .people-table tr {
+      display: grid;
+      padding-block: 0.625rem;
+      border-top: 1px solid var(--stone-rule);
+    }
+
+    .people-table tr:last-child {
+      border-bottom: 1px solid var(--stone-rule);
+    }
+
+    .people-table th,
+    .people-table td,
+    .people-table tr:last-child th,
+    .people-table tr:last-child td {
+      padding: 0;
+      border: 0;
+      text-align: left;
+    }
+  }
+</style>

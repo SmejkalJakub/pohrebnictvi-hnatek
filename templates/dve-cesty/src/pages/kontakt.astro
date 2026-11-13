@@ -1,0 +1,84 @@
+---
+/**
+ * Kontakt (Teď hned): the navy opening is the emergency block itself (label, H1, the number, the
+ * service area); then Kancelář · Úřední hodiny · Telefony a e-mail on white; then Kdo vás přijme
+ * (#lide) on a stone field when people are on (four portraits per row, or a ruled table without
+ * photos); then the page body.
+ */
+import { getPage, getPeople, getSiteContext } from "@core/content/load.ts";
+import CestyLayout from "../layouts/CestyLayout.astro";
+import PathPanel from "../components/PathPanel.astro";
+import OfficeColumns from "../components/OfficeColumns.astro";
+import PeopleFourUp from "../components/PeopleFourUp.astro";
+import PeopleRuledTable from "../components/PeopleRuledTable.astro";
+import { getPathLinks } from "../lib/page-links.ts";
+import { seoDescription, seoTitle } from "../lib/site.ts";
+import { ui } from "../i18n/cs.ts";
+
+const site = await getSiteContext();
+const page = await getPage("kontakt");
+const people = await getPeople();
+const links = await getPathLinks(site, Astro.url.pathname, "now");
+const withPhotos = people.some((person) => person.photo !== null);
+const Body = page.Content;
+---
+<CestyLayout site={site} path="now" title={seoTitle(page.data)} description={seoDescription(page.data)}>
+  <PathPanel
+    tone="now"
+    title={page.data.title}
+    lead={page.data.lead}
+    placeholder={page.data.placeholder}
+    links={links}
+    emergency={site.emergency}
+    emergencyBlock
+    serviceArea={site.emergency.serviceArea}
+  />
+  <OfficeColumns site={site} />
+  {
+    people.length > 0 ? (
+      <section id="lide" class="people" data-tone="ahead" aria-labelledby="lide-nadpis" data-with-photos={withPhotos ? "true" : "false"}>
+        <h2 id="lide-nadpis" class="section-heading">{ui.peopleHeading}</h2>
+        {withPhotos ? <PeopleFourUp people={people} /> : <PeopleRuledTable people={people} />}
+      </section>
+    ) : null
+  }
+  {
+    page.hasBody ? (
+      <div class="section prose narrow">
+        <Body />
+      </div>
+    ) : null
+  }
+</CestyLayout>
+
+<style>
+  .people {
+    margin-top: 2.5rem;
+    padding: 1.75rem var(--gutter) 2rem;
+  }
+
+  .people > * + * {
+    margin-top: 1rem;
+  }
+
+  @media (min-width: 64rem) {
+    .people {
+      margin-top: 4rem;
+      padding-block: 3rem 3.5rem;
+    }
+
+    .people > * + * {
+      margin-top: 1.75rem;
+    }
+
+    .people[data-with-photos="false"] {
+      display: grid;
+      grid-template-columns: 4fr 8fr;
+      column-gap: 3.5rem;
+    }
+
+    .people[data-with-photos="false"] > * + * {
+      margin-top: 0;
+    }
+  }
+</style>

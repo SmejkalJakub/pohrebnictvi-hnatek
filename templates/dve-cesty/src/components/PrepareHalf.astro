@@ -1,0 +1,108 @@
+---
+/**
+ * The stone half of the home split, "Chci se informovat nebo připravit": a ruled list of links,
+ * each with a short line or a price on the right (Ceník with the first group's price, the
+ * featured services except transport, Pohřeb předem and Časté otázky when on), then the VAT note
+ * whenever a price shows (research L9). Prices only through <PriceValue>.
+ */
+import PriceValue from "@core/components/PriceValue.astro";
+import VatNote from "@core/components/VatNote.astro";
+import type { PriceItem } from "@core/content/schemas.ts";
+import type { PricingView } from "@core/content/view-models.ts";
+import { nbsp } from "../lib/site.ts";
+import { ui } from "../i18n/cs.ts";
+
+export interface PrepareRow {
+  key: string;
+  label: string;
+  href: string;
+  note: string | null;
+  price: PriceItem | null;
+}
+
+interface Props {
+  rows: PrepareRow[];
+  pricing: PricingView | null;
+}
+
+const { rows, pricing } = Astro.props;
+const showsPrice = rows.some((row) => row.price !== null);
+---
+<section class="half" data-tone="ahead" aria-labelledby="pul-predem">
+  <p class="path-label">{ui.aheadLabel}</p>
+  <h2 id="pul-predem" class="half-heading">{ui.aheadHeading}</h2>
+  <ul class="ruled prepare" role="list">
+    {
+      rows.map((row) => (
+        <li data-row={row.key}>
+          <a href={row.href} class="ruled-title">{row.label}</a>
+          {row.price !== null ? (
+            <span class="row-side">
+              <PriceValue item={row.price} />
+            </span>
+          ) : null}
+          {row.price === null && row.note !== null ? <span class="row-side muted">{nbsp(row.note)}</span> : null}
+        </li>
+      ))
+    }
+  </ul>
+  {showsPrice && pricing !== null ? <VatNote pricing={pricing} class="half-vat muted" /> : null}
+</section>
+
+<style>
+  .half {
+    padding: 1.5rem var(--gutter) 1.75rem;
+  }
+
+  .half > * + * {
+    margin-top: 0.875rem;
+  }
+
+  .half-heading {
+    font-size: 1.5rem;
+    line-height: 1.25;
+  }
+
+  .prepare li {
+    display: flex;
+    flex-direction: column;
+    padding-block: 0.625rem;
+  }
+
+  .row-side {
+    line-height: 1.5;
+  }
+
+  .half :global(.half-vat) {
+    display: block;
+  }
+
+  @media (min-width: 64rem) {
+    .half {
+      padding: 3rem var(--gutter) 3.5rem;
+    }
+
+    .half > * + * {
+      margin-top: 1.375rem;
+    }
+
+    .half-heading {
+      font-size: 2.25rem;
+      line-height: 1.2;
+    }
+
+    .prepare li {
+      display: grid;
+      /* A short note or a price sits at the right; a long note wraps within 45 % of the row and
+         never squeezes the link. */
+      grid-template-columns: minmax(0, 1fr) fit-content(45%);
+      column-gap: 1.5rem;
+      align-items: baseline;
+      padding-block: 0.75rem;
+    }
+
+    .row-side {
+      text-align: right;
+    }
+  }
+</style>

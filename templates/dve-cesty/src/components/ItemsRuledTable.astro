@@ -1,0 +1,74 @@
+---
+/**
+ * Price items as a ruled three-column table: item · note · price (right). The amount never wraps;
+ * the UKÁZKA mark may drop under it (S8 lesson at 320 px). Prices only through <PriceValue>.
+ */
+import PriceValue from "@core/components/PriceValue.astro";
+import type { PriceItem } from "@core/content/schemas.ts";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  items: PriceItem[];
+  caption: string;
+  /** Column heads (the "Jednotlivé položky" table); groups' extra items go without them. */
+  withHead?: boolean;
+}
+
+const { items, caption, withHead = false } = Astro.props;
+---
+<table class="rtable price-items">
+  <caption class="visually-hidden">{caption}</caption>
+  {
+    withHead ? (
+      <thead>
+        <tr>
+          <th scope="col">{ui.itemColumn}</th>
+          <th scope="col" class="note-col">{ui.noteColumn}</th>
+          <th scope="col" class="num">{ui.priceColumn}</th>
+        </tr>
+      </thead>
+    ) : null
+  }
+  <tbody>
+    {
+      items.map((item) => (
+        <tr>
+          <th scope="row">
+            {item.label}
+            {item.description !== null ? <span class="item-note">{item.description}</span> : null}
+          </th>
+          <td class="note-col muted">{item.description}</td>
+          <td class="num">
+            <PriceValue item={item} />
+          </td>
+        </tr>
+      ))
+    }
+  </tbody>
+</table>
+
+<style>
+  .price-items .note-col {
+    display: none;
+  }
+
+  .item-note {
+    display: block;
+    color: var(--slate);
+    font-weight: 400;
+  }
+
+  .price-items .num {
+    min-width: 7rem;
+  }
+
+  @media (min-width: 48rem) {
+    .price-items .note-col {
+      display: table-cell;
+    }
+
+    .item-note {
+      display: none;
+    }
+  }
+</style>

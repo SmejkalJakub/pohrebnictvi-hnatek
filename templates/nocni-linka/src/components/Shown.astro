@@ -1,0 +1,9 @@
+---
+/** Renders its slot only when `if` is true (keeps `cond && <x/>` out of the markup). */
+interface Props {
+  if: boolean;
+}
+
+const { if: show } = Astro.props;
+---
+{show ? <slot /> : null}

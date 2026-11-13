@@ -1,0 +1,132 @@
+---
+/**
+ * The firm's places (site/places.json, content-contract §6.19) as numbered figures, in list order.
+ * A place without a photo is a text cell (number, name, address, sentence under a 1 px rule), never
+ * an empty frame. `layout`: "home" (3 columns of 3:2 photos), "essay" (O nás: the first two large,
+ * the rest in four columns). `limitPhone` shows only the first n places below 48 rem (home 375).
+ * `start` is the first figure number (02 on the home when the people photo is 01).
+ */
+import type { Place } from "@core/content/schemas.ts";
+import NumberedFigure from "./NumberedFigure.astro";
+import { figureNumber } from "../lib/figures.ts";
+
+interface Props {
+  places: Place[];
+  start: number;
+  layout: "home" | "essay";
+  limitPhone?: number | null;
+}
+
+const { places, start, layout, limitPhone = null } = Astro.props;
+const cells = places.map((place, index) => {
+  let size: "large" | "small" = "small";
+  if (layout === "essay" && index < 2) {
+    size = "large";
+  }
+  let hiddenOnPhone = false;
+  if (limitPhone !== null && index >= limitPhone) {
+    hiddenOnPhone = true;
+  }
+  return { place, number: figureNumber(start + index), size, hiddenOnPhone };
+});
+
+function sizesFor(size: "large" | "small"): string {
+  if (layout === "home") {
+    return "(min-width: 64rem) 23rem, (min-width: 48rem) 45vw, 100vw";
+  }
+  if (size === "large") {
+    return "(min-width: 64rem) 36rem, 100vw";
+  }
+  return "(min-width: 64rem) 17rem, (min-width: 48rem) 45vw, 100vw";
+}
+---
+<ol class="places" data-layout={layout} role="list">
+  {
+    cells.map((cell) => (
+      <li class="place" data-size={cell.size} data-phone-hidden={cell.hiddenOnPhone ? "true" : undefined}>
+        {cell.place.image !== null ? (
+          <NumberedFigure
+            image={cell.place.image}
+            number={cell.number}
+            name={cell.place.name}
+            text={cell.place.note}
+            address={cell.place.address}
+            ratio="16 / 9"
+            ratioWide="3 / 2"
+            widths={[360, 560, 760, 1120]}
+            sizes={sizesFor(cell.size)}
+          />
+        ) : (
+          <div class="place-text">
+            <span class="fig-num place-num" data-figure-number>
+              {cell.number}
+            </span>
+            <b class="place-name">{cell.place.name}</b>
+            {cell.place.address !== null ? <span class="place-address">{cell.place.address}</span> : null}
+            {cell.place.note !== null ? <span class="place-note">{cell.place.note}</span> : null}
+          </div>
+        )}
+      </li>
+    ))
+  }
+</ol>
+
+<style>
+  .places {
+    display: grid;
+    gap: 1.5rem;
+    margin: 0;
+    padding: 1.5rem 0 0;
+    list-style: none;
+  }
+
+  .place-text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding-top: 0.875rem;
+    border-top: 1px solid var(--ink);
+  }
+
+  .place-num {
+    font-size: 1.5rem;
+    line-height: 1.1;
+  }
+
+  .place-name {
+    font-size: 1.25rem;
+    line-height: 1.3;
+  }
+
+  .place-address {
+    color: var(--muted);
+  }
+
+  @media (max-width: 47.99rem) {
+    .place[data-phone-hidden="true"] {
+      display: none;
+    }
+  }
+
+  @media (min-width: 48rem) {
+    .places {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (min-width: 64rem) {
+    .places {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 2rem 1.5rem;
+      padding-top: 1.75rem;
+    }
+
+    .places[data-layout="essay"] {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .places[data-layout="essay"] .place[data-size="large"] {
+      grid-column: span 2;
+    }
+  }
+</style>

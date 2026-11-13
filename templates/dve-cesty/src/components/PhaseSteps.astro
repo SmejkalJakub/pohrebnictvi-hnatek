@@ -1,0 +1,143 @@
+---
+/**
+ * The guide: "Kde blízký člověk zemřel?" as full-width ruled rows, then the steps by phase (a
+ * 22 px heading on a 2 px navy rule, numbered steps). Picking a place filters the steps with
+ * core's :has(:target) mechanism (no JavaScript): the picked row is filled navy with "(vybráno)",
+ * "Zrušit výběr a ukázat vše" appears, phases with nothing left hide. Without a pick the whole
+ * guide shows. Step numbers come from a CSS counter, so they stay continuous.
+ */
+import type { CollectionEntry } from "astro:content";
+import { SITUATION_ANCHOR, SPECIFIC_SITUATIONS, chooserSituations, showsFor } from "@core/content/guidance-flow.ts";
+import { GUIDANCE_PHASES } from "@core/content/schemas.ts";
+import type { SiteContext } from "@core/content/view-models.ts";
+import PlacePickerLinks from "./PlacePickerLinks.astro";
+import StepItem from "./StepItem.astro";
+import { guidancePhaseLabels, ui } from "../i18n/cs.ts";
+
+interface Props {
+  site: SiteContext;
+  guidance: CollectionEntry<"guidance">[];
+}
+
+const { site, guidance } = Astro.props;
+const ALL_ANCHOR = "postup";
+const situations = chooserSituations(guidance);
+
+const phases = GUIDANCE_PHASES.map((phase) => {
+  const steps = guidance.filter((entry) => entry.data.phase === phase);
+  const shownFor = SPECIFIC_SITUATIONS.filter((situation) => steps.some((entry) => showsFor(entry, situation)));
+  return { phase, steps, shownFor };
+}).filter((group) => group.steps.length > 0);
+
+/* Filter rules, one block per offered situation (the selectors depend on the anchors). */
+const filterCss = situations
+  .map((situation) => {
+    const target = `[data-guide]:has(#${SITUATION_ANCHOR[situation]}:target)`;
+    return [
+      `${target} [data-guide-step]:not([data-situations~="any"]):not([data-situations~="${situation}"]) { display: none; }`,
+      `${target} [data-guide-phase]:not([data-shown-for~="${situation}"]) { display: none; }`,
+      `${target} [data-place="${situation}"] { background: var(--navy); color: var(--white); text-decoration: none; padding-inline: 0.75rem; }`,
+      `${target} [data-place="${situation}"] .pick-mark { display: inline; color: var(--mist); font-weight: 400; }`,
+      `${target} [data-show-all] { display: inline-block; }`,
+      `${target} [data-pick-hint] { display: none; }`,
+    ].join("\n");
+  })
+  .join("\n");
+---
+<div data-guide class="guide">
+  <style is:inline set:html={filterCss}></style>
+  {situations.map((situation) => <span id={SITUATION_ANCHOR[situation]} class="guide-target"></span>)}
+  <span id={ALL_ANCHOR} class="guide-target"></span>
+  {
+    situations.length > 0 ? (
+      <section class="guide-pick" aria-labelledby="kde-zemrel">
+        <h2 id="kde-zemrel" class="guide-question">{ui.pickerQuestion}</h2>
+        <p class="muted" data-pick-hint>{ui.pickHint}</p>
+        <PlacePickerLinks situations={situations} base="" questionId="kde-zemrel" />
+        <a href={`#${ALL_ANCHOR}`} class="go show-all" data-show-all>{ui.showAll}</a>
+        <p class="muted" data-pick-hint>{ui.allHint}</p>
+      </section>
+    ) : null
+  }
+  {
+    phases.map((group) => (
+      <section
+        class="guide-phase"
+        aria-labelledby={`faze-${group.phase}`}
+        data-guide-phase
+        data-shown-for={group.shownFor.join(" ")}
+      >
+        <h2 id={`faze-${group.phase}`} class="phase-heading rule-top">{guidancePhaseLabels[group.phase]}</h2>
+        <ol class="steps" role="list">
+          {group.steps.map((entry) => (
+            <StepItem site={site} entry={entry} />
+          ))}
+        </ol>
+      </section>
+    ))
+  }
+</div>
+
+<style>
+  .guide {
+    counter-reset: guide-step;
+    padding: 0 var(--gutter);
+  }
+
+  .guide-target {
+    display: block;
+    scroll-margin-top: 1rem;
+  }
+
+  .guide-pick {
+    padding-top: 1.75rem;
+  }
+
+  .guide-pick > * + * {
+    margin-top: 0.625rem;
+  }
+
+  .guide-question {
+    font-size: 1.5rem;
+  }
+
+  .show-all {
+    display: none;
+  }
+
+  .guide-phase {
+    padding-top: 2rem;
+  }
+
+  .phase-heading {
+    font-size: 1.375rem;
+  }
+
+  .steps {
+    margin: 1rem 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  @media (min-width: 64rem) {
+    .guide {
+      max-width: calc(48rem + 2 * var(--gutter));
+    }
+
+    .guide-pick {
+      padding-top: 3rem;
+    }
+
+    .guide-question {
+      font-size: 1.875rem;
+    }
+
+    .guide-phase {
+      padding-top: 3rem;
+    }
+
+    .phase-heading {
+      font-size: 1.5rem;
+    }
+  }
+</style>

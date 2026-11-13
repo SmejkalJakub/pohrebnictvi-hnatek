@@ -1,0 +1,24 @@
+---
+/** ADR body (research L10) and the complaints contact, as two short statements. */
+import type { LegalInfo } from "@core/content/schemas.ts";
+import Statement from "./Statement.astro";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  legal: LegalInfo;
+}
+
+const { legal } = Astro.props;
+---
+<Statement id="adr" heading={ui.adrHeading} size="small" data-legal>
+  <p class="st-text">
+    {ui.adrText} {legal.adr.name}, <a href={legal.adr.url}>{legal.adr.url.replace(/^https?:\/\//, "")}</a>.
+  </p>
+</Statement>
+{
+  legal.complaintsContact !== null ? (
+    <Statement id="reklamace" heading={ui.complaintsHeading} size="small">
+      <p class="st-text">{legal.complaintsContact}</p>
+    </Statement>
+  ) : null
+}

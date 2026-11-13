@@ -1,0 +1,23 @@
+---
+/** The first statement of a page: muted kicker, the page's one h1, the lead. */
+import PlaceholderMark from "@core/components/PlaceholderMark.astro";
+
+interface Props {
+  kicker?: string | null;
+  title: string;
+  lead?: string | null;
+  placeholder?: boolean;
+  /** "small": 56 px h1 on desktop (people-style pages). */
+  size?: "default" | "small";
+}
+
+const { kicker = null, title, lead = null, placeholder = false, size = "default" } = Astro.props;
+---
+<div class="page-head">
+  <PlaceholderMark active={placeholder} as="div">
+    {kicker !== null ? <p class="kicker">{kicker}</p> : null}
+    <h1 class:list={["page-title", { "page-title-sm": size === "small" }]}>{title}</h1>
+    {lead !== null ? <p class="page-lead lead">{lead}</p> : null}
+  </PlaceholderMark>
+  <slot />
+</div>

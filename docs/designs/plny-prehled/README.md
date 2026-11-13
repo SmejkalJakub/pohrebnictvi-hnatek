@@ -1,5 +1,7 @@
 # H · Plný přehled (`plny-prehled`)
 
+**Superseded:** rejected by the owner on 2026-11-13; replaced by D `dve-cesty` ([docs/notes/s10-dve-cesty.md](../../notes/s10-dve-cesty.md)). Kept for the record; `templates/plny-prehled/` was removed.
+
 **Status (2026-11-10):** round-2 direction, liked by the owner. Home, a notice page and the full page set are drawn. **Build from the pictures and the HTML;** the text below explains them and lists what must not change.
 
 **Concept.** For families who want facts, not atmosphere: the practical son or daughter who arranges everything and compares. The home page is a directory, like a timetable or a municipal noticeboard: every route, the key prices, the people and the documents fit on one desktop screen, in four ruled columns. Nobody has to scroll or guess what is behind a menu; on a phone the same index folds into a list of sections.

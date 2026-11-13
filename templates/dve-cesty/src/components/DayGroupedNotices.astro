@@ -1,0 +1,99 @@
+---
+/**
+ * "Nadcházející rozloučení": the farewells grouped by day (the weekday and date in capitals on a
+ * 2 px navy rule), each one the name as a link, the time and place, and the life dates. Notices
+ * without a public ceremony date come last under their own heading. Nothing promotional (L1).
+ */
+import PlaceholderMark from "@core/components/PlaceholderMark.astro";
+import type { NoticeDay } from "../lib/notice-list.ts";
+import { ceremonyShortLine } from "../lib/notice-list.ts";
+import NoticeDates from "./NoticeDates.astro";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  days: NoticeDay[];
+}
+
+const { days } = Astro.props;
+function dayHeading(day: NoticeDay): string {
+  if (day.weekday === null || day.dateText === null) {
+    return ui.noticesWithoutDate;
+  }
+  return `${day.weekday} ${day.dateText}`;
+}
+const lineText = { line: ui.ceremonyLine, without: ui.withoutCeremony, private: ui.privateCeremony };
+---
+<section class="upcoming" aria-labelledby="nadchazejici">
+  <h2 id="nadchazejici" class="section-heading">{ui.noticesUpcoming}</h2>
+  {
+    days.map((day, index) => (
+      <div class="day">
+        <h3 id={`den-${index + 1}`} class="day-heading rule-top">{dayHeading(day)}</h3>
+        <ul class="day-notices" role="list" aria-labelledby={`den-${index + 1}`}>
+          {day.notices.map((view) => {
+            const line = ceremonyShortLine(view, lineText);
+            return (
+              <li data-notice={view.id}>
+                <PlaceholderMark active={view.placeholder} as="div">
+                  <p class="notice-name">
+                    <a href={view.href}>{view.fullName}</a>
+                  </p>
+                  {line !== null ? <p class="notice-line">{line}</p> : null}
+                  <NoticeDates view={view} />
+                </PlaceholderMark>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+    ))
+  }
+</section>
+
+<style>
+  .upcoming > * + * {
+    margin-top: 1.75rem;
+  }
+
+  .day-heading {
+    font-size: 1.125rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .day-notices {
+    margin: 0.5rem 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .day-notices > li {
+    padding-block: 0.75rem;
+  }
+
+  .day-notices > li + li {
+    border-top: 1px solid var(--hairline);
+  }
+
+  .notice-name {
+    font-size: 1.4375rem;
+    font-weight: 800;
+    line-height: 1.25;
+  }
+
+  .notice-name a {
+    display: inline-block;
+    padding-block: 0.25rem;
+  }
+
+  .notice-line {
+    font-weight: 700;
+  }
+
+  @media (min-width: 64rem) {
+    .notice-name {
+      font-size: 1.625rem;
+    }
+  }
+</style>

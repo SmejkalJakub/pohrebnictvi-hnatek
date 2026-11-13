@@ -1,0 +1,66 @@
+---
+/** "Nedávná oznámení": name as the link, then the date of death and a past ceremony date. */
+import PlaceholderMark from "@core/components/PlaceholderMark.astro";
+import type { NoticeView } from "@core/content/view-models.ts";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  notices: NoticeView[];
+}
+
+const { notices } = Astro.props;
+---
+<ul class="recent">
+  {
+    notices.map((view) => (
+      <li class="st recent-item" data-notice={view.id}>
+        <PlaceholderMark active={view.placeholder} as="div">
+          <p class="recent-name">
+            <a href={view.href}>{view.fullName}</a>
+          </p>
+          <p class="muted recent-meta">
+            <span aria-hidden="true">†</span>
+            <span class="visually-hidden">{ui.diedLabel}:</span> {view.diedText}
+            {view.ceremony !== null && view.ceremony.dateText !== null ? (
+              <>
+                {" · "}
+                {ui.ceremonyHeld} {view.ceremony.dateText}
+              </>
+            ) : null}
+          </p>
+        </PlaceholderMark>
+      </li>
+    ))
+  }
+</ul>
+
+<style>
+  .recent {
+    padding: 0;
+    list-style: none;
+  }
+
+  .recent-item {
+    margin-top: 1rem;
+    padding-top: 0.875rem;
+  }
+
+  .recent-name {
+    font-size: 1.375rem;
+    font-weight: 700;
+  }
+
+  .recent-meta {
+    font-size: 1.125rem;
+  }
+
+  @media (min-width: 64rem) {
+    .recent-name {
+      font-size: 1.5rem;
+    }
+
+    .recent-meta {
+      font-size: 1.25rem;
+    }
+  }
+</style>

@@ -1,8 +1,8 @@
-# Design differentiation: `rodinna-tradice` vs `dustojna-jednoduchost`
+# Design differentiation: templates A–E and G (`rodinna-tradice`, `dustojna-jednoduchost`, `nocni-linka`, `dve-cesty`, `ticha-krajina`, `lide-a-misto`)
 
 **Status:** Phase 1 contract, draft 1 (2026-11-05).
 
-This document defines the two pilot templates **structurally**: page compositions, navigation, information architecture and component inventories. It also states the shared brand constraints and the checklist and scorecard used in Phase 2 QA and in the Phase 4 comparison.
+This document defines the templates **structurally**: page compositions, navigation, information architecture and component inventories. It also states the shared brand constraints and the checklist and scorecard used in Phase 2 QA and in the Phase 4 comparison.
 
 Related: [template-contract.md](template-contract.md) · [content-contract.md](content-contract.md)
 
@@ -94,6 +94,154 @@ Related: [template-contract.md](template-contract.md) · [content-contract.md](c
 
 `StickyHeaderWithEmergency`, `MobileActionBar`, `PracticalHero`, `CtaTier`, `FirstStepsStepper`, `ServiceIndexList`, `ServiceDetailLayout`, `PhasedChecklist`, `UniformCatalogueGrid`, `InfoRow`, `FactSheet`, `PriceTable`, `PrintStyles`.
 
+## 3a. Template C: Noční linka (the night line)
+
+**Status:** built 2026-11-10 (S6, `docs/notes/s6-nocni-linka.md`) from the approved round-2 design F in `docs/designs/nocni-linka/`.
+
+**Concept:** for the person who opens the site at two in the morning. Dark, quiet and very large. On desktop a sticky side rail holds the name, the nonstop number and the navigation; the content scrolls beside it as single statements (muted kicker, one large heading, a sentence or two, one link). Nothing competes with the number: amber is used for it and for nothing else.
+
+### 3a.1 Chrome
+
+- **The rail is the header.** One `<header>`: from 64 rem a sticky 440 px column on the rail colour (name, place, "Nonstop převoz zesnulých" + the number in 38 px amber with a 3 px underline, the vertical ruled nav). Below 64 rem a name row with an "Obsah" button and, directly under it, the nonstop panel on the rail colour; the menu opens in the flow under the panel (24 px bold ruled rows), so the number never leaves the screen.
+- **Neutral form on notice pages** (`/oznameni/…`): the rail and panel are replaced by "Oznámení zveřejňuje <brand>." and an ink "Telefon nonstop <number>" link; the nav is reduced to Oznámení · Kontakt · Úvodní stránka; the footer drops the Dokumenty column and the amber. ⚖ L1 review.
+- **Footer** on the rail colour: name and address · office hours (own heading) · nonstop line (own heading) · Dokumenty, then the legal row (identification, ADR, Právní informace, privacy).
+- **Options:** `palette` `noc` (default) / `grafit`; `fontPair` `schibsted-grotesk` (default) / `hanken-grotesk`; `heroVariant` only `statement` (home never has a photo); `emergencyEmphasis` `high` widens the rail to 512 px and sets the number at 48 px, and repeats the number inside the home hero.
+
+### 3a.2 Page compositions
+
+| Page | Composition |
+| --- | --- |
+| **Home** | Statements in `homepage.sections` order; default hero → services → next-steps → family-story → contact-summary. The hero is one screen tall on desktop (kicker "Když někdo zemřel", H1, lead, one link). A notices statement (no names) follows the hero while notices are on. Featured services are one statement each; next-steps is the 58 px "Kde blízký člověk zemřel?" picker. |
+| **Jak postupovat** | Inverted picker with the word "vybráno", "Zobrazeno N z M kroků", one step per statement ("Krok n z N · phase", 28 px native checkboxes, body in `<details>`, emergency steps repeat the panel, "Další krok"), then Časté otázky by topic. |
+| **Služby** | Featured services as statements, the rest as "Další služby" inline links; **index + detail pages** built the same way, with "V ceně je zahrnuto / Není zahrnuto" from the linked price group. |
+| **Ceník** | VAT note bold in the lead, the demo notice in the site's only 1 px box, one statement per group with the headline price as a 56 px heading in ink and the two inclusion lists, other items in a ruled table. Prints light on A4. |
+| **Kontakt** | Address, then separate statements: Úřední hodiny, Telefony a e-mail, Převoz zesnulých, Lidé (photo rows or ruled name columns, no initials). |
+| **Oznámení** | Large-type agenda: the date as heading, "time · name" on one line, place and type muted; "Bez veřejného obřadu"; "Nedávná oznámení". Notice page: name, dates, 26 px ceremony sentence, map, livestream link, family note, condolences instruction, parte, QR on white. |
+| **Rakve, Květiny** | Built from Lidé: ruled rows with a small thumbnail, or ruled name columns without images. |
+| **O nás, Pro účastníky, Pohřeb předem, Právní informace, privacy, 404** | Title statement, then the Markdown body where each `##` opens a statement; Právní informace adds ADR, Reklamace and the documents as ruled rows. |
+
+### 3a.3 Visual system
+
+- **Palette `noc`:** ground `#121614`, rail `#1B211E`, ink `#F1EEE6`, muted `#B9BDB5`, signal (amber, nonstop number only) `#F0B54A`, rule `#6F7771`. **`grafit`:** `#1C1D20`, `#25272B`, `#F2F1EE`, `#BDBEC2`, `#E9A77A`, `#75777C`. Contrast in `docs/notes/s6-nocni-linka.md`.
+- **Type:** one grotesque, 400/700; body 20 px, lead 24, H1 76/40 (1280/375), statement H2 56–60/30–34.
+- **Separation:** darkness and space; one 1 px rule at the top of each statement. No cards, boxes, icons, radius, photos on home, light sections or a second accent. Print is always light.
+
+### 3a.4 Unique components (C only)
+
+`NightRail`, `RailNumber`, `NeutralLine`, `RailNav`, `NightFooter`, `Statement`, `TitleStatement`, `StatementProse`, `Shown`, `OpeningStatement`, `NoticesTeaser`, `FeaturedStatements`, `PlaceLinks`, `OfficeStatement`, `StoryStatement`, `CatalogueLinksLine`, `StepStatement`, `TopicQuestions`, `GroupPriceStatement`, `InclusionColumns`, `RuledItemTable`, `A4Letterhead`, `CeremonyAgenda`, `RecentNotices`, `NoticeFacts`, `QrSquare`, `HourRows`, `PeopleRows`, `CatalogueRowList`, `EmptyCatalogue`, `DocumentRows`, `AdrStatement`.
+
+## 3b. Template D: Dvě cesty (two paths)
+
+**Status:** built 2026-11-13 (S10, `docs/notes/s10-dve-cesty.md`) from the approved direction D3 in `docs/designs/dve-cesty/`. It replaces the first D, `plny-prehled` (Plný přehled), which the owner rejected on 2026-11-13 (`docs/notes/s7-plny-prehled.md`, kept for the record).
+
+**Concept:** for a funeral home whose visitors arrive in two very different states. The home page asks "S čím vám můžeme pomoct?" and splits in two: a **navy half "Někdo právě zemřel"** with the nonstop number and three first steps, and a **stone half "Chci se informovat nebo připravit"** with prices, a funeral without ceremony, pre-planning and questions. A **"Teď hned / S předstihem" switch** in the header keeps the two paths apart across the site: every page belongs to one path and opens in that path's colour, so a person in shock is never sent through price lists and a person planning ahead is not rushed.
+
+### 3b.1 Chrome
+
+- **Header, not sticky:** ≥ 64 rem a three-column grid: wordmark or logo | the **path switch** (`<nav aria-label="Cesta">`, two links in a rounded segmented control; the page's path filled navy with `aria-current="page"`; on home "Teď hned" filled without `aria-current`; on the 404 neither) | three general links (Oznámení a obřady when on, O nás, Kontakt). Below 64 rem: wordmark + "Menu" (never a hamburger), the switch full width under the header, always visible. The menu opens in the flow grouped by path: a navy group with the number, a stone group, a plain group.
+- **Path openings:** every path page starts with a full-bleed panel in its path's colour. **Teď hned** (Jak postupovat, Kontakt): navy with the number (50 / 34 px 800 white). **S předstihem** (everything else except notices): stone, with a **ruled nonstop line** as its last element ("Někdo právě zemřel?" + label and number). At ≥ 64 rem the panel starts with "V této cestě:" and the path's pages. `emergencyEmphasis: high` adds a navy band with the number under the switch on every S předstihem page.
+- **Neutral form on notice pages:** reduced header (Oznámení a obřady · Kontakt · Úvodní stránka, behind Menu at 375), no switch, no panel, a grey publisher line "Oznámení zveřejňuje <brand>." with "Telefon nonstop <number>"; the footer keeps only the legal row with Kancelář as one plain line. ⚖ L1 review.
+- **Footer:** two halves, navy (the number, availability, Teď hned links; `data-emergency-block`) | stone (Kancelář with address, office hours under their own heading, phone; the S předstihem links); then the legal row on paper with legal name, sídlo, IČO, register entry, ADR, Právní informace, Dokumenty, privacy.
+- **Options:** `palette` `noc-a-kamen` and `fontPair` `manrope` only; `emergencyEmphasis` `standard` / `high`. No `heroVariant`: no photo in any opening.
+
+### 3b.2 Page compositions
+
+| Page | Composition |
+| --- | --- |
+| **Home** | H1 question, then the **split hero**: navy half (number, three first steps, "Postup podle místa úmrtí") and stone half (ruled rows: Ceník with a from-price and the VAT note, featured services except transport, Pohřeb předem, Časté otázky), side by side at ≥ 64 rem, navy first on phones. Then the sections in `homepage.sections` order: default contact-summary (Kancelář) · notices (a link with a count, never names) · family-story (O nás excerpt) as three columns at 1280; any other section as one plain column or ruled list, never a second split. |
+| **Jak postupovat** (Teď hned) | Navy opening; "Kde blízký člověk zemřel?" as **full-width ruled link rows**; the picked row filled navy with "(vybráno)" and "Zrušit výběr a ukázat vše" (`:has(:target)`, no JS); phases under 2 px navy rules, steps numbered by CSS counters, native checkboxes, `<details>` with a visible marker; a stone Kancelář block closes the page. |
+| **Kontakt** (Teď hned) | The navy opening is the emergency block (number, availability, service area); Kancelář · Úřední hodiny (ruled table) · Telefony a e-mail; people at `#lide`: four per row with 3:4 portraits, or a ruled table without photos. |
+| **Služby** (S předstihem) | Stone opening; services by category (Kremace a pohřeb bez obřadu first) as heading 4/12 + ruled rows 8/12 with prices from the linked group; **Časté otázky** (`#caste-otazky`) as `<details>` by topic. **Detail pages:** body, "Co je v ceně a kolik to stojí" (from-price, VAT note, inclusion lists, link to Ceník), "Další služby". |
+| **Ceník** | VAT note in bold under the H1, the ruled nonstop line, then each group as name + from-price on a 2 px rule with two inclusion columns; "Jednotlivé položky" as a ruled table; VAT note again. A4: letterhead, the same tables, nonstop and Kancelář in two separate cells, legal row. |
+| **Oznámení** (neutral) | "Nadcházející rozloučení" grouped by day under uppercase dates on 2 px rules (name link, time and place, dates); "Nedávná oznámení" as a ruled name list beside it (5/12) at 1280. Notice page: the family photo uncropped, name 34 px 800, dates, the ceremony sentence under a 2 px rule, map, livestream link, Od rodiny, Kondolence, parte, QR. |
+| **Rakve, Květiny** | Stone opening; ruled rows with a 160 px image (4:3 / 1:1) beside the name, plain rows without images; Květiny ends with the flowers phone. |
+| **O nás, Pro účastníky, Pohřeb předem, privacy** | Stone opening; the body as sections at each `##` under 1 px rules (heading 4/12, text 8/12 at 1280). **Právní informace**: ADR, Reklamace, Dokumenty (`#dokumenty`). **404**: the switch with nothing selected, one sentence, a small navy half and a small stone half. |
+
+### 3b.3 Visual system
+
+- **`noc-a-kamen`:** white ground `#FFFFFF`, navy `#1C2940` (Teď hned fields, headings, links, rules), stone `#ECE7DF` (S předstihem fields), paper `#F4F1EC` (legal row, publisher line), mist `#C9D2E3` (secondary text on navy), slate `#3E4757` (secondary text), stone text `#4F4A42`. Contrast in `docs/notes/s10-dve-cesty.md`.
+- **Type:** Manrope only, 800 for headings and numbers, 400 / 700 for text; body 18 / 1.6; H1 40 / 30 px; every text ≥ 18 px.
+- **Separation:** colour fields by path (navy, stone) and 2 px navy rules above groups, phases and days; 1 px hairlines in lists. Radius only on the switch and the Menu button. No cards, shadows, icons or photos in any opening.
+
+### 3b.4 Unique components (D only)
+
+`PathHeader`, `PathSwitch`, `PathMenu`, `PathPanel`, `PathSubnav`, `UrgentBand`, `NowNumber`, `AheadNonstopLine`, `PublisherStrip`, `SplitFooter`, `SplitHero`, `UrgentHalf`, `PrepareHalf`, `OfficeColumn`, `NoticesLinkColumn`, `AboutColumn`, `PlacePickerLinks`, `ServicesRuledList`, `PriceFromLine`, `PeopleColumn`, `CataloguePairLinks`, `DocumentsColumn`, `FaqColumn`, `PhaseSteps`, `StepItem`, `FaqDetailsGroups`, `PriceGroupBlock`, `ItemsRuledTable`, `ServiceGroupList`, `ServiceDetailBody`, `ProductRows`, `ProseSections`, `DayGroupedNotices`, `RecentNoticeList`, `NoticeDates`, `NoticeDetailBlocks`, `NoticeQrHint`, `OfficeColumns`, `HoursRuledTable`, `PeopleFourUp`, `PeopleRuledTable`, `AdrRows`, `DocumentRuledList`, `LostSplit`; layout `CestyLayout`.
+
+## 3c. Template E: Tichá krajina (the quiet landscape)
+
+**Status:** built 2026-11-13 (S8, `docs/notes/s8-ticha-krajina.md`) from the approved round-2 design G in `docs/designs/ticha-krajina/`.
+
+**Concept:** for a firm in a rural region that wants the site to feel like air and distance, not like a shop. Every page is one long, slow read on a 12-column grid: short passages (heading in columns 1–4, text in 6–11) alternate with **full-bleed photographs of the local landscape**, commissioned, without people, never in the first screen. The nonstop number is a ruled **stamp line** after the opening and again at the top of the footer.
+
+### 3c.1 Chrome
+
+- **Plain top bar, not sticky:** wordmark or logo left; ≥ 64 rem the text navigation in Figtree 18 px on the right, wrapping to a second line when long; the current page carries a 3 px accent bar instead of an underline. Phones: a **"Menu"** button (never a hamburger) opens the list in the flow as large light Spectral words separated by space only, closed by a stamp line.
+- **Stamp line:** one `tel:` link between two 1 px ink rules: Figtree label · Spectral 600 number in the accent, underlined, 42 / 33 px, never wrapping · "ve dne, v noci i o svátcích". After every page's opening (at about 380 px on a phone) and as the first thing in the footer. `emergencyEmphasis: high` moves the first one directly under the header, before the H1.
+- **Neutral form on notice pages:** a muted sentence "Oznámení zveřejňuje <brand>." with an ink "Telefon nonstop <number>" link under the header; nav reduced to Oznámení · Kontakt · Úvodní stránka; no stamp lines, no bands; the footer keeps Kancelář, Právní informace and the legal row. ⚖ L1 review.
+- **Footer:** the second stamp line; three columns Kancelář (address, hours, office phone) · Dokumenty (PDF) · Právní informace; legal row with legal name, sídlo, IČO, register entry and "Spory: Česká obchodní inspekce, adr.coi.cz".
+- **Options:** `palette` `mlha` (default) / `len`; `fontPair` `spectral-figtree` (default) / `gelasio-figtree`; `emergencyEmphasis` `standard` / `high`. No `heroVariant`: the opening is text only.
+
+### 3c.2 Page compositions
+
+| Page | Composition |
+| --- | --- |
+| **Home** | Text-only opening (light 72 px H1 in cols 1–7, lead in 9–12), stamp line, then passages in `homepage.sections` order: next-steps ("Když někdo zemřel", the place picker as a running sentence) → services (featured services) → family-story → people (names in light serif, two per row) → contact-summary (Kancelář with its own Úřední hodiny). Landscape bands after the 1st, 3rd, 5th … passage, never after the last, never beside `notices`. |
+| **Jak postupovat** | Picker as a **sentence of words** (each ≥ 44 px; the picked word loses its underline, gains a 3 px accent bar and "(vybráno)"); "N kroků pro úmrtí …. Zobrazit vše"; the steps as a **narrative timeline**: one passage per phase (small Figtree label in cols 1–4, Spectral 600 step headings in 6–11 with "when it applies", checkboxes, `<details>`). Then Časté otázky. No bands. |
+| **Služby** | **One long page with anchors** (no detail pages): one passage per featured service with its inclusion lists and "Co je v ceně", then "Další služby" with the others under their own anchors; a band after every second passage. |
+| **Ceník** | VAT note in bold beside the H1; per group with lists: the group name as a small label and **the from-price as the 44 px heading** in cols 1–4, "V ceně je zahrnuto" / "Není zahrnuto" in 6–11; "Jednotlivé položky" as a hairline table, VAT note again. No bands. A4: letterhead, the same two-column logic at reduced size, legal row. |
+| **Kontakt** | Passages Kancelář, Úřední hodiny (hairline table), Telefony, Převoz zesnulých (own heading and emergency block); the office building as a band (`secondaryImage`); Kdo vás přijme (`#lide`): with photos one person per row (3:4 portrait cols 1–2, light 36 px name cols 4–11), without photos names two per row. |
+| **Oznámení** | A calm list: each notice a sentence (34 px name link, dates, ceremony sentence), optional 3:4 family photo beside it; "Nedávná oznámení". Notice page: the family photo uncropped, light 42 px name, plain sentences, Od rodiny, Kondolence, QR. |
+| **Rakve, Květiny** | Built from Lidé: one item per row, image in cols 1–2, light 36 px name; names two per row without images. No bands. |
+| **O nás, Pro účastníky, Pohřeb předem** | The body split at each `##` into passages; one band after the middle passage. **Právní informace**, privacy: passages, no bands. **404**: one sentence with two inline links, then the stamp line. |
+
+### 3c.3 Visual system
+
+- **`mlha`:** ground `#EEF1F0`, ink `#1B2422`, muted `#4C5856`, accent `#2F5160`, rule `#7E8A88`, photo placeholder `#C9D2CF`. **`len`:** `#F3EFE7`, `#24211C`, `#59534A`, `#6B5A3A`, `#8F8676`, `#D8CFBF`. Contrast in `docs/notes/s8-ticha-krajina.md`.
+- **Type:** Spectral 400 for headings (light, never bold) and body 20 / 1.65; Spectral 600 only for the number, small headings and prices; Figtree 500 for navigation, labels and captions, never under 18 px.
+- **Separation:** the photographs and space (48 / 96 px between passages); the only lines are the stamp rules and table hairlines. No boxes, cards, tinted panels, icons, centred layouts or text on photos.
+
+### 3c.4 Unique components (E only)
+
+`QuietTopBar`, `QuietNav`, `StampLine`, `NoticePublisherLine`, `QuietFooter`, `GridPassage`, `LandscapeBand`, `ProsePassages`, `OpeningText`, `PickerSentence`, `FirstHoursPassage`, `ServicesPassage`, `FamilyPassage`, `PeoplePassage`, `OfficePassage`, `CatalogueWords`, `NoticesCountLine`, `GuideNarrative`, `StepPassage`, `QuestionsPassage`, `ServicePassages`, `InclusionLists`, `PriceGroupPassage`, `HairlineItems`, `OfficeHoursHairlines`, `TransportPassage`, `PeoplePortraitRows`, `CatalogueQuietRows`, `NoticeSentences`, `NoticeDetailText`, `NoticeQrPassage`, `AdrPassage`, `DocumentLines`; layout `QuietLayout`.
+
+## 3d. Template G: Lidé a místo (people and places)
+
+**Status:** built 2026-11-13 (S11, `docs/notes/s11-lide-a-misto.md`) from the approved direction D2 in `docs/designs/lide-a-misto/`.
+
+**Concept:** the firm introduced through its real people and places, as a documentary photo essay with **numbered captions**. Every photo is a figure "01 Name. One sentence." with an optional muted address line, numbered per page in reading order; the same numbers survive without photos as a numbered list of places or a numbered table of people, so a page reads complete with no photo at all. Two-digit numerals mean a figure or a place, nothing else; steps use green single digits. Rules, not boxes: a 3 px ink rule above every block, 1 px rules between rows.
+
+### 3d.1 Chrome
+
+- **Header, not sticky:** wordmark (or logo) with `company.tradition.publicWording` as a muted subtitle; ≥ 64 rem an Archivo 18 text nav row on the right, wrapping to a second line; the current page bold with a 3 px underline. 1 px rule under. Below 64 rem an outlined **"Menu"** button opens an in-flow list of 24 px bold links between 1 px rules, then the nonstop block and Kancelář. "Lidé" links to `/o-nas/#lide`.
+- **Nonstop block:** a 3 px ink rule, then one `tel:` link with the label and the green number as block spans (46 px in the home hero, 40 px on inner pages, 34 px on phones, 28 px in the footer), `emergency.shortNote` muted under it. On inner pages it sits right of the H1 at 1280 and under the lead at 375. `emergencyEmphasis: high` adds a full-width green strip under the header on every non-notice page.
+- **Neutral form on notice pages:** a muted sentence "Oznámení zveřejňuje <brand>." with an ink "Telefon nonstop <number>" link; nav reduced to Oznámení · Kontakt · Úvodní stránka; no figures, no green, no strip; a reduced footer.
+- **Footer:** four 3 px-ruled columns Nonstop · Kancelář (address, hours, phone, e-mail) · Na webu · Právní informace (with the document PDFs), stacked at 375; legal row with legal name, sídlo, IČO, register entry and "Spory: Česká obchodní inspekce, adr.coi.cz".
+- **Options:** `emergencyEmphasis` `standard` / `high` only. One palette, one font.
+
+### 3d.2 Page compositions
+
+| Page | Composition |
+| --- | --- |
+| **Home** | `hero`: H1, lead and the 46 px nonstop block on the left, the owners' photo (`heroImage`) bleeding right as figure 01; without it a 64 px H1 with the nonstop block beside it. `family-story`: "Kde se o vašeho blízkého postaráme", the places (`site/places.json`) as a 3-column grid of numbered figures, places without a photo as numbered text cells; no photo at all → a numbered 2-column list; places off → the O nás excerpt. `next-steps`: label column + three first-hours steps with green numerals. `people`: "Kdo vás přijme", 120 × 150 portraits or names only. `price-summary` · `contact-summary` · `notices` as three ruled columns side by side. |
+| **Jak postupovat** | "Kde blízký člověk zemřel?" as full-width 52 px rows between 1 px rules; the picked row fills green with "(vybráno)" (`:has(:target)`, no JS); phases as small caps in the 360 px label column, steps with green numerals under 3 px rules, native checkboxes, `<details>`. Then Časté otázky by topic. |
+| **Služby** | **One long page with anchors** (no detail pages): an anchor row, one block per service (H2 in the label column, summary and body right, the service photo as a numbered figure beside the text when set, "Co je v ceně"), a closing office line. |
+| **Ceník** | VAT note as the bold lead, demo notice, print hint; anchor row; per group the label column (H2, 34 px from-price, "včetně DPH", summary), a 1 px-ruled item table, included / excluded side by side; VAT note again. No photos. A4 print: ink only, groups as heading + table. |
+| **Kontakt** | Office photo as figure 01 (`secondaryImage`); ruled split blocks Kancelář (address, map link, Úřední hodiny under their own heading), Telefony a e-mail (label over number), Převoz zesnulých (its own emergency block), Kdo vás přijme (names, link to `/o-nas/#lide`), billing details. |
+| **O nás** | The people photo bleeding right as figure 01; Kdo jsme (body); **Naše místa** (`#mista`) as numbered figures with address lines, or the numbered list; **Lidé** (`#lide`) as 3:4 portraits with numbered captions and direct phones, or the numbered table; closing columns Kancelář · Pro účastníky. |
+| **Oznámení** | Ruled rows: ceremony date and time · optional 4:5 family photo · name link + dates · place and ceremony type; "Starší oznámení". Notice page: photo beside the 32 px name, the ceremony `dl`, Od rodiny, Kondolence, QR. No numbers, no figures. |
+| **Rakve, Květiny** | Built from Lidé: numbered figures (4:3 / 1:1) in four columns; items without a photo as numbered text cells; no photos at all → a numbered table. Květiny ends with the flowers phone. |
+| **Pro účastníky, Pohřeb předem, Právní informace, privacy, 404** | Opening + nonstop block; Pro účastníky adds the hall photo as figure 01; the body with each `##` under a 3 px rule; Právní informace adds Mimosoudní řešení sporů, Reklamace and Dokumenty (`#dokumenty`) as ruled split blocks. **404**: "Chyba 404", one sentence linking the home page and Kontakt. |
+
+### 3d.3 Visual system
+
+- **Colour:** ground `#F7F7F4`, ink `#161616`, muted `#3F3F3F`, green `#1F4D45` (number, step numerals, picked row, high strip). Contrast in `docs/designs/lide-a-misto/README.md`.
+- **Type:** Archivo (variable weight; the width axis is not shipped, s11 §10 point 8), 700 for headings, numbers and names, 400 for body 18 / 1.55; figure numerals bold and tabular.
+- **Separation:** 3 px ink rules over blocks, 1 px rules between rows and under section heads; a 360 px label column on inner pages. No cards, tints, shadows or radius.
+
+### 3d.4 Unique components (G only)
+
+`EssayHeader`, `EssayFooter`, `NonstopRuleBlock`, `HighLineStrip`, `PublisherSentence`, `PageOpening`, `PeopleHero`, `NumberedFigure`, `PageFigure`, `PlaceGrid`, `PlaceList`, `PlacesSection`, `FirstStepsRow`, `ReceptionSection`, `PriceColumn`, `OfficeColumn`, `NoticesColumn`, `ServiceLinksSection`, `CatalogueLinkRow`, `DeathPlacePicker`, `PhaseSteps`, `StepBlock`, `FaqTopics`, `RuledProse`, `AnchorRow`, `ServiceSection`, `PriceGroupBlock`, `PriceItemRows`, `IncludedExcluded`, `NoticeRowList`, `NoticeDetailBlock`, `NoticeQrNote`, `OfficeHoursRuled`, `PhoneRows`, `TransportBlock`, `BillingDetails`, `PortraitGrid`, `PeopleNumberTable`, `CatalogueFigures`, `CatalogueNumberTable`, `AdrBlock`, `DocumentList`; layout `EssayLayout`.
+
 ## 4. Mobile homepage sketches (375 px, first ~2 screens)
 
 ```
@@ -123,26 +271,28 @@ A · Rodinná tradice                     B · Důstojná jednoduchost
 
 ## 5. Structural differentiation matrix
 
-| Dimension | A: Rodinná tradice | B: Důstojná jednoduchost |
-| --- | --- | --- |
-| Header | centred letterhead, nav under the wordmark | left logo, right nav, sticky |
-| Emergency CTA pattern | dark utility strip above the header (sticky on mobile) | header button + fixed mobile bottom action bar |
-| Mobile navigation | in-flow full-height list | dropdown under the sticky header |
-| Homepage order | hero → family story → services (prose) → first steps → visit us | hero with CTA tier → first steps → services index → contact info row → background |
-| Hero | editorial, asymmetric, image or typographic panel | practical, text-first, CTA block, optional image after the CTAs |
-| Services IA | one long page with anchors, no detail pages | index plus detail pages |
-| Guidance format | narrative article, numbered sections, margin TOC | phased checklist, `<details>`, print styles |
-| Catalogues | editorial figure gallery, varied rhythm | uniform equal-height grid |
-| Pricing | definition lists with dot leaders | tables with captions, reflowing on mobile |
-| About | long-form, prominent, drop cap | fact sheet first, story secondary |
-| Footer | three-column "rich letter" with emergency block | compact two-row footer |
-| Typography | classic serif display + humanist body | sans throughout (optional serif H1) |
-| Image use | larger, fewer, captioned, warm | minimal, functional, uniform crops |
-| Separation device | hairline rules, small caps labels | 1 px lines, tinted bands, 8 px rhythm |
+| Dimension | A: Rodinná tradice | B: Důstojná jednoduchost | C: Noční linka | D: Dvě cesty | E: Tichá krajina | G: Lidé a místo |
+| --- | --- | --- | --- | --- | --- | --- |
+| Header | centred letterhead, nav under the wordmark | left logo, right nav, sticky | the header is a sticky side rail (desktop); name row + "Obsah" (mobile) | wordmark · centred two-option path switch · three links; not sticky | plain top bar, wordmark + text nav (Figtree 18), not sticky; "Menu" below 64 rem | wordmark + tradition subtitle, Archivo nav row, 1 px rule, not sticky; outlined "Menu" below 64 rem |
+| Emergency CTA pattern | dark utility strip above the header (sticky on mobile) | header button + fixed mobile bottom action bar | the rail itself (desktop); panel under the name row (mobile); neutral ink line on notice pages | navy half on home and navy openings on Teď hned pages; ruled line in stone openings; navy band in high emphasis; grey publisher line on notice pages | ruled stamp line after the opening and at the top of the footer; muted sentence on notice pages | large green number under a 3 px rule in the hero column and the opening of every page; green strip under the header when high; footer column; muted sentence on notice pages |
+| Mobile navigation | in-flow full-height list | dropdown under the sticky header | in-flow ruled list under the nonstop panel | switch always visible under the header; Menu grouped by path (navy group with the number, stone group, plain group) | in-flow list of large light serif words, space only, stamp line under it | 24 px bold links between 1 px rules, then the nonstop block and Kancelář |
+| Homepage order | hero → family story → services (prose) → first steps → visit us | hero with CTA tier → first steps → services index → contact info row → background | hero → (notices) → featured services → situation picker → family → office | split hero → office → notices (count) → about | text hero → stamp → steps → band → services → story → band → people → office | hero → places → steps → people → price · office · notices side by side |
+| Hero | editorial, asymmetric, image or typographic panel | practical, text-first, CTA block, optional image after the CTAs | one text statement, one screen tall, never an image | a question and two equal halves by situation (navy · stone); never an image | text only on the 12-col grid: light 72 px H1 cols 1–7, lead cols 9–12; never an image | text left + people photo bleeding right as figure 01; without it a 64 px H1 beside the nonstop block |
+| Services IA | one long page with anchors, no detail pages | index plus detail pages | statement index + statement detail pages, other services as inline links | ruled rows by category + detail pages; Časté otázky on Služby | one long page of passages with anchors, broken by bands | one long page, 360 px label column, numbered service photos beside the text |
+| Guidance format | narrative article, numbered sections, margin TOC | phased checklist, `<details>`, print styles | one step per statement, inverted picker with "vybráno", step tally | picker as full-width ruled rows, picked row filled navy; numbered phases under navy rules | picker as a sentence of words; narrative timeline by phase | full-width ruled picker rows, picked row green; phases in the label column, green step numerals |
+| Catalogues | editorial figure gallery, varied rhythm | uniform equal-height grid | ruled rows with small thumbnails, or ruled name columns | ruled rows with a 160 px image beside the name | one item per row, image cols 1–2, light 36 px name; names two per row without images | numbered figures in four columns; numbered text cells or table without images |
+| Pricing | definition lists with dot leaders | tables with captions, reflowing on mobile | one statement per group, price as a 56 px heading, inclusion lists | group name + from-price on one 2 px rule, two inclusion columns, ruled items table | from-price as the H2 in cols 1–4, included / excluded lists, hairline table | label column with the from-price, 1 px-ruled table, inclusions side by side |
+| About | long-form, prominent, drop cap | fact sheet first, story secondary | statements, one optional 4:3 photo | stone opening, body as ruled sections, no photo | passages with one landscape band | photo essay of places with numbered captions and addresses, then people |
+| Footer | three-column "rich letter" with emergency block | compact two-row footer | four columns on the rail colour + legal row with ADR | navy nonstop half · stone office half, legal row on paper | second stamp line, three columns, legal row | four 3 px-ruled columns (Nonstop, Kancelář, Na webu, Právní informace), legal row |
+| Typography | classic serif display + humanist body | sans throughout (optional serif H1) | one newspaper grotesque, 400/700, 76 px H1 | one geometric sans (Manrope 800 headings, 400 text) | light screen serif (Spectral 400) for headings and body; Figtree only for labels | one grotesque (Archivo), bold 700 headings and names, tabular figure numerals |
+| Image use | larger, fewer, captioned, warm | minimal, functional, uniform crops | none on home; people, catalogues, notices only | none in any opening; people, catalogues and notices only | full-bleed commissioned landscapes between sections, never in the first screen | documentary people and places with numbered captions; people photo in the first screen; numbered text when a photo is missing |
+| Separation device | hairline rules, small caps labels | 1 px lines, tinted bands, 8 px rhythm | darkness and space; one rule on top of each statement | colour fields by path + 2 px navy rules | photographs and space; two 1 px rules around the stamp line | 3 px ink rules over blocks, 1 px rules between rows; no tints or boxes |
+| Colour mood | warm paper, umber | cool slate, forest | dark ground, warm off-white, amber for the number only | white ground with navy and stone as two fields | mist + spruce-blue, or linen + olive-brown | off-white, near-black ink, one deep green |
+| Notices listing | – (not supported) | – (not supported) | large-type agenda by date; neutral chrome | grouped by day under uppercase dates; recent list beside; neutral chrome | calm sentences, optional 3:4 family photo beside the name; neutral chrome | ruled rows: date · optional photo · name · place; neutral chrome, no figures |
 
 ## 6. Differentiation checklist (Phase 2 exit and Phase 4)
 
-A template pair passes only if **every** item is true:
+Every pair of templates passes only if **every** item is true (QA checks the structural items for each pair):
 
 - [ ] The two `src/components/` directories share **no** component files, and the only shared imports are `@core/*`.
 - [ ] For the same content, homepage section order differs in at least 3 positions, and the hero DOM structure differs (verified from the HTML outline, not from CSS).

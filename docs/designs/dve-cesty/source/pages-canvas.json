@@ -1,0 +1,75 @@
+{
+  "v": 3,
+  "createdOnFiles": { "v": 1, "at": "2026-11-13T13:00:00Z" },
+  "title": "Šablona D Dvě cesty – stránky",
+  "launch": { "view": "canvas" },
+  "pages": [],
+  "boards": {
+    "Main.dc.html": { "x": 0, "y": 300, "w": 1280, "h": 2100, "title": "Domů 1280 · obě cesty (schváleno, beze změny)" },
+    "cesty-home-375.dc.html": { "x": 1360, "y": 300, "w": 375, "h": 2400, "title": "Domů 375 · obě cesty (schváleno, beze změny)" },
+    "cesty-notice-375.dc.html": { "x": 1815, "y": 300, "w": 375, "h": 1700, "title": "Oznámení 375 · neutrální (schváleno, beze změny)" },
+
+    "jak-postupovat-375-bez-vyberu.dc.html": { "x": 0, "y": 3200, "w": 375, "h": 2460, "title": "TEĎ HNED · Jak postupovat 375 · bez výběru" },
+    "jak-postupovat-375-doma.dc.html": { "x": 455, "y": 3200, "w": 375, "h": 2500, "title": "TEĎ HNED · Jak postupovat 375 · doma" },
+    "jak-postupovat-375-nemocnice.dc.html": { "x": 910, "y": 3200, "w": 375, "h": 2560, "title": "TEĎ HNED · Jak postupovat 375 · nemocnice" },
+    "jak-postupovat-375-domov.dc.html": { "x": 1365, "y": 3200, "w": 375, "h": 2440, "title": "TEĎ HNED · Jak postupovat 375 · domov pro seniory" },
+    "jak-postupovat-375-zahranici.dc.html": { "x": 1820, "y": 3200, "w": 375, "h": 2360, "title": "TEĎ HNED · Jak postupovat 375 · zahraničí" },
+    "kontakt-375.dc.html": { "x": 2275, "y": 3200, "w": 375, "h": 1960, "title": "TEĎ HNED · Kontakt 375" },
+    "lide-1280-s-fotkami.dc.html": { "x": 2730, "y": 3200, "w": 1280, "h": 1600, "title": "TEĎ HNED · Kontakt 1280 · Lidé s fotkami (#lide)" },
+    "lide-1280-bez-fotek.dc.html": { "x": 4090, "y": 3200, "w": 1280, "h": 1300, "title": "TEĎ HNED · Kontakt 1280 · Lidé bez fotek (#lide)" },
+
+    "cenik-1280.dc.html": { "x": 0, "y": 6240, "w": 1280, "h": 2320, "title": "S PŘEDSTIHEM · Ceník 1280" },
+    "cenik-a4.dc.html": { "x": 1360, "y": 6240, "w": 794, "h": 1123, "title": "S PŘEDSTIHEM · Ceník A4 (tisk)", "paper": "a4" },
+    "sluzby-1280.dc.html": { "x": 2234, "y": 6240, "w": 1280, "h": 1840, "title": "S PŘEDSTIHEM · Služby 1280" },
+    "pro-ucastniky-375.dc.html": { "x": 3594, "y": 6240, "w": 375, "h": 1960, "title": "S PŘEDSTIHEM · Pro účastníky 375" },
+
+    "oznameni-1280.dc.html": { "x": 0, "y": 9040, "w": 1280, "h": 1120, "title": "NEUTRÁLNÍ · Oznámení a obřady 1280" },
+    "oznameni-375.dc.html": { "x": 1360, "y": 9040, "w": 375, "h": 1640, "title": "NEUTRÁLNÍ · Oznámení a obřady 375" },
+
+    "paticka-1280.dc.html": { "x": 0, "y": 10920, "w": 1280, "h": 580, "title": "VŠUDE · Patička 1280" },
+    "menu-375-otevrene.dc.html": { "x": 1360, "y": 10920, "w": 375, "h": 1140, "title": "VŠUDE · Menu 375 otevřené" },
+    "404-375.dc.html": { "x": 1815, "y": 10920, "w": 375, "h": 1060, "title": "VŠUDE · 404 375" },
+    "nouzovy-kontakt-375.dc.html": { "x": 2270, "y": 10920, "w": 375, "h": 1320, "title": "VŠUDE · Nonstop: tři podoby 375" }
+  },
+  "order": [
+    "Main.dc.html",
+    "cesty-home-375.dc.html",
+    "cesty-notice-375.dc.html",
+    "jak-postupovat-375-bez-vyberu.dc.html",
+    "jak-postupovat-375-doma.dc.html",
+    "jak-postupovat-375-nemocnice.dc.html",
+    "jak-postupovat-375-domov.dc.html",
+    "jak-postupovat-375-zahranici.dc.html",
+    "kontakt-375.dc.html",
+    "lide-1280-s-fotkami.dc.html",
+    "lide-1280-bez-fotek.dc.html",
+    "cenik-1280.dc.html",
+    "cenik-a4.dc.html",
+    "sluzby-1280.dc.html",
+    "pro-ucastniky-375.dc.html",
+    "oznameni-1280.dc.html",
+    "oznameni-375.dc.html",
+    "paticka-1280.dc.html",
+    "menu-375-otevrene.dc.html",
+    "404-375.dc.html",
+    "nouzovy-kontakt-375.dc.html"
+  ],
+  "notes": {
+    "t0": { "x": 0, "y": 40, "text": "D3 Dvě cesty: schválený směr (beze změny)", "kind": "title1", "maxW": 2190 },
+    "s0": { "x": 2270, "y": 300, "w": 460, "size": "m", "fill": "gray", "text": "Jedna myšlenka: úvodní obrazovka se dělí podle situace návštěvníka. Vlevo tmavá polovina \"Někdo právě zemřel\" (číslo a tři první kroky), vpravo světlá \"Chci se informovat nebo připravit\" (ceny, bez obřadu, předem, otázky). Celý web drží obě cesty: každá stránka patří jedné z nich a v hlavičce je přepínač.\n\nNonstop: obsah tmavé poloviny, na mobilu hned pod nadpisem.\nKancelář: v pravé cestě a na Kontaktu, nikdy v tmavém poli.\n\nPísmo: Manrope. Barvy: noční modrá #1C2940, kámen #ECE7DF, bílá." },
+    "s1": { "x": 2270, "y": 1020, "w": 460, "size": "m", "fill": "blue", "text": "Jak se pozná cesta na každé stránce\n\n1. Přepínač v hlavičce: vybraná cesta je plná (modrá, bílé písmo), aria-current=\"page\".\n2. Úvod stránky má barvu cesty: TEĎ HNED tmavě modrý pruh s číslem nonstop, S PŘEDSTIHEM kamenný pruh.\n3. Na 1280 je v úvodním pruhu malá navigace \"V této cestě\" se stránkami cesty (pořadí podle core).\n\nTEĎ HNED: Jak postupovat, Kontakt (+ Lidé na /kontakt/#lide).\nS PŘEDSTIHEM: Ceník, Služby (+ detail), Pohřeb předem, Rakve, Květiny, Časté otázky, Dokumenty, O nás, Pro účastníky.\nNEUTRÁLNÍ (mimo cesty, §4a L1): Oznámení a obřady, oznámení. Žádný přepínač, žádné tmavé pole, žádná nabídka.\nVŠUDE: patička, menu, 404." },
+
+    "t1": { "x": 0, "y": 2960, "text": "Cesta TEĎ HNED: tmavý úvod s číslem, málo voleb", "kind": "title1", "maxW": 5370 },
+    "s2": { "x": 5450, "y": 3200, "w": 440, "size": "m", "fill": "gray", "text": "Stránky cesty Teď hned otevírá tmavý pruh: štítek cesty, nadpis, nonstop číslo (34 / 50 px). Kancelář je až pod ním na bílé, ve vlastním bloku.\n\nJak postupovat: výběr místa úmrtí jsou čtyři odkazy (:target, bez JS). Vybraný řádek je plný a má text \"(vybráno)\". Kroky jsou seřazené po fázích, zaškrtávací políčka jsou nativní, delší text v <details>.\n\nLidé: core nemá /lide/, proto jsou lidé sekcí Kontaktu (#lide), jako u C a E." },
+
+    "t2": { "x": 0, "y": 6000, "text": "Cesta S PŘEDSTIHEM: kamenný úvod, ceny a možnosti", "kind": "title1", "maxW": 3970 },
+    "s3": { "x": 4050, "y": 6240, "w": 440, "size": "m", "fill": "gray", "text": "Stránky cesty S předstihem otevírá kamenný pruh: štítek cesty, nadpis, úvod a pod linkou řádek \"Někdo právě zemřel? Nonstop …\" (výchozí podoba nonstop na těchto stránkách, v první obrazovce 375×667).\n\nCeník: skupina = název + cena \"od\" vpravo, pod ní dva sloupce \"V ceně je zahrnuto\" a \"Není zahrnuto\", pak tabulka položek. Poznámka o DPH u nadpisu i na konci. Tisk: Ctrl / Cmd + P, černobíle, bez přepínače.\n\nPro účastníky: patří do cesty S předstihem (informace), ale bez cen a nabídky služeb, protože sem lidé přicházejí z oznámení." },
+
+    "t3": { "x": 0, "y": 8800, "text": "NEUTRÁLNÍ: oznámení a obřady mimo obě cesty", "kind": "title1", "maxW": 2190 },
+    "s4": { "x": 1815, "y": 9040, "w": 440, "size": "m", "fill": "orange", "text": "§4a L1: stránky oznámení nenesou přepínač, tmavé pole ani žádnou nabídku. Hlavička jen se jménem firmy a zkrácenou navigací (Oznámení a obřady · Kontakt · Úvodní stránka), pod ní šedý řádek \"Oznámení zveřejňuje … Telefon nonstop …\".\n\nSeznam: nejdřív nadcházející rozloučení po dnech, pak nedávná oznámení. Jméno je odkaz, pod ním věta o obřadu.\n\n⚖ Neutrální řádek a zkrácená navigace čekají na právníka." },
+
+    "t4": { "x": 0, "y": 10680, "text": "VŠUDE: patička, menu, 404 a tři podoby nonstop", "kind": "title1", "maxW": 2650 },
+    "s5": { "x": 2725, "y": 10920, "w": 440, "size": "m", "fill": "gray", "text": "Patička opakuje dělení: vlevo tmavé pole jen s nonstop, vpravo kamenné pole s kanceláří a hodinami (dva oddělené bloky). Pod nimi právní identifikace, Právní informace, Ochrana osobních údajů, Dokumenty a ADR. Na oznámeních jen šedý právní řádek.\n\nMenu (375): odkazy seskupené podle cest, tmavá skupina s číslem nahoře.\n\n404: dvě malé poloviny jako na úvodní stránce, přepínač bez výběru.\n\nZástupný obsah: Pohřební služba Vzor, +420 000 000 1xx, ceny UKÁZKA, žádná skutečná data klienta, žádné generované obrázky." }
+  },
+  "designSystems": []
+}

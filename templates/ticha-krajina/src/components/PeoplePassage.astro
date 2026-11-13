@@ -1,0 +1,60 @@
+---
+/**
+ * Home `people`: "Kdo vás přijme", the names in light serif two per row in the text column, the
+ * role and a direct line; no photos on home (portraits live on /kontakt/#lide).
+ */
+import PlaceholderMark from "@core/components/PlaceholderMark.astro";
+import type { PersonView } from "@core/content/view-models.ts";
+import GridPassage from "./GridPassage.astro";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  people: PersonView[];
+}
+
+const { people } = Astro.props;
+---
+<GridPassage id="lide-domu" heading={ui.peopleHeading} data-section="people">
+  <ul class="names" role="list">
+    {
+      people.map((person) => (
+        <li>
+          <PlaceholderMark active={person.placeholder} as="div">
+            <p class="name">{person.name}</p>
+            <p class="label">{person.role}</p>
+            {person.phone !== null ? (
+              <p>
+                <a href={person.phone.href} data-phone-link>
+                  {ui.directLine}{" "}<span class="nowrap">{person.phone.display}</span>
+                </a>
+              </p>
+            ) : null}
+          </PlaceholderMark>
+        </li>
+      ))
+    }
+  </ul>
+  <p class="sans"><a href="/kontakt/#lide" class="go">{ui.officeLink}</a></p>
+</GridPassage>
+
+<style>
+  .names {
+    display: grid;
+    gap: 1.5rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .name {
+    font-size: 1.75rem;
+    line-height: 1.2;
+  }
+
+  @media (min-width: 48rem) {
+    .names {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      column-gap: 1.5rem;
+    }
+  }
+</style>

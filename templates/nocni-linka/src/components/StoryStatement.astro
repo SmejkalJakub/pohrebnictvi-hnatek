@@ -1,0 +1,18 @@
+---
+/** Home "family-story": kicker "O nás", the about page title, its excerpt (or lead), one link. */
+import Statement from "./Statement.astro";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  title: string;
+  text: string | null;
+  tradition: string | null;
+}
+
+const { title, text, tradition } = Astro.props;
+---
+<Statement id="o-nas-uvod" kicker={ui.storyKicker} heading={title} class="home-st" data-section="family-story">
+  {tradition !== null ? <p class="st-text muted">{tradition}</p> : null}
+  {text !== null ? <p class="st-text">{text}</p> : null}
+  <a href="/o-nas/" class="st-link">{ui.storyLink}</a>
+</Statement>

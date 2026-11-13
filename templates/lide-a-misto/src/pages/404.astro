@@ -1,0 +1,25 @@
+---
+/** 404: the opening with the small caps kicker and one sentence linking the home page and Kontakt. */
+import { getSiteContext } from "@core/content/load.ts";
+import EssayLayout from "../layouts/EssayLayout.astro";
+import PageOpening from "../components/PageOpening.astro";
+import { ui } from "../i18n/cs.ts";
+
+const site = await getSiteContext();
+---
+<EssayLayout site={site} title={ui.notFoundTitle} description={ui.notFoundTitle} noindex>
+  <PageOpening title={ui.notFoundTitle} kicker={ui.notFoundKicker} emergency={site.emergency} />
+  <div class="frame not-found">
+    <p class="split-free">
+      {ui.notFoundBefore} <a href="/">{ui.notFoundHome}</a>{ui.notFoundOr}{" "}
+      <a href="/kontakt/">{ui.notFoundContact}</a>.
+    </p>
+  </div>
+</EssayLayout>
+
+<style>
+  .not-found {
+    margin-top: 2rem;
+    font-size: 1.25rem;
+  }
+</style>

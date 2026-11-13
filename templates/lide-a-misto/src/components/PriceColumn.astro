@@ -1,0 +1,52 @@
+---
+/**
+ * Home "price-summary": a column under a 3 px rule. The first item of each price group as a
+ * "from" line (core has no group price, so the first item stands for it, as approved for C–E),
+ * at most three groups, the VAT note (research L9), then the link to Ceník.
+ * Renders nothing while pricing is hidden.
+ */
+import PriceValue from "@core/components/PriceValue.astro";
+import VatNote from "@core/components/VatNote.astro";
+import type { PricingView } from "@core/content/view-models.ts";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  pricing: PricingView;
+  title: string;
+  col: number | null;
+}
+
+const { pricing, title, col } = Astro.props;
+const lines = pricing.groups
+  .map((group) => ({ group, item: group.items[0] ?? null }))
+  .filter((line) => line.item !== null)
+  .slice(0, 3);
+---
+<section class="home-col ruled" data-section="price-summary" data-col={col ?? undefined} aria-labelledby="cenik-souhrn">
+  <h2 id="cenik-souhrn" class="col-heading">{title}</h2>
+  <ul class="price-lines" role="list">
+    {
+      lines.map((line) => (
+        <li>
+          {line.group.title}{" "}
+          {line.item !== null ? <PriceValue item={line.item} class="price-strong" /> : null}
+        </li>
+      ))
+    }
+  </ul>
+  <VatNote pricing={pricing} class="muted" />
+  <a href="/cenik/" class="go">{ui.priceLink}</a>
+</section>
+
+<style>
+  .price-lines {
+    margin: 0.5rem 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .price-lines :global(.price-strong [data-price-amount]) {
+    font-weight: 700;
+    white-space: nowrap;
+  }
+</style>

@@ -1,0 +1,117 @@
+---
+/**
+ * Kontakt: the opening (H1 + one sentence), the stamp line, then passages Kancelář, Úřední
+ * hodiny (data-office-hours, its own heading), Telefony, Převoz zesnulých (its own emergency
+ * block), the office building as a band when the page has a secondaryImage, and Kdo vás přijme
+ * (#lide) when people are on.
+ */
+import PhoneLink from "@core/components/PhoneLink.astro";
+import { getPage, getPeople, getSiteContext } from "@core/content/load.ts";
+import { formatAddressLines } from "@core/format/address.ts";
+import { formatPhone } from "@core/format/phone.ts";
+import QuietLayout from "../layouts/QuietLayout.astro";
+import OpeningText from "../components/OpeningText.astro";
+import StampLine from "../components/StampLine.astro";
+import GridPassage from "../components/GridPassage.astro";
+import OfficeHoursHairlines from "../components/OfficeHoursHairlines.astro";
+import TransportPassage from "../components/TransportPassage.astro";
+import LandscapeBand from "../components/LandscapeBand.astro";
+import PeoplePortraitRows from "../components/PeoplePortraitRows.astro";
+import ProsePassages from "../components/ProsePassages.astro";
+import { resolveOptions } from "../lib/options.ts";
+import { mainLocation, mapHref, seoDescription, seoTitle } from "../lib/site.ts";
+import { ui } from "../i18n/cs.ts";
+
+const site = await getSiteContext();
+const options = resolveOptions(site.config);
+const page = await getPage("kontakt");
+const people = await getPeople();
+const location = mainLocation(site);
+const [street, cityLine] = formatAddressLines(location.address);
+const map = mapHref(location);
+const phones = site.contact.phones.map((phone) => ({ ...phone, display: formatPhone(phone.number).display }));
+/* With photos one person per row across the grid; without, names two per row in the text column. */
+const peopleWithPhotos = people.some((person) => person.photo !== null);
+const building = page.data.secondaryImage;
+let buildingCaption: string | null = null;
+if (building !== null && building.caption !== null) {
+  buildingCaption = building.caption;
+}
+const Body = page.Content;
+---
+<QuietLayout site={site} title={seoTitle(page.data)} description={seoDescription(page.data)}>
+  <OpeningText title={page.data.title} lead={page.data.lead} placeholder={page.data.placeholder} />
+  <StampLine emergency={site.emergency} place="opening" high={options.emergencyEmphasis === "high"} />
+  <GridPassage id="kancelar" heading={ui.officeHeading}>
+    <p>{location.name}<br />{street}<br />{cityLine}</p>
+    {map !== null ? <p class="sans"><a href={map} class="go">{ui.mapLink}</a></p> : null}
+    {location.accessNote !== null ? <p class="muted">{location.accessNote}</p> : null}
+  </GridPassage>
+  <GridPassage id="hodiny" heading={ui.hoursHeading} data-office-hours>
+    <OfficeHoursHairlines site={site} id="hodiny-tabulka" withHeading={false} />
+  </GridPassage>
+  <GridPassage id="telefony" heading={ui.phonesHeading}>
+    <ul class="lines" role="list">
+      {
+        phones.map((phone) => (
+          <li>
+            <PhoneLink number={phone.number}>
+              {phone.label}{" "}<span class="nowrap">{phone.display}</span>
+            </PhoneLink>
+          </li>
+        ))
+      }
+      {
+        site.contact.emails.map((email) => (
+          <li>
+            <a href={`mailto:${email.address}`} class="go mail">{email.address}</a>
+          </li>
+        ))
+      }
+    </ul>
+  </GridPassage>
+  <TransportPassage emergency={site.emergency} />
+  {building !== null ? <LandscapeBand image={building} caption={buildingCaption} /> : null}
+  {
+    people.length > 0 && !peopleWithPhotos ? (
+      <GridPassage id="lide" heading={ui.peopleHeading}>
+        <PeoplePortraitRows people={people} />
+      </GridPassage>
+    ) : null
+  }
+  {
+    peopleWithPhotos ? (
+      <section id="lide" class="passage" aria-labelledby="lide-nadpis">
+        <div class="passage-full">
+          <h2 id="lide-nadpis" class="passage-heading">{ui.peopleHeading}</h2>
+        </div>
+        <div class="passage-full people-rows">
+          <PeoplePortraitRows people={people} />
+        </div>
+      </section>
+    ) : null
+  }
+  {page.hasBody ? <ProsePassages idPrefix="kontakt-text"><Body /></ProsePassages> : null}
+</QuietLayout>
+
+<style>
+  .lines {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .people-rows {
+    margin-top: 1.5rem;
+  }
+
+  @media (min-width: 64rem) {
+    .people-rows {
+      margin-top: 3rem;
+    }
+  }
+
+  .mail {
+    overflow-wrap: anywhere;
+  }
+</style>

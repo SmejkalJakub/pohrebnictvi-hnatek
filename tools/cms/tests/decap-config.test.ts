@@ -5,8 +5,13 @@ import { parse } from "yaml";
 import type { TemplateManifest } from "../../../core/content/config.ts";
 import { splitFrontmatter } from "../../../core/content/snapshot.ts";
 import { REPO_ROOT, loadManifest } from "../../lib/repo.ts";
+import { MAX_LANDSCAPE_IMAGES, MAX_PLACES as CORE_MAX_PLACES } from "../../../core/content/schemas.ts";
 import {
   CONTENT_BRANCH,
+  LANDSCAPES_HELP,
+  MAX_LANDSCAPES,
+  MAX_PLACES,
+  PLACES_HELP,
   PLACEHOLDER_IMAGE_LABEL,
   PUBLISH_COLLECTION,
   PUBLISH_REQUEST_FILE,
@@ -25,10 +30,16 @@ import {
   resolvePublishing,
 } from "../settings.ts";
 
+/** Optional collections and singletons each client turns on in its site.config features. */
+const OPTIONAL_TYPES = ["notices", "faq", "people", "documents"];
 const CLIENTS = [
-  { id: "hnatek", template: "rodinna-tradice" },
-  { id: "hnatek-b", template: "dustojna-jednoduchost" },
-] as const;
+  { id: "hnatek", template: "rodinna-tradice", optional: [], singletons: [] },
+  { id: "hnatek-b", template: "dustojna-jednoduchost", optional: [], singletons: [] },
+  { id: "hnatek-c", template: "nocni-linka", optional: OPTIONAL_TYPES, singletons: [] },
+  { id: "hnatek-d", template: "dve-cesty", optional: [], singletons: [] },
+  { id: "hnatek-e", template: "ticha-krajina", optional: OPTIONAL_TYPES, singletons: ["landscapes"] },
+  { id: "hnatek-g", template: "lide-a-misto", optional: [], singletons: ["places"] },
+];
 
 const SITE_ID = "7b0c6a52-1f39-4c55-9a7e-2d1f0b8f4e11";
 
@@ -71,7 +82,7 @@ function allFields(collections: DecapCollection[]): { path: string; field: Decap
   });
 }
 
-describe.each(CLIENTS)("Decap config for $id ($template)", ({ id, template }) => {
+describe.each(CLIENTS)("Decap config for $id ($template)", ({ id, template, optional, singletons }) => {
   it("targets the content branch through DecapBridge, with placeholders until configured", async () => {
     const { config, yaml } = await clientConfig(id, template);
     expect(config.backend.name).toBe("git-gateway");
@@ -112,6 +123,7 @@ describe.each(CLIENTS)("Decap config for $id ($template)", ({ id, template }) =>
       "guidance",
       "coffins",
       "flowers",
+      ...optional,
       "zverejneni",
     ]);
     const basic = collection(config.collections, "zakladni-informace");
@@ -119,6 +131,7 @@ describe.each(CLIENTS)("Decap config for $id ($template)", ({ id, template }) =>
       "company",
       "contact",
       "office-hours",
+      ...singletons,
     ]);
   });
 
@@ -433,6 +446,99 @@ describe("optional collections", () => {
     const supporting: TemplateManifest = { ...manifest, supports: { ...manifest.supports, notices: true } };
     const withNotices = await generated(supporting, { articles: false, notices: true });
     expect(withNotices.collections.map((entry) => entry.name)).toContain("notices");
+  });
+});
+
+describe.each([
+  {
+    feature: "landscapes",
+    template: "ticha-krajina",
+    file: "landscapes.json",
+    label: "Krajiny",
+    list: "images",
+    max: MAX_LANDSCAPES,
+    coreMax: MAX_LANDSCAPE_IMAGES,
+    help: LANDSCAPES_HELP,
+    rules: ["lidé", "západ slunce", "mraky", "květiny", "fotobanky", "počítačem"],
+    required: "place",
+  },
+  {
+    feature: "places",
+    template: "lide-a-misto",
+    file: "places.json",
+    label: "Naše místa",
+    list: "places",
+    max: MAX_PLACES,
+    coreMax: CORE_MAX_PLACES,
+    help: PLACES_HELP,
+    rules: ["vlastní nebo zakázkové", "fotobanky", "počítačem"],
+    required: "name",
+  },
+] as const)("optional singleton $file ($label)", (spec) => {
+  async function generated(supported: boolean, on: boolean) {
+    const manifest = await loadManifest(spec.template);
+    const config = generateDecapConfig({
+      manifest: { ...manifest, supports: { ...manifest.supports, [spec.feature]: supported } },
+      features: { articles: false, [spec.feature]: on },
+      pageIds: ["home"],
+      publishing: resolvePublishing(settings()),
+    });
+    const basics = collection(config.collections, "zakladni-informace");
+    if (!("files" in basics)) {
+      throw new Error("zakladni-informace is not a files collection");
+    }
+    return basics.files.find((file) => file.name === spec.feature);
+  }
+
+  it("appears under Základní informace only while the feature is on and supported", async () => {
+    expect(await generated(true, false)).toBeUndefined();
+    expect(await generated(false, true)).toBeUndefined();
+    const file = await generated(true, true);
+    expect(file?.label).toBe(spec.label);
+    expect(file?.file).toBe(`src/content/site/${spec.file}`);
+  });
+
+  it("states the guardrail and the core limit on the list", async () => {
+    const list = (await generated(true, true))?.fields.find((field) => field.name === spec.list);
+    expect(spec.max).toBe(spec.coreMax);
+    expect(list?.max).toBe(spec.max);
+    expect(list?.hint).toBe(spec.help);
+    for (const rule of spec.rules) {
+      expect(spec.help).toContain(rule);
+    }
+    expect(list?.fields?.find((field) => field.name === spec.required)?.required).toBe(true);
+  });
+
+  it("declares every key of the neutral fixture's file", async () => {
+    const file = await generated(true, true);
+    const data = JSON.parse(
+      await readFile(
+        path.join(REPO_ROOT, "fixtures", "neutral", "src", "content", "site", spec.file),
+        "utf8",
+      ),
+    ) as unknown;
+    const missing: string[] = [];
+    const check = (value: unknown, fields: DecapField[], where: string): void => {
+      if (typeof value !== "object" || value === null || Array.isArray(value)) {
+        return;
+      }
+      for (const [key, child] of Object.entries(value)) {
+        const field = fields.find((candidate) => candidate.name === key);
+        if (field === undefined) {
+          missing.push(`${where}.${key}`);
+          continue;
+        }
+        if (field.fields === undefined) {
+          continue;
+        }
+        const items = Array.isArray(child) ? child : [child];
+        for (const item of items) {
+          check(item, field.fields, `${where}.${key}`);
+        }
+      }
+    };
+    check(data, file?.fields ?? [], spec.file);
+    expect(missing).toEqual([]);
   });
 });
 

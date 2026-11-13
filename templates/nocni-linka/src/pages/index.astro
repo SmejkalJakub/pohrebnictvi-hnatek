@@ -1,0 +1,113 @@
+---
+/**
+ * Home: a sequence of single statements in site.config.homepage.sections order. The hero is one
+ * screen tall on desktop; the notices statement follows it while notices are on.
+ */
+import { getGuidance, getOptionalPage, getPage, getServices, getSiteContext } from "@core/content/load.ts";
+import { chooserSituations } from "@core/content/guidance-flow.ts";
+import NightLayout from "../layouts/NightLayout.astro";
+import OpeningStatement from "../components/OpeningStatement.astro";
+import NoticesTeaser from "../components/NoticesTeaser.astro";
+import FeaturedStatements from "../components/FeaturedStatements.astro";
+import PlaceLinks from "../components/PlaceLinks.astro";
+import Statement from "../components/Statement.astro";
+import OfficeStatement from "../components/OfficeStatement.astro";
+import StoryStatement from "../components/StoryStatement.astro";
+import CatalogueLinksLine from "../components/CatalogueLinksLine.astro";
+import { resolveOptions } from "../lib/options.ts";
+import { ui } from "../i18n/cs.ts";
+
+const site = await getSiteContext();
+const options = resolveOptions(site.config);
+const home = await getPage("home");
+const about = await getPage("o-nas");
+const services = await getServices();
+const guidance = await getGuidance();
+const noticesPage = await getOptionalPage("oznameni");
+const sections = site.config.homepage.sections;
+
+let featured = services.filter((service) => service.data.featured);
+if (featured.length === 0) {
+  featured = services.slice(0, 1);
+}
+const situations = chooserSituations(guidance);
+const firstHours = guidance.filter((entry) => entry.data.phase === "first-hours");
+let showNoticesTeaser = false;
+if (site.config.features.notices && noticesPage !== null) {
+  showNoticesTeaser = true;
+}
+let noticesKicker = "";
+if (noticesPage !== null) {
+  noticesKicker = noticesPage.data.title;
+}
+let aboutText = about.data.lead;
+if (about.data.excerpt !== null) {
+  aboutText = about.data.excerpt;
+}
+const catalogueLinks = site.nav.filter((item) => item.id === "rakve" || item.id === "kvetiny");
+let description = home.data.title;
+if (home.data.metaDescription !== null) {
+  description = home.data.metaDescription;
+}
+---
+<NightLayout site={site} title={home.data.metaTitle} description={description}>
+  {
+    sections.map((section) => (
+      <>
+        {section === "hero" ? (
+          <OpeningStatement
+            title={home.data.title}
+            lead={home.data.lead}
+            placeholder={home.data.placeholder}
+            emergency={site.emergency}
+            high={options.emergencyEmphasis === "high"}
+          />
+        ) : null}
+        {section === "hero" && showNoticesTeaser ? <NoticesTeaser kicker={noticesKicker} /> : null}
+        {section === "services" ? (
+          <div data-section="services">
+            <FeaturedStatements services={featured} context="home" class="home-st" />
+          </div>
+        ) : null}
+        {section === "next-steps" ? (
+          <Statement
+            id="kroky"
+            kicker={ui.stepsKicker}
+            heading={situations.length > 0 ? ui.pickerHeading : ui.firstHoursHeading}
+            class="home-st"
+            data-section="next-steps"
+          >
+            {situations.length > 0 ? (
+              <PlaceLinks situations={situations} base="/jak-postupovat/" labelledBy="kroky-nadpis" />
+            ) : (
+              <ul class="link-rows home-steps">
+                {firstHours.map((entry) => (
+                  <li>
+                    <a href={`/jak-postupovat/#${entry.id}`}>{entry.data.title}</a>
+                  </li>
+                ))}
+              </ul>
+            )}
+            <a href="/jak-postupovat/" class="st-link">{ui.fullGuide}</a>
+          </Statement>
+        ) : null}
+        {section === "family-story" ? (
+          <StoryStatement title={about.data.title} text={aboutText} tradition={site.company.tradition.publicWording} />
+        ) : null}
+        {section === "contact-summary" ? <OfficeStatement site={site} /> : null}
+        {section === "catalogue-links" ? <CatalogueLinksLine links={catalogueLinks} /> : null}
+      </>
+    ))
+  }
+</NightLayout>
+
+<style>
+  .home-steps {
+    margin-top: 1rem;
+  }
+
+  [data-section="next-steps"] :global(.big-links) {
+    max-width: 34rem;
+    margin-top: 1.5rem;
+  }
+</style>

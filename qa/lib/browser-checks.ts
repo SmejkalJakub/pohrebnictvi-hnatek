@@ -282,3 +282,107 @@ export function openAllDetails(): number {
   }
   return all.length;
 }
+
+/**
+ * Phone and nonstop links whose label is glued to the number on screen ("Kancelář+420 …", "Telefon nonstop+420"):
+ * a letter and the following "+" or digit on the same line with less than 0.15 em between them.
+ */
+export function gluedPhoneLabels(): string[] {
+  // A label and its number must read as two words. `innerText` cannot be trusted for this: inside a flex container
+  // the label and the number become separate flex items, `innerText` puts a newline between them, and yet the space
+  // in the source is dropped on screen ("Telefon nonstop+420"). So this measures the rendered gap instead.
+  const glued: string[] = [];
+  const links = Array.from(document.querySelectorAll<HTMLElement>('a[href^="tel:"], [data-emergency-link]'));
+  for (const link of links) {
+    const characters: { char: string; rect: DOMRect }[] = [];
+    const walker = document.createTreeWalker(link, NodeFilter.SHOW_TEXT);
+    let node = walker.nextNode();
+    while (node) {
+      const text = node.textContent ?? "";
+      for (let index = 0; index < text.length; index += 1) {
+        const char = text[index] ?? "";
+        if (/\s/u.test(char)) {
+          continue;
+        }
+        const range = document.createRange();
+        range.setStart(node, index);
+        range.setEnd(node, index + 1);
+        const rect = range.getBoundingClientRect();
+        if (rect.width > 0) {
+          characters.push({ char, rect });
+        }
+      }
+      node = walker.nextNode();
+    }
+    const fontSize = Number.parseFloat(getComputedStyle(link).fontSize);
+    for (let index = 1; index < characters.length; index += 1) {
+      const before = characters[index - 1];
+      const after = characters[index];
+      if (!before || !after) {
+        continue;
+      }
+      const labelMeetsNumber = /\p{L}/u.test(before.char) && /[+\d]/u.test(after.char);
+      if (!labelMeetsNumber) {
+        continue;
+      }
+      // Stacked parts (a label above a large number) can overlap vertically, so compare centres and direction.
+      const afterCentre = after.rect.top + after.rect.height / 2;
+      const beforeCentre = before.rect.top + before.rect.height / 2;
+      const sameLine =
+        after.rect.left >= before.rect.left &&
+        afterCentre > before.rect.top &&
+        afterCentre < before.rect.bottom &&
+        beforeCentre > after.rect.top &&
+        beforeCentre < after.rect.bottom;
+      const gap = after.rect.left - before.rect.right;
+      if (sameLine && gap < fontSize * 0.15) {
+        glued.push(`${JSON.stringify(link.textContent?.replace(/\s+/g, " ").trim())} gap ${gap.toFixed(1)} px → ${link.getAttribute("href") ?? ""}`);
+        break;
+      }
+    }
+  }
+  return glued;
+}
+
+export interface FigureNumberReport {
+  /** Every [data-figure-number] in document order. */
+  numbers: string[];
+  /** Numbers outside a figcaption, a list item or a table row (s11 §4.2). */
+  misplaced: string[];
+  /** [data-figure] elements with no image inside: an empty frame. */
+  emptyFrames: number;
+  /** [data-figure] elements on the page. */
+  figures: number;
+  /** [data-high-strip] elements on the page. */
+  strips: number;
+}
+
+/**
+ * Template G's figure numbering (s11 §4.2), checked through the core-neutral hooks
+ * [data-figure-number], [data-figure] and [data-high-strip]; templates that render none pass.
+ */
+export function describeFigureNumbers(): FigureNumberReport {
+  const numbers: string[] = [];
+  const misplaced: string[] = [];
+  for (const el of Array.from(document.querySelectorAll("[data-figure-number]"))) {
+    const text = (el.textContent ?? "").trim();
+    numbers.push(text);
+    if (el.closest("figcaption, li, tr") === null) {
+      misplaced.push(`${text} in <${el.parentElement?.tagName.toLowerCase() ?? "?"}>`);
+    }
+  }
+  let emptyFrames = 0;
+  const figures = Array.from(document.querySelectorAll("[data-figure]"));
+  for (const figure of figures) {
+    if (figure.querySelector("img") === null) {
+      emptyFrames += 1;
+    }
+  }
+  return {
+    numbers,
+    misplaced,
+    emptyFrames,
+    figures: figures.length,
+    strips: document.querySelectorAll("[data-high-strip]").length,
+  };
+}

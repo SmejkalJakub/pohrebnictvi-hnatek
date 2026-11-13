@@ -1,0 +1,52 @@
+---
+/**
+ * A page's single place photo (Kontakt office, Pro účastníky hall) as figure 01: full width on
+ * phones (the photo bleeds, the caption keeps the gutter), in the text column from 64 rem.
+ */
+import type { ImageRef } from "@core/content/schemas.ts";
+import NumberedFigure from "./NumberedFigure.astro";
+
+interface Props {
+  image: ImageRef;
+  number: string;
+}
+
+const { image, number } = Astro.props;
+---
+<div class="page-figure">
+  <NumberedFigure
+    image={image}
+    number={number}
+    text={image.caption}
+    ratio="16 / 10"
+    ratioWide="3 / 2"
+    widths={[375, 750, 1100]}
+    sizes="(min-width: 64rem) 46rem, 100vw"
+  />
+</div>
+
+<style>
+  .page-figure {
+    margin-top: 2rem;
+  }
+
+  .page-figure :global(.fig-caption) {
+    padding-inline: var(--gutter);
+  }
+
+  @media (min-width: 64rem) {
+    .page-figure {
+      max-width: 80rem;
+      margin: 4rem auto 0;
+      padding-inline: calc(var(--gutter) + var(--label-col) + var(--gap)) var(--gutter);
+    }
+
+    .page-figure :global(.fig-caption) {
+      padding-inline: 0;
+    }
+
+    .page-figure :global(.fig) {
+      max-width: 46rem;
+    }
+  }
+</style>

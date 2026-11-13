@@ -1,0 +1,24 @@
+---
+/** Home "catalogue-links": one statement with inline links to the coffin and flower pages. */
+import type { NavItem } from "@core/content/view-models.ts";
+import Statement from "./Statement.astro";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  links: NavItem[];
+}
+
+const { links } = Astro.props;
+---
+<Statement id="katalog" kicker={ui.catalogueKicker} class="home-st" data-section="catalogue-links">
+  <p class="inline-links">
+    {
+      links.map((link, index) => (
+        <>
+          {index > 0 ? <span aria-hidden="true"> · </span> : null}
+          <a href={link.href}>{link.label}</a>
+        </>
+      ))
+    }
+  </p>
+</Statement>

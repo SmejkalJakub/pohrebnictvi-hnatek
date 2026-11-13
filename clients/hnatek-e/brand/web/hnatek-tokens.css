@@ -1,0 +1,9 @@
+/* Pohřebnictví Hnátek brand tokens. Suggested solid-color equivalents derived from supplied logo image. */
+:root {
+ --hnatek-green: #113C2A;
+ --hnatek-green-medium: #235A3F;
+ --hnatek-gold: #C7A24B;
+ --hnatek-gray: #969C9A;
+ --hnatek-ivory: #F8F6F1;
+ --hnatek-charcoal: #222823;
+}

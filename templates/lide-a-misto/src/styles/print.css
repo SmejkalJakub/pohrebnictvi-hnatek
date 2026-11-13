@@ -1,0 +1,67 @@
+/*
+ * Print (A4): white paper, ink only, 1 px rules, 12 pt body. Navigation, the menu, the high strip
+ * and photos are left out; the print-only letterhead and source line appear (Ceník, notices).
+ */
+.print-only {
+  display: none;
+}
+
+@media print {
+  @page {
+    size: A4;
+    margin: 14mm 16mm;
+  }
+
+  :root {
+    --ground: #ffffff;
+    --green: #161616;
+    --gutter: 0;
+  }
+
+  html,
+  body {
+    background: #ffffff;
+    font-size: 12pt;
+  }
+
+  .print-only {
+    display: block;
+  }
+
+  .no-print,
+  header nav,
+  [data-menu-toggle],
+  [data-high-strip],
+  [data-prototype-banner],
+  figure,
+  .skip-link {
+    display: none !important;
+  }
+
+  a {
+    color: #161616;
+    text-decoration: none;
+  }
+
+  .frame {
+    max-width: none;
+  }
+
+  h1 {
+    font-size: 20pt;
+  }
+
+  h2 {
+    font-size: 14pt;
+    break-after: avoid;
+  }
+
+  tr,
+  li {
+    break-inside: avoid;
+  }
+
+  footer {
+    font-size: 10pt;
+  }
+}

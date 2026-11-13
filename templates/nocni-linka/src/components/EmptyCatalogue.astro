@@ -1,0 +1,21 @@
+---
+/** A catalogue with no entries: one sentence and the office phone, never an empty grid. */
+import PhoneLink from "@core/components/PhoneLink.astro";
+import type { SiteContext } from "@core/content/view-models.ts";
+import { formatPhone } from "@core/format/phone.ts";
+import { primaryOfficePhone } from "../lib/site.ts";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  site: SiteContext;
+}
+
+const { site } = Astro.props;
+const office = primaryOfficePhone(site);
+---
+<div class="st">
+  <p class="st-text">{ui.catalogueEmpty}</p>
+  <p class="st-text">
+    <PhoneLink number={office.number}>{office.label}{" "}<span class="nowrap">{formatPhone(office.number).display}</span></PhoneLink>
+  </p>
+</div>

@@ -1,0 +1,59 @@
+---
+/**
+ * Home "services" (available, not default): "Služby" in the label column and the featured
+ * services as ruled rows with their summary, linking to their anchor on /sluzby/.
+ */
+import type { CollectionEntry } from "astro:content";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  services: CollectionEntry<"services">[];
+  title: string;
+}
+
+const { services, title } = Astro.props;
+---
+<section class="frame home-block split" data-section="services" aria-labelledby="sluzby-souhrn">
+  <h2 id="sluzby-souhrn" class="h2">{title}</h2>
+  <div>
+    <ul class="service-rows" role="list">
+      {
+        services.map((service) => (
+          <li class="service-row">
+            <a href={`/sluzby/#${service.id}`} class="service-link">{service.data.title}</a>
+            <p>{service.data.summary}</p>
+          </li>
+        ))
+      }
+    </ul>
+    <a href="/sluzby/" class="go">{ui.allServices}</a>
+  </div>
+</section>
+
+<style>
+  .home-block {
+    margin-top: var(--section);
+  }
+
+  .service-rows {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .service-row {
+    padding-block: 0.75rem;
+    border-top: 1px solid var(--ink);
+  }
+
+  .service-row:first-child {
+    border-top-width: 3px;
+  }
+
+  .service-link {
+    display: inline-block;
+    padding-block: 0.375rem;
+    font-size: 1.25rem;
+    font-weight: 700;
+  }
+</style>

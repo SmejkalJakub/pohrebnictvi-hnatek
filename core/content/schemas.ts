@@ -636,6 +636,88 @@ export const LegalInfo = z.object({
 export type LegalInfo = z.infer<typeof LegalInfo>;
 
 // ---------------------------------------------------------------------------
+// §6.18 Krajiny (site/landscapes.json, optional; features.landscapes)
+// ---------------------------------------------------------------------------
+
+export const MAX_LANDSCAPE_IMAGES = 12;
+
+/**
+ * One commissioned photograph of the client's region (a landscape or a building) for the
+ * full-bleed bands between page sections. The visible line under a band is `place`, then
+ * `image.caption` and `image.credit` when filled. Stock photos are not allowed: the bands only
+ * work as the client's own surroundings.
+ */
+export const LandscapeImage = z
+  .object({
+    image: ImageRef,
+    place: text(120),
+  })
+  .superRefine((entry, ctx) => {
+    if (entry.image.source === "licensed-stock") {
+      issue(
+        ctx,
+        ["image", "source"],
+        "Krajiny musí být vlastní nebo zakázkové fotografie z vašeho okolí, ne z fotobanky.",
+      );
+    }
+  });
+export type LandscapeImage = z.infer<typeof LandscapeImage>;
+
+export const LandscapeSet = z.object({
+  images: z
+    .array(LandscapeImage)
+    .max(MAX_LANDSCAPE_IMAGES, `Nejvýše ${MAX_LANDSCAPE_IMAGES} fotografií.`)
+    .default([]),
+});
+export type LandscapeSet = z.infer<typeof LandscapeSet>;
+
+// ---------------------------------------------------------------------------
+// §6.19 Naše místa (site/places.json, optional; features.places)
+// ---------------------------------------------------------------------------
+
+export const MAX_PLACES = 12;
+
+/**
+ * One of the firm's real places (office, ceremony hall, vehicle, flower shop, cemetery) for a
+ * documentary list of numbered captions. The text stands on its own: without a photo the place is
+ * shown as a numbered row with its address. The visible caption is `name`, `note` and `address`;
+ * `image.caption` is not shown. Stock and generic photos are not allowed: the list only works as
+ * the firm's own places.
+ */
+export const Place = z
+  .object({
+    name: text(80),
+    address: optionalText(120),
+    note: optionalText(160),
+    image: OptionalImage,
+  })
+  .superRefine((place, ctx) => {
+    if (place.image === null) {
+      return;
+    }
+    if (place.image.source === "licensed-stock") {
+      issue(
+        ctx,
+        ["image", "source"],
+        "Naše místa musí být skutečná místa vaší firmy na vlastních nebo zakázkových fotografiích, ne z fotobanky.",
+      );
+    }
+    if (place.image.depicts === "generic") {
+      issue(
+        ctx,
+        ["image", "depicts"],
+        "Fotografie musí ukazovat skutečné místo vaší firmy, ne obecný obrázek ani fotografii z fotobanky.",
+      );
+    }
+  });
+export type Place = z.infer<typeof Place>;
+
+export const PlaceSet = z.object({
+  places: z.array(Place).max(MAX_PLACES, `Nejvýše ${MAX_PLACES} míst.`).default([]),
+});
+export type PlaceSet = z.infer<typeof PlaceSet>;
+
+// ---------------------------------------------------------------------------
 // §6.11 Pricing
 // ---------------------------------------------------------------------------
 
@@ -784,6 +866,8 @@ export const SINGLETON_NAMES = Object.keys(SINGLETON_SCHEMAS) as SingletonName[]
 /** Singletons a site may omit (the file is then simply absent and the value is null). */
 export const OPTIONAL_SINGLETON_SCHEMAS = {
   legal: LegalInfo,
+  landscapes: LandscapeSet,
+  places: PlaceSet,
 } as const;
 export type OptionalSingletonName = keyof typeof OPTIONAL_SINGLETON_SCHEMAS;
 export const OPTIONAL_SINGLETON_NAMES = Object.keys(OPTIONAL_SINGLETON_SCHEMAS) as OptionalSingletonName[];

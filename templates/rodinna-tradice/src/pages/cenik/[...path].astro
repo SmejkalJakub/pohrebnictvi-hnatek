@@ -4,6 +4,7 @@ import LetterLayout from "../../layouts/LetterLayout.astro";
 import PageIntro from "../../components/PageIntro.astro";
 import DotLeaderPriceList from "../../components/DotLeaderPriceList.astro";
 import DemoPricingNotice from "@core/components/DemoPricingNotice.astro";
+import VatNote from "@core/components/VatNote.astro";
 import { getPage, getPricing, getSiteContext } from "@core/content/load.ts";
 import { formatCzechDate } from "../../lib/content.ts";
 import { ui } from "../../i18n/cs.ts";
@@ -39,7 +40,7 @@ if (pricing === null) {
       <DemoPricingNotice pricing={pricing} brandName={site.company.brandName} />
       <div class="pricing-meta">
         {pricing.validFrom !== null ? <p>{ui.validFrom} {formatCzechDate(pricing.validFrom)}</p> : null}
-        {pricing.vatNote !== null ? <p>{pricing.vatNote}</p> : null}
+        <VatNote pricing={pricing} />
       </div>
       <DotLeaderPriceList pricing={pricing} />
       {pricing.generalNote !== null ? <p class="caption pricing-note">{pricing.generalNote}</p> : null}

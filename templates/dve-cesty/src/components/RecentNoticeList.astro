@@ -1,0 +1,43 @@
+---
+/** "Nedávná oznámení": a ruled list of names (links) with the life dates and when the farewell took place. */
+import PlaceholderMark from "@core/components/PlaceholderMark.astro";
+import type { NoticeView } from "@core/content/view-models.ts";
+import NoticeDates from "./NoticeDates.astro";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  notices: NoticeView[];
+}
+
+const { notices } = Astro.props;
+---
+<section class="recent" aria-labelledby="nedavna">
+  <h2 id="nedavna" class="section-heading">{ui.noticesRecent}</h2>
+  <ul class="ruled recent-list" role="list">
+    {
+      notices.map((view) => (
+        <li data-notice={view.id}>
+          <PlaceholderMark active={view.placeholder} as="div">
+            <p>
+              <a href={view.href} class="ruled-title">{view.fullName}</a>
+            </p>
+            <NoticeDates view={view} />
+            {view.ceremony !== null && view.ceremony.dateText !== null ? (
+              <p class="muted">{ui.ceremonyHeld(view.ceremony.dateText)}</p>
+            ) : null}
+          </PlaceholderMark>
+        </li>
+      ))
+    }
+  </ul>
+</section>
+
+<style>
+  .recent-list {
+    margin-top: 1rem;
+  }
+
+  .recent-list > li:first-child {
+    border-top: 2px solid var(--navy);
+  }
+</style>

@@ -1,0 +1,27 @@
+---
+/** Home "people": names and roles as plain lines (no photos on home), then the link to Kontakt #lide. */
+import PlaceholderMark from "@core/components/PlaceholderMark.astro";
+import type { PersonView } from "@core/content/view-models.ts";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  people: PersonView[];
+}
+
+const { people } = Astro.props;
+---
+<section class="home-col" data-section="people" aria-labelledby="lide-sekce">
+  <h2 id="lide-sekce" class="col-heading">{ui.peopleHeading}</h2>
+  <ul class="col-lines" role="list">
+    {
+      people.map((person) => (
+        <li>
+          <PlaceholderMark active={person.placeholder} as="span">
+            <span class="strong">{person.name}</span>, {person.role}
+          </PlaceholderMark>
+        </li>
+      ))
+    }
+  </ul>
+  <a href="/kontakt/#lide" class="go">{ui.allPeople}</a>
+</section>

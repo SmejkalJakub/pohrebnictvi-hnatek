@@ -1,0 +1,23 @@
+---
+/** Home "documents": the downloadable documents as plain PDF links. */
+import type { DocumentView } from "@core/content/view-models.ts";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  documents: DocumentView[];
+}
+
+const { documents } = Astro.props;
+---
+<section class="home-col" data-section="documents" aria-labelledby="dokumenty-sekce">
+  <h2 id="dokumenty-sekce" class="col-heading">{ui.documentsHeading}</h2>
+  <ul class="col-lines" role="list">
+    {
+      documents.map((document) => (
+        <li>
+          <a href={document.href} class="go">{document.title}</a> ({ui.pdf})
+        </li>
+      ))
+    }
+  </ul>
+</section>

@@ -1,0 +1,67 @@
+---
+/**
+ * Květiny (S předstihem): the stone opening, ruled rows (1:1 image, name, type), the body, then
+ * the flowers order section with the flowers phone (or the office phone). Handles zero entries.
+ */
+import PhoneLink from "@core/components/PhoneLink.astro";
+import { getFlowers, getPage, getSiteContext } from "@core/content/load.ts";
+import { formatPhone } from "@core/format/phone.ts";
+import CestyLayout from "../layouts/CestyLayout.astro";
+import PathPanel from "../components/PathPanel.astro";
+import ProductRows, { type ProductItem } from "../components/ProductRows.astro";
+import ProseSections from "../components/ProseSections.astro";
+import { getPathLinks } from "../lib/page-links.ts";
+import { flowerPhones, primaryOfficePhone, seoDescription, seoTitle } from "../lib/site.ts";
+import { flowerTypeLabels, ui } from "../i18n/cs.ts";
+
+const site = await getSiteContext();
+const page = await getPage("kvetiny");
+const flowers = await getFlowers();
+const links = await getPathLinks(site, Astro.url.pathname, "ahead");
+const items: ProductItem[] = flowers.map((entry) => ({
+  id: entry.id,
+  name: entry.data.title,
+  detail: flowerTypeLabels[entry.data.type],
+  summary: entry.data.summary,
+  image: entry.data.image,
+  placeholder: entry.data.placeholder,
+}));
+let phones = flowerPhones(site);
+if (phones.length === 0) {
+  phones = [primaryOfficePhone(site)];
+}
+const Body = page.Content;
+---
+<CestyLayout site={site} path="ahead" title={seoTitle(page.data)} description={seoDescription(page.data)}>
+  <PathPanel
+    tone="ahead"
+    title={page.data.title}
+    lead={page.data.lead}
+    placeholder={page.data.placeholder}
+    links={links}
+    emergency={site.emergency}
+  />
+  <ProductRows site={site} items={items} aspect="1:1" />
+  {page.hasBody ? <ProseSections><Body /></ProseSections> : null}
+  <section id="objednavka" class="section split-section" aria-labelledby="objednavka-nadpis">
+    <div class="split-head">
+      <h2 id="objednavka-nadpis" class="section-heading">{ui.flowersOrder}</h2>
+    </div>
+    <div class="rule-top order">
+      <p>{ui.flowersOrderText}</p>
+      {
+        phones.map((phone) => (
+          <p>
+            <PhoneLink number={phone.number} class="go">{phone.label}{" "}<span class="nowrap">{formatPhone(phone.number).display}</span></PhoneLink>
+          </p>
+        ))
+      }
+    </div>
+  </section>
+</CestyLayout>
+
+<style>
+  .order > * + * {
+    margin-top: 0.25rem;
+  }
+</style>

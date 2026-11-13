@@ -696,6 +696,84 @@ function legalFile(): DecapFile {
   ]);
 }
 
+/** An imageRef whose file field carries its own size hint (landscapes, places). */
+function imageWithFileHint(name: string, label: string, fileHint: string): DecapField {
+  const image = imageRef(name, label, true);
+  image.fields = (image.fields ?? []).map((field) => {
+    if (field.name !== "file") {
+      return field;
+    }
+    return { ...field, hint: fileHint };
+  });
+  return image;
+}
+
+/** Mirrors core MAX_LANDSCAPE_IMAGES (checked in tests). */
+export const MAX_LANDSCAPES = 12;
+
+/** Guardrail of the landscape bands (content-contract §6.18), shown above the photo list. */
+export const LANDSCAPES_HELP =
+  "Fotografie krajiny nebo budov z vašeho okolí, vlastní nebo zakázkové. Na fotografii nesmí být lidé, " +
+  "západ slunce, mraky ani květiny. Nepoužívejte fotobanky ani obrázky vytvořené počítačem. Na webu se " +
+  "nikdy nezobrazí na začátku stránky. Bez fotografií zůstane mezi oddíly volné místo.";
+
+/** site/landscapes.json: the photos for the full-bleed bands between sections (features.landscapes). */
+function landscapesFile(): DecapFile {
+  return jsonFile("landscapes", "Krajiny", "landscapes.json", [
+    listOf(
+      "images",
+      "Fotografie krajiny",
+      [
+        imageWithFileHint(
+          "image",
+          "Fotografie",
+          "JPEG, PNG nebo WebP, nejlépe do 8 MB. Na šířku, alespoň 2560 px. Po výměně fotografie upravte popis a původ a práva k ní potvrďte znovu.",
+        ),
+        str("place", "Místo", {
+          required: true,
+          max: 120,
+          hint: "Kde fotografie vznikla. Příklad: Drahanská vrchovina nad Vyškovem.",
+        }),
+      ],
+      { min: 0, max: MAX_LANDSCAPES, summary: "{{fields.place}}", hint: LANDSCAPES_HELP },
+    ),
+  ]);
+}
+
+/** Mirrors core MAX_PLACES (checked in tests). */
+export const MAX_PLACES = 12;
+
+/** Guardrail of the places list (content-contract §6.19), shown above the list. */
+export const PLACES_HELP =
+  "Místa, kde se staráte o zesnulé a o rodiny: kancelář, obřadní síň, vůz, vazárna, hřbitov. Fotografie " +
+  "jen vlastní nebo zakázkové, bez smutečních hostů a bez zesnulých. Nepoužívejte fotobanky ani obrázky " +
+  "vytvořené počítačem. Místo bez fotografie se na webu ukáže jako řádek s adresou.";
+
+/** site/places.json: the firm's places with optional photos (features.places). */
+function placesFile(): DecapFile {
+  const image = imageWithFileHint(
+    "image",
+    "Fotografie",
+    "Nepovinné. JPEG, PNG nebo WebP, nejlépe do 8 MB. Na šířku, alespoň 1600 px. Popisek se nezobrazuje: pod fotografií je název místa, věta a adresa.",
+  );
+  return jsonFile("places", "Naše místa", "places.json", [
+    listOf(
+      "places",
+      "Místa",
+      [
+        str("name", "Název místa", { required: true, max: 80, hint: "Příklad: Kancelář na náměstí." }),
+        str("address", "Adresa nebo upřesnění", { max: 120, hint: "Příklad: Náměstí 12, Vyškov." }),
+        str("note", "Jedna věta o místě", {
+          max: 160,
+          hint: "Příklad: Tady spolu vše domluvíme, bez spěchu.",
+        }),
+        image,
+      ],
+      { min: 0, max: MAX_PLACES, summary: "{{fields.name}}", hint: PLACES_HELP },
+    ),
+  ]);
+}
+
 /** §4.9: each price is "demo" until the client sets it to approved; currency is locked. */
 function pricingFile(inclusions: boolean): DecapFile {
   return jsonFile("pricing", "Ceník", "pricing.json", [
@@ -1375,6 +1453,12 @@ export function generateDecapConfig(input: DecapConfigInput): DecapConfig {
   const basicFiles = [companyFile(), contactFile(), officeHoursFile()];
   if (showLegal) {
     basicFiles.push(legalFile());
+  }
+  if (enabled("landscapes")) {
+    basicFiles.push(landscapesFile());
+  }
+  if (enabled("places")) {
+    basicFiles.push(placesFile());
   }
   const collections: DecapCollection[] = [
     {

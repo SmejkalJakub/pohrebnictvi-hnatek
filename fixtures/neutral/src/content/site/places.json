@@ -1,0 +1,61 @@
+{
+  "places": [
+    {
+      "name": "Zástupné místo 1",
+      "address": "Zástupná adresa",
+      "note": "Zástupná věta o tomto místě.",
+      "image": {
+        "file": "placeholder-3x2.png",
+        "alt": "Neutrální zástupný obrázek místo fotografie místa firmy",
+        "source": "placeholder",
+        "depicts": "placeholder"
+      }
+    },
+    {
+      "name": "Zástupné místo 2",
+      "address": "Zástupná adresa",
+      "note": "Zástupná věta o tomto místě.",
+      "image": {
+        "file": "placeholder-3x2.png",
+        "alt": "Neutrální zástupný obrázek místo fotografie místa firmy",
+        "source": "placeholder",
+        "depicts": "placeholder"
+      }
+    },
+    {
+      "name": "Zástupné místo 3",
+      "address": "Zástupná adresa",
+      "note": "Zástupná věta o tomto místě.",
+      "image": {
+        "file": "placeholder-3x2.png",
+        "alt": "Neutrální zástupný obrázek místo fotografie místa firmy",
+        "source": "placeholder",
+        "depicts": "placeholder",
+        "credit": "Zástupný autor"
+      }
+    },
+    {
+      "name": "Zástupné místo 4",
+      "address": "Zástupná adresa",
+      "note": "Zástupná věta o tomto místě.",
+      "image": null
+    },
+    {
+      "name": "Zástupné místo 5",
+      "address": "Zástupná adresa",
+      "note": "Zástupná věta o tomto místě.",
+      "image": {
+        "file": "placeholder-3x2.png",
+        "alt": "Neutrální zástupný obrázek místo fotografie místa firmy",
+        "source": "placeholder",
+        "depicts": "placeholder"
+      }
+    },
+    {
+      "name": "Zástupné místo 6",
+      "address": "Zástupná adresa",
+      "note": "Zástupná věta o tomto místě.",
+      "image": null
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+---
+/**
+ * Právní informace (research L10, S předstihem): the stone opening, Mimosoudní řešení sporů,
+ * Reklamace, Dokumenty (#dokumenty) and the page body. Emitted only when the page exists.
+ */
+import { getDocuments, getOptionalPage, getSiteContext } from "@core/content/load.ts";
+import CestyLayout from "../../layouts/CestyLayout.astro";
+import PathPanel from "../../components/PathPanel.astro";
+import AdrRows from "../../components/AdrRows.astro";
+import DocumentRuledList from "../../components/DocumentRuledList.astro";
+import ProseSections from "../../components/ProseSections.astro";
+import { getPathLinks } from "../../lib/page-links.ts";
+import { seoDescription, seoTitle } from "../../lib/site.ts";
+
+export async function getStaticPaths() {
+  const page = await getOptionalPage("pravni-informace");
+  if (page === null) {
+    return [];
+  }
+  return [{ params: { path: undefined } }];
+}
+
+const site = await getSiteContext();
+const page = await getOptionalPage("pravni-informace");
+if (page === null) {
+  throw new Error("unreachable: page missing");
+}
+const documents = await getDocuments();
+const links = await getPathLinks(site, Astro.url.pathname, "ahead");
+const Body = page.Content;
+---
+<CestyLayout site={site} path="ahead" title={seoTitle(page.data)} description={seoDescription(page.data)}>
+  <PathPanel
+    tone="ahead"
+    title={page.data.title}
+    lead={page.data.lead}
+    placeholder={page.data.placeholder}
+    links={links}
+    emergency={site.emergency}
+  />
+  {site.legal !== null ? <AdrRows legal={site.legal} /> : null}
+  {documents.length > 0 ? <DocumentRuledList documents={documents} /> : null}
+  {page.hasBody ? <ProseSections><Body /></ProseSections> : null}
+</CestyLayout>

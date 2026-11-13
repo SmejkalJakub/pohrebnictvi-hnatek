@@ -1,0 +1,116 @@
+---
+/**
+ * The opening of an inner page: H1, lead and optional extra lines (slot) in the text column, the
+ * nonstop block beside them at ≥ 64 rem (bottom-aligned, 440 px), under them on phones.
+ * `withNonstop` false only where the page gives the number in another form (notice list).
+ */
+import PlaceholderMark from "@core/components/PlaceholderMark.astro";
+import type { EmergencyTransport } from "@core/content/schemas.ts";
+import NonstopRuleBlock from "./NonstopRuleBlock.astro";
+
+interface Props {
+  title: string;
+  lead?: string | null;
+  placeholder?: boolean;
+  emergency: EmergencyTransport;
+  withNonstop?: boolean;
+  /** Small caps line above the H1 (404). */
+  kicker?: string | null;
+  /**
+   * Phones only: the nonstop block straight under the H1, before the lead and the extra lines, so a
+   * long opening (Ceník: VAT note, demo notice, print hint) keeps the number in the first screen.
+   */
+  numberFirst?: boolean;
+}
+
+const {
+  title,
+  lead = null,
+  placeholder = false,
+  emergency,
+  withNonstop = true,
+  kicker = null,
+  numberFirst = false,
+} = Astro.props;
+const hasNonstop = withNonstop && emergency.enabled;
+---
+<section
+  class="frame opening"
+  data-nonstop={hasNonstop ? "true" : "false"}
+  data-number-first={numberFirst ? "true" : "false"}
+>
+  <div class="opening-text">
+    {kicker !== null ? <p class="caps">{kicker}</p> : null}
+    <h1 class="opening-title">{title}</h1>
+    <div class="opening-more">
+      <PlaceholderMark active={placeholder} as="div" class="opening-more-inner">
+        {lead !== null ? <p class="opening-lead">{lead}</p> : null}
+        <slot />
+      </PlaceholderMark>
+    </div>
+  </div>
+  {hasNonstop ? <NonstopRuleBlock emergency={emergency} size="page" /> : null}
+</section>
+
+<style>
+  .opening {
+    display: grid;
+    gap: 1rem;
+    padding-top: 1.375rem;
+  }
+
+  .opening-text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.875rem;
+    min-width: 0;
+  }
+
+  .opening-title {
+    font-size: var(--h1);
+    line-height: 1.06;
+    letter-spacing: -0.01em;
+    overflow-wrap: break-word;
+  }
+
+  .opening-more,
+  .opening-more :global(.opening-more-inner) {
+    display: flex;
+    flex-direction: column;
+    gap: 0.875rem;
+  }
+
+  .opening-lead {
+    max-width: 40rem;
+  }
+
+  @media (max-width: 63.99rem) {
+    .opening[data-number-first="true"] .opening-text {
+      display: contents;
+    }
+
+    .opening[data-number-first="true"] .opening-more {
+      order: 2;
+    }
+  }
+
+  @media (min-width: 64rem) {
+    .opening {
+      padding-top: 4rem;
+    }
+
+    .opening[data-nonstop="true"] {
+      grid-template-columns: minmax(0, 1fr) 27.5rem;
+      column-gap: 4.5rem;
+      align-items: end;
+    }
+
+    .opening-text {
+      gap: 1.125rem;
+    }
+
+    .opening-lead {
+      font-size: 1.25rem;
+    }
+  }
+</style>

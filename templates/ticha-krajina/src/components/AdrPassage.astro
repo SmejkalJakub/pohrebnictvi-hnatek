@@ -1,0 +1,25 @@
+---
+/** Právní informace: mimosoudní řešení sporů (ADR body and link) and reklamace, as passages (research L10). */
+import type { LegalInfo } from "@core/content/schemas.ts";
+import GridPassage from "./GridPassage.astro";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  legal: LegalInfo;
+}
+
+const { legal } = Astro.props;
+---
+<GridPassage id="spory" heading={ui.adrHeading}>
+  <p>
+    {ui.adrText} {legal.adr.name},{" "}
+    <a href={legal.adr.url} class="go">{legal.adr.url.replace(/^https?:\/\//, "")}</a>.
+  </p>
+</GridPassage>
+{
+  legal.complaintsContact !== null ? (
+    <GridPassage id="reklamace" heading={ui.complaintsHeading}>
+      <p>{legal.complaintsContact}</p>
+    </GridPassage>
+  ) : null
+}
