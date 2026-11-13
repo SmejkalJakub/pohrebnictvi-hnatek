@@ -1,3 +1,5 @@
+> **Note (2026-11-12):** the CMS chosen in this plan, Pages CMS, was replaced by Decap CMS with DecapBridge; see [cms/README.md](cms/README.md). The plan is kept as a historical record.
+
 # Phase 2 plan: implement both design templates
 
 **Status:** Phase 1 output, draft 1 (2026-11-05). Each session below is a bounded task with its own inputs, outputs and stop condition. Sessions must not rely on earlier chat context; they read these docs.

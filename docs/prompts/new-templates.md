@@ -67,7 +67,7 @@ SCOPE (each type optional; nothing changes for a site that does not switch it on
 8. Manifest: new supports flags (notices, people, faq, documents, guestInfo, prePlanning) and
    site.config features switches; G-005 must reject a feature the template does not support.
    Set every new flag to false for rodinna-tradice and dustojna-jednoduchost, so they keep passing.
-9. CMS: .pages.yml generation for every new type, Czech labels and help texts, media folder for
+9. CMS: Decap config.yml generation for every new type, Czech labels and help texts, media folder for
    documents; notices get a clear "Souhlas objednatele" group.
 10. Fixture: realistic Czech PLACEHOLDER data for every type in fixtures/neutral (marked placeholder,
     obviously fictional names, demo dates relative to "now" handled so builds stay deterministic —
@@ -256,7 +256,7 @@ Run once per approved direction, in a fresh session at the repository root, **af
 Build a new website template "<Name>" (id: <ascii-kebab-id>, letter <C|D|E>) in this repository from
 the attached, approved Claude Design comps and token sheet. It joins rodinna-tradice (A) and
 dustojna-jednoduchost (B) and must drop into the existing client flow
-(/site-research → /site-build → /site-revise → client:export → Cloudflare + Pages CMS) unchanged.
+(/site-research → /site-build → /site-revise → client:export → Netlify or Cloudflare + Decap CMS) unchanged.
 
 READ FIRST, in this order
 1. docs/template-contract.md (all: §3 manifest incl. the new supports flags, §4 routes incl.

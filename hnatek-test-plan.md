@@ -61,7 +61,7 @@ Example request:
 Done when: targeted changes are correct, build passes, and unrelated approved design/content remains unchanged. Record a before/after Git diff.
 
 ## Phase 6 — Restricted CMS pilot
-- Install Pages CMS configuration **in the exported test client's GitHub repository**.
+- Connect Decap CMS (through DecapBridge) to **the exported test client's GitHub repository** (docs/cms/setup.md).
 - Provide editors for pricing, contact/hours, services and selected image/text fields.
 - Hide article/blog editor entirely for Hnátek.
 - Configure a simple Git-triggered build/deploy to an access-controlled or non-indexed preview.

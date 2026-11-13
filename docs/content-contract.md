@@ -55,7 +55,7 @@ Format decisions:
 
 - **Singletons are JSON** and are imported and parsed by `core/content/load.ts`. Using a `file()` loader for singletons would force an artificial `id` structure. Plain JSON import with `Schema.parse` gives exact error paths and needs no extra tooling.
 - **Collections are Markdown with YAML frontmatter**, loaded via Astro Content Layer `glob()` loaders in `src/content.config.ts`. The body is restricted Markdown (§7.3).
-- **Schemas are flat and CMS-shaped:** no discriminated unions, no deeply nested optional objects, and selects instead of free strings where meaning matters. Pages CMS (Phase 6) cannot edit unions comfortably.
+- **Schemas are flat and CMS-shaped:** no discriminated unions, no deeply nested optional objects, and selects instead of free strings where meaning matters. A Git-based CMS (Decap) cannot edit unions comfortably.
 - All schemas import `z` from `astro/zod` so they stay on the Zod version bundled with the pinned Astro release.
 
 ## 3. Provenance model
@@ -284,6 +284,7 @@ export const ImageRef = z.object({
   source: z.enum(["client", "existing-website", "own-photo", "licensed-stock", "placeholder"]),
   depicts: z.enum(["actual-business", "generic", "placeholder"]),
   rightsConfirmed: z.boolean().default(false),
+  rightsConfirmedFor: optionalText(300),   // file the confirmation belongs to (written by the CMS; G-033)
   focus: z.enum(["center", "top", "bottom", "left", "right"]).default("center"),
 }).superRefine((img, ctx) => {
   if (!img.decorative && img.alt.length < 5) {
@@ -684,26 +685,28 @@ Copy is plain professional Czech. There is no sentimental marketing, no superlat
 
 A core checker (`core/markdown/restrict-body.ts`) fails the build with the file and line when it finds the items below. S1 implemented it as a line-based checker rather than a remark plugin: the same code then runs in the Node validator, the build gate and the unit tests with no extra dependencies. It skips fenced code and inline code.
 
-- raw HTML (G-034), except `<u>` and `<br>`, which the Pages CMS editor emits for underline and hard breaks;
+- raw HTML (G-034), except `<u>` and `<br>`, which a CMS rich-text editor may emit for underline and hard breaks;
 - inline images, because images come from `ImageRef` fields (G-034);
 - phone numbers in body text (pattern `+420` or nine-digit groups), because phones come from contact data so that a number edit in one place is complete;
 - links with `javascript:`, or bare URLs to non-HTTPS sites (G-034).
 
-**Headings (amended after the S2 Pages CMS spike).** The CMS editor cannot be restricted and offers H1, so heading problems no longer fail the build:
+**Headings.** The Decap editor offers H2–H4 only, but hand edits or another editor may still produce an H1, so heading problems do not fail the build:
 
 - core renders every body `#` as `##`, because the page H1 comes from `title`;
 - the gate only warns about H1 and skipped levels (G-035);
 - core gives every heading an ASCII id (`co-sluzba-zahrnuje`) through plugins it installs into Astro 7's Sätteri Markdown processor (`core/markdown/satteri-plugins.ts`).
 
-**What the CMS writes (amended after S2).** Pages CMS deletes `null`, `""`, `[]` and `{}` on every save and cannot represent "unset" in a toggle. The schemas therefore accept the following, and `core/tests/cms-tolerance.test.ts` re-parses the whole fixture after a simulated CMS save:
+**What the CMS writes.** A CMS may drop `null`, `""`, `[]` and `{}`, write `""` for an emptied field, or leave a toggle `null`. Decap CMS 3.17 keeps `null` and unknown keys, rewrites YAML front matter in plain block style and JSON with two-space indentation, and stores uploaded images as `src/assets/media/<file>` (docs/cms/architecture.md §4). The schemas accept all of the following; `core/tests/cms-tolerance.test.ts` re-parses the fixture after a simulated empty-value-stripping save, and `tools/cms/tests/decap-roundtrip.test.ts` checks real Decap output and a Decap-style rewrite of both Hnátek variants:
 
 - missing objects: `legalIds` and `tradition` default to all-null;
 - `familyOwned` as `"yes"` / `"no"` / `"unknown"`. This is also the form content files store, so agent-written content already matches what the CMS saves. Booleans are still accepted; the ledger records the parsed value (`true`/`false`/`null`);
 - an image object without `file`, which counts as no image;
 - `null` booleans in images, which count as `false`;
-- rows added without `id` (`phones`, `emails`, `weekly`, price groups and items), which get an ASCII slug of their label. Price items get `<group id>-<label slug>`, unique list-wide. Explicit ids are kept, and duplicates are still errors.
+- rows added without `id` (`phones`, `emails`, `weekly`, price groups and items), which get an ASCII slug of their label. Price items get `<group id>-<label slug>`, unique list-wide. Explicit ids are kept, and duplicates are still errors;
+- image `file` as a bare name (`foto.jpg`) or a CMS path (`src/assets/media/foto.jpg`); both name the same file;
+- `rightsConfirmedFor` on images: the file a rights confirmation was given for. When it is set and names a different file than `file`, G-033 treats the rights as not confirmed (a replaced photo never inherits the old photo's confirmation).
 
-Entry file names that are not ASCII slugs fail as G-001 (S2 amendment A6).
+Entry file names that are not ASCII slugs fail as G-001. Decap creates them from the title with `slug.encoding: ascii` and `clean_accents`, and never renames an existing file.
 
 ## 8. Build modes and the publication gate
 
@@ -735,7 +738,7 @@ Gate rules. Each has an id; the `prototype` column gives its behaviour in protot
 | G-030 | Phone number found in a Markdown body | fail | fail |
 | G-031 | Any `placeholder: true` page or entry is published | marker | fail |
 | G-032 | Any `ImageRef.source = "placeholder"` rendered | marker | fail |
-| G-033 | Any rendered image with `rightsConfirmed: false` | warn | fail |
+| G-033 | Any rendered image with `rightsConfirmed: false`, or with `rightsConfirmedFor` naming a different file than `file` | warn | fail |
 | G-034 | Markdown body contains raw HTML (other than `<u>`, `<br>`), an inline image, or an unsafe link (§7.3) | fail | fail |
 | G-035 | Markdown body uses H1 or skips heading levels (H1 is demoted at render) | warn | warn |
 | G-040 | Published guidance without `review.reviewedAt` | marker "Neověřený text" | fail |
@@ -743,7 +746,7 @@ Gate rules. Each has an id; the `prototype` column gives its behaviour in protot
 | G-042 | Emergency phone equals an office phone | warn | warn |
 | G-050 | `articles/` exists while the feature is off | warn | warn |
 | G-051 | Articles on, template unsupported | fail | fail |
-| G-060 | Contact form enabled without provider + privacy page | fail | fail |
+| G-060 | Contact form enabled without `contactFormHandler` + privacy page | fail | fail |
 | G-061 | Map embed (iframe) enabled without privacy page | fail | fail |
 | G-070 | Published notice (not expired) without a consent record | fail | fail |
 | G-071 | Notice past `publishUntil`: not built | warn | warn |
@@ -801,7 +804,7 @@ Online booking, payments, client portal, multi-tenant hosting and a custom CMS a
 | U6 | Real price list | demo prices (`status: "demo"`), visibly marked; otherwise `visible: false` | L | client |
 | U7 | Procedural/legal guidance correctness | drafted from general knowledge, marked "Neověřený text"; sources listed | L | named reviewer (client or adviser) |
 | U8 | Re-verification of all contact details and hours | use existing-website values | L | client |
-| U9 | Contact form data handling, privacy page, cookies | form disabled; privacy page drafted as `placeholder` | L (if form, embed or analytics enabled) | client |
+| U9 | Contact form data handling, privacy page, cookies | Hnátek: form on for testing on Netlify only (Netlify Forms); privacy page drafted as `placeholder`, so production stays blocked | L (if form, embed or analytics enabled) | client |
 | U10 | IČO, DIČ, registered office, commercial register entry; confirm § 435 ZOK duty | `[Doplnit]` markers | L | client (public registers may be consulted in Phase 3, then confirmed) |
 | U11 | Address form "ev.č. 38/22", map coordinates, parking/access | address verbatim; map as link only, no coordinates | L | client |
 | U12 | Flowers: in-house or partner florist; who answers +420 731 175 835 | neutral wording "Objednávky květin" | L | client |

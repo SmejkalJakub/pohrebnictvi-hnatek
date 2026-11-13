@@ -15,7 +15,7 @@ Related: [content-contract.md](content-contract.md) (provenance, schemas, gate) 
 | 3. Build | agent | `/site-build <id>` | content from the ledger, template options, media; `client:validate` passes |
 | 4. Review | owner | `npm run client:dev -- <id>` | local preview at `http://localhost:4321` |
 | 5. Revise (repeat) | agent | `/site-revise <id> <feedback>` | content, ledger and approvals updated; `notes/feedback.md` |
-| 6. Ship | owner | `/site-ship <id>` (prints a checklist) | export, GitHub repo, host, Pages CMS, then go-live after `check:launch` |
+| 6. Ship | owner | `/site-ship <id>` (prints a checklist) | export, GitHub repo, DecapBridge, Netlify (or Cloudflare), then go-live after `check:launch` |
 
 Steps 4–5 repeat until the owner is happy with the prototype. Go-live additionally waits for the client's confirmations: every displayed fact `VERIFIED` (or an approved `CLIENT_PROVIDED`), copy, prices, guidance and image rights signed off.
 
@@ -27,7 +27,7 @@ Steps 4–5 repeat until the owner is happy with the prototype. Go-live addition
 | `npm run client:validate -- <id> [--json]` | Schema, publication gate and G-005 against the template manifest, in both modes. Prints the prototype findings and the rules that still block production. Exit 1 only when prototype fails. |
 | `npm run client:dev -- <id> [astro flags]` | `astro dev` in `templates/<template>/` with `SITE_ROOT` and `SITE_CONFIG` pointing at the client (prototype mode). |
 | `npm run client:build -- <id> [--production]` | `astro build` the same way, as a render check. Output goes to the template's `dist/`. |
-| `npm run client:export -- <id> [--out <dir>] [--force] [--name <pkg>] [--keep]` | Validates, runs `tools/export` (default output `exports/<id>/`, Git-ignored), then `export:verify`. The production expectation follows the client: while the gate has errors, verify requires the production build to fail and name exactly those rules; once it has none, verify requires it to pass. |
+| `npm run client:export -- <id> [--out <dir>] [--force] [--name <pkg>] [--keep]` | Validates, checks `publishing.json` against every other client, runs `tools/export` (default output `exports/<id>/`, Git-ignored; includes the Decap admin, `wrangler.jsonc` and the workflows), then `export:verify`. The production expectation follows the client: while the gate has errors, verify requires the production build to fail and name exactly those rules; once it has none, verify requires it to pass. |
 
 The launch check needs no wrapper: `npm run check:launch -- clients/<id>`.
 
@@ -43,6 +43,7 @@ clients/<id>/
                             #   and the icons it lists; served from the site root, linked by SeoHead
   provenance/facts.json     # fact ledger: value, status, source per fact
   provenance/approvals.json # copy, pricing, guidance and image sign-offs, staff consent (people)
+  publishing.json           # CMS repository, DecapBridge site id, hosting (Netlify project or Cloudflare Worker; no secrets; docs/cms/setup.md)
   notes/                    # research.md, feedback.md (agent notes; never exported)
 ```
 

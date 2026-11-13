@@ -1,3 +1,5 @@
+> **Superseded in part (2026-11-12):** Pages CMS was replaced by Decap CMS. `.pages.yml`, the Pages CMS Actions and the `payload` input no longer exist; the export now writes `public/admin/` (Decap), `wrangler.jsonc` and three workflows with an integrity check. Current documentation: [../cms/README.md](../cms/README.md). The rest of this note (export layout, verify steps) still applies.
+
 # S5 · Standalone export, independence verification, CMS config: session notes
 
 **Status:** done 2026-11-05. Both fixture exports pass `npm run export:verify` (10/10 steps), and so do the production-ready exports (`--production pass`, sitemap emitted). Generator and export unit tests: 37 passing (`npx vitest run --project tools`). Root `npm run check` passes.

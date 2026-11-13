@@ -46,7 +46,7 @@ The shared surface is data-shaped, not markup-shaped. A template can therefore r
       notes/       research and feedback notes (not exported)
   tools/
     export/                         # builds a standalone client repo (§9)
-    cms/                            # generates .pages.yml from contract + manifest + features
+    cms/                            # generates the Decap config.yml from contract + manifest + features + publishing.json
   docs/
 ```
 
@@ -88,7 +88,7 @@ export default {
   supports: {
     articles: false,              // pilot: neither template implements articles
     multipleLocations: false,
-    contactForm: false,           // reserved; enabling needs U9 resolved
+    contactForm: true,            // renders core ContactForm on /kontakt/ and the /kontakt/odeslano/ page (core/forms/contact.ts)
     serviceDetailPages: true,     // generates /sluzby/<slug>/
     mapEmbed: false,              // features.map "embed-on-click" rejected by G-005 when false
     // Optional content types (content-contract §6.13–§6.17). Each has a site.config feature of the
@@ -300,7 +300,7 @@ const config = {
   template: "rodinna-tradice",
   siteUrl: "https://example.invalid",               // real domain required in production (G-012)
   features: {
-    articles: false, contactForm: false, map: "link",
+    articles: false, contactForm: false, map: "link",   // contactForm: true also needs contactFormHandler (G-060)
     // Optional content types; each needs the template's supports flag (G-005). All default to false.
     notices: false, people: false, faq: false, documents: false, guestInfo: false, prePlanning: false,
   },
@@ -331,14 +331,16 @@ hnatek-web/
   .nvmrc                  # Node version used for the verified build
   astro.config.mjs        # template config; @core alias → ./src/core
   tsconfig.json
-  .pages.yml              # generated CMS config (static file; generator is NOT exported)
+  netlify.toml            # Netlify hosting (publishing.json hosting.provider "netlify"): no Git builds; or
+  wrangler.jsonc          # Cloudflare Workers Static Assets: production Worker and "<name>-preview"
+  public/admin/           # Decap CMS: index.html, generated config.yml (generator is NOT exported), pinned self-hosted bundle
   src/
     core/                 # verbatim copy of core/ without core/tests (cli/ and the launch check included)
     layouts/ components/ pages/ styles/ i18n/   # from the template
     content/  assets/media/  assets/documents/  site.config.ts   # from clients/hnatek (documents only when present)
   public/                 # from clients/<id>/public: favicon, touch icon, web manifest (linked by SeoHead when present); robots.txt is written by core at build time
   scripts/validate.ts     # runs schema + gate (+ G-005 against the manifest) without building; Node runs .ts directly
-  .github/workflows/      # publish.yml (production build + gate, then fast-forward main) and discard.yml
+  .github/workflows/      # preview.yml, publish.yml, discard.yml; preview and publish embed the integrity manifest (hashes of every non-content file)
   README.md               # Czech + English: build, preview, deploy, SITE_MODE
   HANDOVER.md             # Czech: what can be edited where, publishing, rollback, responsibilities
   CREDITS.md              # fonts (licences), image sources and rights holders
@@ -354,7 +356,7 @@ hnatek-web/
 2. A text scan finds no `workspace:`, `file:` or `link:` dependency specifiers, no `../` imports escaping the project root, no absolute local paths, no private registry URLs, and no references to `@core` that do not resolve inside `src/core`.
 3. The only network access at build time is the public npm registry during install. A build with the network disabled after install succeeds.
 4. Fonts and images are all present in the repo.
-5. Deploy target: any static host. `dist/` is the artifact. Host-specific files (`netlify.toml`, Cloudflare `_headers`) are added only for the host the client chooses (U17). The host environment sets `SITE_MODE=production`.
+5. Deploy target: `dist/` is the artifact, deployed by the exported workflows to the host named in `clients/<id>/publishing.json` (Netlify or Cloudflare Workers, docs/cms/setup.md). Only that host's file (`netlify.toml` or `wrangler.jsonc`) is written. `publish.yml` builds with `SITE_MODE=production` (or `PUBLISH_MODE`). A Netlify Forms contact form is exported only with Netlify hosting.
 
 **Launch check inside an export.** `check:launch` looks for the ledger in `provenance/`, then in the archived `docs/provenance/`, so it also runs in an exported site.
 
@@ -371,7 +373,7 @@ hnatek-web/
 | Core published as a private npm package | The exported site would depend on a private registry. Vendoring the source copy satisfies independence. |
 | Both templates shipped in the export with a switch | Dead code; invites client-side layout changes; widens the support surface. |
 | Per-client free-form CSS overrides | Breaks template versioning and the Phase 5 "unrelated design unchanged" check; contrast could regress silently. Declared options replace it. |
-| SSR/hybrid output, or a hosted headless CMS | Adds runtime dependencies and cost; the brief requires static public pages. Pages CMS edits Git, and the site stays static. |
+| SSR/hybrid output, or a hosted headless CMS | Adds runtime dependencies and cost; the brief requires static public pages. Decap CMS edits Git through DecapBridge, and the site stays static. |
 | Templates reading content files directly | Bypasses validation and makes renaming a field a two-template change. Everything goes through core loaders. |
 | "Open now" status indicator | Needs client-side time logic; wrong on holidays and exceptions; low value against its risk. |
 | Google Maps iframe / Google Fonts by default | Third-party data transfer and consent obligations in the EU; breaks offline builds. |
