@@ -1,18 +1,15 @@
 # Zahodit nepublikované změny: reset the CMS branch `content` to `main` (the published state).
 #
-# Started by the Pages CMS Action "Zahodit nepublikované změny" (workflow_dispatch on `content`).
-# Every change saved in the CMS since the last publish is removed from `content`. The commits stay
-# reachable in GitHub for about 90 days through the run log below (old and new commit ids).
-# The push is refused if `content` moved after the Action was started (force-with-lease).
+# Started only by someone with access to the GitHub repository (the agency): Actions →
+# "Zahodit nepublikované změny" → Run workflow on branch `content`, or
+# `gh workflow run discard.yml --ref content`. Every change saved in the CMS since the last publish is
+# removed from `content` (and from the preview). The commits stay reachable in GitHub for about
+# 90 days through the run log below (old and new commit ids).
+# The push is refused if `content` moved after the run was started (force-with-lease).
 name: Zahodit nepublikované změny
 
 on:
   workflow_dispatch:
-    inputs:
-      payload:
-        description: "Data from Pages CMS (not used)"
-        required: false
-        type: string
 
 permissions:
   contents: read

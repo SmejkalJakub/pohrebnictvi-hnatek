@@ -1,0 +1,11 @@
+{
+  "repository": "SmejkalJakub/hnatek-b-web",
+  "decapbridge": {
+    "siteId": null,
+    "authType": "classic"
+  },
+  "hosting": {
+    "provider": "netlify",
+    "siteId": null
+  }
+}

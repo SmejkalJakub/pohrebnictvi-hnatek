@@ -5,7 +5,9 @@
  *
  * Copies the export to a fresh temp directory outside this repository and runs, with a clean
  * environment (no SITE_ROOT/SITE_CONFIG/SITE_MODE, no npm settings of this machine):
- *   static scan · npm ci · prototype build · production build · validate · astro check ·
+ *   static scan · Decap admin and secret scan · integrity check of the workflows (run as GitHub
+ *   runs it, on a Git copy) · npm ci · prototype build (with hosting config and contact form) ·
+ *   production build · validate · astro check ·
  *   build with the network blocked after install · scan of the built pages for external resources.
  * --production fail (default): the production build must fail and name every rule in --rules
  *   (default: the rules the neutral fixture violates). --production pass: it must succeed and
@@ -14,12 +16,20 @@
  */
 import { spawn } from "node:child_process";
 import { existsSync } from "node:fs";
-import { cp, mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
+import { cp, mkdir, mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseArgs, stringFlag } from "../lib/args.ts";
 import { REPO_ROOT, isInside } from "../lib/repo.ts";
+import {
+  checkAdmin,
+  checkHostingAndForm,
+  findSecrets,
+  integrityScript,
+  runGit,
+  runScript,
+} from "./cms-checks.ts";
 import { externalResources, scanExport } from "./scan.ts";
 
 export const FIXTURE_PRODUCTION_RULES = ["G-011", "G-012", "G-020", "G-021", "G-031", "G-032", "G-040"];
@@ -212,6 +222,59 @@ export async function verifyExport(
     return { ok: findings.length === 0, details };
   });
 
+  await step("Decap CMS admin (public/admin) and no secrets in the export", async () => {
+    const admin = await checkAdmin(path.join(workDir, "public", "admin"));
+    const secrets = await findSecrets(workDir);
+    const details = [...admin.details];
+    if (secrets.length === 0) {
+      details.push("no credential-like strings");
+    } else {
+      details.push(...secrets.map((finding) => `SECRET: ${finding}`));
+    }
+    return { ok: admin.ok && secrets.length === 0, details };
+  });
+
+  await step("integrity check of preview.yml / publish.yml (as GitHub runs it)", async () => {
+    const details: string[] = [];
+    const runnerTemp = path.join(tempRoot, "runner-temp");
+    await mkdir(runnerTemp, { recursive: true });
+    for (const args of [
+      ["init", "-q", "-b", "content"],
+      ["add", "-A"],
+      ["commit", "-q", "-m", "export"],
+    ]) {
+      const result = await runGit(args, workDir);
+      if (result.code !== 0) {
+        return { ok: false, details: [`git ${args[0]} failed`], output: result.output };
+      }
+    }
+    let ok = true;
+    for (const workflow of ["preview.yml", "publish.yml"]) {
+      const script = await integrityScript(path.join(workDir, ".github", "workflows", workflow));
+      const clean = await runScript(script, workDir, runnerTemp);
+      details.push(`${workflow} on the export as committed: exit ${clean.code} (must be 0)`);
+      ok = ok && clean.code === 0;
+      if (clean.code !== 0) {
+        return { ok, details, output: clean.output };
+      }
+    }
+    const script = await integrityScript(path.join(workDir, ".github", "workflows", "publish.yml"));
+    const locked = path.join(workDir, "astro.config.mjs");
+    const original = await readFile(locked, "utf8");
+    await writeFile(
+      locked,
+      `${original}
+// tampered
+`,
+      "utf8",
+    );
+    const tampered = await runScript(script, workDir, runnerTemp);
+    await writeFile(locked, original, "utf8");
+    details.push(`publish.yml with astro.config.mjs changed: exit ${tampered.code} (must fail)`);
+    ok = ok && tampered.code !== 0;
+    return { ok, details };
+  });
+
   const install = await step("npm ci", async () => {
     const result = await npm(["ci", "--no-audit", "--no-fund"]);
     return { ok: result.code === 0, details: [`exit ${result.code}`], output: result.output };
@@ -233,11 +296,15 @@ export async function verifyExport(
         ["robots.txt disallows all", robots.includes("Disallow: /")],
         ["no sitemap.xml", !existsSync(path.join(dist, "sitemap.xml"))],
         ["prototype banner", index.includes("data-prototype-banner")],
+        ["dist/admin/index.html and config.yml", (await checkAdmin(path.join(dist, "admin"))).ok],
       ];
       for (const [label, passed] of checks) {
         details.push(`${passed ? "ok" : "MISSING"}: ${label}`);
         ok = ok && passed;
       }
+      const hosting = await checkHostingAndForm(workDir, dist);
+      details.push(...hosting.details);
+      ok = ok && hosting.ok;
       const external: string[] = [];
       for (const file of await htmlFiles(dist)) {
         for (const resource of externalResources(await readFile(file, "utf8"))) {

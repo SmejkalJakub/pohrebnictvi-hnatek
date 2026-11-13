@@ -8,7 +8,9 @@
  * client's content, media and site.config.ts in src/, its public/ (favicon, touch icon, web
  * manifest) in public/, provenance in docs/provenance/, plus a
  * generated package.json (exact versions from this repo's lockfile), package-lock.json, .nvmrc,
- * .pages.yml, the publish/discard workflows and the handover documents.
+ * the Decap CMS editor (public/admin/: pinned bundle, generated config.yml), the hosting config
+ * (wrangler.jsonc or netlify.toml, hosting.ts), the preview / publish / discard workflows with the
+ * integrity manifest, and the handover documents.
  * --force replaces an existing earlier export (a directory that contains TEMPLATE.json).
  */
 import { execFile } from "node:child_process";
@@ -18,13 +20,28 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
-import type { TemplateManifest } from "../../core/content/config.ts";
+import type { SiteConfig, TemplateManifest } from "../../core/content/config.ts";
 import { loadValidatedContent } from "../../core/content/snapshot.ts";
 import { buildMediaInventory, inventoryToMarkdown } from "../../core/media/inventory.ts";
-import { generatePagesConfigForSite } from "../cms/generate.ts";
-import type { CmsContentEntry, PagesConfig } from "../cms/pages-config.ts";
+import {
+  PUBLISH_COLLECTION,
+  PUBLISH_REQUEST_FILE,
+  type DecapCollection,
+  type DecapConfig,
+} from "../cms/decap-config.ts";
+import {
+  PLACEHOLDER_VALUE,
+  defaultPublishing,
+  readPublishing,
+  type PublishingSettings,
+} from "../cms/settings.ts";
+import { generateDecapConfigForSite } from "../cms/generate.ts";
+import { DECAP_DIR_NAME, DECAP_VERSION, copyDecapBundle, integrityAttribute } from "../cms/vendor.ts";
 import { parseArgs, requiredFlag, stringFlag } from "../lib/args.ts";
 import { CORE_DIR, REPO_ROOT, isInside, loadManifest, templateDir } from "../lib/repo.ts";
+import { prepareContentForCms } from "./cms-content.ts";
+import { hostingPlan, type HostingPlan } from "./hosting.ts";
+import { CMS_WRITABLE_PATTERN, buildIntegrityManifest, indentManifest } from "./integrity.ts";
 import { rewriteCoreReferences } from "./rewrite.ts";
 import { renderTemplate } from "./render.ts";
 
@@ -53,6 +70,8 @@ export interface ExportOptions {
   configFile: string | null;
   packageName: string | null;
   force: boolean;
+  /** clients/<id>/publishing.json; null: every repository and DecapBridge value is a placeholder. */
+  publishing: PublishingSettings | null;
   log: (line: string) => void;
 }
 
@@ -231,7 +250,7 @@ export async function buildPackageJson(
     version: "1.0.0",
     private: true,
     type: "module",
-    description: "Statický web postavený na Astro; obsah se upravuje v Pages CMS.",
+    description: "Statický web postavený na Astro; obsah se upravuje v Decap CMS (/admin/).",
     engines: { node: nodeEngine },
     packageManager: root.packageManager,
     scripts: {
@@ -273,34 +292,6 @@ async function generateLockfile(outDir: string, log: (line: string) => void): Pr
 }
 
 // ---------------------------------------------------------------------------
-// Content adjustments for the CMS
-// ---------------------------------------------------------------------------
-
-/**
- * Pages CMS edits familyOwned as a yes / no / unknown select and rejects values outside the list
- * (S2 A4, B5). The schema accepts both forms, so booleans are written in the CMS form.
- */
-async function normaliseForCms(outDir: string, notes: string[]): Promise<void> {
-  const file = path.join(outDir, "src", "content", "site", "company.json");
-  const company = await readJson<Record<string, unknown>>(file);
-  const value = company.familyOwned;
-  let next: string | null = null;
-  if (value === true) {
-    next = "yes";
-  } else if (value === false) {
-    next = "no";
-  } else if (value === null || value === undefined) {
-    next = "unknown";
-  }
-  if (next === null) {
-    return;
-  }
-  company.familyOwned = next;
-  await writeFile(file, `${JSON.stringify(company, null, 2)}\n`, "utf8");
-  notes.push(`company.json familyOwned ${JSON.stringify(value ?? null)} → "${next}" (CMS select form)`);
-}
-
-// ---------------------------------------------------------------------------
 // Documents
 // ---------------------------------------------------------------------------
 
@@ -309,33 +300,23 @@ async function renderDocument(name: string, values: Record<string, string>): Pro
   return renderTemplate(template, values);
 }
 
-function cmsMenu(config: PagesConfig): string {
-  const describe = (entry: CmsContentEntry, indent: string): string[] => {
-    if (entry.type === "group") {
+/** The CMS menu for HANDOVER.md, in the order the editor shows it. */
+export function cmsMenu(config: DecapConfig): string {
+  const describe = (collection: DecapCollection): string[] => {
+    if ("files" in collection) {
       return [
-        `${indent}- **${entry.label}**`,
-        ...entry.items.flatMap((item) => describe(item, `${indent}  `)),
+        `- **${collection.label}**`,
+        ...collection.files.map((file) => `  - ${file.label} (\`${file.file}\`)`),
       ];
     }
-    if (entry.type === "collection") {
-      return [`${indent}- **${entry.label}** – položky lze přidávat a mazat (\`${entry.path}/\`)`];
+    let operations = "položky lze přidávat a mazat";
+    if (!collection.create) {
+      operations = "položky nelze přidávat";
     }
-    return [`${indent}- **${entry.label}** (\`${entry.path}\`)`];
+    return [`- **${collection.label}** – ${operations} (\`${collection.folder}/\`)`];
   };
-  const lines = config.content.flatMap((entry) => describe(entry, ""));
-  const mediaFolders = Array.isArray(config.media) ? config.media : [config.media];
-  for (const media of mediaFolders) {
-    let kind = "nahrané obrázky";
-    if (media.name === "documents") {
-      kind = "nahrané dokumenty PDF";
-    }
-    lines.push(`- **${media.label}** – ${kind} (\`${media.input}/\`)`);
-  }
-  lines.push(
-    ...config.actions.map(
-      (action) => `- Akce **${action.label}** (\`.github/workflows/${action.workflow}\`)`,
-    ),
-  );
+  const lines = config.collections.flatMap(describe);
+  lines.push(`- **Média** – nahrané fotografie (\`${config.media_folder}/\`)`);
   return lines.join("\n");
 }
 
@@ -526,7 +507,7 @@ export async function exportSite(options: ExportOptions): Promise<ExportResult> 
   } else {
     notes.push("client has no provenance/ directory; docs/provenance/ not created");
   }
-  await normaliseForCms(outDir, notes);
+  notes.push(...(await prepareContentForCms(outDir)));
 
   const { content, problems } = await loadValidatedContent(outDir);
   if (content === null) {
@@ -546,40 +527,68 @@ export async function exportSite(options: ExportOptions): Promise<ExportResult> 
   await writeFile(path.join(outDir, ".nvmrc"), `${nodeVersion}\n`, "utf8");
   await writeFile(
     path.join(outDir, ".gitignore"),
-    "node_modules/\ndist/\n.astro/\n.env\n.env.*\n.DS_Store\n*.log\n",
+    "node_modules/\ndist/\n.astro/\n.wrangler/\n.netlify/\n.env\n.env.*\n.dev.vars\n.DS_Store\n*.log\n",
     "utf8",
   );
   await mkdir(path.join(outDir, "scripts"), { recursive: true });
   await copyFile(path.join(TEMPLATES, "validate.ts.tpl"), path.join(outDir, "scripts", "validate.ts"));
 
-  log("Generating .pages.yml and workflows");
-  const cms = await generatePagesConfigForSite({ templateId, siteRoot: outDir, configFile: null });
-  await writeFile(path.join(outDir, ".pages.yml"), cms.yaml, "utf8");
-  const workflows = path.join(outDir, ".github", "workflows");
-  await mkdir(workflows, { recursive: true });
+  log(`Decap CMS ${DECAP_VERSION} → public/admin/`);
+  const publishing = options.publishing ?? defaultPublishing(packageName);
+  const cms = await generateDecapConfigForSite({
+    templateId,
+    siteRoot: outDir,
+    configFile: null,
+    publishing,
+  });
+  const adminDir = path.join(outDir, "public", "admin");
+  await copyDecapBundle(path.join(adminDir, DECAP_DIR_NAME), log);
+  await writeFile(path.join(adminDir, "config.yml"), cms.yaml, "utf8");
   await writeFile(
-    path.join(workflows, "publish.yml"),
-    await renderDocument("publish.yml.tpl", PINNED_ACTIONS),
+    path.join(adminDir, "index.html"),
+    await renderDocument("admin-index.html.tpl", {
+      brandName: escapeHtml(content.company.brandName),
+      decapVersion: DECAP_VERSION,
+      decapDir: DECAP_DIR_NAME,
+      decapIntegrity: integrityAttribute(),
+      placeholder: PLACEHOLDER_VALUE,
+      publishCollection: PUBLISH_COLLECTION,
+    }),
     "utf8",
   );
-  await writeFile(
-    path.join(workflows, "discard.yml"),
-    await renderDocument("discard.yml.tpl", PINNED_ACTIONS),
-    "utf8",
-  );
+  if (cms.publishing.missing.length > 0) {
+    notes.push(
+      `publishing settings missing (${cms.publishing.missing.join(", ")}): /admin/ shows a notice instead of a login until a re-export with clients/<id>/publishing.json filled in`,
+    );
+  }
+  const hosting = hostingPlan(cms.publishing.hosting);
+  checkContactFormHosting(content.config, hosting);
+  await writeFile(path.join(outDir, hosting.configFile.name), hosting.configFile.content, "utf8");
+  if (content.config.features.contactForm) {
+    notes.push(
+      `contact form on (${String(content.config.contactFormHandler)}): switch on form detection and the e-mail notification in the Netlify project (docs/cms/setup.md)`,
+    );
+  }
 
   log("Writing README.md, HANDOVER.md, CREDITS.md, TEMPLATE.json");
   const exportedAt = new Date();
   const exportedDate = exportedAt.toISOString().slice(0, 10);
   const core = await readJson<PackageJson>(path.join(CORE_DIR, "package.json"));
   const npmVersion = String(packageJson.packageManager).replace(/^npm@/, "");
+  let formNote = "";
+  if (content.config.features.contactForm) {
+    formNote = `\n${hosting.text.formCs ?? ""}\n`;
+  }
   const common = {
+    ...hosting.text,
+    formNote,
     brandName: content.company.brandName,
     templateName: manifest.name,
     templateVersion: manifest.version,
     exportedDate,
     nodeVersion,
     npmVersion,
+    publishRequestFile: PUBLISH_REQUEST_FILE,
   };
   await writeFile(path.join(outDir, "README.md"), await renderDocument("README.md.tpl", common), "utf8");
   await writeFile(
@@ -598,6 +607,8 @@ export async function exportSite(options: ExportOptions): Promise<ExportResult> 
     path.join(outDir, "CREDITS.md"),
     await renderDocument("CREDITS.md.tpl", {
       ...common,
+      decapVersion: DECAP_VERSION,
+      decapDir: DECAP_DIR_NAME,
       fontTable: fontTable(await fontCredits(outDir, templateId, dependencies)),
       imageNote,
       imageTable: inventoryToMarkdown(inventory),
@@ -615,7 +626,57 @@ export async function exportSite(options: ExportOptions): Promise<ExportResult> 
   await writeFile(path.join(outDir, "TEMPLATE.json"), `${JSON.stringify(templateJson, null, 2)}\n`, "utf8");
 
   await generateLockfile(outDir, log);
+
+  // Last: the workflows embed the hashes of every other non-content file of the export.
+  log("Writing workflows with the integrity manifest");
+  await writeWorkflows(outDir, hosting);
   return { outDir, rewrites, notes };
+}
+
+/** Netlify Forms only work on Netlify; refuse an export that would ship a form nobody receives. */
+function checkContactFormHosting(config: SiteConfig, hosting: HostingPlan): void {
+  if (!config.features.contactForm) {
+    return;
+  }
+  if (config.contactFormHandler === "netlify" && hosting.provider !== "netlify") {
+    throw new Error(
+      `The contact form uses Netlify Forms, but publishing.json hosts the site on ${hosting.provider}. Set hosting.provider to "netlify" or switch features.contactForm off.`,
+    );
+  }
+}
+
+/** preview.yml, publish.yml and discard.yml; the first two check the integrity manifest first. */
+export async function writeWorkflows(outDir: string, hosting: HostingPlan): Promise<void> {
+  const manifest = await buildIntegrityManifest(outDir);
+  const integrityStep = (
+    await renderDocument("integrity-step.yml.tpl", {
+      trustedManifest: indentManifest(manifest, 10),
+      cmsWritablePattern: CMS_WRITABLE_PATTERN,
+    })
+  ).replace(/\n$/, "");
+  const values = {
+    ...PINNED_ACTIONS,
+    integrityStep,
+    previewDeployStep: hosting.previewDeployStep,
+    productionDeployStep: hosting.productionDeployStep,
+    previewTarget: hosting.previewTarget,
+    productionTarget: hosting.productionTarget,
+    deploySecrets: hosting.secrets,
+    publishRequestFile: PUBLISH_REQUEST_FILE,
+  };
+  const workflows = path.join(outDir, ".github", "workflows");
+  await mkdir(workflows, { recursive: true });
+  for (const name of ["preview", "publish", "discard"]) {
+    await writeFile(
+      path.join(workflows, `${name}.yml`),
+      await renderDocument(`${name}.yml.tpl`, values),
+      "utf8",
+    );
+  }
+}
+
+function escapeHtml(value: string): string {
+  return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
 
 /** Drops tsconfig entries that point at files the export does not contain (fixture configs). */
@@ -643,13 +704,15 @@ async function main(): Promise<void> {
   if (configFlag !== null) {
     configFile = path.resolve(cwd, configFlag);
   }
+  const clientDir = path.resolve(cwd, requiredFlag(args, "client"));
   const result = await exportSite({
-    clientDir: path.resolve(cwd, requiredFlag(args, "client")),
+    clientDir,
     templateId: requiredFlag(args, "template"),
     outDir: path.resolve(cwd, requiredFlag(args, "out")),
     configFile,
     packageName: stringFlag(args, "name"),
     force: args.flags.has("force"),
+    publishing: await readPublishing(clientDir),
     log: (line) => console.log(line),
   });
   console.log("\nRewritten core references:");

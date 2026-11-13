@@ -24,3 +24,6 @@ Generated from the media inventory at export time; regenerate after replacing im
 ## Software
 
 Web je postaven na [Astro](https://astro.build) (MIT) a [Tailwind CSS](https://tailwindcss.com) (MIT). Úplný seznam balíčků a jejich verzí je v `package-lock.json`.
+
+Editor obsahu na `/admin/` je [Decap CMS](https://decapcms.org) {{decapVersion}} (MIT), uložený s webem ve složce `public/admin/{{decapDir}}/`. Licence knihoven, které obsahuje, jsou v `public/admin/{{decapDir}}/decap-cms.js.LICENSE.txt`.
+The content editor at `/admin/` is Decap CMS {{decapVersion}} (MIT), self-hosted in `public/admin/{{decapDir}}/`.

@@ -1,6 +1,6 @@
 # {{brandName}} – web
 
-Statický web postavený na [Astro](https://astro.build) (šablona „{{templateName}}“ {{templateVersion}}). Obsah se upravuje v Pages CMS, sestavený web je složka `dist/`, kterou lze nahrát na jakýkoli statický hosting.
+Statický web postavený na [Astro](https://astro.build) (šablona „{{templateName}}“ {{templateVersion}}). Obsah se upravuje v Decap CMS na adrese `/admin/`, sestavený web je složka `dist/`, kterou nasazují workflow na GitHubu na hosting {{hostingName}}.
 
 *English version below.*
 
@@ -30,31 +30,34 @@ Statický web postavený na [Astro](https://astro.build) (šablona „{{template
 
 ### Nasazení
 
-Sestavený web je složka `dist/`. Na hostingu nastavte:
+Web nasazují workflow na GitHubu, ne hosting sám:
 
-- příkaz pro sestavení `npm ci && npm run build`, výstupní složku `dist`, Node.js podle `.nvmrc`;
-- pro větev `main` proměnnou prostředí `SITE_MODE=production` (ostrý web);
-- pro větev `content` žádnou proměnnou (náhled v testovacím režimu, neindexovaný);
-- e-mailové upozornění při neúspěšném nasazení.
+- `.github/workflows/preview.yml` po každém uložení v CMS (větev `content`) ověří soubory mimo obsah, sestaví **náhled** v testovacím režimu a nasadí ho {{previewTargetCs}};
+- `.github/workflows/publish.yml` spouští redaktor uložením položky „Zveřejnit změny“ v editoru (soubor `{{publishRequestFile}}`), nebo správce ručně: ověří soubory, sestaví web v režimu `production` s kontrolou obsahu, nasadí **ostrý web** a posune `main`.
 
-**Zkušební provoz** (než klient vše potvrdí): pro `main` proměnnou `SITE_MODE` nenastavujte a na GitHubu přidejte proměnnou repozitáře `PUBLISH_MODE` = `prototype` (Settings → Secrets and variables → Actions → Variables). Akce „Zveřejnit změny“ pak kontroluje obsah v testovacím režimu a `main` běží jako neindexovaný testovací web. Před spuštěním ostrého webu proměnnou smažte a pro `main` nastavte `SITE_MODE=production`.
+Nasazení je zapnuté, jen když má repozitář {{secretsCs}} (Settings → Secrets and variables → Actions). Bez nich workflow jen sestaví a zkontroluje web.
+
+**Nepropojujte hosting přímo s větví `main` ani `content`** (Cloudflare Workers Builds, Netlify, Cloudflare Pages s Git integrací): hosting by pak nasadil i změnu, která obešla kontrolu souborů.
+
+**Zkušební provoz** (než klient vše potvrdí): na GitHubu přidejte proměnnou repozitáře `PUBLISH_MODE` = `prototype`. Akce „Zveřejnit změny“ pak kontroluje obsah v testovacím režimu a ostrá adresa ukazuje neindexovaný testovací web. Před spuštěním ostrého webu proměnnou smažte.
 
 Jak se změny z CMS dostanou na ostrý web, popisuje [HANDOVER.md](HANDOVER.md).
 
 ### Struktura
 
-- `src/content/` – obsah webu (texty, služby, ceník, kontakty); upravuje se v Pages CMS
+- `src/content/` – obsah webu (texty, služby, ceník, kontakty); upravuje se v Decap CMS
 - `src/assets/media/` – obrázky
 - `src/site.config.ts` – nastavení šablony (varianty, pořadí sekcí); jen pro vývojáře
 - `src/core/` – sdílená vrstva pro data a kontroly obsahu; neupravujte
 - `src/pages/`, `src/components/`, `src/layouts/`, `src/styles/` – šablona
-- `.pages.yml` – konfigurace Pages CMS
-- `.github/workflows/` – zveřejnění a zahození změn z CMS
+- `public/admin/` – editor Decap CMS (`index.html`, vygenerovaný `config.yml`, pevná verze editoru); neupravujte ručně
+- `.github/workflows/` – náhled (`preview.yml`), zveřejnění (`publish.yml`) a zahození (`discard.yml`) změn z CMS; obsahují kontrolní součty všech souborů mimo obsah
+- {{hostingFile}}
 - `docs/provenance/` – archiv ověření údajů před předáním webu
 
 ## English
 
-Static site built with [Astro](https://astro.build) (template "{{templateName}}" {{templateVersion}}). Content is edited in Pages CMS; the built site is the `dist/` folder, which any static host can serve.
+Static site built with [Astro](https://astro.build) (template "{{templateName}}" {{templateVersion}}). Content is edited in Decap CMS at `/admin/`; the built site is the `dist/` folder, deployed by GitHub Actions to {{hostingName}} ({{hostingFileEn}}).
 
 ### Requirements
 
@@ -80,7 +83,7 @@ Static site built with [Astro](https://astro.build) (template "{{templateName}}"
 
 ### Deploy
 
-`dist/` is the artifact. On the host: build command `npm ci && npm run build`, output `dist`, Node.js from `.nvmrc`; set `SITE_MODE=production` for the `main` branch only; leave the `content` branch preview in prototype mode; turn on e-mail alerts for failed deploys. For a trial run before the content is approved, leave `SITE_MODE` unset on `main` too and add the GitHub repository variable `PUBLISH_MODE` = `prototype`: "Zveřejnit změny" then gates in prototype mode and `main` is a noindex test site. Remove the variable and set `SITE_MODE=production` on `main` to go live. No host-specific files are included; add them only for the host you choose.
+GitHub Actions deploy the site, not the host: `preview.yml` builds every CMS save on `content` in prototype mode and deploys it to {{previewTargetEn}}; `publish.yml` (started by an editor saving "Zveřejnit změny", which commits `{{publishRequestFile}}`, or by hand) checks the integrity manifest, builds in production mode with the gate, deploys to {{productionTargetEn}} and fast-forwards `main`. Deploys run only when {{secretsEn}}. Do not connect a host's Git integration to `main` or `content`: it would deploy changes that bypassed the integrity check. For a trial run before the content is approved, set the repository variable `PUBLISH_MODE` = `prototype`.
 
 The build needs no network access after `npm ci`: fonts are self-hosted from `@fontsource` packages and images live in `src/assets/media/`. Astro may try to send anonymous telemetry; disable it with `npx astro telemetry disable` or `ASTRO_TELEMETRY_DISABLED=1`.
 

@@ -4,7 +4,8 @@
  *   npm run client:export -- <id> [--out <dir>] [--force] [--name <package-name>] [--keep]
  *
  * 1. Validates the client (prototype must pass) and records which rules block production.
- * 2. Runs tools/export for the template in clients/<id>/src/site.config.ts. --out defaults to
+ * 2. Runs tools/export for the template in clients/<id>/src/site.config.ts, with the CMS settings in
+ *    clients/<id>/publishing.json (checked against every other client). --out defaults to
  *    exports/<id>/ (ignored by Git); use a directory outside this repo for the repository you push.
  * 3. Runs export:verify. While the production gate has errors, verify expects the production build
  *    to fail and to name exactly those rules; once it has none, verify expects it to pass.
@@ -16,7 +17,7 @@ import { exportSite } from "../export/export.ts";
 import { formatReport, verifyExport } from "../export/verify.ts";
 import { parseArgs, stringFlag } from "../lib/args.ts";
 import { REPO_ROOT } from "../lib/repo.ts";
-import { loadClient } from "./clients.ts";
+import { loadClient, loadPublishing } from "./clients.ts";
 import { formatValidation, validateClient } from "./validate.ts";
 
 export function defaultExportDir(id: string): string {
@@ -41,6 +42,10 @@ async function main(): Promise<void> {
     throw new Error("Usage: npm run client:export -- <id> [--out <dir>] [--force] [--name <pkg>] [--keep]");
   }
   const site = await loadClient(id);
+  const publishing = await loadPublishing(id);
+  if (publishing === null) {
+    console.log(`note: clients/${id}/publishing.json not found; CMS repository and login are placeholders.`);
+  }
   const validation = await validateClient(site);
   console.log(formatValidation(site, validation));
   if (!validation.prototypeOk) {
@@ -60,6 +65,7 @@ async function main(): Promise<void> {
     configFile: null,
     packageName: stringFlag(args, "name"),
     force: args.flags.has("force"),
+    publishing,
     log: (line) => console.log(line),
   });
   for (const note of exported.notes) {
