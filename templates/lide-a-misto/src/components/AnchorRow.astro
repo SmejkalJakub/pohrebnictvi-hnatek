@@ -1,0 +1,43 @@
+---
+/** A row of in-page links between 1 px rules (Ceník groups, Služby). Wraps; each link is a 44 px target. */
+interface Props {
+  label: string;
+  links: { href: string; label: string }[];
+}
+
+const { label, links } = Astro.props;
+---
+<nav class="frame anchors no-print" aria-label={label}>
+  <ul class="anchor-list" role="list">
+    {
+      links.map((link) => (
+        <li>
+          <a href={link.href} class="go">{link.label}</a>
+        </li>
+      ))
+    }
+  </ul>
+</nav>
+
+<style>
+  .anchors {
+    margin-top: 2.5rem;
+  }
+
+  .anchor-list {
+    display: flex;
+    flex-wrap: wrap;
+    column-gap: 2rem;
+    margin: 0;
+    padding: 0.25rem 0;
+    list-style: none;
+    border-top: 1px solid var(--ink);
+    border-bottom: 1px solid var(--ink);
+  }
+
+  @media (min-width: 64rem) {
+    .anchors {
+      margin-top: 3.5rem;
+    }
+  }
+</style>

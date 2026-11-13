@@ -1,0 +1,97 @@
+---
+/** People without any photo: a numbered table (number · name 30 px · role · direct phone), complete as it is. */
+import PhoneLink from "@core/components/PhoneLink.astro";
+import PlaceholderMark from "@core/components/PlaceholderMark.astro";
+import type { PersonView } from "@core/content/view-models.ts";
+import { figureNumber } from "../lib/figures.ts";
+
+interface Props {
+  people: PersonView[];
+  start: number;
+  caption: string;
+}
+
+const { people, start, caption } = Astro.props;
+---
+<table class="people-table">
+  <caption class="visually-hidden">{caption}</caption>
+  <tbody>
+    {
+      people.map((person, index) => (
+        <tr>
+          <td class="cell-num">
+            <span class="fig-num" data-figure-number>{figureNumber(start + index)}</span>
+          </td>
+          <th scope="row" class="cell-name">
+            <PlaceholderMark active={person.placeholder} as="span">{person.name}</PlaceholderMark>
+          </th>
+          <td class="cell-role">{person.role}</td>
+          <td class="cell-phone">
+            {person.phone !== null ? <PhoneLink number={person.phone.href.replace("tel:", "")} /> : null}
+          </td>
+        </tr>
+      ))
+    }
+  </tbody>
+</table>
+
+<style>
+  .people-table {
+    width: 100%;
+    margin-top: 1.5rem;
+    border-top: 3px solid var(--ink);
+  }
+
+  tr {
+    display: grid;
+    grid-template-columns: 3rem minmax(0, 1fr);
+    padding-block: 0.875rem;
+    border-bottom: 1px solid var(--ink);
+  }
+
+  td,
+  th {
+    padding: 0;
+    text-align: left;
+    vertical-align: baseline;
+  }
+
+  .cell-num {
+    grid-row: span 3;
+    font-size: 1.375rem;
+  }
+
+  .cell-name {
+    font-size: 1.5rem;
+    line-height: 1.2;
+  }
+
+  .cell-role {
+    color: var(--muted);
+  }
+
+  @media (min-width: 64rem) {
+    tr {
+      display: table-row;
+    }
+
+    td,
+    th {
+      padding: 1.375rem 1.5rem 1.375rem 0;
+    }
+
+    .cell-num {
+      width: 4.5rem;
+      font-size: 1.5rem;
+    }
+
+    .cell-name {
+      font-size: 1.875rem;
+    }
+
+    .cell-phone {
+      padding-right: 0;
+      text-align: right;
+    }
+  }
+</style>

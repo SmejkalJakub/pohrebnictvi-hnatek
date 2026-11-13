@@ -120,6 +120,7 @@ describe("feature switch and supports flag", () => {
       prePlanning: false,
       priceInclusions: false,
       landscapes: false,
+      places: false,
     },
     homepageSections: {
       available: ["hero", "contact-summary"],

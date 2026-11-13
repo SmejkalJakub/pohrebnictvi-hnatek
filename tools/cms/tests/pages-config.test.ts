@@ -5,10 +5,12 @@ import { parse } from "yaml";
 import type { TemplateManifest } from "../../../core/content/config.ts";
 import { splitFrontmatter } from "../../../core/content/snapshot.ts";
 import { REPO_ROOT, loadManifest } from "../../lib/repo.ts";
-import { MAX_LANDSCAPE_IMAGES } from "../../../core/content/schemas.ts";
+import { MAX_LANDSCAPE_IMAGES, MAX_PLACES as CORE_MAX_PLACES } from "../../../core/content/schemas.ts";
 import {
   LANDSCAPES_HELP,
   MAX_LANDSCAPES,
+  MAX_PLACES,
+  PLACES_HELP,
   PLACEHOLDER_IMAGE_LABEL,
   generatePagesConfig,
   renderPagesYaml,
@@ -21,6 +23,7 @@ const TEMPLATES = [
   "nocni-linka",
   "dve-cesty",
   "ticha-krajina",
+  "lide-a-misto",
 ] as const;
 /** Templates that declare every optional content type off (A and B, 2026-11-10). */
 const WITHOUT_OPTIONAL_TYPES = ["rodinna-tradice", "dustojna-jednoduchost"] as const;
@@ -395,6 +398,7 @@ async function fullManifest(): Promise<TemplateManifest> {
       prePlanning: true,
       priceInclusions: true,
       landscapes: false,
+      places: false,
     },
     imageSlots: {
       ...base.imageSlots,
@@ -544,5 +548,49 @@ describe("landscape photos in the CMS (Krajiny)", () => {
     const config = await withLandscapes(true, true);
     const data = await fixtureFile("src/content/site/landscapes.json");
     expect(undeclaredKeys(data, entry(config, "landscapes").fields, "landscapes")).toEqual([]);
+  });
+});
+
+describe("places in the CMS (Naše místa)", () => {
+  async function withPlaces(supported: boolean, on: boolean): Promise<ParsedConfig> {
+    const manifest = await fullManifest();
+    manifest.supports = { ...manifest.supports, places: supported };
+    const config = generatePagesConfig({
+      manifest,
+      features: { ...ALL_FEATURES, places: on },
+      pageIds: await pageIds(),
+      legal: true,
+    });
+    return parse(renderPagesYaml(config, { templateId: "full", templateVersion: "0.0.0" })) as ParsedConfig;
+  }
+
+  it("appears only while the feature is on and the template supports it", async () => {
+    expect(JSON.stringify(await withPlaces(true, false))).not.toContain("places.json");
+    expect(JSON.stringify(await withPlaces(false, true))).not.toContain("places.json");
+    const config = await withPlaces(true, true);
+    const mista = entry(config, "places");
+    expect(mista.label).toBe("Naše místa");
+    expect(mista.path).toBe("src/content/site/places.json");
+    expect(mista.operations).toEqual({ create: false, delete: false, rename: false });
+  });
+
+  it("states the guardrail and the limits on the place list", async () => {
+    const places = field(entry(await withPlaces(true, true), "places").fields, "places") as Field & {
+      description?: string;
+      list?: { max?: number };
+    };
+    expect(MAX_PLACES).toBe(CORE_MAX_PLACES);
+    expect(places.list).toMatchObject({ max: MAX_PLACES });
+    expect(places.description).toBe(PLACES_HELP);
+    for (const rule of ["vlastní nebo zakázkové", "fotobanky", "počítačem"]) {
+      expect(PLACES_HELP).toContain(rule);
+    }
+    expect(field(places.fields, "name").required).toBe(true);
+  });
+
+  it("declares every key of the fixture's places.json", async () => {
+    const config = await withPlaces(true, true);
+    const data = await fixtureFile("src/content/site/places.json");
+    expect(undeclaredKeys(data, entry(config, "places").fields, "places")).toEqual([]);
   });
 });

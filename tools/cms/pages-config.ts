@@ -1226,6 +1226,45 @@ function landscapesEntry(): CmsFileEntry {
   ]);
 }
 
+/** Mirrors core MAX_PLACES (checked in tests). */
+export const MAX_PLACES = 12;
+
+/** Guardrail of the places list (content-contract §6.19), shown above the list. */
+export const PLACES_HELP =
+  "Místa, kde se staráte o zesnulé a o rodiny: kancelář, obřadní síň, vůz, vazárna, hřbitov. Fotografie " +
+  "jen vlastní nebo zakázkové, bez smutečních hostů a bez zesnulých. Nepoužívejte fotobanky ani obrázky " +
+  "vytvořené počítačem. Místo bez fotografie se na webu ukáže jako řádek s adresou.";
+
+/** site/places.json: the firm's places with optional photos (features.places). */
+function placesEntry(): CmsFileEntry {
+  const image = imageRef("image", "Fotografie", true);
+  image.description =
+    "Nepovinné. Popisek obrázku se nezobrazuje: pod fotografií je název místa, věta a adresa.";
+  image.fields = (image.fields ?? []).map((field) => {
+    if (field.name !== "file") {
+      return field;
+    }
+    return { ...field, description: "JPEG, PNG nebo WebP, nejlépe do 8 MB. Na šířku, alespoň 1600 px." };
+  });
+  return jsonFile("places", "Naše místa", "places.json", [
+    listOf(
+      "places",
+      "Místa",
+      [
+        str("name", "Název místa", { required: true, max: 80, description: "Příklad: Kancelář na náměstí." }),
+        str("address", "Adresa nebo upřesnění", { max: 120, description: "Příklad: Náměstí 12, Vyškov." }),
+        str("note", "Jedna věta o místě", {
+          max: 160,
+          description: "Příklad: Tady spolu vše domluvíme, bez spěchu.",
+        }),
+        image,
+      ],
+      { min: 0, max: MAX_PLACES, collapsible: { collapsed: true, summary: "{name}" } },
+      { description: PLACES_HELP },
+    ),
+  ]);
+}
+
 // ---------------------------------------------------------------------------
 // Whole config
 // ---------------------------------------------------------------------------
@@ -1242,6 +1281,9 @@ export function generatePagesConfig(input: PagesConfigInput): PagesConfig {
   }
   if (enabled("landscapes")) {
     companyItems.push(landscapesEntry());
+  }
+  if (enabled("places")) {
+    companyItems.push(placesEntry());
   }
   const content: CmsContentEntry[] = [
     emergencyEntry(),

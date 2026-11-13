@@ -1,0 +1,197 @@
+---
+/**
+ * Notices as ruled rows (research L1: nothing promotional, no figures, no green): the ceremony day
+ * and time · the family's photo when given (4:5, with consent; otherwise nothing) · the name as a
+ * link with the dates · the place and the kind of ceremony. On phones the date comes first, then
+ * photo + name, then the place. `kind` "recent" shows when the farewell took place instead.
+ */
+import { Image } from "astro:assets";
+import PlaceholderMark from "@core/components/PlaceholderMark.astro";
+import type { NoticeView } from "@core/content/view-models.ts";
+import { resolveOptionalImage } from "@core/media/resolve.ts";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  notices: NoticeView[];
+  kind: "upcoming" | "recent";
+}
+
+const { notices, kind } = Astro.props;
+const rows = notices.map((view) => {
+  const ceremony = view.ceremony;
+  let when: string | null = null;
+  let time: string | null = null;
+  let where: string | null = null;
+  let type: string | null = null;
+  if (ceremony !== null) {
+    if (ceremony.type === "without-ceremony") {
+      type = ui.withoutCeremony;
+    } else if (ceremony.type === "private") {
+      type = ui.privateCeremony;
+    } else {
+      type = ceremony.typeLabel;
+      where = [ceremony.placeName, ceremony.address].filter((part) => part !== null).join(", ");
+      if (where === "") {
+        where = null;
+      }
+    }
+    if (ceremony.weekday !== null && ceremony.dateText !== null) {
+      when = `${ceremony.weekday} ${ceremony.dateText}`;
+      time = ceremony.timeText;
+    }
+  }
+  let held: string | null = null;
+  if (kind === "recent" && ceremony !== null && ceremony.dateText !== null) {
+    held = ui.ceremonyHeld(ceremony.dateText);
+  }
+  return { view, when, time, where, type, held, photo: resolveOptionalImage(view.photo) };
+});
+---
+<ol class="notice-rows" role="list">
+  {
+    rows.map((row) => (
+      <li class="notice-row" data-photo={row.photo !== null ? "true" : "false"}>
+        <p class="row-when">
+          {kind === "upcoming" && row.when !== null ? (
+            <>
+              <b class="when-day">{row.when}</b>
+              {row.time !== null ? <span>v {row.time}</span> : null}
+            </>
+          ) : null}
+          {row.held !== null ? <span class="muted">{row.held}</span> : null}
+        </p>
+        {row.photo !== null ? (
+          <PlaceholderMark active={row.photo.isPlaceholder} kind="image" as="div" class="row-photo-frame">
+            <Image
+              src={row.photo.src}
+              alt={row.photo.alt}
+              widths={[104, 208]}
+              sizes="6.5rem"
+              class="photo row-photo"
+              style={`object-position: ${row.photo.objectPosition}`}
+            />
+          </PlaceholderMark>
+        ) : null}
+        <PlaceholderMark active={row.view.placeholder} as="div" class="row-name">
+          <a href={row.view.href} class="name-link">{row.view.fullName}</a>
+          <span class="muted row-dates">
+            {row.view.bornText !== null ? (
+              <>
+                <span aria-hidden="true">*</span>
+                <span class="visually-hidden">{ui.born}:</span> {row.view.bornText}{"  "}
+              </>
+            ) : null}
+            <span aria-hidden="true">†</span>
+            <span class="visually-hidden">{ui.diedLabel}:</span> {row.view.diedText}
+          </span>
+        </PlaceholderMark>
+        <p class="row-where">
+          {row.where !== null ? <span>{row.where}</span> : null}
+          {row.type !== null ? <span class="muted">{row.type}</span> : null}
+        </p>
+      </li>
+    ))
+  }
+</ol>
+
+<style>
+  .notice-rows {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .notice-row {
+    display: grid;
+    grid-template-columns: 5.5rem minmax(0, 1fr);
+    grid-template-areas:
+      "when when"
+      "photo name"
+      "where where";
+    gap: 0.75rem 0.875rem;
+    padding-block: 1.125rem;
+    border-bottom: 1px solid var(--ink);
+  }
+
+  .notice-row[data-photo="false"] {
+    grid-template-areas:
+      "when when"
+      "name name"
+      "where where";
+  }
+
+  .row-when {
+    grid-area: when;
+    display: flex;
+    flex-wrap: wrap;
+    column-gap: 0.5rem;
+    font-size: 1.25rem;
+  }
+
+  .row-when:empty {
+    display: none;
+  }
+
+  .notice-row > :global(.row-photo-frame),
+  .notice-row > :global(.row-photo) {
+    grid-area: photo;
+  }
+
+  .notice-row :global(.row-photo) {
+    aspect-ratio: 4 / 5;
+  }
+
+  .notice-row > :global(.row-name),
+  .row-name {
+    grid-area: name;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .name-link {
+    display: inline-block;
+    padding-block: 0.375rem;
+    font-size: 1.5rem;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+
+  .row-where {
+    grid-area: where;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .row-where:empty {
+    display: none;
+  }
+
+  @media (min-width: 64rem) {
+    .notice-row,
+    .notice-row[data-photo="false"] {
+      grid-template-columns: 15rem 6.5rem minmax(0, 1fr) 20rem;
+      grid-template-areas: "when photo name where";
+      column-gap: 2rem;
+      padding-block: 1.5rem;
+      align-items: start;
+    }
+
+    .row-when {
+      flex-direction: column;
+      font-size: 1.375rem;
+    }
+
+    .row-when:empty {
+      display: block;
+    }
+
+    .when-day {
+      font-size: 1.625rem;
+    }
+
+    .name-link {
+      font-size: 1.75rem;
+    }
+  }
+</style>

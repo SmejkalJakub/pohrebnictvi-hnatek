@@ -1,0 +1,86 @@
+---
+/**
+ * A price group under a 3 px rule: the title as H2 in the label column with the first item's price
+ * as the "from" figure (34 px bold ink; core has no group price, so the first item stands for it,
+ * as approved for C–E) and "včetně DPH"; on the right every item in a ruled table, then the
+ * inclusion lists. Prices only through <PriceValue>.
+ */
+import PriceValue from "@core/components/PriceValue.astro";
+import type { PriceGroup } from "@core/content/schemas.ts";
+import IncludedExcluded from "./IncludedExcluded.astro";
+import PriceItemRows from "./PriceItemRows.astro";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  group: PriceGroup;
+}
+
+const { group } = Astro.props;
+const headline = group.items[0] ?? null;
+const headingId = `${group.id}-nadpis`;
+---
+<section id={group.id} class="frame price-group" aria-labelledby={headingId} data-price-group={group.id}>
+  <div class="ruled split">
+    <div class="group-head">
+      <h2 id={headingId} class="h2">{group.title}</h2>
+      {
+        headline !== null ? (
+          <p class="group-from">
+            <PriceValue item={headline} class="from-price" />
+            <span class="from-vat">{ui.inclVat}</span>
+          </p>
+        ) : null
+      }
+      {group.description !== null ? <p>{group.description}</p> : null}
+    </div>
+    <div class="group-body">
+      <PriceItemRows items={group.items} caption={ui.itemsCaption(group.title)} />
+      {group.includes.length > 0 || group.excludes.length > 0 ? (
+        <IncludedExcluded includes={group.includes} excludes={group.excludes} id={group.id} />
+      ) : null}
+    </div>
+  </div>
+</section>
+
+<style>
+  .price-group {
+    margin-top: 3rem;
+    scroll-margin-top: 1rem;
+  }
+
+  .group-head {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .group-from {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .group-from :global(.from-price) {
+    font-size: 1.75rem;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+
+  .group-from :global(.from-price [data-price-amount]) {
+    white-space: nowrap;
+  }
+
+  .from-vat {
+    color: var(--muted);
+    font-size: 1.0625rem;
+  }
+
+  @media (min-width: 64rem) {
+    .price-group {
+      margin-top: 5rem;
+    }
+
+    .group-from :global(.from-price) {
+      font-size: 2.125rem;
+    }
+  }
+</style>

@@ -1,0 +1,25 @@
+---
+/**
+ * Jak postupovat: the opening with the nonstop block, the place picker rows, the steps by phase
+ * with green numerals, the page body, then Časté otázky (#caste-otazky).
+ */
+import { getFaq, getGuidance, getPage, getSiteContext } from "@core/content/load.ts";
+import EssayLayout from "../layouts/EssayLayout.astro";
+import PageOpening from "../components/PageOpening.astro";
+import PhaseSteps from "../components/PhaseSteps.astro";
+import RuledProse from "../components/RuledProse.astro";
+import FaqTopics from "../components/FaqTopics.astro";
+import { seoDescription, seoTitle } from "../lib/site.ts";
+
+const site = await getSiteContext();
+const page = await getPage("jak-postupovat");
+const guidance = await getGuidance();
+const faq = await getFaq();
+const Body = page.Content;
+---
+<EssayLayout site={site} title={seoTitle(page.data)} description={seoDescription(page.data)}>
+  <PageOpening title={page.data.title} lead={page.data.lead} placeholder={page.data.placeholder} emergency={site.emergency} />
+  <PhaseSteps site={site} guidance={guidance} />
+  {page.hasBody ? <RuledProse id="postup-text"><Body /></RuledProse> : null}
+  {faq.length > 0 ? <FaqTopics groups={faq} /> : null}
+</EssayLayout>

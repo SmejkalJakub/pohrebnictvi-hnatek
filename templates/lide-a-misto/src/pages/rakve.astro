@@ -1,0 +1,69 @@
+---
+/** Rakve: numbered figures (4:3) when any coffin has a photo, otherwise the numbered list; zero items: one sentence and the office phone. */
+import PhoneLink from "@core/components/PhoneLink.astro";
+import { getCoffins, getPage, getSiteContext } from "@core/content/load.ts";
+import { formatPhone } from "@core/format/phone.ts";
+import EssayLayout from "../layouts/EssayLayout.astro";
+import PageOpening from "../components/PageOpening.astro";
+import CatalogueFigures, { type CatalogueItem } from "../components/CatalogueFigures.astro";
+import CatalogueNumberTable from "../components/CatalogueNumberTable.astro";
+import RuledProse from "../components/RuledProse.astro";
+import { primaryOfficePhone, seoDescription, seoTitle } from "../lib/site.ts";
+import { ui } from "../i18n/cs.ts";
+
+const site = await getSiteContext();
+const page = await getPage("rakve");
+const coffins = await getCoffins();
+const items: CatalogueItem[] = coffins.map((entry) => {
+  const parts: string[] = [];
+  if (entry.data.material !== null) {
+    parts.push(entry.data.material);
+  }
+  if (entry.data.code !== null) {
+    parts.push(`${ui.code} ${entry.data.code}`);
+  }
+  let detail: string | null = null;
+  if (parts.length > 0) {
+    detail = parts.join(", ");
+  }
+  return {
+    id: entry.id,
+    name: entry.data.name,
+    detail,
+    summary: entry.data.summary,
+    image: entry.data.image,
+    placeholder: entry.data.placeholder,
+  };
+});
+const withPhotos = items.some((item) => item.image !== null);
+const office = primaryOfficePhone(site);
+const Body = page.Content;
+---
+<EssayLayout site={site} title={seoTitle(page.data)} description={seoDescription(page.data)}>
+  <PageOpening title={page.data.title} lead={page.data.lead} placeholder={page.data.placeholder} emergency={site.emergency} />
+  <section class="frame catalogue-part" aria-label={ui.itemsLabel}>
+    {
+      items.length === 0 ? (
+        <p class="ruled">
+          {ui.catalogueEmpty}{" "}
+          <PhoneLink number={office.number}>{office.label}{" "}<span class="nowrap">{formatPhone(office.number).display}</span></PhoneLink>
+        </p>
+      ) : null
+    }
+    {items.length > 0 && withPhotos ? <CatalogueFigures items={items} ratio="4 / 3" /> : null}
+    {items.length > 0 && !withPhotos ? <CatalogueNumberTable items={items} /> : null}
+  </section>
+  {page.hasBody ? <RuledProse id="rakve-text"><Body /></RuledProse> : null}
+</EssayLayout>
+
+<style>
+  .catalogue-part {
+    margin-top: 2.5rem;
+  }
+
+  @media (min-width: 64rem) {
+    .catalogue-part {
+      margin-top: 4rem;
+    }
+  }
+</style>

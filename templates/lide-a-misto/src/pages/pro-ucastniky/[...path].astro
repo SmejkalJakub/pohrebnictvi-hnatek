@@ -1,0 +1,30 @@
+---
+/** Pro účastníky pohřbu (only while features.guestInfo is on): the opening, the guest hall photo as figure 01 when set (heroImage), then the body as ruled prose. */
+import { getOptionalPage, getSiteContext } from "@core/content/load.ts";
+import EssayLayout from "../../layouts/EssayLayout.astro";
+import PageOpening from "../../components/PageOpening.astro";
+import PageFigure from "../../components/PageFigure.astro";
+import RuledProse from "../../components/RuledProse.astro";
+import { seoDescription, seoTitle } from "../../lib/site.ts";
+
+export async function getStaticPaths() {
+  const site = await getSiteContext();
+  const page = await getOptionalPage("pro-ucastniky");
+  if (!site.config.features.guestInfo || page === null) {
+    return [];
+  }
+  return [{ params: { path: undefined } }];
+}
+
+const site = await getSiteContext();
+const page = await getOptionalPage("pro-ucastniky");
+if (page === null) {
+  throw new Error("unreachable: page missing");
+}
+const Body = page.Content;
+---
+<EssayLayout site={site} title={seoTitle(page.data)} description={seoDescription(page.data)}>
+  <PageOpening title={page.data.title} lead={page.data.lead} placeholder={page.data.placeholder} emergency={site.emergency} />
+  {page.data.heroImage !== null ? <PageFigure image={page.data.heroImage} number="01" /> : null}
+  {page.hasBody ? <RuledProse id="pro-ucastniky-text"><Body /></RuledProse> : null}
+</EssayLayout>

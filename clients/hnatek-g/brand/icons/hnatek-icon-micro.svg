@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128" role="img" aria-label="Pohřebnictví Hnátek — logo">
+<defs>
+ <linearGradient id="evergreen" x1="0" y1="0" x2="0.95" y2="1">
+ <stop offset="0" stop-color="#0e3424"/><stop offset="0.58" stop-color="#16452e"/><stop offset="1" stop-color="#0b2f21"/>
+ </linearGradient>
+ <linearGradient id="gold" x1="0" y1="0" x2="0.2" y2="1">
+ <stop offset="0" stop-color="#D8B65D"/><stop offset="0.7" stop-color="#C39B3F"/><stop offset="1" stop-color="#AA7F32"/>
+ </linearGradient>
+ <linearGradient id="silver" x1="0" y1="0" x2="0.3" y2="1">
+ <stop offset="0" stop-color="#A7ACAA"/><stop offset="1" stop-color="#898F8E"/>
+ </linearGradient>
+ </defs>
+
+<rect width="128" height="128" rx="19" fill="#113C2A"/><g fill="#F8F6F1"><path d="M33 39 H47 V93 H33Z M81 39 H95 V93 H81Z M46 62 H82 V73 H46Z"/></g><path d="M64 13 C71 22 76 29 70 36 C64 42 58 38 57 33 C56 27 61 18 64 13Z" fill="#D2AC56"/>
+</svg>

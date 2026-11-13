@@ -1,0 +1,70 @@
+---
+/**
+ * Telephones and e-mails as rows between 1 px rules: a muted label over the number (block spans,
+ * never flex: QA test 9), each row one link.
+ */
+import type { SiteContext } from "@core/content/view-models.ts";
+import { formatPhone } from "@core/format/phone.ts";
+
+interface Props {
+  site: SiteContext;
+}
+
+const { site } = Astro.props;
+const phones = site.contact.phones.map((phone) => ({ label: phone.label, ...formatPhone(phone.number) }));
+---
+<ul class="phone-rows" role="list">
+  {
+    phones.map((phone) => (
+      <li>
+        <a href={phone.href} class="phone-row" data-phone-link>
+          <span class="row-label">{phone.label}</span>{" "}
+          <span class="row-value" data-part="number">{phone.display}</span>
+        </a>
+      </li>
+    ))
+  }
+  {
+    site.contact.emails.map((email) => (
+      <li>
+        <a href={`mailto:${email.address}`} class="phone-row">
+          <span class="row-label">{email.label}</span>{" "}
+          <span class="row-value">{email.address}</span>
+        </a>
+      </li>
+    ))
+  }
+</ul>
+
+<style>
+  .phone-rows {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .phone-rows li + li {
+    border-top: 1px solid var(--ink);
+  }
+
+  .phone-row {
+    display: block;
+    padding-block: 0.625rem;
+    text-decoration: none;
+  }
+
+  .row-label {
+    display: block;
+    color: var(--muted);
+    font-size: 1.0625rem;
+  }
+
+  .row-value {
+    display: block;
+    font-size: 1.25rem;
+    font-weight: 700;
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+    overflow-wrap: anywhere;
+  }
+</style>

@@ -248,6 +248,7 @@ describe("SiteConfig and manifest", () => {
       prePlanning: false,
       priceInclusions: false,
       landscapes: false,
+      places: false,
     },
     homepageSections: {
       available: ["hero", "services", "contact-summary", "family-story"],
@@ -271,6 +272,7 @@ describe("SiteConfig and manifest", () => {
       guestInfo: false,
       prePlanning: false,
       landscapes: false,
+      places: false,
     });
     expect(config.pinnedBuildDate).toBeNull();
   });

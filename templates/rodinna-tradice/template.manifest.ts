@@ -25,6 +25,7 @@ const manifest = {
     prePlanning: false,
     priceInclusions: false,
     landscapes: false,
+    places: false,
   },
 
   homepageSections: {

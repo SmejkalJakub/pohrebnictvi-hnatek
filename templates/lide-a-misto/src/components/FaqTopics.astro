@@ -1,0 +1,84 @@
+---
+/**
+ * Časté otázky (#caste-otazky): per topic, the topic in the label column and each question as a
+ * <details> between 1 px rules, the answer inside.
+ */
+import type { CollectionEntry } from "astro:content";
+import PlaceholderMark from "@core/components/PlaceholderMark.astro";
+import { render } from "@core/content/load.ts";
+import type { FaqGroup } from "@core/content/view-models.ts";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  groups: FaqGroup<CollectionEntry<"faq">>[];
+}
+
+const { groups } = Astro.props;
+const answers = new Map<string, Awaited<ReturnType<typeof render>>["Content"]>();
+for (const group of groups) {
+  for (const entry of group.entries) {
+    answers.set(entry.id, (await render(entry)).Content);
+  }
+}
+---
+<section id="caste-otazky" class="frame faq" aria-labelledby="caste-otazky-nadpis">
+  <h2 id="caste-otazky-nadpis" class="h2 faq-heading">{ui.faqHeading}</h2>
+  {
+    groups.map((group) => (
+      <div class="split faq-topic">
+        <h3 class="caps">{group.label}</h3>
+        <ul class="questions" role="list">
+          {group.entries.map((entry) => {
+            const Answer = answers.get(entry.id);
+            return (
+              <li class="question">
+                <details>
+                  <summary>{entry.data.question}</summary>
+                  <PlaceholderMark active={entry.data.placeholder} as="div" class="prose answer">
+                    {Answer !== undefined ? <Answer /> : null}
+                  </PlaceholderMark>
+                </details>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+    ))
+  }
+</section>
+
+<style>
+  .faq {
+    margin-top: var(--section);
+  }
+
+  .faq-heading {
+    padding-bottom: 0.875rem;
+    border-bottom: 3px solid var(--ink);
+  }
+
+  .faq-topic {
+    margin-top: 1.75rem;
+  }
+
+  .questions {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border-top: 1px solid var(--ink);
+  }
+
+  .question {
+    border-bottom: 1px solid var(--ink);
+  }
+
+  summary {
+    padding-block: 0.75rem;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .question :global(.answer) {
+    padding-bottom: 1rem;
+  }
+</style>

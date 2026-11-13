@@ -1,0 +1,45 @@
+---
+/**
+ * Právní informace (only when the page exists): the opening, Mimosoudní řešení sporů and
+ * Reklamace (AdrBlock), Dokumenty (#dokumenty) when there are any, then the body as ruled prose.
+ */
+import { getDocuments, getOptionalPage, getSiteContext } from "@core/content/load.ts";
+import EssayLayout from "../../layouts/EssayLayout.astro";
+import PageOpening from "../../components/PageOpening.astro";
+import AdrBlock from "../../components/AdrBlock.astro";
+import DocumentList from "../../components/DocumentList.astro";
+import RuledProse from "../../components/RuledProse.astro";
+import { seoDescription, seoTitle } from "../../lib/site.ts";
+
+export async function getStaticPaths() {
+  const page = await getOptionalPage("pravni-informace");
+  if (page === null) {
+    return [];
+  }
+  return [{ params: { path: undefined } }];
+}
+
+const site = await getSiteContext();
+const page = await getOptionalPage("pravni-informace");
+if (page === null) {
+  throw new Error("unreachable: page missing");
+}
+const documents = await getDocuments();
+const Body = page.Content;
+---
+<EssayLayout site={site} title={seoTitle(page.data)} description={seoDescription(page.data)}>
+  <PageOpening title={page.data.title} lead={page.data.lead} placeholder={page.data.placeholder} emergency={site.emergency} />
+  <div class="frame legal-parts">
+    {site.legal !== null ? <AdrBlock legal={site.legal} /> : null}
+    {documents.length > 0 ? <DocumentList documents={documents} /> : null}
+  </div>
+  {page.hasBody ? <RuledProse id="pravni-text"><Body /></RuledProse> : null}
+</EssayLayout>
+
+<style>
+  .legal-parts {
+    display: grid;
+    gap: 2.5rem;
+    margin-top: var(--section);
+  }
+</style>

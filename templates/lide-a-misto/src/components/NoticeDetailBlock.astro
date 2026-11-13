@@ -1,0 +1,237 @@
+---
+/**
+ * One notice as drawn (research L1: nothing promotional, no business photos, no green): back link;
+ * the family's photo (4:5, only with consent) beside the name and dates; the ceremony as a heading
+ * with a short list (Kde + map link, Obřad, Přenos as a plain link, L14); the notice text; Od
+ * rodiny; Kondolence (an instruction, never a form); the parte; the QR code with the print hint.
+ */
+import { Image } from "astro:assets";
+import PlaceholderMark from "@core/components/PlaceholderMark.astro";
+import type { LoadedNotice } from "@core/content/load.ts";
+import { resolveOptionalImage } from "@core/media/resolve.ts";
+import NoticeQrNote from "./NoticeQrNote.astro";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  notice: LoadedNotice;
+}
+
+const { notice } = Astro.props;
+const view = notice.view;
+const ceremony = view.ceremony;
+const photo = resolveOptionalImage(view.photo);
+const parte = resolveOptionalImage(view.parteImage);
+const Body = notice.Content;
+let heading: string | null = null;
+let where: string | null = null;
+if (ceremony !== null) {
+  if (ceremony.type === "without-ceremony") {
+    heading = ui.withoutCeremony;
+  } else if (ceremony.type === "private") {
+    heading = ui.privateCeremony;
+  } else if (ceremony.weekday !== null && ceremony.dateText !== null) {
+    heading = ui.ceremonyHeading(ceremony.weekday, ceremony.dateText, ceremony.timeText);
+  }
+  const parts = [ceremony.placeName, ceremony.address].filter((part) => part !== null);
+  if (parts.length > 0) {
+    where = parts.join(", ");
+  }
+}
+const publicCeremony = ceremony !== null && ceremony.type !== "without-ceremony" && ceremony.type !== "private";
+---
+<article class="frame notice" data-notice={view.id}>
+  <a href="/oznameni/" class="go no-print">{ui.allNotices}</a>
+  <PlaceholderMark active={view.placeholder} as="div" class="notice-main">
+    <div class="notice-head" data-photo={photo !== null ? "true" : "false"}>
+      {
+        photo !== null ? (
+          <Image
+            src={photo.src}
+            alt={photo.alt}
+            widths={[128, 256, 384]}
+            sizes="(min-width: 64rem) 12rem, 8rem"
+            class="photo notice-photo"
+            loading="eager"
+            style={`object-position: ${photo.objectPosition}`}
+          />
+        ) : null
+      }
+      <div class="notice-name">
+        <h1 class="notice-title">{view.fullName}</h1>
+        <p class="muted">
+          {
+            view.bornText !== null ? (
+              <>
+                <span aria-hidden="true">*</span>
+                <span class="visually-hidden">{ui.born}:</span> {view.bornText}{"  "}
+              </>
+            ) : null
+          }
+          <span aria-hidden="true">†</span>
+          <span class="visually-hidden">{ui.diedLabel}:</span> {view.diedText}
+        </p>
+      </div>
+    </div>
+    {
+      heading !== null ? (
+        <section class="notice-part notice-ceremony" aria-labelledby="obrad">
+          <h2 id="obrad" class="part-heading">{heading}</h2>
+          {publicCeremony && ceremony !== null ? (
+            <dl class="facts">
+              {where !== null ? (
+                <>
+                  <dt>{ui.where}</dt>
+                  <dd>
+                    {where}
+                    {ceremony.mapUrl !== null ? (
+                      <>
+                        {" · "}
+                        <a href={ceremony.mapUrl}>{ui.mapShort}</a>
+                      </>
+                    ) : null}
+                  </dd>
+                </>
+              ) : null}
+              <dt>{ui.ceremonyType}</dt>
+              <dd>{ceremony.typeLabel}</dd>
+              {view.livestreamUrl !== null ? (
+                <>
+                  <dt>{ui.livestreamLabel}</dt>
+                  <dd>
+                    <a href={view.livestreamUrl} rel="nofollow noopener">{ui.livestream}</a>
+                    <span class="muted fact-note">{ui.livestreamNote}</span>
+                  </dd>
+                </>
+              ) : null}
+            </dl>
+          ) : null}
+        </section>
+      ) : null
+    }
+    {notice.hasBody ? <div class="prose notice-body"><Body /></div> : null}
+  </PlaceholderMark>
+  {
+    view.familyNote !== null ? (
+      <section class="notice-part" aria-labelledby="od-rodiny">
+        <h2 id="od-rodiny" class="part-heading">{ui.familyNote}</h2>
+        <p>{view.familyNote}</p>
+      </section>
+    ) : null
+  }
+  {
+    view.condolencesEmail !== null ? (
+      <section class="notice-part" aria-labelledby="kondolence">
+        <h2 id="kondolence" class="part-heading">{ui.condolences}</h2>
+        <p>
+          {ui.condolencesText} <a href={`mailto:${view.condolencesEmail}`}>{view.condolencesEmail}</a>. {ui.condolencesAfter}
+        </p>
+      </section>
+    ) : null
+  }
+  {
+    parte !== null || view.partePdfHref !== null ? (
+      <section class="notice-part" aria-labelledby="parte">
+        <h2 id="parte" class="part-heading">{ui.parteImage}</h2>
+        {parte !== null ? (
+          <Image src={parte.src} alt={parte.alt} widths={[400, 800]} sizes="(min-width: 64rem) 32rem, 100vw" class="parte-image" />
+        ) : null}
+        {view.partePdfHref !== null ? <a href={view.partePdfHref} class="go">{ui.partePdf}</a> : null}
+      </section>
+    ) : null
+  }
+  <NoticeQrNote view={view} />
+</article>
+
+<style>
+  .notice {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    max-width: 48rem;
+    padding-top: 0.5rem;
+  }
+
+  .notice :global(.notice-main) {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  .notice-head {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1rem;
+    align-items: end;
+  }
+
+  .notice-head[data-photo="true"] {
+    grid-template-columns: 8rem minmax(0, 1fr);
+  }
+
+  .notice-head :global(.notice-photo) {
+    aspect-ratio: 4 / 5;
+  }
+
+  .notice-name {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+  }
+
+  .notice-title {
+    font-size: 2rem;
+    line-height: 1.08;
+  }
+
+  .notice-part {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding-top: 0.875rem;
+    border-top: 1px solid var(--ink);
+  }
+
+  .notice-ceremony {
+    border-top: 3px solid var(--ink);
+  }
+
+  .part-heading {
+    font-size: 1.375rem;
+    line-height: 1.3;
+  }
+
+  .facts {
+    display: grid;
+    grid-template-columns: 6rem minmax(0, 1fr);
+    gap: 0.5rem 0.75rem;
+  }
+
+  .facts dt {
+    color: var(--muted);
+  }
+
+  .facts a {
+    display: inline-block;
+    padding-block: 0.5rem;
+  }
+
+  .fact-note {
+    display: block;
+    font-size: 1rem;
+  }
+
+  @media (min-width: 64rem) {
+    .notice {
+      padding-top: 2rem;
+    }
+
+    .notice-head[data-photo="true"] {
+      grid-template-columns: 12rem minmax(0, 1fr);
+      column-gap: 2rem;
+    }
+
+    .notice-title {
+      font-size: 3rem;
+    }
+  }
+</style>

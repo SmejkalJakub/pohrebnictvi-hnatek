@@ -1,0 +1,86 @@
+---
+/**
+ * Home "next-steps": "Když někdo zemřel" in the label column and the first-hours steps in up to
+ * three columns, each under a 3 px rule with a large green numeral (steps, not figures), then the
+ * link to the full guide.
+ */
+import type { CollectionEntry } from "astro:content";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  steps: CollectionEntry<"guidance">[];
+}
+
+const { steps } = Astro.props;
+const shown = steps.slice(0, 3);
+---
+<section class="frame home-block split" data-section="next-steps" aria-labelledby="kdyz-nekdo-zemrel">
+  <h2 id="kdyz-nekdo-zemrel" class="h2">{ui.firstHoursHeading}</h2>
+  <div>
+    <ol class="first-steps" role="list">
+      {
+        shown.map((entry, index) => (
+          <li class="first-step">
+            <span class="step-numeral" aria-hidden="true">{index + 1}</span>
+            <span class="visually-hidden">{index + 1}.</span>
+            <b class="first-step-title">{entry.data.title}</b>
+            <span>{entry.data.summary}</span>
+          </li>
+        ))
+      }
+    </ol>
+    <a href="/jak-postupovat/" class="go">{ui.fullGuide}</a>
+  </div>
+</section>
+
+<style>
+  .home-block {
+    margin-top: var(--section);
+  }
+
+  .first-steps {
+    display: grid;
+    gap: 1rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .first-step {
+    display: grid;
+    grid-template-columns: 2.25rem minmax(0, 1fr);
+    column-gap: 0.5rem;
+    padding-top: 0.625rem;
+    border-top: 3px solid var(--ink);
+  }
+
+  .step-numeral {
+    grid-row: span 2;
+    color: var(--green);
+    font-size: 1.75rem;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  .first-step-title {
+    font-size: 1.125rem;
+  }
+
+  @media (min-width: 64rem) {
+    .first-steps {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 2rem;
+    }
+
+    .first-step {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      padding-top: 0.875rem;
+    }
+
+    .step-numeral {
+      font-size: 2.5rem;
+    }
+  }
+</style>

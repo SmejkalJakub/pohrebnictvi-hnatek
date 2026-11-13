@@ -1,0 +1,35 @@
+---
+/**
+ * Kontakt "Převoz zesnulých" (data-emergency-block, its own heading, never with office hours):
+ * availability, service area and the nonstop link as a ruled block.
+ */
+import type { EmergencyTransport } from "@core/content/schemas.ts";
+import NonstopRuleBlock from "./NonstopRuleBlock.astro";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  emergency: EmergencyTransport;
+}
+
+const { emergency } = Astro.props;
+---
+{
+  emergency.enabled ? (
+    <section class="split" aria-labelledby="prevoz" data-emergency-block>
+      <h2 id="prevoz" class="h2">{ui.transportHeading}</h2>
+      <div class="transport">
+        {emergency.serviceArea !== null ? <p>{emergency.serviceArea}</p> : null}
+        <NonstopRuleBlock emergency={emergency} size="page" rule={false} />
+      </div>
+    </section>
+  ) : null
+}
+
+<style>
+  .transport {
+    max-width: 45rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+</style>

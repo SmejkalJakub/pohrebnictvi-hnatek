@@ -25,6 +25,7 @@ const manifest = {
     prePlanning: true,
     priceInclusions: true,
     landscapes: false,
+    places: false,
   },
 
   // The hero is the split itself (the question and both halves), so the halves always follow the
