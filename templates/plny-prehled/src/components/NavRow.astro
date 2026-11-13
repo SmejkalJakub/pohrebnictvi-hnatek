@@ -1,0 +1,42 @@
+---
+/**
+ * The whole index. ≥ 48 rem: every page in one row under a 3 px ink rule, the current page in
+ * bold (never the highlight). Below: the "Rejstřík" panel, one ruled row per page with its count
+ * or from-price in mono, opened by the header button (aria-controls). Without JS the panel is
+ * shown in the flow. The Ceník row's price comes through <PriceValue>, so the panel carries the
+ * VAT note too (research L9).
+ */
+import PriceValue from "@core/components/PriceValue.astro";
+import VatNote from "@core/components/VatNote.astro";
+import type { PricingView } from "@core/content/view-models.ts";
+import type { IndexEntry } from "../lib/directory.ts";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  entries: IndexEntry[];
+  pricing: PricingView | null;
+  id: string;
+}
+
+const { entries, pricing, id } = Astro.props;
+const hasPrice = entries.some((entry) => entry.priceItem !== null);
+---
+<nav class="nav-row" aria-label={ui.navLabel}>
+  <div id={id} class="index-panel">
+  <p class="index-title" aria-hidden="true">{ui.menuTitle}</p>
+  <ul class="index-list">
+    {
+      entries.map((entry) => (
+        <li class="index-item">
+          <a href={entry.href} aria-current={entry.current ? "page" : undefined}>
+            {entry.label}
+          </a>
+          {entry.count !== null ? <span class="index-count mono">{entry.count}</span> : null}
+          {entry.priceItem !== null ? <PriceValue item={entry.priceItem} class="index-count mono" /> : null}
+        </li>
+      ))
+    }
+  </ul>
+  {hasPrice && pricing !== null ? <VatNote pricing={pricing} class="index-vat" /> : null}
+  </div>
+</nav>

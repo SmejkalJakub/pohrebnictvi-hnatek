@@ -1,0 +1,57 @@
+---
+/**
+ * Lidé as a table: a 64 × 80 thumbnail or a square initials box (ink outline, no fill), name,
+ * "Na starosti", direct line in mono or "—". Without any photo the boxes are 56 × 56 squares.
+ */
+import { Image } from "astro:assets";
+import PhoneLink from "@core/components/PhoneLink.astro";
+import PlaceholderMark from "@core/components/PlaceholderMark.astro";
+import type { PersonView } from "@core/content/view-models.ts";
+import { resolveOptionalImage } from "@core/media/resolve.ts";
+import InitialsBox from "./InitialsBox.astro";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  people: PersonView[];
+}
+
+const { people } = Astro.props;
+const rows = people.map((person) => ({ person, photo: resolveOptionalImage(person.photo) }));
+const anyPhoto = rows.some((row) => row.photo !== null);
+let boxSize: "large" | "square" = "square";
+if (anyPhoto) {
+  boxSize = "large";
+}
+---
+  <table class="t people">
+    <thead>
+      <tr>
+        <th scope="col" class="people-photo"><span class="visually-hidden">{ui.photoColumn}</span></th>
+        <th scope="col">{ui.nameColumn}</th>
+        <th scope="col">{ui.roleColumn}</th>
+        <th scope="col">{ui.lineColumn}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {
+        rows.map(({ person, photo }) => (
+          <tr>
+            <td>
+              {photo !== null ? (
+                <Image src={photo.src} alt={photo.alt} width={64} height={80} densities={[1, 2]} class="person-thumb" style={`object-position: ${photo.objectPosition}`} />
+              ) : (
+                <InitialsBox initials={person.initials} size={boxSize} />
+              )}
+            </td>
+            <th scope="row" class="person-cell">
+              <PlaceholderMark active={person.placeholder} as="span">
+                {person.name}
+              </PlaceholderMark>
+            </th>
+            <td>{person.role}</td>
+            <td>{person.phone !== null ? <PhoneLink number={person.phone.href.replace("tel:", "")} class="mono nowrap" /> : ui.none}</td>
+          </tr>
+        ))
+      }
+    </tbody>
+  </table>

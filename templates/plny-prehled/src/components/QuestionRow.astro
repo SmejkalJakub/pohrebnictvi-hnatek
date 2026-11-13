@@ -1,0 +1,30 @@
+---
+/**
+ * The full-width FAQ row under the directory: up to five questions as links into the FAQ on the
+ * guide page, then "Všechny otázky". Three link columns at desktop width.
+ */
+import { ui } from "../i18n/cs.ts";
+
+export interface QuestionLink {
+  id: string;
+  question: string;
+}
+
+interface Props {
+  questions: QuestionLink[];
+}
+
+const { questions } = Astro.props;
+---
+<ul class="question-links">
+  {
+    questions.map((question) => (
+      <li>
+        <a href={`/jak-postupovat/#${question.id}`}>{question.question}</a>
+      </li>
+    ))
+  }
+  <li>
+    <a href="/jak-postupovat/#caste-otazky">{ui.allQuestions}</a>
+  </li>
+</ul>

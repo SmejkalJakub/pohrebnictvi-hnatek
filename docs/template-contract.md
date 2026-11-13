@@ -131,6 +131,8 @@ export default {
 } satisfies TemplateManifest;
 ```
 
+**Homepage section ids** (`HOMEPAGE_SECTIONS` in `core/content/config.ts`): `hero`, `family-story`, `services`, `next-steps`, `contact-summary`, `catalogue-links`, and the directory sections added for template D (2026-11-11): `price-summary` (a price excerpt with the VAT note), `people`, `notices` (a link with a count, never names: L1), `documents` and `faq`. A manifest offers only the ids it renders, and `constraints` (`first`, `required`) are per template; nothing requires `hero` or `contact-summary` globally. `people`, `notices`, `documents` and `faq` are valid only while their feature (`features.<id>`) is on: G-005 rejects them otherwise, so a manifest should list them only when it supports that feature. `price-summary` depends on content the client can change in the CMS (`pricing.visible`), so it never fails a build: the template renders nothing for it while pricing is hidden, like `/cenik/`.
+
 Templates A and B declare every optional flag `false` (2026-11-10). A template that renders `/pravni-informace/` declares `pageFields["pravni-informace"]`; that is what makes the CMS show the legal-information entry and what obliges the footer link (§6). Image slots for notices and people use the prefixes `notice.` and `person.` (for example `"notice.photo"`, `"person.photo"`); without them the CMS keeps those image fields hidden.
 
 Every value in `options` must be fully implemented and must pass contrast and layout QA. The agent cannot ask for values outside the declared set (`site.config.ts` is validated against the manifest).
@@ -141,7 +143,7 @@ Core owns the URLs (content-contract §5). Templates own the `src/pages/*.astro`
 
 | Route | Template obligation | Data available (core view model) |
 | --- | --- | --- |
-| `/` | must render; sections in `site.config.homepage.sections` order | `SiteContext`, `pages.home`, featured services, guidance (first-hours), `pages["o-nas"].excerpt` |
+| `/` | must render; sections in `site.config.homepage.sections` order | `SiteContext`, `pages.home`, featured services, guidance (first-hours), `pages["o-nas"].excerpt`; for the directory sections `getPricing()`, `getPeople()`, `getNoticeIndex()`, `getDocuments()`, `getFaq()`, `getCoffins()`, `getFlowers()` |
 | `/jak-postupovat/` | must render all published guidance, grouped or ordered by the template | `guidance[]` (sorted by phase, then order) |
 | `/sluzby/` | must render all published services | `services[]` grouped by category |
 | `/sluzby/<slug>/` | only if `supports.serviceDetailPages`; otherwise the build must not emit these paths, and anchors `/sluzby/#<slug>` are used instead | `service`, linked price group |

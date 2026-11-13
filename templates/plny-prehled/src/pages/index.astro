@@ -1,0 +1,178 @@
+---
+/**
+ * Home: the directory. Every homepage section is a ruled cell in site.config.homepage.sections
+ * order (CSS columns at desktop width, so any order and any subset lays out; the FAQ row spans
+ * all columns). The first section's heading is the page's h1. No hero, no story.
+ */
+import {
+  getCoffins,
+  getDocuments,
+  getFaq,
+  getFlowers,
+  getGuidance,
+  getNoticeIndex,
+  getOptionalPage,
+  getPage,
+  getPeople,
+  getPricing,
+  getServices,
+  getSiteContext,
+} from "@core/content/load.ts";
+import { chooserSituations } from "@core/content/guidance-flow.ts";
+import PriceValue from "@core/components/PriceValue.astro";
+import IndexLayout from "../layouts/IndexLayout.astro";
+import DirectorySection from "../components/DirectorySection.astro";
+import FirstHoursCell from "../components/FirstHoursCell.astro";
+import PriceExcerptCell from "../components/PriceExcerptCell.astro";
+import ServiceListCell from "../components/ServiceListCell.astro";
+import CatalogueCountCell, { type CatalogueLine } from "../components/CatalogueCountCell.astro";
+import PeopleCell from "../components/PeopleCell.astro";
+import NoticeCountCell from "../components/NoticeCountCell.astro";
+import DocumentListCell from "../components/DocumentListCell.astro";
+import QuestionRow, { type QuestionLink } from "../components/QuestionRow.astro";
+import { excerptItems } from "../lib/directory.ts";
+import { ui } from "../i18n/cs.ts";
+
+const site = await getSiteContext();
+const home = await getPage("home");
+const guidance = await getGuidance();
+const services = await getServices();
+const coffins = await getCoffins();
+const flowers = await getFlowers();
+const people = await getPeople();
+const documents = await getDocuments();
+const faq = await getFaq();
+const pricing = await getPricing();
+const noticesPage = await getOptionalPage("oznameni");
+const noticeIndex = await getNoticeIndex();
+
+const situations = chooserSituations(guidance);
+const firstHours = guidance.filter((entry) => entry.data.phase === "first-hours");
+let featured = services.filter((service) => service.data.featured);
+if (featured.length === 0) {
+  featured = services;
+}
+let excerpt: ReturnType<typeof excerptItems> = [];
+if (pricing !== null) {
+  excerpt = excerptItems(pricing);
+}
+const catalogueLines: CatalogueLine[] = [];
+for (const item of site.nav) {
+  if (item.id === "rakve") {
+    catalogueLines.push({
+      key: item.id,
+      label: item.label,
+      href: item.href,
+      count: coffins.length,
+      images: coffins.flatMap((entry) => (entry.data.image === null ? [] : [entry.data.image])),
+      thumb: { width: 64, height: 48 },
+    });
+  }
+  if (item.id === "kvetiny") {
+    catalogueLines.push({
+      key: item.id,
+      label: item.label,
+      href: item.href,
+      count: flowers.length,
+      images: flowers.flatMap((entry) => (entry.data.image === null ? [] : [entry.data.image])),
+      thumb: { width: 48, height: 48 },
+    });
+  }
+}
+const catalogueHeading = catalogueLines
+  .map((line, index) => (index === 0 ? line.label : line.label.toLocaleLowerCase("cs")))
+  .join(" a ");
+const questions: QuestionLink[] = faq
+  .flatMap((group) => group.entries)
+  .slice(0, 5)
+  .map((entry) => ({ id: `otazka-${entry.id}`, question: entry.data.question }));
+let noticesLabel: string = ui.noticesHeading;
+if (noticesPage !== null) {
+  noticesLabel = noticesPage.data.navLabel;
+}
+
+/* Which configured sections have something to show (G-005 already ensures the features are on). */
+function renders(section: string): boolean {
+  if (section === "price-summary") {
+    return pricing !== null && excerpt.length > 0;
+  }
+  if (section === "people") {
+    return people.length > 0;
+  }
+  if (section === "documents") {
+    return documents.length > 0;
+  }
+  if (section === "faq") {
+    return questions.length > 0;
+  }
+  if (section === "notices") {
+    return noticesPage !== null;
+  }
+  if (section === "catalogue-links") {
+    return catalogueLines.length > 0;
+  }
+  return true;
+}
+const sections = site.config.homepage.sections.filter(renders);
+function level(section: string): 1 | 2 {
+  if (section === sections[0]) {
+    return 1;
+  }
+  return 2;
+}
+---
+<IndexLayout site={site} title={home.data.metaTitle} description={home.data.metaDescription} foldDirectory>
+  {
+      sections.map((section) => (
+        <>
+          {section === "next-steps" ? (
+            <DirectorySection section={section} heading={ui.directoryHeading} level={level(section)}>
+              <FirstHoursCell situations={situations} firstHours={firstHours} />
+            </DirectorySection>
+          ) : null}
+          {section === "price-summary" && pricing !== null ? (
+            <DirectorySection section={section} heading={ui.priceHeading} level={level(section)}>
+              <Fragment slot="hint">{excerpt[0] !== undefined ? <PriceValue item={excerpt[0]} /> : null}</Fragment>
+              <PriceExcerptCell pricing={pricing} items={excerpt} />
+            </DirectorySection>
+          ) : null}
+          {section === "services" ? (
+            <DirectorySection section={section} heading={ui.servicesHeading} level={level(section)}>
+              <Fragment slot="hint">{services.length}</Fragment>
+              <ServiceListCell services={featured} detailPages={true} />
+            </DirectorySection>
+          ) : null}
+          {section === "catalogue-links" ? (
+            <DirectorySection
+              section={section}
+              heading={catalogueHeading}
+              level={level(section)}
+            >
+              <CatalogueCountCell lines={catalogueLines} />
+            </DirectorySection>
+          ) : null}
+          {section === "people" ? (
+            <DirectorySection section={section} heading={ui.peopleHeading} level={level(section)}>
+              <PeopleCell people={people} />
+            </DirectorySection>
+          ) : null}
+          {section === "notices" ? (
+            <DirectorySection section={section} heading={ui.noticesHeading} level={level(section)}>
+              <Fragment slot="hint">{noticeIndex.upcoming.length}</Fragment>
+              <NoticeCountCell label={noticesLabel} upcoming={noticeIndex.upcoming.length} />
+            </DirectorySection>
+          ) : null}
+          {section === "documents" ? (
+            <DirectorySection section={section} heading={ui.documentsHeading} level={level(section)}>
+              <DocumentListCell documents={documents} />
+            </DirectorySection>
+          ) : null}
+          {section === "faq" ? (
+            <DirectorySection section={section} heading={ui.faqHeading} level={level(section)} wide>
+              <QuestionRow questions={questions} />
+            </DirectorySection>
+          ) : null}
+        </>
+      ))
+  }
+</IndexLayout>

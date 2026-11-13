@@ -124,6 +124,28 @@ async function homeStructure(
   });
 }
 
+/** Outline of <main> (tag names and roles only), as in homeStructure. Runs in the page. */
+function mainOutline(): string {
+  const outline = (el: Element | null, depth = 0): string => {
+    if (el === null) {
+      return "(none)";
+    }
+    const role = el.getAttribute("role");
+    const tag = role === null ? el.tagName.toLowerCase() : `${el.tagName.toLowerCase()}[role=${role}]`;
+    if (tag === "svg" || depth >= 7) {
+      return tag;
+    }
+    const children = Array.from(el.children)
+      .filter((c) => c.tagName !== "SCRIPT" && c.tagName !== "STYLE")
+      .map((c) => outline(c, depth + 1));
+    if (children.length === 0) {
+      return tag;
+    }
+    return `${tag}(${children.join(",")})`;
+  };
+  return outline(document.querySelector("main"));
+}
+
 test.describe("cross-template structure", () => {
   test.describe.configure({ mode: "default" });
 
@@ -251,7 +273,7 @@ test.describe("cross-template structure", () => {
     expect(problems, problems.join("\n")).toEqual([]);
   });
 
-  test("route sets follow supports.serviceDetailPages and differ for every pair", async () => {
+  test("route sets follow supports.serviceDetailPages and differ for every pair", async ({ page }) => {
     const detail = /^\/sluzby\/[^/]+\/$/;
     const routes = new Map(templates.map((t) => [t.id, discoverRoutes(t).map((r) => r.path)]));
     record("routes", Object.fromEntries(routes));
@@ -266,11 +288,31 @@ test.describe("cross-template structure", () => {
         expect(detailPaths, `${t.id} must not emit service detail pages`).toEqual([]);
       }
     }
+    // There are only two services IAs (anchors or detail pages), so from three templates on some
+    // pair shares one, and two templates that support the same content types then emit the same
+    // routes. Such a pair passes only if its services pages differ in structure: the DOM outline
+    // of /sluzby/ and of the first detail page (tags and roles, no classes) must differ.
+    const sameRoutes: string[] = [];
     for (const [first, second] of templatePairs()) {
       const a = [...(routes.get(first.id) ?? [])].sort().join("\n");
       const b = [...(routes.get(second.id) ?? [])].sort().join("\n");
-      expect(a, `${first.letter}/${second.letter}: identical route sets`).not.toBe(b);
+      if (a !== b) {
+        continue;
+      }
+      sameRoutes.push(`${first.letter}/${second.letter}`);
+      const firstDetail = (routes.get(first.id) ?? []).find((r) => detail.test(r)) ?? "/sluzby/";
+      for (const path of ["/sluzby/", firstDetail]) {
+        const outlines: string[] = [];
+        for (const t of [first, second]) {
+          await page.goto(`${baseUrlFor(t)}${path}`);
+          outlines.push(await page.evaluate(mainOutline));
+        }
+        expect(outlines[0], `${first.letter}/${second.letter}: identical routes and identical ${path} structure`).not.toBe(
+          outlines[1],
+        );
+      }
     }
+    record("sameRouteSetPairs", sameRoutes);
   });
 });
 

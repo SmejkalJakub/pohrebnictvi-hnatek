@@ -1,0 +1,23 @@
+---
+/**
+ * Neutral nonstop form for the notice list and notice pages (research L1, ⚖ pending a lawyer's
+ * view): a plain 1 px ink box, the publisher, and "Telefon nonstop <number>" in ink. No highlight,
+ * no "převoz". The link keeps core's accessible name (label + number).
+ */
+import EmergencyPhoneLink from "@core/components/EmergencyPhoneLink.astro";
+import { formatPhone } from "@core/format/phone.ts";
+import type { SiteContext } from "@core/content/view-models.ts";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  site: SiteContext;
+}
+
+const { site } = Astro.props;
+---
+<p class="plain-box">
+  {ui.neutralPublisher(site.company.brandName)}{" "}
+  <EmergencyPhoneLink emergency={site.emergency} variant="custom" class="plain-box-link">
+    {ui.neutralPhone}{" "}<span class="mono nowrap">{formatPhone(site.emergency.phone).display}</span>
+  </EmergencyPhoneLink>
+</p>

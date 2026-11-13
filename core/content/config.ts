@@ -14,6 +14,13 @@ export const HOMEPAGE_SECTIONS = [
   "next-steps",
   "contact-summary",
   "catalogue-links",
+  // Directory-style sections (template D). The template renders nothing for "price-summary" while
+  // pricing.visible is false; the other four need their content feature (checked under G-005).
+  "price-summary",
+  "people",
+  "notices",
+  "documents",
+  "faq",
 ] as const;
 export type HomepageSection = (typeof HOMEPAGE_SECTIONS)[number];
 
@@ -88,6 +95,14 @@ export const CONTENT_FEATURES = [
 ] as const;
 export type ContentFeature = (typeof CONTENT_FEATURES)[number];
 
+/** Homepage sections that show an optional content type: valid only while that feature is on (G-005). */
+export const SECTION_FEATURE: Partial<Record<HomepageSection, ContentFeature>> = {
+  people: "people",
+  notices: "notices",
+  documents: "documents",
+  faq: "faq",
+};
+
 export interface TemplateManifest {
   id: string;
   name: string;
@@ -125,6 +140,24 @@ export interface TemplateManifest {
   pageFields: Record<string, readonly string[]>;
 }
 
+/**
+ * A template's default homepage order for a given set of features: sections that need a
+ * switched-off feature are left out (G-005 would reject them). Used by client:new, where every
+ * optional feature starts off.
+ */
+export function defaultSectionsFor(
+  manifest: Pick<TemplateManifest, "homepageSections">,
+  features: Partial<Record<ContentFeature, boolean>>,
+): HomepageSection[] {
+  return manifest.homepageSections.default.filter((section) => {
+    const feature = SECTION_FEATURE[section];
+    if (feature === undefined) {
+      return true;
+    }
+    return features[feature] === true;
+  });
+}
+
 export interface ConfigIssue {
   path: string;
   message: string;
@@ -156,6 +189,15 @@ export function checkConfigAgainstManifest(config: SiteConfig, manifest: Templat
   for (const section of sections) {
     if (!manifest.homepageSections.available.includes(section)) {
       issues.push({ path: "homepage.sections", message: `Template does not offer section "${section}".` });
+    }
+  }
+  for (const section of sections) {
+    const feature = SECTION_FEATURE[section];
+    if (feature !== undefined && !config.features[feature]) {
+      issues.push({
+        path: "homepage.sections",
+        message: `Section "${section}" needs features.${feature}; switch the feature on or remove the section.`,
+      });
     }
   }
   const constraints = manifest.homepageSections.constraints;

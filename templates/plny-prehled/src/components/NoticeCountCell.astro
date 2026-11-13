@@ -1,0 +1,17 @@
+---
+/**
+ * "Oznámení" on home: only a link with the number of upcoming ceremonies. Never names or dates
+ * next to services and prices (research L1).
+ */
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  label: string;
+  upcoming: number;
+}
+
+const { label, upcoming } = Astro.props;
+---
+<p>
+  <a href="/oznameni/">{label}</a>{" "}<span class="mono muted">{ui.upcomingCount(upcoming)}</span>
+</p>

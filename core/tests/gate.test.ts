@@ -1,3 +1,6 @@
+import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import path from "node:path";
 import { beforeAll, describe, expect, it } from "vitest";
 import { collectReferencedMediaFiles, hasErrors, runGate, type Finding, type RuleId } from "../gate/rules.ts";
 import { runGateForSite } from "../gate/run.ts";
@@ -301,5 +304,36 @@ describe("G-005 config against the template manifest", () => {
     expect(run.findings.filter((finding) => finding.rule === "G-005").map((finding) => finding.path)).toEqual(
       expect.arrayContaining(["template", "homepage.sections"]),
     );
+  });
+
+  it("fails in both modes when a homepage section needs a feature that is off", async () => {
+    const directory = {
+      ...manifest,
+      homepageSections: {
+        available: ["next-steps", "price-summary", "notices", "people"],
+        default: ["next-steps", "price-summary", "notices", "people"],
+        constraints: { first: "next-steps", required: ["next-steps"] },
+      },
+    } as const satisfies TemplateManifest;
+    const source = await readFile(path.join(FIXTURE_ROOT, "src/site.config.ts"), "utf8");
+    const edited = source
+      .replace(/notices: true/, "notices: false")
+      .replace(/homepage: \{ sections: \[[^\]]*\] \}/, 'homepage: { sections: ["next-steps", "price-summary", "notices", "people"] }');
+    expect(edited).not.toBe(source);
+    const dir = await mkdtemp(path.join(tmpdir(), "gate-sections-"));
+    const configFile = path.join(dir, "site.config.ts");
+    try {
+      await writeFile(configFile, edited);
+      for (const mode of ["prototype", "production"] as const) {
+        const run = await runGateForSite(FIXTURE_ROOT, { mode, now: NOW, manifest: directory, configFile });
+        const g005 = run.findings.filter((finding) => finding.rule === "G-005");
+        expect(g005.map((finding) => finding.en)).toEqual([
+          'Section "notices" needs features.notices; switch the feature on or remove the section.',
+        ]);
+        expect(g005[0]?.level).toBe("error");
+      }
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
   });
 });

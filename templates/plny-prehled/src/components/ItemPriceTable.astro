@@ -1,0 +1,51 @@
+---
+/**
+ * "Jednotlivé položky": Položka · Popis · Typ ceny (pevná, za jednotku, rozpětí, od, na dotaz)
+ * · Cena (mono, right, never wrapping). With several groups each starts with its own row.
+ * The same table prints on A4.
+ */
+import PriceValue from "@core/components/PriceValue.astro";
+import type { PriceGroup } from "@core/content/schemas.ts";
+import { priceKindLabel } from "../lib/directory.ts";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  groups: PriceGroup[];
+}
+
+const { groups } = Astro.props;
+const showGroupRows = groups.length > 1;
+---
+  <table class="t items t-stack">
+    <thead>
+      <tr>
+        <th scope="col">{ui.itemColumn}</th>
+        <th scope="col">{ui.descriptionColumn}</th>
+        <th scope="col">{ui.kindColumn}</th>
+        <th scope="col" class="num">{ui.priceColumn}</th>
+      </tr>
+    </thead>
+    {
+      groups.map((group) => (
+        <tbody id={group.id}>
+          {showGroupRows ? (
+            <tr class="group-row">
+              <th scope="colgroup" colspan="4">
+                {group.title}
+              </th>
+            </tr>
+          ) : null}
+          {group.items.map((item) => (
+            <tr>
+              <th scope="row">{item.label}</th>
+              <td data-label={ui.descriptionColumn}>{item.description ?? ui.none}</td>
+              <td data-label={ui.kindColumn}>{priceKindLabel(item)}</td>
+              <td class="num" data-label={ui.priceColumn}>
+                <PriceValue item={item} class="mono" />
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      ))
+    }
+  </table>

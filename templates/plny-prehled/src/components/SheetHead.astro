@@ -1,0 +1,25 @@
+---
+/**
+ * Top of every inner page: a 3 px ink rule on phones, the h1 (40 / 32 px, never larger), and
+ * the lead. A slot on the right holds page tools (situation buttons, print hint).
+ */
+import PlaceholderMark from "@core/components/PlaceholderMark.astro";
+
+interface Props {
+  title: string;
+  lead?: string | null;
+  placeholder?: boolean;
+}
+
+const { title, lead = null, placeholder = false } = Astro.props;
+---
+<div class="sheet-head">
+  <PlaceholderMark active={placeholder} as="div">
+    <div class="head-line">
+      <h1 class="sheet-title">{title}</h1>
+      {Astro.slots.has("tools") ? <div class="head-tools"><slot name="tools" /></div> : null}
+    </div>
+    {lead !== null ? <p class="sheet-lead">{lead}</p> : null}
+  </PlaceholderMark>
+  <slot />
+</div>

@@ -1,0 +1,30 @@
+---
+/** Právní informace: the ADR body and the complaints contact as key–value tables. */
+import type { LegalInfo } from "@core/content/schemas.ts";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  legal: LegalInfo;
+}
+
+const { legal } = Astro.props;
+---
+<h2 class="sec">{ui.adrHeading}</h2>
+<table class="t">
+  <tbody>
+    <tr>
+      <th scope="row" class="key">{ui.adrBody}</th>
+      <td>
+        {legal.adr.name}, <a href={legal.adr.url}>{legal.adr.url.replace(/^https?:\/\//, "").replace(/\/$/, "")}</a>
+      </td>
+    </tr>
+  </tbody>
+</table>
+{
+  legal.complaintsContact !== null ? (
+    <>
+      <h2 class="sec">{ui.complaintsHeading}</h2>
+      <p class="sheet-note">{legal.complaintsContact}</p>
+    </>
+  ) : null
+}

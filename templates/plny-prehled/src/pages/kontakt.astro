@@ -1,0 +1,56 @@
+---
+/**
+ * Kontakt: everything as key–value tables. Kontakty (address + map, phones, e-mail), Úřední
+ * hodiny under their own heading (data-office-hours), Převoz zesnulých under its own heading
+ * (data-emergency-block), then Lidé (#lide) when people are on.
+ */
+import { getPage, getPeople, getSiteContext } from "@core/content/load.ts";
+import IndexLayout from "../layouts/IndexLayout.astro";
+import SheetHead from "../components/SheetHead.astro";
+import ContactTable from "../components/ContactTable.astro";
+import TransportTable from "../components/TransportTable.astro";
+import PeopleTable from "../components/PeopleTable.astro";
+import ReferenceBody from "../components/ReferenceBody.astro";
+import { ui } from "../i18n/cs.ts";
+import { descriptionFor, titleFor } from "../lib/directory.ts";
+
+const site = await getSiteContext();
+const page = await getPage("kontakt");
+const people = await getPeople();
+const Body = page.Content;
+---
+<IndexLayout site={site} title={titleFor(page.data)} description={descriptionFor(page.data)}>
+  <SheetHead title={page.data.title} lead={page.data.lead} placeholder={page.data.placeholder} />
+  <h2 class="sec">{ui.contactsHeading}</h2>
+  <ContactTable site={site} />
+  <section aria-labelledby="hodiny" data-office-hours>
+    <h2 id="hodiny" class="sec">{ui.hoursHeading}</h2>
+    <table class="t">
+      <tbody>
+        {
+          site.officeHoursRows.map((row) => (
+            <tr>
+              <th scope="row" class="key">{row.days}</th>
+              <td class="num mono">
+                {row.text}
+                {row.note !== null ? <span class="cell-note">{row.note}</span> : null}
+              </td>
+            </tr>
+          ))
+        }
+      </tbody>
+    </table>
+    {site.officeHours.holidayNote !== null ? <p class="sheet-note muted">{site.officeHours.holidayNote}</p> : null}
+    {site.officeHours.outsideHoursNote !== null ? <p class="sheet-note muted">{site.officeHours.outsideHoursNote}</p> : null}
+  </section>
+  {site.emergency.enabled ? <TransportTable emergency={site.emergency} /> : null}
+  {
+    people.length > 0 ? (
+      <section id="lide" aria-labelledby="lide-nadpis">
+        <h2 id="lide-nadpis" class="sec">{ui.peopleHeading}</h2>
+        <PeopleTable people={people} />
+      </section>
+    ) : null
+  }
+  <ReferenceBody show={page.hasBody}><Body /></ReferenceBody>
+</IndexLayout>

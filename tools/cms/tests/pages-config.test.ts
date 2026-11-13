@@ -8,7 +8,7 @@ import { REPO_ROOT, loadManifest } from "../../lib/repo.ts";
 import { PLACEHOLDER_IMAGE_LABEL, generatePagesConfig, renderPagesYaml } from "../pages-config.ts";
 
 const FIXTURE = path.join(REPO_ROOT, "fixtures", "neutral");
-const TEMPLATES = ["rodinna-tradice", "dustojna-jednoduchost", "nocni-linka"] as const;
+const TEMPLATES = ["rodinna-tradice", "dustojna-jednoduchost", "nocni-linka", "plny-prehled"] as const;
 /** Templates that declare every optional content type off (A and B, 2026-11-10). */
 const WITHOUT_OPTIONAL_TYPES = ["rodinna-tradice", "dustojna-jednoduchost"] as const;
 

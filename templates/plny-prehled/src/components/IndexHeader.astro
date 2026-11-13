@@ -1,0 +1,59 @@
+---
+/**
+ * Header of every page: name and address on the left; on the right the highlighted nonstop box
+ * and, separately, the Kancelář box; under them the navigation row. Phones: name row with the
+ * "Rejstřík" button (never a hamburger), then the nonstop box, then the Kancelář box.
+ * Neutral form (notices): the plain publisher box instead of both boxes, reduced navigation.
+ */
+import { Image } from "astro:assets";
+import { resolveOptionalImage } from "@core/media/resolve.ts";
+import { formatAddressInline } from "@core/format/address.ts";
+import type { PricingView, SiteContext } from "@core/content/view-models.ts";
+import NonstopBox from "./NonstopBox.astro";
+import OfficeBox from "./OfficeBox.astro";
+import PublisherBox from "./PublisherBox.astro";
+import NavRow from "./NavRow.astro";
+import type { IndexEntry } from "../lib/directory.ts";
+import { officeLocation } from "../lib/directory.ts";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  site: SiteContext;
+  entries: IndexEntry[];
+  neutral: boolean;
+  pricing: PricingView | null;
+}
+
+const { site, entries, neutral, pricing } = Astro.props;
+const logo = resolveOptionalImage(site.company.logo);
+const address = formatAddressInline(officeLocation(site).address);
+---
+<header class="index-header" data-neutral={neutral ? "true" : "false"}>
+  <div class="head-name">
+    <a href="/" class="brand">
+      {
+        logo !== null ? (
+          <Image src={logo.src} alt="" height={56} class="brand-logo" loading="eager" />
+        ) : null
+      }
+      <span class={logo !== null ? "visually-hidden" : "brand-text"}>{site.company.brandName}</span>
+    </a>
+    <p class="head-address">{address}</p>
+  </div>
+  <button type="button" class="index-toggle" data-index-toggle aria-expanded="false" aria-controls="rejstrik">
+    {ui.menuOpen}
+  </button>
+  <NavRow entries={entries} pricing={pricing} id="rejstrik" />
+  <div class="head-boxes">
+    {
+      neutral ? (
+        <PublisherBox site={site} />
+      ) : (
+        <>
+          <NonstopBox emergency={site.emergency} />
+          <OfficeBox site={site} />
+        </>
+      )
+    }
+  </div>
+</header>

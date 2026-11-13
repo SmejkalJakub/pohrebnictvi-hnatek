@@ -1,0 +1,30 @@
+---
+/**
+ * The Kancelář box beside the nonstop box: office hours in mono, one row per group, and the
+ * office phone. Its own container and label, never inside the emergency box (invariant 2).
+ * The label is not a heading: the page's h1 must stay the first heading.
+ */
+import PhoneLink from "@core/components/PhoneLink.astro";
+import type { SiteContext } from "@core/content/view-models.ts";
+import { firstOfficePhone } from "../lib/directory.ts";
+
+interface Props {
+  site: SiteContext;
+}
+
+const { site } = Astro.props;
+const office = firstOfficePhone(site);
+---
+<div class="office-box" data-office-hours role="group" aria-labelledby="kancelar-box">
+  <p id="kancelar-box" class="box-title">{site.officeHours.label}</p>
+  <ul class="box-hours mono">
+    {
+      site.officeHoursRows.map((row) => (
+        <li>
+          <span>{row.days}</span>{" "}<span class="nowrap">{row.text}</span>
+        </li>
+      ))
+    }
+  </ul>
+  <PhoneLink number={office.number} class="mono box-phone" />
+</div>

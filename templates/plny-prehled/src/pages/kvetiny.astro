@@ -1,0 +1,56 @@
+---
+/** Květiny: H1, lead, the catalogue table (thumbnail 1:1, name, kind, description), flower phones. */
+import PhoneLink from "@core/components/PhoneLink.astro";
+import { getFlowers, getPage, getSiteContext } from "@core/content/load.ts";
+import IndexLayout from "../layouts/IndexLayout.astro";
+import SheetHead from "../components/SheetHead.astro";
+import CatalogueTable, { type CatalogueItem } from "../components/CatalogueTable.astro";
+import NoCatalogueItems from "../components/NoCatalogueItems.astro";
+import ReferenceBody from "../components/ReferenceBody.astro";
+import { flowerTypeLabels, ui } from "../i18n/cs.ts";
+import { descriptionFor, flowerPhones, titleFor } from "../lib/directory.ts";
+
+const site = await getSiteContext();
+const page = await getPage("kvetiny");
+const flowers = await getFlowers();
+const phones = flowerPhones(site);
+const items: CatalogueItem[] = flowers.map((entry) => ({
+  id: entry.id,
+  name: entry.data.title,
+  meta: flowerTypeLabels[entry.data.type] ?? null,
+  summary: entry.data.summary,
+  image: entry.data.image,
+  placeholder: entry.data.placeholder,
+}));
+const Body = page.Content;
+---
+<IndexLayout site={site} title={titleFor(page.data)} description={descriptionFor(page.data)}>
+  <SheetHead title={page.data.title} lead={page.data.lead} placeholder={page.data.placeholder} />
+  {
+    items.length > 0 ? (
+      <CatalogueTable items={items} metaLabel={ui.typeCol} thumb={{ width: 72, height: 72 }} />
+    ) : (
+      <NoCatalogueItems site={site} />
+    )
+  }
+  {
+    phones.length > 0 ? (
+      <section aria-labelledby="kvetiny-telefon">
+        <h2 id="kvetiny-telefon" class="sec">{ui.flowersOrder}</h2>
+        <table class="t">
+          <tbody>
+            {phones.map((phone) => (
+              <tr>
+                <th scope="row" class="key">{phone.label}</th>
+                <td>
+                  <PhoneLink number={phone.number} class="mono nowrap" />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </section>
+    ) : null
+  }
+  <ReferenceBody show={page.hasBody}><Body /></ReferenceBody>
+</IndexLayout>

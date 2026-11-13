@@ -1,0 +1,64 @@
+---
+/**
+ * Rakve and Květiny as a table, built from Lidé: a thumbnail column only when some item has an
+ * image (an item without one gets an empty cell, no frame), name, code or kind, description.
+ */
+import { Image } from "astro:assets";
+import PlaceholderMark from "@core/components/PlaceholderMark.astro";
+import type { ImageRef } from "@core/content/schemas.ts";
+import { resolveOptionalImage } from "@core/media/resolve.ts";
+import { ui } from "../i18n/cs.ts";
+
+export interface CatalogueItem {
+  id: string;
+  name: string;
+  meta: string | null;
+  summary: string | null;
+  image: ImageRef | null;
+  placeholder: boolean;
+}
+
+interface Props {
+  items: CatalogueItem[];
+  metaLabel: string;
+  thumb: { width: number; height: number };
+}
+
+const { items, metaLabel, thumb } = Astro.props;
+const rows = items.map((item) => ({ item, image: resolveOptionalImage(item.image) }));
+const withImages = rows.some((row) => row.image !== null);
+---
+  <table class="t catalogue t-stack">
+    <thead>
+      <tr>
+        {withImages ? <th scope="col"><span class="visually-hidden">{ui.photoColumn}</span></th> : null}
+        <th scope="col">{ui.nameCol}</th>
+        <th scope="col">{metaLabel}</th>
+        <th scope="col">{ui.aboutCol}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {
+        rows.map(({ item, image }) => (
+          <tr id={item.id}>
+            {withImages ? (
+              <td class="catalogue-thumb-cell">
+                {image !== null ? (
+                  <PlaceholderMark active={image.isPlaceholder} kind="image" as="div">
+                    <Image src={image.src} alt={image.alt} width={thumb.width} height={thumb.height} densities={[1, 2]} class="thumb" style={`object-position: ${image.objectPosition}`} />
+                  </PlaceholderMark>
+                ) : null}
+              </td>
+            ) : null}
+            <th scope="row" class="strong">
+              <PlaceholderMark active={item.placeholder} as="span">
+                {item.name}
+              </PlaceholderMark>
+            </th>
+            <td data-label={metaLabel}>{item.meta ?? ui.none}</td>
+            <td>{item.summary ?? ui.none}</td>
+          </tr>
+        ))
+      }
+    </tbody>
+  </table>

@@ -1,0 +1,80 @@
+---
+/**
+ * Every step as a compact checklist row: a native checkbox with "n. Title." and the summary,
+ * the step's own checklist items, the contact prompt, and the full text in <details>.
+ * Filtered by the picked situation like the matrix.
+ */
+import type { CollectionEntry } from "astro:content";
+import EmergencyPhoneLink from "@core/components/EmergencyPhoneLink.astro";
+import PhoneLink from "@core/components/PhoneLink.astro";
+import PlaceholderMark from "@core/components/PlaceholderMark.astro";
+import UnreviewedMark from "@core/components/UnreviewedMark.astro";
+import { render } from "@core/content/load.ts";
+import { situationsAttribute } from "@core/content/guidance-flow.ts";
+import type { SiteContext } from "@core/content/view-models.ts";
+import { formatPhone } from "@core/format/phone.ts";
+import { firstOfficePhone } from "../lib/directory.ts";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  site: SiteContext;
+  steps: CollectionEntry<"guidance">[];
+}
+
+const { site, steps } = Astro.props;
+const office = firstOfficePhone(site);
+const rendered = await Promise.all(steps.map(async (entry) => ({ entry, Content: (await render(entry)).Content })));
+---
+<ol class="step-list">
+  {
+    rendered.map(({ entry, Content }) => (
+      <li id={entry.id} class="step-row" data-guide-step data-situations={situationsAttribute(entry)}>
+        <PlaceholderMark active={entry.data.placeholder} as="div">
+          <label class="chk">
+            <input type="checkbox" name={`krok-${entry.id}`} />
+            <span>
+              <strong>
+                <span class="step-n"></span>
+                {entry.data.title}.
+              </strong>{" "}
+              {entry.data.summary}
+            </span>
+          </label>
+          <UnreviewedMark reviewedAt={entry.data.review.reviewedAt} />
+          {entry.data.checklist.length > 0 ? (
+            <ul class="sub-checks plain-list" aria-label={ui.checklist}>
+              {entry.data.checklist.map((item, index) => (
+                <li>
+                  <label class="chk">
+                    <input type="checkbox" name={`${entry.id}-${index}`} />
+                    <span>{item}</span>
+                  </label>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+          {entry.data.contactPrompt === "emergency" ? (
+            <p class="step-call">
+              <EmergencyPhoneLink emergency={site.emergency} variant="custom">
+                {site.emergency.label}{" "}<span class="mono nowrap">{formatPhone(site.emergency.phone).display}</span>
+              </EmergencyPhoneLink>
+            </p>
+          ) : null}
+          {entry.data.contactPrompt === "office" ? (
+            <p class="step-call">
+              <PhoneLink number={office.number}>
+                {ui.officePrompt}{" "}<span class="mono nowrap">{formatPhone(office.number).display}</span>
+              </PhoneLink>
+            </p>
+          ) : null}
+          <details class="step-more">
+            <summary>{ui.more}</summary>
+            <div class="ref-body">
+              <Content />
+            </div>
+          </details>
+        </PlaceholderMark>
+      </li>
+    ))
+  }
+</ol>

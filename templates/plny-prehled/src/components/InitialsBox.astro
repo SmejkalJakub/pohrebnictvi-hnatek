@@ -1,0 +1,10 @@
+---
+/** Square initials box for a person without a photo: ink outline, no fill, never a circle. */
+interface Props {
+  initials: string;
+  size: "small" | "large" | "square";
+}
+
+const { initials, size } = Astro.props;
+---
+<span class:list={["initials", `initials-${size}`]} aria-hidden="true">{initials}</span>

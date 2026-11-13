@@ -1,7 +1,7 @@
 /**
  * Scaffold a new client site (docs/client-workflow.md).
  *
- *   npm run client:new -- <id> --template <rodinna-tradice|dustojna-jednoduchost|nocni-linka>
+ *   npm run client:new -- <id> --template <rodinna-tradice|dustojna-jednoduchost|nocni-linka|plny-prehled>
  *
  * Creates clients/<id>/ from the neutral fixture: content in src/content (every entry still
  * placeholder, every price demo), the placeholder graphics in src/assets/media, a site.config.ts
@@ -15,7 +15,7 @@ import { existsSync } from "node:fs";
 import { cp, mkdir, readdir, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import type { ContentFeature, TemplateManifest } from "../../core/content/config.ts";
+import { defaultSectionsFor, type ContentFeature, type TemplateManifest } from "../../core/content/config.ts";
 import { loadValidatedContent, type ValidatedContent } from "../../core/content/snapshot.ts";
 import { parseArgs, requiredFlag } from "../lib/args.ts";
 import { CORE_DIR, REPO_ROOT, loadManifest } from "../lib/repo.ts";
@@ -110,7 +110,10 @@ function siteConfigSource(manifest: TemplateManifest, configFile: string): strin
   const options = Object.entries(manifest.options)
     .map(([name, declaration]) => `    ${name}: ${JSON.stringify(declaration.default)},`)
     .join("\n");
-  const sections = manifest.homepageSections.default.map((section) => JSON.stringify(section)).join(", ");
+  // Optional features start off, so their homepage sections are left out until switched on.
+  const sections = defaultSectionsFor(manifest, {})
+    .map((section) => JSON.stringify(section))
+    .join(", ");
   return `// Agent-only configuration (template-contract §8). Never edited in the CMS.
 // Allowed values: templates/${manifest.id}/template.manifest.ts (options, homepageSections).
 // Plain object + \`import type\` only, so Node can load it without a bundler.
@@ -244,7 +247,7 @@ async function main(): Promise<void> {
   const args = parseArgs(process.argv.slice(2));
   const id = args.positional[0];
   if (id === undefined) {
-    throw new Error("Usage: npm run client:new -- <id> --template <rodinna-tradice|dustojna-jednoduchost|nocni-linka>");
+    throw new Error("Usage: npm run client:new -- <id> --template <rodinna-tradice|dustojna-jednoduchost|nocni-linka|plny-prehled>");
   }
   const result = await scaffoldClient({ id, templateId: requiredFlag(args, "template") });
   const relative = path.relative(REPO_ROOT, result.dir);

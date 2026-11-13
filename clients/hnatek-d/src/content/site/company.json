@@ -1,0 +1,27 @@
+{
+  "brandName": "Pohřebnictví Hnátek",
+  "legalName": "POHŘEBNICTVÍ HNÁTEK s.r.o.",
+  "legalIds": {
+    "ico": "08862711",
+    "dic": "CZ08862711",
+    "registryEntry": "C 115877 vedená u Krajského soudu v Brně",
+    "registeredOffice": {
+      "street": "Dědická 38/22",
+      "city": "Vyškov",
+      "postalCode": "682 01",
+      "country": "CZ"
+    }
+  },
+  "tradition": {
+    "publicWording": "Rodinná firma se 40 letou tradicí",
+    "foundedYear": null
+  },
+  "familyOwned": "yes",
+  "logo": {
+    "file": "logo-hnatek-horizontal.svg",
+    "alt": "Pohřebnictví Hnátek",
+    "source": "client",
+    "depicts": "actual-business",
+    "rightsConfirmed": true
+  }
+}

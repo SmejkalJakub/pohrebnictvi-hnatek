@@ -1,0 +1,107 @@
+---
+/**
+ * Service reference sheet, built from Služby + Ceník: H1, the summary, a key–value table (druh
+ * služby, the linked group's prices with the VAT note), what the price includes and excludes,
+ * the body, and links to the price list and the index. Transport adds the nonstop number.
+ */
+import type { CollectionEntry } from "astro:content";
+import EmergencyPhoneLink from "@core/components/EmergencyPhoneLink.astro";
+import PriceValue from "@core/components/PriceValue.astro";
+import VatNote from "@core/components/VatNote.astro";
+import { getPricing, getServices, getSiteContext, render } from "@core/content/load.ts";
+import IndexLayout from "../../layouts/IndexLayout.astro";
+import SheetHead from "../../components/SheetHead.astro";
+import ReferenceBody from "../../components/ReferenceBody.astro";
+import Sep from "../../components/Sep.astro";
+import { serviceCategoryLabels, ui } from "../../i18n/cs.ts";
+import { groupFor } from "../../lib/directory.ts";
+
+export async function getStaticPaths() {
+  const services = await getServices();
+  return services.map((service) => ({ params: { slug: service.id }, props: { service } }));
+}
+
+interface Props {
+  service: CollectionEntry<"services">;
+}
+
+const { service } = Astro.props;
+const site = await getSiteContext();
+const pricing = await getPricing();
+const group = groupFor(pricing, service.data.priceGroupId);
+const { Content } = await render(service);
+const hasBody = (service.body ?? "").trim() !== "";
+const hasLists = group !== null && (group.includes.length > 0 || group.excludes.length > 0);
+---
+<IndexLayout site={site} title={service.data.title} description={service.data.summary}>
+  <SheetHead title={service.data.title} lead={service.data.summary} placeholder={service.data.placeholder} />
+  <table class="t sheet-facts">
+    <tbody>
+      <tr>
+        <th scope="row" class="key">{ui.categoryRow}</th>
+        <td>{serviceCategoryLabels[service.data.category] ?? service.data.category}</td>
+      </tr>
+      {
+        group !== null
+          ? group.items.map((item) => (
+              <tr>
+                <th scope="row" class="key">{item.label}</th>
+                <td>
+                  <PriceValue item={item} class="mono" />
+                </td>
+              </tr>
+            ))
+          : null
+      }
+      {
+        service.data.category === "transport" && site.emergency.enabled ? (
+          <tr>
+            <th scope="row" class="key">{site.emergency.label}</th>
+            <td>
+              <EmergencyPhoneLink emergency={site.emergency} variant="number" numberClass="mono nowrap" />
+            </td>
+          </tr>
+        ) : null
+      }
+    </tbody>
+  </table>
+  {group !== null && pricing !== null ? <VatNote pricing={pricing} class="sheet-note" /> : null}
+  {
+    hasLists && group !== null ? (
+      <div class="package-lists sheet-lists">
+        {group.includes.length > 0 ? (
+          <div>
+            <h2 class="list-title">{ui.includes}</h2>
+            <ul class="bullets">
+              {group.includes.map((line) => (
+                <li>{line}</li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
+        {group.excludes.length > 0 ? (
+          <div>
+            <h2 class="list-title">{ui.excludes}</h2>
+            <ul class="bullets">
+              {group.excludes.map((line) => (
+                <li>{line}</li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
+      </div>
+    ) : null
+  }
+  <ReferenceBody show={hasBody}><Content /></ReferenceBody>
+  <p class="sheet-more">
+    {
+      group !== null && site.pricingVisible ? (
+        <>
+          <a href={`/cenik/#${group.id}`}>{ui.priceListLink}</a>
+          <Sep />
+        </>
+      ) : null
+    }
+    <a href="/sluzby/">{ui.allServicesBack}</a>
+  </p>
+</IndexLayout>

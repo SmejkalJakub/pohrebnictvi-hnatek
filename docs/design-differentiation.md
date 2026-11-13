@@ -130,6 +130,43 @@ Related: [template-contract.md](template-contract.md) · [content-contract.md](c
 
 `NightRail`, `RailNumber`, `NeutralLine`, `RailNav`, `NightFooter`, `Statement`, `TitleStatement`, `StatementProse`, `Shown`, `OpeningStatement`, `NoticesTeaser`, `FeaturedStatements`, `PlaceLinks`, `OfficeStatement`, `StoryStatement`, `CatalogueLinksLine`, `StepStatement`, `TopicQuestions`, `GroupPriceStatement`, `InclusionColumns`, `RuledItemTable`, `A4Letterhead`, `CeremonyAgenda`, `RecentNotices`, `NoticeFacts`, `QrSquare`, `HourRows`, `PeopleRows`, `CatalogueRowList`, `EmptyCatalogue`, `DocumentRows`, `AdrStatement`.
 
+## 3b. Template D: Plný přehled (the full overview)
+
+**Status:** built 2026-11-11 (S7, `docs/notes/s7-plny-prehled.md`) from the approved round-2 design H in `docs/designs/plny-prehled/`.
+
+**Concept:** for families who want facts, not atmosphere: the practical son or daughter who arranges everything and compares. Every page is a reference sheet; the home page is a **directory**, like a timetable or a municipal noticeboard: routes, key prices, services and catalogues with counts, people, the notices count, documents and common questions on one desktop screen in four ruled columns. On a phone the index folds into `<details>` rows.
+
+### 3b.1 Chrome
+
+- **Header with two boxes.** Name and address left; right the **highlighted nonstop box** (highlight fill, 2 px ink border, bold label, number in Overpass Mono 30 / 28 px, underlined, never wrapping) and, separately, the 1 px **Kancelář** box (hours in mono, office phone). Under them **the whole navigation in one row** under a 3 px ink rule (≥ 48 rem); the current page is bold, never highlighted.
+- **Phones:** name row with a **"Rejstřík"** button (never a hamburger), then the nonstop box, then the Kancelář box. The Rejstřík lists every page as a ruled row with its count or from-price in mono (`7 kroků`, `3`, `od … Kč`, `3 PDF`); the VAT note follows when a price shows.
+- **Neutral form on notice pages:** a plain 1 px box "Oznámení zveřejňuje <brand>. Telefon nonstop <number>", no Kancelář box, nav reduced to Oznámení · Kontakt · Úvodní stránka, footer without Dokumenty and with "Telefon nonstop". ⚖ L1 review.
+- **Footer:** 3 px rule; Kancelář (address, hours, phone) · Nonstop převoz · Dokumenty (PDF) · Právní (Právní informace, privacy, adr.coi.cz); legal row with legal name, sídlo, IČO, register entry.
+- **Options:** `palette` `seda-a-terakota` (default, owner 2026-11-11) / `bila-a-zluta`; `fontPair` `overpass` (Overpass + Overpass Mono, default) / `red-hat` (Red Hat Text + Red Hat Mono); `emergencyEmphasis` `high` doubles the box's height (44 px number on desktop) and, on phones, moves the boxes above the name row. No `heroVariant`: there is no hero.
+
+### 3b.2 Page compositions
+
+| Page | Composition |
+| --- | --- |
+| **Home** | The directory: every homepage section is a ruled cell, in `homepage.sections` order, laid out with CSS columns (4 at ≥ 64 rem, 2 at ≥ 48 rem) so any order and subset works; `faq` spans all columns under a 3 px rule. Default next-steps (h1 "Když někdo zemřel": situation links + first hours) → price-summary (first item of each group, VAT note) → services → catalogue-links (counts + small thumbnails) → people → notices (a link with a count, never names) → documents → faq. Phones: `<details>` rows, the first open. |
+| **Jak postupovat** | H1 beside four situation buttons (the only filled controls); the **situation matrix** (rows = steps, columns = situations, "ano" / "—"); picking hides the other columns and rows (`:target`, no JS). Phones: "Krok / Platí pro" table unpicked; picked = "Doma: N kroků" and one compact checklist with native checkboxes, full text in `<details>`. Then Časté otázky by topic. |
+| **Služby** | **Index table** (služba · co zahrnuje · cena in mono · Detail) + VAT note; **reference sheet** per service (key–value table with the linked group's prices, VAT note, inclusion lists). |
+| **Ceník** | VAT note under the title and under the table; packages (groups with inclusion lists) side by side under 3 px rules with the price at the right of the title; **"Jednotlivé položky"** with a **"Typ ceny"** column (pevná, za jednotku, rozpětí, od, na dotaz). The same tables on A4; the highlight prints as a 2 px black box. |
+| **Kontakt** | Key–value tables: Kontakty, Úřední hodiny (own heading), Převoz zesnulých (own heading: dostupnost, oblast, number), Lidé (`#lide`) as a table with 64 × 80 thumbnails or **square initials boxes**. |
+| **Oznámení** | **Timetable**: datum · čas · jméno · místo · obřad · přenos, em dash for missing values; "Nedávná oznámení" as a second table; phones: a name and a 3-row mini table each. Notice page: h1 name + photo thumbnail, ceremony sentence, fact table, text, parte, QR. |
+| **Rakve, Květiny** | Built from Lidé: a table (thumbnail column only when some item has an image, name, code / kind, description). |
+| **O nás, Pro účastníky, Pohřeb předem, privacy** | Reference sheets: H1, lead, the body with each `##` as a ruled block and lists as ruled rows. **Právní informace**: ADR and Reklamace tables, Dokumenty (`#dokumenty`). **404**: the whole index as `<details>` rows. |
+
+### 3b.3 Visual system
+
+- **`seda-a-terakota`:** ground `#F2F2F0`, ink `#141414`, muted `#4A4A4A`, highlight (nonstop box only) `#E8B98C`, rule `#868684`. **`bila-a-zluta`:** `#FFFFFF`, `#111111`, `#4A4A4A`, `#F2C230`, `#8A8A8A`. The highlight fails 3 : 1 against the ground, so the box always has its 2 px ink border. Contrast in `docs/notes/s7-plny-prehled.md`.
+- **Type:** Overpass 400/700 for words, Overpass Mono 500 for every number; body 18 / 1.45; section headings 22; H1 40 / 32, never larger.
+- **Separation:** column rules and table rules; 3 px ink rules above the nav, the FAQ row and the footer. No hero, cards, shadows, icons, radius, section backgrounds or photos larger than a thumbnail. Overpass sets "·" tight to the next word, so middle dots are separate elements with their own margin.
+
+### 3b.4 Unique components (D only)
+
+`IndexHeader`, `NonstopBox`, `OfficeBox`, `PublisherBox`, `NavRow`, `IndexFooter`, `Sep`, `SheetHead`, `ReferenceBody`, `DirectorySection`, `FirstHoursCell`, `PriceExcerptCell`, `ServiceListCell`, `CatalogueCountCell`, `PeopleCell`, `NoticeCountCell`, `DocumentListCell`, `QuestionRow`, `SituationButtons`, `SituationMatrix`, `PickedChecklist`, `QuestionDetails`, `PackagePair`, `ItemPriceTable`, `ServiceIndexTable`, `ContactTable`, `TransportTable`, `PeopleTable`, `InitialsBox`, `CatalogueTable`, `NoCatalogueItems`, `AdrTable`, `DocumentTable`, `CeremonyTimetable`, `NoticeFactTable`, `NoticeQrBlock`, `RegisterList`; layout `IndexLayout`.
+
 ## 4. Mobile homepage sketches (375 px, first ~2 screens)
 
 ```
@@ -159,24 +196,24 @@ A · Rodinná tradice                     B · Důstojná jednoduchost
 
 ## 5. Structural differentiation matrix
 
-| Dimension | A: Rodinná tradice | B: Důstojná jednoduchost | C: Noční linka |
-| --- | --- | --- | --- |
-| Header | centred letterhead, nav under the wordmark | left logo, right nav, sticky | the header is a sticky side rail (desktop); name row + "Obsah" (mobile) |
-| Emergency CTA pattern | dark utility strip above the header (sticky on mobile) | header button + fixed mobile bottom action bar | the rail itself (desktop); panel under the name row (mobile); neutral ink line on notice pages |
-| Mobile navigation | in-flow full-height list | dropdown under the sticky header | in-flow ruled list under the nonstop panel |
-| Homepage order | hero → family story → services (prose) → first steps → visit us | hero with CTA tier → first steps → services index → contact info row → background | hero → (notices) → featured services → situation picker → family → office |
-| Hero | editorial, asymmetric, image or typographic panel | practical, text-first, CTA block, optional image after the CTAs | one text statement, one screen tall, never an image |
-| Services IA | one long page with anchors, no detail pages | index plus detail pages | statement index + statement detail pages, other services as inline links |
-| Guidance format | narrative article, numbered sections, margin TOC | phased checklist, `<details>`, print styles | one step per statement, inverted picker with "vybráno", step tally |
-| Catalogues | editorial figure gallery, varied rhythm | uniform equal-height grid | ruled rows with small thumbnails, or ruled name columns |
-| Pricing | definition lists with dot leaders | tables with captions, reflowing on mobile | one statement per group, price as a 56 px heading, inclusion lists |
-| About | long-form, prominent, drop cap | fact sheet first, story secondary | statements, one optional 4:3 photo |
-| Footer | three-column "rich letter" with emergency block | compact two-row footer | four columns on the rail colour + legal row with ADR |
-| Typography | classic serif display + humanist body | sans throughout (optional serif H1) | one newspaper grotesque, 400/700, 76 px H1 |
-| Image use | larger, fewer, captioned, warm | minimal, functional, uniform crops | none on home; people, catalogues, notices only |
-| Separation device | hairline rules, small caps labels | 1 px lines, tinted bands, 8 px rhythm | darkness and space; one rule on top of each statement |
-| Colour mood | warm paper, umber | cool slate, forest | dark ground, warm off-white, amber for the number only |
-| Notices listing | – (not supported) | – (not supported) | large-type agenda by date; neutral chrome |
+| Dimension | A: Rodinná tradice | B: Důstojná jednoduchost | C: Noční linka | D: Plný přehled |
+| --- | --- | --- | --- | --- |
+| Header | centred letterhead, nav under the wordmark | left logo, right nav, sticky | the header is a sticky side rail (desktop); name row + "Obsah" (mobile) | name + highlighted nonstop box + separate Kancelář box; every page in one nav row under a 3 px rule |
+| Emergency CTA pattern | dark utility strip above the header (sticky on mobile) | header button + fixed mobile bottom action bar | the rail itself (desktop); panel under the name row (mobile); neutral ink line on notice pages | highlighted header box (2 px ink border); plain 1 px box on notice pages |
+| Mobile navigation | in-flow full-height list | dropdown under the sticky header | in-flow ruled list under the nonstop panel | "Rejstřík": every page as a ruled row with a count or from-price in mono |
+| Homepage order | hero → family story → services (prose) → first steps → visit us | hero with CTA tier → first steps → services index → contact info row → background | hero → (notices) → featured services → situation picker → family → office | no hero: next-steps → price summary → services → catalogues → people → notices → documents → FAQ row |
+| Hero | editorial, asymmetric, image or typographic panel | practical, text-first, CTA block, optional image after the CTAs | one text statement, one screen tall, never an image | none: the directory starts at once; the first cell's heading is the h1 |
+| Services IA | one long page with anchors, no detail pages | index plus detail pages | statement index + statement detail pages, other services as inline links | index table with prices + reference sheets |
+| Guidance format | narrative article, numbered sections, margin TOC | phased checklist, `<details>`, print styles | one step per statement, inverted picker with "vybráno", step tally | situation × step matrix; picked = one compact checklist |
+| Catalogues | editorial figure gallery, varied rhythm | uniform equal-height grid | ruled rows with small thumbnails, or ruled name columns | tables with small thumbnails; counts and thumbnails on home |
+| Pricing | definition lists with dot leaders | tables with captions, reflowing on mobile | one statement per group, price as a 56 px heading, inclusion lists | package pair + one item table with a "Typ ceny" column, same on A4 |
+| About | long-form, prominent, drop cap | fact sheet first, story secondary | statements, one optional 4:3 photo | reference sheet, no photo |
+| Footer | three-column "rich letter" with emergency block | compact two-row footer | four columns on the rail colour + legal row with ADR | 3 px rule, four ruled columns, legal row |
+| Typography | classic serif display + humanist body | sans throughout (optional serif H1) | one newspaper grotesque, 400/700, 76 px H1 | highway-sign sans + mono for every number; H1 ≤ 40 px |
+| Image use | larger, fewer, captioned, warm | minimal, functional, uniform crops | none on home; people, catalogues, notices only | thumbnails only (≤ 96 × 120) |
+| Separation device | hairline rules, small caps labels | 1 px lines, tinted bands, 8 px rhythm | darkness and space; one rule on top of each statement | column rules and table rules; 3 px ink rules |
+| Colour mood | warm paper, umber | cool slate, forest | dark ground, warm off-white, amber for the number only | light grey or white ground, black ink, one highlight behind the number |
+| Notices listing | – (not supported) | – (not supported) | large-type agenda by date; neutral chrome | timetable: datum · čas · jméno · místo · obřad · přenos; neutral chrome |
 
 ## 6. Differentiation checklist (Phase 2 exit and Phase 4)
 

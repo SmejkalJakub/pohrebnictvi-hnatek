@@ -1,0 +1,117 @@
+---
+/**
+ * Footer of every page: a 3 px ink rule, then four ruled columns at desktop width: Kancelář
+ * (address, office hours, office phone) · the nonstop line under its own heading · Dokumenty
+ * (PDF, when documents are on) · Právní (Právní informace, privacy, ADR). Below, the legal row
+ * (research L8): legal name, sídlo, IČO, register entry.
+ * Neutral form (notice pages): no Dokumenty column, the nonstop heading reads "Telefon nonstop".
+ */
+import EmergencyPhoneLink from "@core/components/EmergencyPhoneLink.astro";
+import MissingFact from "@core/components/MissingFact.astro";
+import PhoneLink from "@core/components/PhoneLink.astro";
+import type { DocumentView, SiteContext } from "@core/content/view-models.ts";
+import { formatAddressInline, formatAddressLines } from "@core/format/address.ts";
+import Sep from "./Sep.astro";
+import { firstOfficePhone, mapLink, officeLocation } from "../lib/directory.ts";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  site: SiteContext;
+  neutral: boolean;
+  documents: DocumentView[];
+  hasPrivacyPage: boolean;
+}
+
+const { site, neutral, documents, hasPrivacyPage } = Astro.props;
+const location = officeLocation(site);
+const [street, cityLine] = formatAddressLines(location.address);
+const map = mapLink(location);
+const office = firstOfficePhone(site);
+const ids = site.company.legalIds;
+const showDocuments = !neutral && documents.length > 0;
+let nonstopHeading = site.emergency.label;
+if (neutral) {
+  nonstopHeading = ui.neutralPhone;
+}
+const hasLegalColumn = site.legalLink !== null || hasPrivacyPage || site.legal !== null;
+---
+<footer class="index-footer" data-neutral={neutral ? "true" : "false"}>
+  <div class="foot-grid">
+    <section class="foot-col" aria-labelledby="pata-kancelar" data-office-hours>
+      <h2 id="pata-kancelar" class="foot-heading">{site.officeHours.label}</h2>
+      <p>{street}<br />{cityLine}</p>
+      {map !== null ? <p><a href={map}>{ui.mapLink}</a></p> : null}
+      <ul class="foot-hours mono">
+        {
+          site.officeHoursRows.map((row) => (
+            <li>
+              <span>{row.days}</span>{" "}<span class="nowrap">{row.text}</span>
+              {row.note !== null ? <span class="foot-note">{row.note}</span> : null}
+            </li>
+          ))
+        }
+      </ul>
+      <p><PhoneLink number={office.number} class="mono foot-phone" /></p>
+    </section>
+    {
+      site.emergency.enabled ? (
+        <section class="foot-col" aria-labelledby="pata-nonstop" data-emergency-block>
+          <h2 id="pata-nonstop" class="foot-heading">{nonstopHeading}</h2>
+          <p>
+            <EmergencyPhoneLink emergency={site.emergency} variant="number" class="foot-nonstop" numberClass="mono" />
+          </p>
+        </section>
+      ) : null
+    }
+    {
+      showDocuments ? (
+        <section class="foot-col" aria-labelledby="pata-dokumenty">
+          <h2 id="pata-dokumenty" class="foot-heading">{ui.footerDocuments}</h2>
+          <ul class="foot-list">
+            {documents.map((document) => (
+              <li>
+                <a href={document.href}>{document.title}</a>{" "}<span class="mono muted">{ui.pdf}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null
+    }
+    {
+      hasLegalColumn ? (
+        <section class="foot-col" aria-labelledby="pata-pravni">
+          <h2 id="pata-pravni" class="foot-heading">{ui.footerLegal}</h2>
+          <ul class="foot-list">
+            {site.legalLink !== null ? (
+              <li>
+                <a href={site.legalLink.href}>{site.legalLink.label}</a>
+              </li>
+            ) : null}
+            {hasPrivacyPage ? (
+              <li>
+                <a href="/ochrana-osobnich-udaju/">{ui.privacy}</a>
+              </li>
+            ) : null}
+            {site.legal !== null ? (
+              <li>
+                {ui.adrShort}{" "}
+                <a href={site.legal.adr.url}>{site.legal.adr.url.replace(/^https?:\/\//, "").replace(/\/$/, "")}</a>
+                <span class="visually-hidden"> ({site.legal.adr.name})</span>
+              </li>
+            ) : null}
+          </ul>
+        </section>
+      ) : null
+    }
+  </div>
+  <p class="foot-legal muted" data-legal-identification>
+    {site.company.legalName}
+    {", "}
+    {ids.registeredOffice !== null ? formatAddressInline(ids.registeredOffice) : <MissingFact name="sídlo společnosti" />}
+    <Sep />
+    {ui.ico}{" "}
+    {ids.ico !== null ? <span class="mono nowrap">{ids.ico}</span> : <MissingFact name="IČO" />}
+    <Sep />
+    {ids.registryEntry !== null ? ids.registryEntry : <MissingFact name="zápis v obchodním rejstříku" />}
+  </p>
+</footer>

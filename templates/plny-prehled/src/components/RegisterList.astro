@@ -1,0 +1,53 @@
+---
+/**
+ * The whole index as <details> rows (404): each row's summary is the page name with its count
+ * or from-price; inside are the page link and, for the guide and the services, their sub-links.
+ */
+import PriceValue from "@core/components/PriceValue.astro";
+import type { IndexEntry } from "../lib/directory.ts";
+
+export interface SubLink {
+  label: string;
+  href: string;
+}
+
+interface Props {
+  entries: IndexEntry[];
+  children: Record<string, SubLink[]>;
+}
+
+const { entries, children } = Astro.props;
+---
+<div class="register">
+  {
+    entries.map((entry) => (
+      <details class="fold-row">
+        <summary>
+          {entry.label}
+          {entry.count !== null ? (
+            <>
+              {" "}
+              <span class="mono muted register-count">{entry.count}</span>
+            </>
+          ) : null}
+          {entry.priceItem !== null ? (
+            <>
+              {" "}
+              <PriceValue item={entry.priceItem} class="mono muted register-count" />
+            </>
+          ) : null}
+        </summary>
+        <ul class="register-links plain-list">
+          <li>
+            <a href={entry.href}>{entry.label}</a>
+          </li>
+          {(children[entry.key] ?? []).map((link) => (
+            <li>
+              <a href={link.href}>{link.label}</a>
+            </li>
+          ))}
+        </ul>
+      </details>
+    ))
+  }
+</div>

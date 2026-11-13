@@ -1,0 +1,90 @@
+---
+/**
+ * Oznámení a obřady (only while features.notices is on): the timetable list and one reference
+ * sheet per live notice. Both use the neutral chrome (research L1, ⚖ pending a lawyer's view):
+ * plain box, reduced navigation, no service links or prices anywhere on these pages.
+ */
+import PlaceholderMark from "@core/components/PlaceholderMark.astro";
+import { getNoticeIndex, getNotices, getOptionalPage, getSiteContext, type LoadedNotice } from "@core/content/load.ts";
+import IndexLayout from "../../layouts/IndexLayout.astro";
+import CeremonyTimetable from "../../components/CeremonyTimetable.astro";
+import NoticeFactTable from "../../components/NoticeFactTable.astro";
+import ReferenceBody from "../../components/ReferenceBody.astro";
+import { ui } from "../../i18n/cs.ts";
+
+export async function getStaticPaths() {
+  const site = await getSiteContext();
+  const page = await getOptionalPage("oznameni");
+  if (!site.config.features.notices || page === null) {
+    return [];
+  }
+  const notices = await getNotices();
+  return [
+    { params: { path: undefined }, props: { notice: null } },
+    ...notices.map((notice) => ({ params: { path: notice.view.id }, props: { notice } })),
+  ];
+}
+
+interface Props {
+  notice: LoadedNotice | null;
+}
+
+const { notice } = Astro.props;
+const site = await getSiteContext();
+const page = await getOptionalPage("oznameni");
+const index = await getNoticeIndex();
+let title: string = ui.allNotices;
+let description: string = ui.allNotices;
+let lead: string | null = null;
+let hasBody = false;
+let placeholder = false;
+if (page !== null) {
+  title = page.data.title;
+  description = page.data.metaDescription;
+  lead = page.data.lead;
+  hasBody = page.hasBody;
+  placeholder = page.data.placeholder;
+}
+const Body = page?.Content;
+const isEmpty = index.upcoming.length === 0 && index.recent.length === 0;
+---
+{
+  notice === null ? (
+    <IndexLayout site={site} title={title} description={description} neutral>
+      <div class="sheet-head">
+        <PlaceholderMark active={placeholder} as="div">
+          <h1 class="sheet-title">{title}</h1>
+          {lead !== null ? <p class="sheet-lead muted">{lead}</p> : null}
+        </PlaceholderMark>
+      </div>
+      {isEmpty ? <p class="sheet-note">{ui.noticesEmpty}</p> : null}
+      {index.upcoming.length > 0 ? (
+        <section aria-labelledby="nadchazejici">
+          <h2 id="nadchazejici" class="sec sec-heavy">{ui.noticesUpcoming}</h2>
+          <CeremonyTimetable notices={index.upcoming} kind="upcoming" />
+        </section>
+      ) : null}
+      {index.recent.length > 0 ? (
+        <section aria-labelledby="nedavna">
+          <h2 id="nedavna" class="sec sec-heavy">{ui.noticesRecent}</h2>
+          <CeremonyTimetable notices={index.recent} kind="recent" />
+        </section>
+      ) : null}
+      {Body !== undefined ? (
+        <ReferenceBody show={hasBody}>
+          <Body />
+        </ReferenceBody>
+      ) : null}
+    </IndexLayout>
+  ) : (
+    <IndexLayout
+      site={site}
+      title={notice.view.fullName}
+      description={`${title}: ${notice.view.fullName}`}
+      noindex={notice.view.noindex}
+      neutral
+    >
+      <NoticeFactTable notice={notice} />
+    </IndexLayout>
+  )
+}

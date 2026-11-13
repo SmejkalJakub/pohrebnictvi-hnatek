@@ -1,0 +1,80 @@
+---
+/**
+ * Jak postupovat: the situation buttons beside the h1, the situation matrix (desktop) or the
+ * "Krok / Platí pro" table (phones), then every step as a checklist row with its full text in
+ * <details>, then Časté otázky (#caste-otazky). Picking a situation (:target + :has(), no JS,
+ * core guidance-flow) hides the other columns and the steps that do not apply.
+ */
+import { getFaq, getGuidance, getPage, getSiteContext } from "@core/content/load.ts";
+import { SITUATION_ANCHOR, chooserSituations, showsFor } from "@core/content/guidance-flow.ts";
+import IndexLayout from "../layouts/IndexLayout.astro";
+import SheetHead from "../components/SheetHead.astro";
+import SituationButtons from "../components/SituationButtons.astro";
+import SituationMatrix from "../components/SituationMatrix.astro";
+import PickedChecklist from "../components/PickedChecklist.astro";
+import QuestionDetails from "../components/QuestionDetails.astro";
+import ReferenceBody from "../components/ReferenceBody.astro";
+import { situationButtons, ui } from "../i18n/cs.ts";
+import { descriptionFor, titleFor } from "../lib/directory.ts";
+
+const ALL_ANCHOR = "vsechny-kroky";
+const site = await getSiteContext();
+const page = await getPage("jak-postupovat");
+const guidance = await getGuidance();
+const faq = await getFaq();
+const situations = chooserSituations(guidance);
+const Body = page.Content;
+const counts = situations.map((situation) => ({
+  situation,
+  count: guidance.filter((entry) => showsFor(entry, situation)).length,
+}));
+
+/* Filter rules, one block per offered situation (the selectors depend on the anchors). */
+const filterCss = situations
+  .map((situation) => {
+    const target = `[data-guide]:has(#${SITUATION_ANCHOR[situation]}:target)`;
+    const hidden = `:not([data-situations~="any"]):not([data-situations~="${situation}"])`;
+    return [
+      `${target} [data-guide-step]${hidden} { display: none; }`,
+      `${target} [data-col]:not([data-col="${situation}"]) { display: none; }`,
+      `${target} [data-of="all"], ${target} .applies { display: none; }`,
+      `${target} [data-of="${situation}"] { display: block; }`,
+      `${target} [data-pick="${situation}"] { background: var(--ink); color: var(--ground); }`,
+      `${target} [data-pick="${situation}"] .pick-word { display: inline; }`,
+    ].join("\n");
+  })
+  .join("\n");
+---
+<IndexLayout site={site} title={titleFor(page.data)} description={descriptionFor(page.data)}>
+  <div data-guide class="guide">
+    <style is:inline set:html={filterCss}></style>
+    {situations.map((situation) => <span id={SITUATION_ANCHOR[situation]} class="guide-target"></span>)}
+    <span id={ALL_ANCHOR} class="guide-target"></span>
+    <SheetHead title={page.data.title} lead={page.data.lead} placeholder={page.data.placeholder}>
+      {situations.length > 0 ? <SituationButtons situations={situations} slot="tools" /> : null}
+    </SheetHead>
+    <SituationMatrix site={site} steps={guidance} situations={situations} />
+    <h2 class="sec" data-of="all">{ui.allSteps(guidance.length)}</h2>
+    {
+      counts.map(({ situation, count }) => (
+        <h2 class="sec situation-count" data-of={situation}>
+          {ui.situationSteps(situationButtons[situation], count)}
+        </h2>
+      ))
+    }
+    <PickedChecklist site={site} steps={guidance} />
+    <p class="sheet-more picked-only">
+      <a href={`#${ALL_ANCHOR}`}>{ui.showAllSteps}</a>
+    </p>
+    <p class="sheet-more muted no-print">{ui.printGuide}</p>
+    <ReferenceBody show={page.hasBody}><Body /></ReferenceBody>
+  </div>
+  {
+    faq.length > 0 ? (
+      <section id="caste-otazky" class="faq" aria-labelledby="caste-otazky-nadpis">
+        <h2 id="caste-otazky-nadpis" class="sec sec-heavy">{ui.faqHeading}</h2>
+        <QuestionDetails groups={faq} />
+      </section>
+    ) : null
+  }
+</IndexLayout>

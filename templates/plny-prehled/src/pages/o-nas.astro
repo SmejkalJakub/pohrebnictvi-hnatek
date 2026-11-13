@@ -1,0 +1,16 @@
+---
+/** O nás: a reference sheet built from Pro účastníky (H1, lead, body as ruled blocks); no photo. */
+import { getPage, getSiteContext } from "@core/content/load.ts";
+import IndexLayout from "../layouts/IndexLayout.astro";
+import SheetHead from "../components/SheetHead.astro";
+import ReferenceBody from "../components/ReferenceBody.astro";
+import { descriptionFor, titleFor } from "../lib/directory.ts";
+
+const site = await getSiteContext();
+const page = await getPage("o-nas");
+const Body = page.Content;
+---
+<IndexLayout site={site} title={titleFor(page.data)} description={descriptionFor(page.data)}>
+  <SheetHead title={page.data.title} lead={page.data.lead} placeholder={page.data.placeholder} />
+  <ReferenceBody show={page.hasBody}><Body /></ReferenceBody>
+</IndexLayout>

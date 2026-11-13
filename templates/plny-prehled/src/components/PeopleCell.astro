@@ -1,0 +1,40 @@
+---
+/** "Lidé" on home: thumbnail (48 × 60) or initials box, name, role, direct line in mono. */
+import { Image } from "astro:assets";
+import PhoneLink from "@core/components/PhoneLink.astro";
+import PlaceholderMark from "@core/components/PlaceholderMark.astro";
+import type { PersonView } from "@core/content/view-models.ts";
+import { resolveOptionalImage } from "@core/media/resolve.ts";
+import InitialsBox from "./InitialsBox.astro";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  people: PersonView[];
+}
+
+const { people } = Astro.props;
+const rows = people.slice(0, 4).map((person) => ({ person, photo: resolveOptionalImage(person.photo) }));
+---
+<ul class="cell-people">
+  {
+    rows.map(({ person, photo }) => (
+      <li>
+        <PlaceholderMark active={person.placeholder} as="div">
+          <div class="person-line">
+            {photo !== null ? (
+              <Image src={photo.src} alt="" width={48} height={60} densities={[1, 2]} class="person-thumb" style={`object-position: ${photo.objectPosition}`} />
+            ) : (
+              <InitialsBox initials={person.initials} size="small" />
+            )}
+            <div>
+              <p class="person-name">{person.name}</p>
+              <p class="muted">{person.role}</p>
+              {person.phone !== null ? <PhoneLink number={person.phone.href.replace("tel:", "")} class="mono" /> : null}
+            </div>
+          </div>
+        </PlaceholderMark>
+      </li>
+    ))
+  }
+</ul>
+{people.length > 4 ? <p class="cell-more"><a href="/kontakt/#lide">{ui.allPeople}</a></p> : null}

@@ -3,6 +3,7 @@ import { mkdtemp, readFile, readdir, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { defaultSectionsFor } from "../../../core/content/config.ts";
 import { loadValidatedContent } from "../../../core/content/snapshot.ts";
 import { Approvals, Ledger, collectTrackedFacts } from "../../../core/gate/launch-check.ts";
 import { FIXTURE_PRODUCTION_RULES } from "../../export/verify.ts";
@@ -13,7 +14,7 @@ import { verifyExpectation } from "../export.ts";
 import { scaffoldClient } from "../new.ts";
 import { validateClient } from "../validate.ts";
 
-const TEMPLATES = ["rodinna-tradice", "dustojna-jednoduchost", "nocni-linka"] as const;
+const TEMPLATES = ["rodinna-tradice", "dustojna-jednoduchost", "nocni-linka", "plny-prehled"] as const;
 
 let clientsDir: string;
 
@@ -56,7 +57,8 @@ describe.each(TEMPLATES)("client:new with %s", (templateId) => {
     const manifest = await loadManifest(templateId);
     expect(site.config.template).toBe(templateId);
     expect(site.config.siteUrl).toBe("https://example.invalid");
-    expect(site.config.homepage.sections).toEqual(manifest.homepageSections.default);
+    // Feature-bound sections (people, notices, documents, faq) wait until their feature is on.
+    expect(site.config.homepage.sections).toEqual(defaultSectionsFor(manifest, {}));
     const defaults = Object.fromEntries(
       Object.entries(manifest.options).map(([name, declaration]) => [name, declaration.default]),
     );

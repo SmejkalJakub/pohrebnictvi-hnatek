@@ -1,0 +1,45 @@
+---
+/**
+ * "Když někdo zemřel": the situation links into the guide's matrix (:target, no JS), the
+ * first-hours steps as a numbered list, and the link to the whole guide.
+ */
+import type { CollectionEntry } from "astro:content";
+import { SITUATION_ANCHOR, type SpecificSituation } from "@core/content/guidance-flow.ts";
+import Sep from "./Sep.astro";
+import { situationButtons, ui } from "../i18n/cs.ts";
+
+interface Props {
+  situations: SpecificSituation[];
+  firstHours: CollectionEntry<"guidance">[];
+}
+
+const { situations, firstHours } = Astro.props;
+---
+{
+  situations.length > 0 ? (
+    <>
+      <p class="cell-label">{ui.whereDied}</p>
+      <p class="cell-links">
+        {situations.map((situation, index) => (
+          <>
+            {index > 0 ? <Sep /> : null}
+            <a href={`/jak-postupovat/#${SITUATION_ANCHOR[situation]}`}>{situationButtons[situation]}</a>
+          </>
+        ))}
+      </p>
+    </>
+  ) : null
+}
+{
+  firstHours.length > 0 ? (
+    <>
+      <p class="cell-label">{ui.firstHours}</p>
+      <ol class="cell-steps">
+        {firstHours.map((entry) => (
+          <li>{entry.data.title}</li>
+        ))}
+      </ol>
+    </>
+  ) : null
+}
+<p class="cell-more"><a href="/jak-postupovat/">{ui.fullGuide}</a></p>

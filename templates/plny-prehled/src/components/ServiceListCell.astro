@@ -1,0 +1,27 @@
+---
+/** "Služby": the featured services as a plain list of links to their reference sheets. */
+import type { CollectionEntry } from "astro:content";
+import { serviceHref } from "@core/content/view-models.ts";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  services: CollectionEntry<"services">[];
+  detailPages: boolean;
+}
+
+const { services, detailPages } = Astro.props;
+---
+{
+  services.length > 0 ? (
+    <ul class="cell-list">
+      {services.map((service) => (
+        <li>
+          <a href={serviceHref(service.id, detailPages)}>{service.data.title}</a>
+        </li>
+      ))}
+    </ul>
+  ) : (
+    <p>{ui.noFeatured}</p>
+  )
+}
+<p class="cell-more"><a href="/sluzby/">{ui.allServices}</a></p>

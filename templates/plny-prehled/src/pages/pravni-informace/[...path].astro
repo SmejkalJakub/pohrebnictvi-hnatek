@@ -1,0 +1,44 @@
+---
+/**
+ * Právní informace (research L10), built from Kontakt: key–value tables for the ADR body and
+ * complaints, Dokumenty ke stažení (#dokumenty), then the body. Emitted only when the page exists
+ * (the manifest declares pageFields["pravni-informace"]).
+ */
+import { getDocuments, getOptionalPage, getSiteContext } from "@core/content/load.ts";
+import IndexLayout from "../../layouts/IndexLayout.astro";
+import SheetHead from "../../components/SheetHead.astro";
+import AdrTable from "../../components/AdrTable.astro";
+import DocumentTable from "../../components/DocumentTable.astro";
+import ReferenceBody from "../../components/ReferenceBody.astro";
+import { ui } from "../../i18n/cs.ts";
+import { descriptionFor, titleFor } from "../../lib/directory.ts";
+
+export async function getStaticPaths() {
+  const page = await getOptionalPage("pravni-informace");
+  if (page === null) {
+    return [];
+  }
+  return [{ params: { path: undefined } }];
+}
+
+const site = await getSiteContext();
+const page = await getOptionalPage("pravni-informace");
+if (page === null) {
+  throw new Error("unreachable: page missing");
+}
+const documents = await getDocuments();
+const Body = page.Content;
+---
+<IndexLayout site={site} title={titleFor(page.data)} description={descriptionFor(page.data)}>
+  <SheetHead title={page.data.title} lead={page.data.lead} placeholder={page.data.placeholder} />
+  {site.legal !== null ? <AdrTable legal={site.legal} /> : null}
+  {
+    documents.length > 0 ? (
+      <section id="dokumenty" aria-labelledby="dokumenty-nadpis">
+        <h2 id="dokumenty-nadpis" class="sec">{ui.documentsSheet}</h2>
+        <DocumentTable documents={documents} />
+      </section>
+    ) : null
+  }
+  <ReferenceBody show={page.hasBody}><Body /></ReferenceBody>
+</IndexLayout>

@@ -1,0 +1,21 @@
+---
+/** Zero coffins or flowers: one sentence and the office phone. */
+import PhoneLink from "@core/components/PhoneLink.astro";
+import type { SiteContext } from "@core/content/view-models.ts";
+import { formatPhone } from "@core/format/phone.ts";
+import { firstOfficePhone } from "../lib/directory.ts";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  site: SiteContext;
+}
+
+const { site } = Astro.props;
+const office = firstOfficePhone(site);
+---
+<p class="sheet-note">
+  {ui.noItems}{" "}
+  <PhoneLink number={office.number}>
+    {office.label}{" "}<span class="mono nowrap">{formatPhone(office.number).display}</span>
+  </PhoneLink>
+</p>

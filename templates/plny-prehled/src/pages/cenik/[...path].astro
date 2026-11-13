@@ -1,0 +1,59 @@
+---
+/**
+ * Ceník (conditional route: no file while pricing is hidden). The VAT note under the title and
+ * again under the items table (research L9), the demo notice before the first price, the
+ * packages side by side, then "Jednotlivé položky" with the "Typ ceny" column. Prints on A4 as
+ * the same tables (styles/print.css).
+ */
+import DemoPricingNotice from "@core/components/DemoPricingNotice.astro";
+import VatNote from "@core/components/VatNote.astro";
+import { getPage, getPricing, getSiteContext } from "@core/content/load.ts";
+import { formatCzechDate } from "@core/format/date.ts";
+import IndexLayout from "../../layouts/IndexLayout.astro";
+import SheetHead from "../../components/SheetHead.astro";
+import PackagePair from "../../components/PackagePair.astro";
+import ItemPriceTable from "../../components/ItemPriceTable.astro";
+import ReferenceBody from "../../components/ReferenceBody.astro";
+import { ui } from "../../i18n/cs.ts";
+import { descriptionFor, isPackage, titleFor } from "../../lib/directory.ts";
+
+export async function getStaticPaths() {
+  const pricing = await getPricing();
+  if (pricing === null) {
+    return [];
+  }
+  return [{ params: { path: undefined } }];
+}
+
+const site = await getSiteContext();
+const page = await getPage("cenik");
+const pricing = await getPricing();
+if (pricing === null) {
+  throw new Error("unreachable: pricing hidden");
+}
+const packages = pricing.groups.filter(isPackage);
+const others = pricing.groups.filter((group) => !isPackage(group));
+const Body = page.Content;
+const sourceUrl = `${site.config.siteUrl.replace(/\/$/, "")}/cenik/`;
+---
+<IndexLayout site={site} title={titleFor(page.data)} description={descriptionFor(page.data)} noindex={pricing.hasDemo}>
+  <SheetHead title={page.data.title} lead={page.data.lead} placeholder={page.data.placeholder}>
+    <p class="muted no-print" slot="tools">{ui.printPrices}</p>
+    <VatNote pricing={pricing} class="sheet-note" />
+    {pricing.generalNote !== null ? <p class="sheet-note">{pricing.generalNote}</p> : null}
+    {pricing.validFrom !== null ? <p class="sheet-note muted">{ui.validFrom(formatCzechDate(pricing.validFrom))}</p> : null}
+    <DemoPricingNotice pricing={pricing} brandName={site.company.brandName} />
+  </SheetHead>
+  {packages.length > 0 ? <PackagePair groups={packages} /> : null}
+  {
+    others.length > 0 ? (
+      <section aria-labelledby="polozky">
+        <h2 id="polozky" class="sec sec-heavy">{ui.itemsHeading}</h2>
+        <ItemPriceTable groups={others} />
+        <VatNote pricing={pricing} class="sheet-note" />
+      </section>
+    ) : null
+  }
+  <ReferenceBody show={page.hasBody}><Body /></ReferenceBody>
+  <p class="print-only">{ui.printSource} {sourceUrl}</p>
+</IndexLayout>

@@ -1,0 +1,120 @@
+---
+/**
+ * Page shell for Template D "Plný přehled". Options become data attributes on <html>.
+ * Every page is a reference sheet: the header with its two boxes (highlighted nonstop number,
+ * separate Kancelář box), the whole navigation in one row (≥ 48 rem) or behind "Rejstřík",
+ * then the page's tables, then the footer.
+ * `neutral` switches the chrome to its notice form (research L1): a plain 1 px box with the
+ * publisher and the nonstop number, no Kancelář box, reduced navigation, neutral footer.
+ */
+import "../styles/fonts.css";
+import "../styles/global.css";
+import "../styles/print.css";
+import SeoHead from "@core/components/SeoHead.astro";
+import StructuredData from "@core/components/StructuredData.astro";
+import PrototypeBanner from "@core/components/PrototypeBanner.astro";
+import type { ImageMetadata } from "astro";
+import { getDocuments, getPricing, hasPage } from "@core/content/load.ts";
+import type { SiteContext } from "@core/content/view-models.ts";
+import overpassLatin from "@fontsource/overpass/files/overpass-latin-700-normal.woff2?url";
+import overpassMonoLatin from "@fontsource/overpass-mono/files/overpass-mono-latin-500-normal.woff2?url";
+import redHatLatin from "@fontsource/red-hat-text/files/red-hat-text-latin-700-normal.woff2?url";
+import redHatMonoLatin from "@fontsource/red-hat-mono/files/red-hat-mono-latin-500-normal.woff2?url";
+import IndexHeader from "../components/IndexHeader.astro";
+import IndexFooter from "../components/IndexFooter.astro";
+import { resolveOptions } from "../lib/options.ts";
+import { loadIndex } from "../lib/index-entries.ts";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  site: SiteContext;
+  /** Page title without the brand name; null on the homepage. */
+  title?: string | null;
+  description: string;
+  noindex?: boolean;
+  image?: ImageMetadata | null;
+  /** Notice list and notice pages: plain box, reduced nav, neutral footer. */
+  neutral?: boolean;
+  /** Home only: fold the directory's <details> rows on narrow screens (see the script below). */
+  foldDirectory?: boolean;
+}
+
+const {
+  site,
+  title = null,
+  description,
+  noindex = false,
+  image = null,
+  neutral = false,
+  foldDirectory = false,
+} = Astro.props;
+const options = resolveOptions(site.config);
+const path = Astro.url.pathname;
+
+const documents = await getDocuments();
+const hasPrivacyPage = await hasPage("ochrana-osobnich-udaju");
+const entries = await loadIndex(site, path, neutral);
+const pricing = await getPricing();
+
+/* Preload the faces of the first paint: the mono number in the nonstop box and the bold name. */
+let preloads = [overpassMonoLatin, overpassLatin];
+if (options.fontPair === "red-hat") {
+  preloads = [redHatMonoLatin, redHatLatin];
+}
+const labels = JSON.stringify({ open: ui.menuOpen, close: ui.menuClose });
+---
+<html
+  lang="cs"
+  class="no-js"
+  data-palette={options.palette}
+  data-font={options.fontPair}
+  data-emphasis={options.emergencyEmphasis}
+>
+  <head>
+    {preloads.map((href) => <link rel="preload" href={href} as="font" type="font/woff2" crossorigin />)}
+    <SeoHead site={site} title={title} description={description} noindex={noindex} image={image} />
+    <script is:inline>
+      document.documentElement.classList.replace("no-js", "js");
+    </script>
+    <StructuredData site={site} />
+  </head>
+  <body>
+    <PrototypeBanner />
+    <a href="#obsah" class="skip-link">{ui.skipLink}</a>
+    <IndexHeader site={site} entries={entries} neutral={neutral} pricing={pricing} />
+    <main id="obsah" tabindex="-1" class:list={["sheet", { directory: foldDirectory }]}>
+      <slot />
+    </main>
+    <IndexFooter site={site} neutral={neutral} documents={documents} hasPrivacyPage={hasPrivacyPage} />
+    <script is:inline define:vars={{ labels, foldDirectory }}>
+      const text = JSON.parse(labels);
+      const toggle = document.querySelector("[data-index-toggle]");
+      const panel = toggle === null ? null : document.getElementById(toggle.getAttribute("aria-controls"));
+      if (toggle !== null && panel !== null) {
+        const setOpen = (open) => {
+          toggle.setAttribute("aria-expanded", String(open));
+          toggle.textContent = open ? text.close : text.open;
+          panel.toggleAttribute("data-open", open);
+        };
+        toggle.addEventListener("click", () => {
+          setOpen(toggle.getAttribute("aria-expanded") !== "true");
+        });
+        document.addEventListener("keydown", (event) => {
+          if (event.key === "Escape" && toggle.getAttribute("aria-expanded") === "true") {
+            setOpen(false);
+            toggle.focus();
+          }
+        });
+      }
+      // The home directory ships every section open (complete without JS and on wide screens);
+      // on phones it folds into <details> rows with only the first open, as drawn.
+      if (foldDirectory && window.matchMedia("(max-width: 47.99rem)").matches) {
+        document.querySelectorAll("[data-fold]").forEach((details, index) => {
+          if (index > 0) {
+            details.open = false;
+          }
+        });
+      }
+    </script>
+  </body>
+</html>

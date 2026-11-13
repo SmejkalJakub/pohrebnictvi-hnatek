@@ -1,0 +1,34 @@
+---
+/**
+ * "Kde zemřel?": 2 × 2 buttons on phones, four in a row beside the h1 on desktop: the only
+ * filled controls on the site. Links to :target anchors (no JS); the picked one inverts and
+ * says "vybráno" (CSS in jak-postupovat).
+ */
+import { SITUATION_ANCHOR, type SpecificSituation } from "@core/content/guidance-flow.ts";
+import Sep from "./Sep.astro";
+import { situationButtons, ui } from "../i18n/cs.ts";
+
+interface Props {
+  situations: SpecificSituation[];
+}
+
+const { situations } = Astro.props;
+---
+<div class="pick" role="group" aria-labelledby="kde-zemrel">
+  <p id="kde-zemrel" class="cell-label">{ui.situationButtons}</p>
+  <ul class="pick-grid">
+    {
+      situations.map((situation) => (
+        <li>
+          <a href={`#${SITUATION_ANCHOR[situation]}`} class="pick-button" data-pick={situation}>
+            {situationButtons[situation]}
+            <span class="pick-word">
+              <Sep />
+              {ui.picked}
+            </span>
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+</div>
