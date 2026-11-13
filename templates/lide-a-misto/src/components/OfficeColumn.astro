@@ -1,0 +1,48 @@
+---
+/**
+ * Home "contact-summary": "Kancelář" under a 3 px rule: address, office hours (their own
+ * container, data-office-hours, never next to the nonstop link), the office phone and a link to
+ * Kontakt.
+ */
+import PhoneLink from "@core/components/PhoneLink.astro";
+import type { SiteContext } from "@core/content/view-models.ts";
+import { formatAddressLines } from "@core/format/address.ts";
+import { formatPhone } from "@core/format/phone.ts";
+import { mainLocation, primaryOfficePhone } from "../lib/site.ts";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  site: SiteContext;
+  col: number | null;
+}
+
+const { site, col } = Astro.props;
+const [street, cityLine] = formatAddressLines(mainLocation(site).address);
+const office = primaryOfficePhone(site);
+---
+<section class="home-col ruled" data-section="contact-summary" data-col={col ?? undefined} aria-labelledby="kancelar-souhrn">
+  <h2 id="kancelar-souhrn" class="col-heading">{ui.officeHeading}</h2>
+  <p>{street}<br />{cityLine}</p>
+  <ul class="hour-lines" role="list" data-office-hours>
+    {
+      site.officeHoursRows.map((row) => (
+        <li>
+          <abbr title={row.daysLong}>{row.days}</abbr> <span class="nowrap">{row.text}</span>
+          {row.note !== null ? <span class="muted">, {row.note}</span> : null}
+        </li>
+      ))
+    }
+  </ul>
+  <p>
+    <PhoneLink number={office.number}>{office.label}{" "}<span class="nowrap">{formatPhone(office.number).display}</span></PhoneLink>
+  </p>
+  <a href="/kontakt/" class="go">{ui.officeLink}</a>
+</section>
+
+<style>
+  .hour-lines {
+    margin: 0.25rem 0 0;
+    padding: 0;
+    list-style: none;
+  }
+</style>

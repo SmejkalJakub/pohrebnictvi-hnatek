@@ -1,0 +1,69 @@
+---
+/** Price items as a table with 1 px rules: label (bold) and description left, price right. Only the amount never wraps (a UKÁZKA mark may drop under it at 320 px: E lesson). */
+import PriceValue from "@core/components/PriceValue.astro";
+import type { PriceItem } from "@core/content/schemas.ts";
+
+interface Props {
+  items: PriceItem[];
+  caption: string;
+}
+
+const { items, caption } = Astro.props;
+---
+<table class="price-rows">
+  <caption class="visually-hidden">{caption}</caption>
+  <tbody>
+    {
+      items.map((item) => (
+        <tr>
+          <th scope="row">
+            <b>{item.label}</b>
+            {item.description !== null ? <span class="row-desc">{item.description}</span> : null}
+          </th>
+          <td>
+            <PriceValue item={item} class="row-price" />
+          </td>
+        </tr>
+      ))
+    }
+  </tbody>
+</table>
+
+<style>
+  .price-rows {
+    width: 100%;
+    line-height: 1.45;
+  }
+
+  .price-rows tr {
+    border-top: 1px solid var(--ink);
+  }
+
+  .price-rows tr:last-child {
+    border-bottom: 1px solid var(--ink);
+  }
+
+  th {
+    padding: 0.75rem 1.5rem 0.75rem 0;
+    font-weight: 400;
+    text-align: left;
+    vertical-align: top;
+  }
+
+  td {
+    padding-block: 0.75rem;
+    text-align: right;
+    vertical-align: top;
+    font-weight: 700;
+  }
+
+  .row-desc {
+    display: block;
+    color: var(--muted);
+    font-size: 1.0625rem;
+  }
+
+  .price-rows :global([data-price-amount]) {
+    white-space: nowrap;
+  }
+</style>

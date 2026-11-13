@@ -1,0 +1,39 @@
+---
+/** The QR code of the notice page with the print hint (Ctrl/Cmd + P) and the standalone SVG file. */
+import NoticeQrCode from "@core/components/NoticeQrCode.astro";
+import type { NoticeView } from "@core/content/view-models.ts";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  view: NoticeView;
+}
+
+const { view } = Astro.props;
+---
+<div class="qr-note">
+  <div class="qr-box" role="img" aria-label={ui.qrLabel}>
+    <NoticeQrCode notice={view} />
+  </div>
+  <div>
+    <p>{ui.qrText}</p>
+    <a href={view.qr.href} class="go no-print">{ui.qrFile}</a>
+  </div>
+</div>
+
+<style>
+  .qr-note {
+    display: grid;
+    grid-template-columns: 5.25rem minmax(0, 1fr);
+    gap: 0.875rem;
+    align-items: center;
+    padding-top: 0.875rem;
+    border-top: 1px solid var(--ink);
+    font-size: 1.0625rem;
+  }
+
+  .qr-box {
+    padding: 0.25rem;
+    background: #ffffff;
+    border: 1px solid var(--ink);
+  }
+</style>

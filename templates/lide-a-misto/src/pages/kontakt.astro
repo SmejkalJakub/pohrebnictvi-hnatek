@@ -1,0 +1,107 @@
+---
+/**
+ * Kontakt: the opening with the nonstop block; the office photo as figure 01 when set
+ * (secondaryImage); Kancelář (address, map link, office hours under their own heading); phones and
+ * e-mails; Převoz zesnulých (its own emergency block); Kdo vás přijme (names, link to O nás #lide);
+ * billing details; the page body.
+ */
+import { getPage, getPeople, getSiteContext } from "@core/content/load.ts";
+import { formatAddressLines } from "@core/format/address.ts";
+import EssayLayout from "../layouts/EssayLayout.astro";
+import PageOpening from "../components/PageOpening.astro";
+import PageFigure from "../components/PageFigure.astro";
+import OfficeHoursRuled from "../components/OfficeHoursRuled.astro";
+import PhoneRows from "../components/PhoneRows.astro";
+import TransportBlock from "../components/TransportBlock.astro";
+import BillingDetails from "../components/BillingDetails.astro";
+import RuledProse from "../components/RuledProse.astro";
+import { mainLocation, mapHref, seoDescription, seoTitle } from "../lib/site.ts";
+import { ui } from "../i18n/cs.ts";
+
+const site = await getSiteContext();
+const page = await getPage("kontakt");
+const people = await getPeople();
+const location = mainLocation(site);
+const [street, cityLine] = formatAddressLines(location.address);
+const map = mapHref(location);
+const office = page.data.secondaryImage;
+const Body = page.Content;
+---
+<EssayLayout site={site} title={seoTitle(page.data)} description={seoDescription(page.data)}>
+  <PageOpening title={page.data.title} lead={page.data.lead} placeholder={page.data.placeholder} emergency={site.emergency} />
+  {office !== null ? <PageFigure image={office} number="01" /> : null}
+  <div class="frame contact">
+    <section class="ruled split contact-part" aria-labelledby="kancelar">
+      <h2 id="kancelar" class="h2">{ui.officeHeading}</h2>
+      <div class="contact-body">
+        <p>{street}<br />{cityLine}</p>
+        {map !== null ? <a href={map} class="go">{ui.mapLink}</a> : null}
+        <OfficeHoursRuled site={site} id="uredni-hodiny" />
+      </div>
+    </section>
+    <section class="ruled split contact-part" aria-labelledby="telefony">
+      <h2 id="telefony" class="h2">{ui.phonesHeading}</h2>
+      <PhoneRows site={site} />
+    </section>
+    <div class="ruled contact-part">
+      <TransportBlock emergency={site.emergency} />
+    </div>
+    {
+      people.length > 0 ? (
+        <section class="ruled split contact-part" aria-labelledby="kdo-vas-prijme">
+          <h2 id="kdo-vas-prijme" class="h2">{ui.receptionHeading}</h2>
+          <div class="contact-body">
+            <ul class="names" role="list">
+              {people.map((person) => (
+                <li>
+                  <b>{person.name}</b>, {person.role}
+                </li>
+              ))}
+            </ul>
+            <a href="/o-nas/#lide" class="go">{ui.allPeople}</a>
+          </div>
+        </section>
+      ) : null
+    }
+    <div class="split contact-part">
+      <span></span>
+      <BillingDetails site={site} />
+    </div>
+  </div>
+  {page.hasBody ? <RuledProse id="kontakt-text"><Body /></RuledProse> : null}
+</EssayLayout>
+
+<style>
+  .contact {
+    display: flex;
+    flex-direction: column;
+    gap: 2.5rem;
+    margin-top: 2.5rem;
+  }
+
+  .contact-body {
+    display: flex;
+    flex-direction: column;
+    align-items: start;
+    gap: 0.5rem;
+    max-width: 45rem;
+  }
+
+  .contact-body > :global(.hours) {
+    align-self: stretch;
+    margin-top: 0.75rem;
+  }
+
+  .names {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  @media (min-width: 64rem) {
+    .contact {
+      gap: 4rem;
+      margin-top: 4rem;
+    }
+  }
+</style>

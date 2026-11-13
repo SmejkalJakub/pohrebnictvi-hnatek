@@ -1,0 +1,106 @@
+---
+/**
+ * The firm's places without any photo: a numbered list with name, address and one sentence, so
+ * the page reads as complete (the "without photos" boards). `layout`: "home" (two columns of rows),
+ * "essay" (O nás: full-width rows, number · name and address · sentence).
+ */
+import type { Place } from "@core/content/schemas.ts";
+import { figureNumber } from "../lib/figures.ts";
+
+interface Props {
+  places: Place[];
+  start: number;
+  layout: "home" | "essay";
+}
+
+const { places, start, layout } = Astro.props;
+---
+<ol class="place-rows" data-layout={layout} role="list">
+  {
+    places.map((place, index) => (
+      <li class="place-row">
+        <span class="fig-num row-num" data-figure-number>
+          {figureNumber(start + index)}
+        </span>
+        <div class="row-name">
+          <b>{place.name}</b>
+          {place.address !== null ? <span class="row-address">{place.address}</span> : null}
+        </div>
+        {place.note !== null ? <p class="row-note">{place.note}</p> : null}
+      </li>
+    ))
+  }
+</ol>
+
+<style>
+  .place-rows {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .place-row {
+    display: grid;
+    grid-template-columns: 3rem minmax(0, 1fr);
+    column-gap: 1rem;
+    row-gap: 0.25rem;
+    padding-block: 1.125rem;
+    border-bottom: 1px solid var(--ink);
+  }
+
+  .row-num {
+    grid-row: span 2;
+    font-size: 1.5rem;
+    line-height: 1.2;
+  }
+
+  .row-name {
+    display: flex;
+    flex-direction: column;
+    font-size: 1.25rem;
+    line-height: 1.35;
+  }
+
+  .row-address {
+    color: var(--muted);
+    font-size: 1.0625rem;
+  }
+
+  .row-note {
+    grid-column: 2;
+  }
+
+  @media (min-width: 64rem) {
+    .place-rows[data-layout="home"] {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      column-gap: 3.5rem;
+    }
+
+    .place-row {
+      grid-template-columns: 4rem minmax(0, 1fr);
+      padding-block: 1.25rem;
+    }
+
+    .row-num {
+      font-size: 1.75rem;
+    }
+
+    .place-rows[data-layout="essay"] .place-row {
+      grid-template-columns: 4.5rem 23.75rem minmax(0, 1fr);
+      align-items: baseline;
+    }
+
+    .place-rows[data-layout="essay"] .row-num {
+      grid-row: auto;
+    }
+
+    .place-rows[data-layout="essay"] .row-name {
+      font-size: 1.5rem;
+    }
+
+    .place-rows[data-layout="essay"] .row-note {
+      grid-column: auto;
+    }
+  }
+</style>

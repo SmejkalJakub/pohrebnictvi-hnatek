@@ -1,0 +1,61 @@
+---
+/** "V ceně je zahrnuto" and "Není zahrnuto" side by side (stacked on phones). Either list may be empty. */
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  includes: string[];
+  excludes: string[];
+  id: string;
+}
+
+const { includes, excludes, id } = Astro.props;
+---
+<div class="incl">
+  {
+    includes.length > 0 ? (
+      <div>
+        <h3 id={`${id}-v-cene`} class="h3">{ui.included}</h3>
+        <ul aria-labelledby={`${id}-v-cene`}>
+          {includes.map((line) => (
+            <li>{line}</li>
+          ))}
+        </ul>
+      </div>
+    ) : null
+  }
+  {
+    excludes.length > 0 ? (
+      <div>
+        <h3 id={`${id}-mimo`} class="h3">{ui.excluded}</h3>
+        <ul aria-labelledby={`${id}-mimo`}>
+          {excludes.map((line) => (
+            <li>{line}</li>
+          ))}
+        </ul>
+      </div>
+    ) : null
+  }
+</div>
+
+<style>
+  .incl {
+    display: grid;
+    gap: 1.5rem;
+    padding-top: 1.75rem;
+  }
+
+  h3 {
+    margin-bottom: 0.5rem;
+  }
+
+  ul {
+    padding-left: 1.25rem;
+  }
+
+  @media (min-width: 48rem) {
+    .incl {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      column-gap: 2.5rem;
+    }
+  }
+</style>

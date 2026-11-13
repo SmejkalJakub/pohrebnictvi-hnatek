@@ -1,0 +1,28 @@
+---
+/** Kontakt "Fakturační údaje": legal name, IČO and DIČ from company.json (missing facts marked). */
+import MissingFact from "@core/components/MissingFact.astro";
+import type { SiteContext } from "@core/content/view-models.ts";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  site: SiteContext;
+}
+
+const { site } = Astro.props;
+const ids = site.company.legalIds;
+---
+<section class="billing" aria-labelledby="fakturace">
+  <h2 id="fakturace" class="h3">{ui.billingHeading}</h2>
+  <p>
+    {site.company.legalName}<br />
+    {ui.ico} {ids.ico !== null ? <span class="nowrap">{ids.ico}</span> : <MissingFact name="IČO" />}
+    {ids.dic !== null ? <>, {ui.dic} <span class="nowrap">{ids.dic}</span></> : null}
+  </p>
+</section>
+
+<style>
+  .billing {
+    padding-top: 0.875rem;
+    border-top: 1px solid var(--ink);
+  }
+</style>

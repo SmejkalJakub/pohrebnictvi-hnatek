@@ -1,0 +1,52 @@
+---
+/**
+ * The neutral emergency form on notice pages (research L1, ⚖ awaiting legal review): one muted
+ * sentence naming the publisher, with an ink link "Telefon nonstop <number>". No rule, no green,
+ * no strip, nothing promotional. The link's accessible name comes from core.
+ */
+import EmergencyPhoneLink from "@core/components/EmergencyPhoneLink.astro";
+import type { SiteContext } from "@core/content/view-models.ts";
+import { formatPhone } from "@core/format/phone.ts";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  site: SiteContext;
+}
+
+const { site } = Astro.props;
+const phone = formatPhone(site.emergency.phone);
+---
+<p class="publisher">
+  <span class="frame publisher-inner">
+    {ui.neutralPublisher(site.company.brandName)}{" "}
+    <EmergencyPhoneLink emergency={site.emergency} variant="custom" class="publisher-link">
+      {ui.neutralPhone}{" "}<span data-part="number">{phone.display}</span>
+    </EmergencyPhoneLink>
+  </span>
+</p>
+
+<style>
+  .publisher {
+    border-bottom: 1px solid var(--ink);
+    color: var(--muted);
+    font-size: 1rem;
+    line-height: 1.55;
+  }
+
+  .publisher-inner {
+    display: block;
+    padding-block: 0.25rem;
+  }
+
+  .publisher :global(.publisher-link) {
+    display: inline-block;
+    padding-block: 0.625rem;
+    color: var(--ink);
+  }
+
+  @media (min-width: 64rem) {
+    .publisher {
+      font-size: 1.0625rem;
+    }
+  }
+</style>

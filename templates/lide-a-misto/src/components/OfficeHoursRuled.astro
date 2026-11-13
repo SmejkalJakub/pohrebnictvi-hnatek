@@ -1,0 +1,81 @@
+---
+/**
+ * Office hours as a ruled two-column list under their own heading (data-office-hours, never
+ * shared with the nonstop link), then the holiday and outside-hours notes and any exceptions.
+ */
+import type { SiteContext } from "@core/content/view-models.ts";
+import { formatCzechDate } from "@core/format/date.ts";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  site: SiteContext;
+  id: string;
+}
+
+const { site, id } = Astro.props;
+const hours = site.officeHours;
+---
+<div class="hours" data-office-hours>
+  <h3 id={id} class="h3">{ui.hoursHeading}</h3>
+  <dl class="hours-rows" aria-labelledby={id}>
+    {
+      site.officeHoursRows.map((row) => (
+        <div class="hours-row">
+          <dt>
+            <abbr title={row.daysLong}>{row.days}</abbr>
+          </dt>
+          <dd>
+            {row.text}
+            {row.note !== null ? <span class="hours-note">{row.note}</span> : null}
+          </dd>
+        </div>
+      ))
+    }
+  </dl>
+  {hours.holidayNote !== null ? <p class="muted">{hours.holidayNote}</p> : null}
+  {hours.outsideHoursNote !== null ? <p class="muted">{hours.outsideHoursNote}</p> : null}
+  {
+    hours.exceptions.length > 0 ? (
+      <div>
+        <p>{ui.exceptionsHeading}</p>
+        <ul class="muted">
+          {hours.exceptions.map((exception) => (
+            <li>
+              {formatCzechDate(exception.from)}–{formatCzechDate(exception.to)}
+              {exception.note !== null ? ` · ${exception.note}` : ""}
+            </li>
+          ))}
+        </ul>
+      </div>
+    ) : null
+  }
+</div>
+
+<style>
+  .hours {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .hours-rows {
+    border-bottom: 1px solid var(--ink);
+  }
+
+  .hours-row {
+    display: grid;
+    grid-template-columns: 6rem minmax(0, 1fr);
+    gap: 0.75rem;
+    padding-block: 0.5rem;
+    border-top: 1px solid var(--ink);
+  }
+
+  dt {
+    color: var(--muted);
+  }
+
+  .hours-note {
+    display: block;
+    color: var(--muted);
+  }
+</style>

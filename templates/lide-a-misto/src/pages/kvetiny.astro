@@ -1,0 +1,73 @@
+---
+/** Květiny: numbered figures (1:1) when any arrangement has a photo, otherwise the numbered list; zero items: one sentence and the office phone; then how to order, with the flowers phone. */
+import PhoneLink from "@core/components/PhoneLink.astro";
+import { getFlowers, getPage, getSiteContext } from "@core/content/load.ts";
+import { formatPhone } from "@core/format/phone.ts";
+import EssayLayout from "../layouts/EssayLayout.astro";
+import PageOpening from "../components/PageOpening.astro";
+import CatalogueFigures, { type CatalogueItem } from "../components/CatalogueFigures.astro";
+import CatalogueNumberTable from "../components/CatalogueNumberTable.astro";
+import RuledProse from "../components/RuledProse.astro";
+import { flowerPhones, primaryOfficePhone, seoDescription, seoTitle } from "../lib/site.ts";
+import { flowerTypeLabels, ui } from "../i18n/cs.ts";
+
+const site = await getSiteContext();
+const page = await getPage("kvetiny");
+const flowers = await getFlowers();
+const items: CatalogueItem[] = flowers.map((entry) => ({
+  id: entry.id,
+  name: entry.data.title,
+  detail: flowerTypeLabels[entry.data.type],
+  summary: entry.data.summary,
+  image: entry.data.image,
+  placeholder: entry.data.placeholder,
+}));
+let phones = flowerPhones(site);
+if (phones.length === 0) {
+  phones = [primaryOfficePhone(site)];
+}
+const withPhotos = items.some((item) => item.image !== null);
+const office = primaryOfficePhone(site);
+const Body = page.Content;
+---
+<EssayLayout site={site} title={seoTitle(page.data)} description={seoDescription(page.data)}>
+  <PageOpening title={page.data.title} lead={page.data.lead} placeholder={page.data.placeholder} emergency={site.emergency} />
+  <section class="frame catalogue-part" aria-label={ui.itemsLabel}>
+    {
+      items.length === 0 ? (
+        <p class="ruled">
+          {ui.catalogueEmpty}{" "}
+          <PhoneLink number={office.number}>{office.label}{" "}<span class="nowrap">{formatPhone(office.number).display}</span></PhoneLink>
+        </p>
+      ) : null
+    }
+    {items.length > 0 && withPhotos ? <CatalogueFigures items={items} ratio="1 / 1" /> : null}
+    {items.length > 0 && !withPhotos ? <CatalogueNumberTable items={items} /> : null}
+  </section>
+  <section class="frame split order" aria-labelledby="objednavka">
+    <h2 id="objednavka" class="h2">{ui.flowersOrder}</h2>
+    <div class="ruled">
+      <p>{ui.flowersOrderText}</p>
+      {phones.map((phone) => (
+        <PhoneLink number={phone.number}>{phone.label}{" "}<span class="nowrap">{formatPhone(phone.number).display}</span></PhoneLink>
+      ))}
+    </div>
+  </section>
+  {page.hasBody ? <RuledProse id="kvetiny-text"><Body /></RuledProse> : null}
+</EssayLayout>
+
+<style>
+  .catalogue-part {
+    margin-top: 2.5rem;
+  }
+
+  .order {
+    margin-top: var(--section);
+  }
+
+  @media (min-width: 64rem) {
+    .catalogue-part {
+      margin-top: 4rem;
+    }
+  }
+</style>

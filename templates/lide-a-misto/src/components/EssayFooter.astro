@@ -1,0 +1,230 @@
+---
+/**
+ * Footer, every page (research L8, L10). Four columns under 3 px rules: Nonstop (its own emergency
+ * block and heading) · Kancelář (address, office hours under their own heading, office phone,
+ * e-mail) · Na webu · Právní informace; then the legal row: legal name, sídlo, IČO, DIČ,
+ * register entry and the ADR body. At 375 px the columns stack.
+ * Neutral form (notice pages, research L1): the legal row and the legal links only.
+ */
+import MissingFact from "@core/components/MissingFact.astro";
+import PhoneLink from "@core/components/PhoneLink.astro";
+import type { DocumentView, SiteContext } from "@core/content/view-models.ts";
+import { formatAddressInline, formatAddressLines } from "@core/format/address.ts";
+import { formatPhone } from "@core/format/phone.ts";
+import NonstopRuleBlock from "./NonstopRuleBlock.astro";
+import { mainLocation, officeEmail, primaryOfficePhone } from "../lib/site.ts";
+import { ui } from "../i18n/cs.ts";
+
+export interface FooterLink {
+  href: string;
+  label: string;
+}
+
+interface Props {
+  site: SiteContext;
+  neutral: boolean;
+  documents: DocumentView[];
+  hasPrivacyPage: boolean;
+  /** "Na webu": the optional pages and anchors that are on (Pro účastníky, Časté otázky …). */
+  siteLinks: FooterLink[];
+}
+
+const { site, neutral, documents, hasPrivacyPage, siteLinks } = Astro.props;
+const location = mainLocation(site);
+const [street, cityLine] = formatAddressLines(location.address);
+const office = primaryOfficePhone(site);
+const email = officeEmail(site);
+const ids = site.company.legalIds;
+const showNonstop = !neutral && site.emergency.enabled;
+---
+<footer class="foot" data-neutral={neutral ? "true" : "false"}>
+  <div class="frame">
+    {
+      neutral ? null : (
+        <div class="foot-cols">
+          {showNonstop ? (
+            <section class="foot-col" aria-labelledby="pata-nonstop" data-emergency-block>
+              <h2 id="pata-nonstop" class="visually-hidden">{site.emergency.label}</h2>
+              <NonstopRuleBlock emergency={site.emergency} size="footer" />
+            </section>
+          ) : null}
+          <section class="foot-col ruled" aria-labelledby="pata-kancelar">
+            <h2 id="pata-kancelar" class="foot-heading">{ui.officeHeading}</h2>
+            <p>{street}<br />{cityLine}</p>
+            <div data-office-hours>
+              <h3 class="visually-hidden">{ui.hoursHeading}</h3>
+              <ul class="foot-list">
+                {site.officeHoursRows.map((row) => (
+                  <li>
+                    <abbr title={row.daysLong}>{row.days}</abbr> <span class="nowrap">{row.text}</span>
+                    {row.note !== null ? <span>, {row.note}</span> : null}
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <p class="foot-links">
+              <PhoneLink number={office.number}>
+                {office.label}{" "}<span class="nowrap">{formatPhone(office.number).display}</span>
+              </PhoneLink>
+              {email !== null ? <a href={`mailto:${email}`} class="go">{email}</a> : null}
+            </p>
+          </section>
+          {siteLinks.length > 0 ? (
+            <section class="foot-col ruled" aria-labelledby="pata-web">
+              <h2 id="pata-web" class="foot-heading">{ui.onSite}</h2>
+              <ul class="foot-list foot-links">
+                {siteLinks.map((link) => (
+                  <li>
+                    <a href={link.href} class="go">{link.label}</a>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ) : null}
+          <section class="foot-col ruled" aria-labelledby="pata-pravni">
+            <h2 id="pata-pravni" class="foot-heading">{ui.legalHeading}</h2>
+            <ul class="foot-list foot-links">
+              {site.legalLink !== null ? (
+                <li>
+                  <a href={site.legalLink.href} class="go">{site.legalLink.label}</a>
+                </li>
+              ) : null}
+              {hasPrivacyPage ? (
+                <li>
+                  <a href="/ochrana-osobnich-udaju/" class="go">{ui.privacy}</a>
+                </li>
+              ) : null}
+              {documents.map((document) => (
+                <li>
+                  <a href={document.href} class="go">{document.title} ({ui.pdf})</a>
+                </li>
+              ))}
+            </ul>
+          </section>
+        </div>
+      )
+    }
+    {
+      neutral && (site.legalLink !== null || hasPrivacyPage) ? (
+        <ul class="foot-neutral-links">
+          {site.legalLink !== null ? (
+            <li>
+              <a href={site.legalLink.href} class="go">{site.legalLink.label}</a>
+            </li>
+          ) : null}
+          {hasPrivacyPage ? (
+            <li>
+              <a href="/ochrana-osobnich-udaju/" class="go">{ui.privacy}</a>
+            </li>
+          ) : null}
+        </ul>
+      ) : null
+    }
+    <div class="foot-legal" data-legal-identification>
+      <p>
+        {site.company.legalName}
+        {", "}
+        {
+          ids.registeredOffice !== null ? (
+            formatAddressInline(ids.registeredOffice)
+          ) : (
+            <MissingFact name="sídlo společnosti" />
+          )
+        }
+        {", "}
+        {ui.ico}{" "}
+        {ids.ico !== null ? <span class="nowrap">{ids.ico}</span> : <MissingFact name="IČO" />}
+        {ids.dic !== null ? <>, {ui.dic} <span class="nowrap">{ids.dic}</span></> : null}
+        {", "}
+        {ids.registryEntry !== null ? ids.registryEntry : <MissingFact name="zápis v obchodním rejstříku" />}
+        {"."}
+      </p>
+      {
+        site.legal !== null ? (
+          <p>
+            {ui.adrFooter} {site.legal.adr.name},{" "}
+            <a href={site.legal.adr.url} class="go">{site.legal.adr.url.replace(/^https?:\/\//, "")}</a>
+          </p>
+        ) : null
+      }
+    </div>
+  </div>
+</footer>
+
+<style>
+  .foot {
+    margin-top: var(--section);
+    padding-block: 2rem 1.5rem;
+    border-top: 1px solid var(--ink);
+    font-size: 1.0625rem;
+    line-height: 1.6;
+  }
+
+  .foot-cols {
+    display: grid;
+    gap: 2rem;
+  }
+
+  .foot-heading {
+    margin-bottom: 0.375rem;
+    font-size: 1.125rem;
+  }
+
+  .foot-list {
+    padding: 0;
+    list-style: none;
+  }
+
+  .foot-links {
+    display: flex;
+    flex-direction: column;
+    align-items: start;
+  }
+
+  .foot-neutral-links {
+    display: flex;
+    flex-wrap: wrap;
+    column-gap: 1.5rem;
+    padding: 0;
+    list-style: none;
+  }
+
+  .foot-legal {
+    display: grid;
+    gap: 0.25rem;
+    margin-top: 2rem;
+    padding-top: 1.125rem;
+    border-top: 1px solid var(--ink);
+    color: var(--muted);
+  }
+
+  .foot[data-neutral="true"] .foot-legal {
+    margin-top: 0.5rem;
+  }
+
+  .foot-legal a {
+    color: var(--ink);
+  }
+
+  @media (min-width: 48rem) {
+    .foot-cols {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      column-gap: 2.5rem;
+    }
+  }
+
+  @media (min-width: 64rem) {
+    .foot {
+      padding-block: 2.5rem 2rem;
+    }
+
+    .foot-cols {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .foot-legal {
+      grid-template-columns: minmax(0, 1fr) auto;
+      column-gap: 2.5rem;
+    }
+  }
+</style>

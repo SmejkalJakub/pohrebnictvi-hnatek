@@ -1,0 +1,108 @@
+---
+/**
+ * Home "people": "Kdo vás přijme". With photos: 120 × 150 portraits beside name, role and direct
+ * phone, three per row; a person without a photo gets no frame (name, role, phone only).
+ * Links to the Lidé section on O nás (plan s11 §4.1).
+ */
+import { Image } from "astro:assets";
+import PhoneLink from "@core/components/PhoneLink.astro";
+import PlaceholderMark from "@core/components/PlaceholderMark.astro";
+import type { PersonView } from "@core/content/view-models.ts";
+import { resolveOptionalImage } from "@core/media/resolve.ts";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  people: PersonView[];
+}
+
+const { people } = Astro.props;
+const rows = people.map((person) => ({ person, photo: resolveOptionalImage(person.photo) }));
+---
+<section class="frame home-block" data-section="people" aria-labelledby="kdo-vas-prijme">
+  <div class="section-head">
+    <h2 id="kdo-vas-prijme" class="h2">{ui.receptionHeading}</h2>
+    <a href="/o-nas/#lide" class="go">{ui.allPeople}</a>
+  </div>
+  <ul class="reception" role="list">
+    {
+      rows.map((row) => (
+        <li class="person" data-photo={row.photo !== null ? "true" : "false"}>
+          {row.photo !== null ? (
+            <PlaceholderMark active={row.photo.isPlaceholder} kind="image" as="div" class="person-frame">
+              <Image
+                src={row.photo.src}
+                alt={row.photo.alt}
+                widths={[120, 240]}
+                sizes="7.5rem"
+                class="photo person-photo"
+                style={`object-position: ${row.photo.objectPosition}`}
+              />
+            </PlaceholderMark>
+          ) : null}
+          <PlaceholderMark active={row.person.placeholder} as="div" class="person-text">
+            <b class="person-name">{row.person.name}</b>
+            <span class="muted">{row.person.role}</span>
+            {row.person.phone !== null ? <PhoneLink number={row.person.phone.href.replace("tel:", "")} /> : null}
+          </PlaceholderMark>
+        </li>
+      ))
+    }
+  </ul>
+</section>
+
+<style>
+  .home-block {
+    margin-top: var(--section);
+  }
+
+  .reception {
+    display: grid;
+    gap: 1.25rem;
+    margin: 0;
+    padding: 1.5rem 0 0;
+    list-style: none;
+  }
+
+  .person {
+    display: grid;
+    grid-template-columns: 6rem minmax(0, 1fr);
+    column-gap: 0.875rem;
+    align-items: start;
+  }
+
+  .person[data-photo="false"] {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .person :global(.person-photo) {
+    aspect-ratio: 4 / 5;
+  }
+
+  .person :global(.person-text),
+  .person > :global(.person-text) {
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+  }
+
+  .person-name {
+    font-size: 1.1875rem;
+  }
+
+  @media (min-width: 64rem) {
+    .reception {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 1.75rem 1.5rem;
+      padding-top: 1.75rem;
+    }
+
+    .person {
+      grid-template-columns: 7.5rem minmax(0, 1fr);
+      column-gap: 1rem;
+    }
+
+    .person-name {
+      font-size: 1.25rem;
+    }
+  }
+</style>

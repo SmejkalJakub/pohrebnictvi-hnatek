@@ -1,0 +1,102 @@
+---
+/**
+ * Oznámení a obřady (only while features.notices is on): the list of ruled rows and one page per
+ * live notice. Both use the neutral chrome (research L1, ⚖ pending a lawyer's view): the publisher
+ * sentence, reduced navigation, the neutral footer, no photos of the firm, no green, no figures.
+ */
+import { getNoticeIndex, getNotices, getOptionalPage, getSiteContext, type LoadedNotice } from "@core/content/load.ts";
+import EssayLayout from "../../layouts/EssayLayout.astro";
+import PageOpening from "../../components/PageOpening.astro";
+import NoticeRowList from "../../components/NoticeRowList.astro";
+import NoticeDetailBlock from "../../components/NoticeDetailBlock.astro";
+import RuledProse from "../../components/RuledProse.astro";
+import { ui } from "../../i18n/cs.ts";
+
+export async function getStaticPaths() {
+  const site = await getSiteContext();
+  const page = await getOptionalPage("oznameni");
+  if (!site.config.features.notices || page === null) {
+    return [];
+  }
+  const notices = await getNotices();
+  return [
+    { params: { path: undefined }, props: { notice: null } },
+    ...notices.map((notice) => ({ params: { path: notice.view.id }, props: { notice } })),
+  ];
+}
+
+interface Props {
+  notice: LoadedNotice | null;
+}
+
+const { notice } = Astro.props;
+const site = await getSiteContext();
+const page = await getOptionalPage("oznameni");
+const index = await getNoticeIndex();
+let title: string = ui.noticesHeading;
+let description: string = ui.noticesHeading;
+let lead: string | null = null;
+let hasBody = false;
+let placeholder = false;
+if (page !== null) {
+  title = page.data.title;
+  description = page.data.metaDescription ?? page.data.title;
+  lead = page.data.lead;
+  hasBody = page.hasBody;
+  placeholder = page.data.placeholder;
+}
+const Body = page?.Content;
+const isEmpty = index.upcoming.length === 0 && index.recent.length === 0;
+---
+{
+  notice === null ? (
+    <EssayLayout site={site} title={title} description={description} neutral>
+      <PageOpening title={title} lead={lead} placeholder={placeholder} emergency={site.emergency} withNonstop={false} />
+      {isEmpty ? <p class="frame notices-empty">{ui.noticesEmpty}</p> : null}
+      {index.upcoming.length > 0 ? (
+        <section class="frame notices-part" aria-labelledby="nadchazejici">
+          <h2 id="nadchazejici" class="h2 part-title">{ui.noticesUpcoming}</h2>
+          <NoticeRowList notices={index.upcoming} kind="upcoming" />
+        </section>
+      ) : null}
+      {index.recent.length > 0 ? (
+        <section class="frame notices-part" aria-labelledby="starsi">
+          <h2 id="starsi" class="h2 part-title">{ui.noticesRecent}</h2>
+          <NoticeRowList notices={index.recent} kind="recent" />
+        </section>
+      ) : null}
+      {Body !== undefined && hasBody ? <RuledProse id="oznameni-text"><Body /></RuledProse> : null}
+    </EssayLayout>
+  ) : (
+    <EssayLayout
+      site={site}
+      title={notice.view.fullName}
+      description={`${title}: ${notice.view.fullName}`}
+      noindex={notice.view.noindex}
+      neutral
+    >
+      <NoticeDetailBlock notice={notice} />
+    </EssayLayout>
+  )
+}
+
+<style>
+  .notices-empty {
+    margin-top: 2rem;
+  }
+
+  .notices-part {
+    margin-top: 2.5rem;
+  }
+
+  .part-title {
+    padding-bottom: 0.75rem;
+    border-bottom: 3px solid var(--ink);
+  }
+
+  @media (min-width: 64rem) {
+    .notices-part {
+      margin-top: 3.5rem;
+    }
+  }
+</style>

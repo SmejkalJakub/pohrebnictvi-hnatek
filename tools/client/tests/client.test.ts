@@ -14,7 +14,14 @@ import { verifyExpectation } from "../export.ts";
 import { copiesContent, scaffoldClient } from "../new.ts";
 import { validateClient } from "../validate.ts";
 
-const TEMPLATES = ["rodinna-tradice", "dustojna-jednoduchost", "nocni-linka", "plny-prehled", "ticha-krajina"] as const;
+const TEMPLATES = [
+  "rodinna-tradice",
+  "dustojna-jednoduchost",
+  "nocni-linka",
+  "plny-prehled",
+  "ticha-krajina",
+  "lide-a-misto",
+] as const;
 
 let clientsDir: string;
 
@@ -163,5 +170,22 @@ describe("client:new and the landscape photo set", () => {
     expect(site.config.features.landscapes).toBe(false);
     expect(existsSync(path.join(clientsDir, "test-ticha-krajina", "src/content/site/landscapes.json"))).toBe(true);
     expect(existsSync(path.join(clientsDir, "test-rodinna-tradice", "src/content/site/landscapes.json"))).toBe(false);
+  });
+});
+
+describe("client:new and the places set", () => {
+  it("copies site/places.json only for a template that supports places", async () => {
+    for (const templateId of TEMPLATES) {
+      const manifest = await loadManifest(templateId);
+      expect(copiesContent(manifest, "site/places.json"), templateId).toBe(manifest.supports.places);
+    }
+    expect((await loadManifest("lide-a-misto")).supports.places).toBe(true);
+  });
+
+  it("starts the places feature off, with the file in place for the CMS", async () => {
+    const site = await loadClient("test-lide-a-misto", clientsDir);
+    expect(site.config.features.places).toBe(false);
+    expect(existsSync(path.join(clientsDir, "test-lide-a-misto", "src/content/site/places.json"))).toBe(true);
+    expect(existsSync(path.join(clientsDir, "test-ticha-krajina", "src/content/site/places.json"))).toBe(false);
   });
 });

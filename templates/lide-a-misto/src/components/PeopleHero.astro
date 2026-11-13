@@ -1,0 +1,154 @@
+---
+/**
+ * The home opening (data-hero). With the home people photo (pages/home heroImage): text on the
+ * left (H1, then the nonstop number at 46 px, then the lead; on wide screens the lead comes before
+ * the number), the photo on the right bleeding to the window edge, captioned "01 …". It is the
+ * page's first figure and its LCP image (eager, high priority, ≤ 200 KB AVIF at 1280).
+ * Without the photo: a 64 px H1 and the lead on the left, the nonstop block beside them.
+ */
+import PlaceholderMark from "@core/components/PlaceholderMark.astro";
+import type { EmergencyTransport, ImageRef } from "@core/content/schemas.ts";
+import NonstopRuleBlock from "./NonstopRuleBlock.astro";
+import NumberedFigure from "./NumberedFigure.astro";
+
+interface Props {
+  title: string;
+  lead: string | null;
+  placeholder: boolean;
+  image: ImageRef | null;
+  emergency: EmergencyTransport;
+}
+
+const { title, lead, placeholder, image, emergency } = Astro.props;
+let caption: string | null = null;
+if (image !== null) {
+  caption = image.caption;
+}
+---
+<section class="hero" data-hero data-photo={image !== null ? "true" : "false"} aria-labelledby="uvod">
+  <div class="hero-text">
+    <h1 id="uvod" class="hero-title">{title}</h1>
+    <NonstopRuleBlock emergency={emergency} size="hero" class="hero-nonstop" />
+    {
+      lead !== null ? (
+        <div class="hero-lead-wrap">
+          <PlaceholderMark active={placeholder} as="div">
+            <p class="hero-lead">{lead}</p>
+          </PlaceholderMark>
+        </div>
+      ) : null
+    }
+  </div>
+  {
+    image !== null ? (
+      <NumberedFigure
+        image={image}
+        number="01"
+        text={caption}
+        ratio="9 / 10"
+        ratioWide="8 / 7"
+        widths={[375, 560, 750, 1000, 1400]}
+        sizes="(min-width: 80rem) calc(100vw - (100vw - 80rem) / 2 - 36rem), (min-width: 64rem) calc(100vw - 36rem), 100vw"
+        priority
+        class="hero-figure"
+      />
+    ) : null
+  }
+</section>
+
+<style>
+  .hero {
+    --edge: max(var(--gutter), calc((100vw - 80rem) / 2 + var(--gutter)));
+    display: grid;
+    gap: 1.5rem;
+    padding-top: 1.375rem;
+  }
+
+  .hero-text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.875rem;
+    padding-inline: var(--gutter);
+    min-width: 0;
+  }
+
+  .hero-title {
+    font-size: var(--h1);
+    line-height: 1.06;
+    letter-spacing: -0.01em;
+  }
+
+  .hero :global(.hero-figure .fig-caption) {
+    padding-inline: var(--gutter);
+  }
+
+  @media (min-width: 64rem) {
+    .hero {
+      padding-top: 3.5rem;
+    }
+
+    .hero[data-photo="true"] {
+      grid-template-columns: 32.5rem minmax(0, 1fr);
+      column-gap: 3.5rem;
+      align-items: start;
+      padding-left: var(--edge);
+    }
+
+    .hero[data-photo="true"] .hero-text {
+      gap: 1.5rem;
+      padding: 1.5rem 0 0;
+    }
+
+    .hero[data-photo="true"] :global(.hero-figure .fig-caption) {
+      padding-inline: 0 var(--gutter);
+    }
+
+    .hero[data-photo="false"] {
+      max-width: 80rem;
+      margin-inline: auto;
+      padding-inline: var(--gutter);
+      padding-top: 4.5rem;
+    }
+
+    .hero[data-photo="false"] .hero-text {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 27.5rem;
+      grid-template-rows: auto auto;
+      column-gap: 4.5rem;
+      row-gap: 1.5rem;
+      align-items: end;
+      padding: 0;
+    }
+
+    .hero[data-photo="false"] .hero-title {
+      grid-column: 1;
+      grid-row: 1;
+      font-size: 4rem;
+      max-width: 42rem;
+    }
+
+    .hero[data-photo="false"] :global(.hero-lead-wrap) {
+      grid-column: 1;
+      grid-row: 2;
+    }
+
+    .hero[data-photo="false"] :global(.hero-nonstop) {
+      grid-column: 2;
+      grid-row: 1 / span 2;
+    }
+
+    /* With the photo the lead sits between the H1 and the number, as drawn at 1280. */
+    .hero[data-photo="true"] :global(.hero-lead-wrap) {
+      order: 1;
+    }
+
+    .hero[data-photo="true"] :global(.hero-nonstop) {
+      order: 2;
+      margin-top: 0.5rem;
+    }
+
+    .hero-lead {
+      font-size: 1.25rem;
+    }
+  }
+</style>

@@ -1,0 +1,111 @@
+---
+/**
+ * The default emergency form: a 3 px ink rule, then ONE tel: link holding the label (bold ink) and
+ * the number (bold green, underlined, never wrapping), each a block span (never flex: QA test 9),
+ * then the short note in muted text outside the link. The accessible name comes from core.
+ * `size`: "hero" 46 px (home), "page" 40 px (inner pages; 34 px on phones), "footer" 28 px,
+ * "menu" 34 px (the open mobile menu).
+ */
+import EmergencyPhoneLink from "@core/components/EmergencyPhoneLink.astro";
+import type { EmergencyTransport } from "@core/content/schemas.ts";
+import { formatPhone } from "@core/format/phone.ts";
+
+interface Props {
+  emergency: EmergencyTransport;
+  size: "hero" | "page" | "footer" | "menu";
+  class?: string;
+  /** False inside a block that already draws its own top rule (Kontakt, Převoz zesnulých). */
+  rule?: boolean;
+}
+
+const { emergency, size, class: className, rule = true } = Astro.props;
+const phone = formatPhone(emergency.phone);
+const note = emergency.shortNote;
+---
+{
+  emergency.enabled ? (
+    <div class:list={["nonstop", className]} data-size={size} data-rule={rule ? "true" : "false"}>
+      <EmergencyPhoneLink emergency={emergency} variant="custom" class="nonstop-link">
+        <span class="nonstop-label">{emergency.label}</span>{" "}
+        <span class="nonstop-number" data-part="number">{phone.display}</span>
+      </EmergencyPhoneLink>
+      {note !== null && size !== "menu" ? <p class="nonstop-note">{note}</p> : null}
+    </div>
+  ) : null
+}
+
+<style>
+  .nonstop {
+    --num-size: 2.125rem;
+    border-top: 3px solid var(--ink);
+    padding-top: 0.75rem;
+  }
+
+  .nonstop[data-size="footer"] {
+    --num-size: 1.75rem;
+  }
+
+  .nonstop[data-rule="false"] {
+    border-top: 0;
+    padding-top: 0;
+  }
+
+  .nonstop :global(.nonstop-link) {
+    display: block;
+    padding-block: 0.25rem;
+    color: var(--ink);
+    text-decoration: none;
+  }
+
+  .nonstop-label {
+    display: block;
+    font-size: 1.0625rem;
+    font-weight: 700;
+    line-height: 1.4;
+  }
+
+  .nonstop-number {
+    display: block;
+    color: var(--green);
+    font-size: min(var(--num-size), 10.4vw);
+    font-weight: 700;
+    line-height: 1.25;
+    white-space: nowrap;
+    text-decoration: underline;
+    text-decoration-thickness: 3px;
+    text-underline-offset: 0.18em;
+  }
+
+  .nonstop[data-size="footer"] .nonstop-number {
+    text-decoration-thickness: 2px;
+  }
+
+  .nonstop :global(.nonstop-link:hover) .nonstop-number {
+    text-decoration-thickness: 4px;
+  }
+
+  .nonstop-note {
+    margin-top: 0.25rem;
+    color: var(--muted-2);
+    font-size: 1.0625rem;
+    line-height: 1.5;
+  }
+
+  @media (min-width: 64rem) {
+    .nonstop {
+      padding-top: 1.125rem;
+    }
+
+    .nonstop[data-size="hero"] {
+      --num-size: 2.875rem;
+    }
+
+    .nonstop[data-size="page"] {
+      --num-size: 2.5rem;
+    }
+
+    .nonstop-label {
+      font-size: 1.125rem;
+    }
+  }
+</style>

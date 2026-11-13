@@ -1,0 +1,87 @@
+---
+/**
+ * One service on the long Služby page (id = service id): H2 in the label column under a 3 px
+ * rule; on the right the summary, the body, the link to its price group, and the service photo as
+ * a numbered figure beside the text when it has one.
+ */
+import type { CollectionEntry } from "astro:content";
+import PlaceholderMark from "@core/components/PlaceholderMark.astro";
+import { render } from "@core/content/load.ts";
+import type { PriceGroup } from "@core/content/schemas.ts";
+import NumberedFigure from "./NumberedFigure.astro";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  service: CollectionEntry<"services">;
+  group: PriceGroup | null;
+  /** The figure number when the service has a photo, else null. */
+  number: string | null;
+}
+
+const { service, group, number } = Astro.props;
+const data = service.data;
+const { Content } = await render(service);
+const hasBody = (service.body ?? "").trim() !== "";
+const headingId = `${service.id}-nadpis`;
+---
+<section id={service.id} class="frame service" aria-labelledby={headingId}>
+  <div class="ruled split">
+    <h2 id={headingId} class="h2">{data.title}</h2>
+    <div class="service-body" data-photo={data.image !== null && number !== null ? "true" : "false"}>
+      <PlaceholderMark active={data.placeholder} as="div" class="service-text">
+        <p class="service-summary">{data.summary}</p>
+        {hasBody ? <div class="prose"><Content /></div> : null}
+        {group !== null ? <a href={`/cenik/#${group.id}`} class="go">{ui.includesLink}: {group.title}</a> : null}
+      </PlaceholderMark>
+      {
+        data.image !== null && number !== null ? (
+          <NumberedFigure
+            image={data.image}
+            number={number}
+            text={data.image.caption}
+            ratio="3 / 2"
+            widths={[340, 680]}
+            sizes="(min-width: 64rem) 21rem, 100vw"
+            class="service-fig"
+          />
+        ) : null
+      }
+    </div>
+  </div>
+</section>
+
+<style>
+  .service {
+    margin-top: 3rem;
+    scroll-margin-top: 1rem;
+  }
+
+  .service-body {
+    display: grid;
+    gap: 1.25rem;
+  }
+
+  .service-body :global(.service-text),
+  .service-body > :global(*) {
+    min-width: 0;
+  }
+
+  .service-summary {
+    font-size: 1.1875rem;
+  }
+
+  .service-body :global(.prose) {
+    margin-top: 0.875rem;
+  }
+
+  @media (min-width: 64rem) {
+    .service {
+      margin-top: 4.5rem;
+    }
+
+    .service-body[data-photo="true"] {
+      grid-template-columns: minmax(0, 1fr) 21.25rem;
+      column-gap: 2rem;
+    }
+  }
+</style>

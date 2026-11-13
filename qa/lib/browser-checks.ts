@@ -343,3 +343,46 @@ export function gluedPhoneLabels(): string[] {
   }
   return glued;
 }
+
+export interface FigureNumberReport {
+  /** Every [data-figure-number] in document order. */
+  numbers: string[];
+  /** Numbers outside a figcaption, a list item or a table row (s11 §4.2). */
+  misplaced: string[];
+  /** [data-figure] elements with no image inside: an empty frame. */
+  emptyFrames: number;
+  /** [data-figure] elements on the page. */
+  figures: number;
+  /** [data-high-strip] elements on the page. */
+  strips: number;
+}
+
+/**
+ * Template G's figure numbering (s11 §4.2), checked through the core-neutral hooks
+ * [data-figure-number], [data-figure] and [data-high-strip]; templates that render none pass.
+ */
+export function describeFigureNumbers(): FigureNumberReport {
+  const numbers: string[] = [];
+  const misplaced: string[] = [];
+  for (const el of Array.from(document.querySelectorAll("[data-figure-number]"))) {
+    const text = (el.textContent ?? "").trim();
+    numbers.push(text);
+    if (el.closest("figcaption, li, tr") === null) {
+      misplaced.push(`${text} in <${el.parentElement?.tagName.toLowerCase() ?? "?"}>`);
+    }
+  }
+  let emptyFrames = 0;
+  const figures = Array.from(document.querySelectorAll("[data-figure]"));
+  for (const figure of figures) {
+    if (figure.querySelector("img") === null) {
+      emptyFrames += 1;
+    }
+  }
+  return {
+    numbers,
+    misplaced,
+    emptyFrames,
+    figures: figures.length,
+    strips: document.querySelectorAll("[data-high-strip]").length,
+  };
+}

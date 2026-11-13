@@ -1,0 +1,64 @@
+---
+/**
+ * High emphasis (emergencyEmphasis "high"): a full-width green strip directly under the header on
+ * every non-notice page, in addition to the page's own nonstop block (as drawn on the canvas).
+ * One tel: link, white bold label and the underlined number; wraps to two lines at 375 px.
+ */
+import EmergencyPhoneLink from "@core/components/EmergencyPhoneLink.astro";
+import type { EmergencyTransport } from "@core/content/schemas.ts";
+import { formatPhone } from "@core/format/phone.ts";
+
+interface Props {
+  emergency: EmergencyTransport;
+}
+
+const { emergency } = Astro.props;
+const phone = formatPhone(emergency.phone);
+---
+{
+  emergency.enabled ? (
+    <div class="strip" data-high-strip>
+      <div class="frame">
+        <EmergencyPhoneLink emergency={emergency} variant="custom" class="strip-link">
+          <span>{emergency.label}</span>{" "}
+          <span class="strip-number" data-part="number">{phone.display}</span>
+        </EmergencyPhoneLink>
+      </div>
+    </div>
+  ) : null
+}
+
+<style>
+  .strip {
+    background: var(--green);
+  }
+
+  .strip :global(.strip-link) {
+    display: block;
+    padding-block: 0.75rem;
+    color: var(--on-green);
+    font-size: 1.0625rem;
+    font-weight: 700;
+    line-height: 1.45;
+    text-decoration: none;
+  }
+
+  .strip-number {
+    white-space: nowrap;
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 0.2em;
+  }
+
+  /* Ink on green is 1.90 : 1, so the ring is white and inset. */
+  .strip :global(.strip-link:focus-visible) {
+    outline: 3px solid var(--on-green);
+    outline-offset: -6px;
+  }
+
+  @media (min-width: 64rem) {
+    .strip :global(.strip-link) {
+      font-size: 1.125rem;
+    }
+  }
+</style>

@@ -1,0 +1,47 @@
+---
+/** Dokumenty ke stažení (#dokumenty): one ruled row per PDF: title link, "PDF", valid from. */
+import type { DocumentView } from "@core/content/view-models.ts";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  documents: DocumentView[];
+}
+
+const { documents } = Astro.props;
+---
+<section id="dokumenty" class="ruled split documents" aria-labelledby="dokumenty-nadpis">
+  <h2 id="dokumenty-nadpis" class="h2">{ui.documentsHeading}</h2>
+  <ul class="document-rows" role="list">
+    {
+      documents.map((document) => (
+        <li class="document-row">
+          <a href={document.href} class="go">{document.title}</a>
+          <span class="muted">
+            {ui.pdf}
+            {document.validFromText !== null ? `, ${ui.validFrom} ${document.validFromText}` : ""}
+          </span>
+        </li>
+      ))
+    }
+  </ul>
+</section>
+
+<style>
+  .documents {
+    scroll-margin-top: 1rem;
+  }
+
+  .document-rows {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .document-row {
+    display: flex;
+    flex-wrap: wrap;
+    column-gap: 1rem;
+    align-items: baseline;
+    border-bottom: 1px solid var(--ink);
+  }
+</style>

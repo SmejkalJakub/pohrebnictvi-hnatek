@@ -1,0 +1,20 @@
+---
+/**
+ * Home "notices": a column with the notices page title, one sentence and a link with the count.
+ * Never names or dates of the dead on the home (research L1), as approved for D and E.
+ */
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  title: string;
+  count: number;
+  col: number | null;
+}
+
+const { title, count, col } = Astro.props;
+---
+<section class="home-col ruled" data-section="notices" data-col={col ?? undefined} aria-labelledby="oznameni-souhrn">
+  <h2 id="oznameni-souhrn" class="col-heading">{title}</h2>
+  <p>{ui.noticesText}</p>
+  <a href="/oznameni/" class="go">{ui.noticesLink(count)}</a>
+</section>

@@ -6,6 +6,7 @@ import { expect, test, type Page } from "@playwright/test";
 import {
   checkHoursSeparation,
   describeEmergencyLinks,
+  describeFigureNumbers,
   describeFocus,
   gluedPhoneLabels,
   headingOutline,
@@ -243,6 +244,26 @@ for (const t of templates) {
             await open(page, route);
             const glued = await page.evaluate(gluedPhoneLabels);
             expect(glued, `${size.width} px: ${glued.join("\n")}`).toEqual([]);
+          }
+        });
+
+        test(`10 figure numbers: two digits, in captions or lists, 01 upwards; no empty frames ${route.path}`, async ({
+          page,
+        }) => {
+          await open(page, route);
+          const report = await page.evaluate(describeFigureNumbers);
+          expect(report.misplaced, "figure numbers outside a caption or list").toEqual([]);
+          expect(report.emptyFrames, "a figure frame without an image").toBe(0);
+          for (const number of report.numbers) {
+            expect(number, "a figure number is not two digits").toMatch(/^\d{2}$/);
+          }
+          const expected = report.numbers.map((_, index) => String(index + 1).padStart(2, "0"));
+          const sorted = [...report.numbers].sort();
+          expect(sorted, "figure numbers must run 01, 02 … once each, without gaps").toEqual(expected);
+          if (route.path.startsWith("/oznameni/")) {
+            expect(report.figures, "numbered figures on a notice page").toBe(0);
+            expect(report.numbers, "figure numbers on a notice page").toEqual([]);
+            expect(report.strips, "the high-emphasis strip on a notice page").toBe(0);
           }
         });
 

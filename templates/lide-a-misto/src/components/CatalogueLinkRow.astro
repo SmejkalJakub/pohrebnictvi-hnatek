@@ -1,0 +1,39 @@
+---
+/** Home "catalogue-links": the label column heading and the catalogue pages as plain links. */
+import type { NavItem } from "@core/content/view-models.ts";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  links: NavItem[];
+}
+
+const { links } = Astro.props;
+---
+<section class="frame home-block split" data-section="catalogue-links" aria-labelledby="katalogy">
+  <h2 id="katalogy" class="h2">{ui.catalogueHeading}</h2>
+  <ul class="ruled catalogue-links" role="list">
+    {
+      links.map((link) => (
+        <li>
+          <a href={link.href} class="go">{link.label}</a>
+        </li>
+      ))
+    }
+  </ul>
+</section>
+
+<style>
+  .home-block {
+    margin-top: var(--section);
+  }
+
+  .catalogue-links {
+    display: flex;
+    flex-wrap: wrap;
+    column-gap: 2rem;
+    margin: 0;
+    padding-left: 0;
+    list-style: none;
+    font-size: 1.25rem;
+  }
+</style>

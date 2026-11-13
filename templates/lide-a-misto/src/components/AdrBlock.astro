@@ -1,0 +1,31 @@
+---
+/** Právní informace: out-of-court dispute resolution (ADR) and the complaints contact, under 3 px rules. */
+import type { LegalInfo } from "@core/content/schemas.ts";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  legal: LegalInfo;
+}
+
+const { legal } = Astro.props;
+---
+<section class="ruled split adr" aria-labelledby="adr">
+  <h2 id="adr" class="h2">{ui.adrHeading}</h2>
+  <p>
+    {ui.adrText} {legal.adr.name}, <a href={legal.adr.url}>{legal.adr.url.replace(/^https?:\/\//, "")}</a>.
+  </p>
+</section>
+{
+  legal.complaintsContact !== null ? (
+    <section class="ruled split adr" aria-labelledby="reklamace">
+      <h2 id="reklamace" class="h2">{ui.complaintsHeading}</h2>
+      <p>{legal.complaintsContact}</p>
+    </section>
+  ) : null
+}
+
+<style>
+  .adr p {
+    max-width: 45rem;
+  }
+</style>
