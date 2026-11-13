@@ -1,0 +1,70 @@
+---
+/**
+ * Časté otázky (#caste-otazky on Služby, the S předstihem hub): the heading column and the topics,
+ * each question a <details> (visible marker) with its Markdown answer, under ruled lines.
+ */
+import type { CollectionEntry } from "astro:content";
+import PlaceholderMark from "@core/components/PlaceholderMark.astro";
+import { render } from "@core/content/load.ts";
+import type { FaqGroup } from "@core/content/view-models.ts";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  groups: FaqGroup<CollectionEntry<"faq">>[];
+}
+
+const { groups } = Astro.props;
+const answers = new Map<string, Awaited<ReturnType<typeof render>>["Content"]>();
+for (const group of groups) {
+  for (const entry of group.entries) {
+    answers.set(entry.id, (await render(entry)).Content);
+  }
+}
+---
+<section id="caste-otazky" class="section split-section" aria-labelledby="caste-otazky-nadpis">
+  <div class="split-head">
+    <h2 id="caste-otazky-nadpis" class="section-heading">{ui.faqHeading}</h2>
+  </div>
+  <div class="topics">
+    {
+      groups.map((group) => (
+        <div class="topic">
+          <h3 class="small-heading rule-top">{group.label}</h3>
+          <ul class="ruled questions" role="list">
+            {group.entries.map((entry) => {
+              const Answer = answers.get(entry.id);
+              return (
+                <li>
+                  <PlaceholderMark active={entry.data.placeholder} as="div">
+                    <details class="more">
+                      <summary>{entry.data.question}</summary>
+                      <div class="prose">{Answer !== undefined ? <Answer /> : null}</div>
+                    </details>
+                  </PlaceholderMark>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      ))
+    }
+  </div>
+</section>
+
+<style>
+  .topic + .topic {
+    margin-top: 1.75rem;
+  }
+
+  .questions {
+    margin-top: 0.5rem;
+  }
+
+  .questions > li {
+    padding-block: 0.25rem;
+  }
+
+  .questions > li:first-child {
+    border-top: 0;
+  }
+</style>

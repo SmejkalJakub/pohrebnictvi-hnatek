@@ -1,0 +1,24 @@
+---
+/** The life dates of a notice ("* 3. 4. 1941  † 9. 11. 2026"), with the meaning spelled out for screen readers. */
+import type { NoticeView } from "@core/content/view-models.ts";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  view: NoticeView;
+  class?: string;
+}
+
+const { view, class: className } = Astro.props;
+---
+<p class:list={["muted", className]}>
+  {
+    view.bornText !== null ? (
+      <>
+        <span aria-hidden="true">*</span>
+        <span class="visually-hidden">{ui.born}:</span> {view.bornText}{"   "}
+      </>
+    ) : null
+  }
+  <span aria-hidden="true">†</span>
+  <span class="visually-hidden">{ui.diedLabel}:</span> {view.diedText}
+</p>

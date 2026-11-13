@@ -1,0 +1,62 @@
+---
+/**
+ * Office hours as a ruled table (data-office-hours on the surrounding block, its own heading),
+ * then the holiday and outside-hours notes and any exceptions. Never beside the nonstop line.
+ */
+import type { SiteContext } from "@core/content/view-models.ts";
+import { formatCzechDate } from "@core/format/date.ts";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  site: SiteContext;
+}
+
+const { site } = Astro.props;
+const hours = site.officeHours;
+---
+<table class="rtable hours">
+  <caption class="visually-hidden">{ui.hoursHeading}</caption>
+  <tbody>
+    {
+      site.officeHoursRows.map((row) => (
+        <tr>
+          <th scope="row">
+            <abbr title={row.daysLong}>{row.days}</abbr>
+          </th>
+          <td>
+            {row.text}
+            {row.note !== null ? <span class="hours-note">{row.note}</span> : null}
+          </td>
+        </tr>
+      ))
+    }
+  </tbody>
+</table>
+{hours.holidayNote !== null ? <p class="muted">{hours.holidayNote}</p> : null}
+{hours.outsideHoursNote !== null ? <p class="muted">{hours.outsideHoursNote}</p> : null}
+{
+  hours.exceptions.length > 0 ? (
+    <div>
+      <p>{ui.exceptionsHeading}</p>
+      <ul class="dot-list muted">
+        {hours.exceptions.map((exception) => (
+          <li>
+            {formatCzechDate(exception.from)}–{formatCzechDate(exception.to)}
+            {exception.note !== null ? ` · ${exception.note}` : ""}
+          </li>
+        ))}
+      </ul>
+    </div>
+  ) : null
+}
+
+<style>
+  .hours abbr {
+    text-decoration: none;
+  }
+
+  .hours-note {
+    display: block;
+    color: var(--slate);
+  }
+</style>

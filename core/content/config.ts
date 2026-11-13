@@ -14,8 +14,9 @@ export const HOMEPAGE_SECTIONS = [
   "next-steps",
   "contact-summary",
   "catalogue-links",
-  // Directory-style sections (template D). The template renders nothing for "price-summary" while
-  // pricing.visible is false; the other four need their content feature (checked under G-005).
+  // Directory-style sections for the optional content types. A template renders nothing for
+  // "price-summary" while pricing.visible is false; the other four need their content feature
+  // (checked under G-005).
   "price-summary",
   "people",
   "notices",

@@ -1,0 +1,83 @@
+---
+/**
+ * Lidé with photos (Kontakt #lide, stone field): four per row at ≥ 64 rem, two on phones; the
+ * 3:4 portrait, the name, the role and an optional direct line. A person without a photo among
+ * others gets no empty frame.
+ */
+import { Image } from "astro:assets";
+import PlaceholderMark from "@core/components/PlaceholderMark.astro";
+import type { PersonView } from "@core/content/view-models.ts";
+import { resolveOptionalImage } from "@core/media/resolve.ts";
+
+interface Props {
+  people: PersonView[];
+}
+
+const { people } = Astro.props;
+const rows = people.map((person) => ({ person, photo: resolveOptionalImage(person.photo) }));
+---
+<ul class="four-up" role="list">
+  {
+    rows.map(({ person, photo }) => (
+      <li class="person" data-person={person.id}>
+        {photo !== null ? (
+          <Image
+            src={photo.src}
+            alt={photo.alt}
+            width={300}
+            height={400}
+            densities={[1, 2]}
+            class="portrait"
+            style={`object-position: ${photo.objectPosition}`}
+          />
+        ) : null}
+        <PlaceholderMark active={person.placeholder} as="div">
+          <p class="person-name">{person.name}</p>
+          <p class="muted">{person.role}</p>
+        </PlaceholderMark>
+        {person.phone !== null ? (
+          <a href={person.phone.href} class="go nowrap" data-phone-link>
+            {person.phone.display}
+          </a>
+        ) : null}
+      </li>
+    ))
+  }
+</ul>
+
+<style>
+  .four-up {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.75rem 1rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .four-up :global(.portrait) {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 3 / 4;
+    margin-bottom: 0.625rem;
+    object-fit: cover;
+    background: var(--photo);
+  }
+
+  .person-name {
+    font-size: 1.1875rem;
+    font-weight: 800;
+    line-height: 1.3;
+  }
+
+  @media (min-width: 64rem) {
+    .four-up {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      column-gap: 2rem;
+    }
+
+    .person-name {
+      font-size: 1.3125rem;
+    }
+  }
+</style>

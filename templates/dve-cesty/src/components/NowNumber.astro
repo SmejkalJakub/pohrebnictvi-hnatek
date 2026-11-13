@@ -1,0 +1,75 @@
+---
+/**
+ * The navy form of the nonstop line: one tel: link holding the label (mist), the number (white,
+ * 34 / 50 px 800, underlined 3 px) and the availability line. Label, number and note are block
+ * spans inside the link with real spaces between them, never flex (S6 lesson, QA test 9); the
+ * accessible name comes from core. Sizes: "panel" (home half, Teď hned openings), "footer", "menu".
+ */
+import EmergencyPhoneLink from "@core/components/EmergencyPhoneLink.astro";
+import type { EmergencyTransport } from "@core/content/schemas.ts";
+import { formatPhone } from "@core/format/phone.ts";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  emergency: EmergencyTransport;
+  size?: "panel" | "footer" | "menu";
+}
+
+const { emergency, size = "panel" } = Astro.props;
+const phone = formatPhone(emergency.phone);
+const withNote = size !== "menu";
+---
+<div class="now-number" data-size={size}>
+  <EmergencyPhoneLink emergency={emergency} variant="custom" class="now-link">
+    <span class="now-label">{emergency.label}</span>{" "}
+    <span class="now-digits" data-part="number">{phone.display}</span>
+    {
+      withNote ? (
+        <>
+          {" "}
+          <span class="now-note">{ui.availability}</span>
+        </>
+      ) : null
+    }
+  </EmergencyPhoneLink>
+</div>
+
+<style>
+  .now-number :global(.now-link) {
+    display: block;
+    color: var(--white);
+    text-decoration: none;
+  }
+
+  .now-label,
+  .now-note {
+    display: block;
+    color: var(--mist);
+    font-size: 1.125rem;
+    line-height: 1.5;
+  }
+
+  .now-digits {
+    display: inline-block;
+    padding-block: 0.25rem;
+    font-size: min(var(--num), 9.75vw);
+    font-weight: 800;
+    line-height: 1.2;
+    white-space: nowrap;
+    text-decoration: underline;
+    text-decoration-thickness: 3px;
+    text-underline-offset: 0.18em;
+  }
+
+  .now-number[data-size="footer"] .now-digits {
+    font-size: min(2.125rem, 10vw);
+  }
+
+  .now-number[data-size="menu"] .now-digits {
+    font-size: min(1.875rem, 9.5vw);
+  }
+
+  .now-number :global(.now-link:hover) .now-digits {
+    text-decoration-thickness: 4px;
+  }
+</style>

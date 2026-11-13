@@ -1,0 +1,23 @@
+---
+/** Home "catalogue-links": Rakve and Květiny as two plain links under one heading. */
+import type { NavItem } from "@core/content/view-models.ts";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  links: NavItem[];
+}
+
+const { links } = Astro.props;
+---
+<section class="home-col" data-section="catalogue-links" aria-labelledby="katalog-sekce">
+  <h2 id="katalog-sekce" class="col-heading">{ui.catalogueHeading}</h2>
+  <ul class="col-lines" role="list">
+    {
+      links.map((item) => (
+        <li>
+          <a href={item.href} class="go">{item.label}</a>
+        </li>
+      ))
+    }
+  </ul>
+</section>

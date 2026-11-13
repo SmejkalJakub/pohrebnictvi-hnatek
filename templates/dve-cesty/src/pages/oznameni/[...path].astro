@@ -1,0 +1,157 @@
+---
+/**
+ * Oznámení a obřady (only while features.notices is on): the list and one page per live notice,
+ * both in the neutral chrome (research L1): reduced header, the publisher line, no path switch,
+ * no panels, no service links or prices, the neutral footer.
+ */
+import PlaceholderMark from "@core/components/PlaceholderMark.astro";
+import { buildDate, getNoticeIndex, getNotices, getOptionalPage, getSiteContext, type LoadedNotice } from "@core/content/load.ts";
+import CestyLayout from "../../layouts/CestyLayout.astro";
+import DayGroupedNotices from "../../components/DayGroupedNotices.astro";
+import RecentNoticeList from "../../components/RecentNoticeList.astro";
+import NoticeDetailBlocks from "../../components/NoticeDetailBlocks.astro";
+import { buildNoticeList } from "../../lib/notice-list.ts";
+import { nbsp } from "../../lib/site.ts";
+import { ui } from "../../i18n/cs.ts";
+
+export async function getStaticPaths() {
+  const site = await getSiteContext();
+  const page = await getOptionalPage("oznameni");
+  if (!site.config.features.notices || page === null) {
+    return [];
+  }
+  const notices = await getNotices();
+  return [
+    { params: { path: undefined }, props: { notice: null } },
+    ...notices.map((notice) => ({ params: { path: notice.view.id }, props: { notice } })),
+  ];
+}
+
+interface Props {
+  notice: LoadedNotice | null;
+}
+
+const { notice } = Astro.props;
+const site = await getSiteContext();
+const page = await getOptionalPage("oznameni");
+const guestPage = await getOptionalPage("pro-ucastniky");
+const list = buildNoticeList(await getNoticeIndex(), buildDate);
+let title: string = ui.noticesHeading;
+let description: string = ui.noticesHeading;
+let lead: string | null = null;
+let hasBody = false;
+let placeholder = false;
+if (page !== null) {
+  title = page.data.title;
+  description = page.data.metaDescription ?? page.data.title;
+  lead = page.data.lead;
+  hasBody = page.hasBody;
+  placeholder = page.data.placeholder;
+}
+const Body = page?.Content;
+const isEmpty = list.days.length === 0 && list.recent.length === 0;
+let showGuests = false;
+if (site.config.features.guestInfo && guestPage !== null) {
+  showGuests = true;
+}
+---
+{
+  notice === null ? (
+    <CestyLayout site={site} path="neutral" title={title} description={description}>
+      <div class="wrap list-head">
+        <h1 class="list-title">{title}</h1>
+        {lead !== null ? (
+          <div class="list-lead">
+            <PlaceholderMark active={placeholder} as="div">
+              <p>{nbsp(lead)}</p>
+            </PlaceholderMark>
+          </div>
+        ) : null}
+      </div>
+      {isEmpty ? (
+        <div class="section">
+          <p>{ui.noticesEmpty}</p>
+        </div>
+      ) : (
+        <div class="section notice-grid">
+          {list.days.length > 0 ? <DayGroupedNotices days={list.days} /> : null}
+          {list.recent.length > 0 ? <RecentNoticeList notices={list.recent} /> : null}
+        </div>
+      )}
+      {Body !== undefined && hasBody ? (
+        <div class="section prose narrow">
+          <Body />
+        </div>
+      ) : null}
+      <div class="section list-links">
+        {showGuests && guestPage !== null ? (
+          <p>
+            <a href="/pro-ucastniky/" class="go">{guestPage.data.navLabel}</a>
+          </p>
+        ) : null}
+        <p>
+          <a href="/" class="go">{ui.homeLink}</a>
+        </p>
+      </div>
+    </CestyLayout>
+  ) : (
+    <CestyLayout
+      site={site}
+      path="neutral"
+      title={notice.view.fullName}
+      description={`${title}: ${notice.view.fullName}`}
+      noindex={notice.view.noindex}
+    >
+      <NoticeDetailBlocks notice={notice} />
+    </CestyLayout>
+  )
+}
+
+<style>
+  .list-head {
+    padding-top: 1.375rem;
+  }
+
+  .list-head > * + * {
+    margin-top: 0.75rem;
+  }
+
+  .list-title {
+    font-size: var(--h1);
+    line-height: 1.18;
+  }
+
+  .list-lead {
+    max-width: 48rem;
+  }
+
+  .notice-grid > :global(* + *) {
+    margin-top: 2.5rem;
+  }
+
+  .list-links > * + * {
+    margin-top: 0;
+  }
+
+  @media (min-width: 64rem) {
+    .list-head {
+      padding-top: 3rem;
+    }
+
+    .notice-grid {
+      display: grid;
+      grid-template-columns: 7fr 5fr;
+      column-gap: 3.5rem;
+      align-items: start;
+    }
+
+    .notice-grid > :global(* + *) {
+      margin-top: 0;
+    }
+
+    .notice-grid > :global(:only-child) {
+      grid-column: 1 / -1;
+      max-width: 48rem;
+    }
+  }
+</style>

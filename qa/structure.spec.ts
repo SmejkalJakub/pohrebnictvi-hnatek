@@ -437,6 +437,49 @@ test.describe("law: notices, footer identification, VAT note", () => {
     expect(problems, problems.join("\n")).toEqual([]);
   });
 
+  test("path switch: never on notice pages; exactly one current path elsewhere (D)", () => {
+    // Runs only on templates that mark two paths (a [data-path-switch] on the homepage). Notice
+    // pages get the neutral chrome: no switch and no path panel (L1). Every other page except the
+    // homepage and the 404 belongs to one path, so its switch has exactly one aria-current option.
+    const problems: string[] = [];
+    const report: Record<string, number> = {};
+    for (const t of templates) {
+      if (!/\bdata-path-switch\b/.test(builtHtml(t, "/"))) {
+        continue;
+      }
+      let checked = 0;
+      for (const route of discoverRoutes(t)) {
+        const html = builtHtml(t, route.path);
+        checked += 1;
+        if (route.path.startsWith("/oznameni/")) {
+          if (/\bdata-path-switch\b/.test(html)) {
+            problems.push(`${t.id} ${route.path}: a path switch on a notice page`);
+          }
+          if (/\bdata-panel=/.test(html)) {
+            problems.push(`${t.id} ${route.path}: a path panel on a notice page`);
+          }
+          continue;
+        }
+        if (route.path === "/" || route.path === "/404.html") {
+          continue;
+        }
+        const start = html.search(/<nav\b[^>]*\bdata-path-switch\b/);
+        if (start === -1) {
+          problems.push(`${t.id} ${route.path}: no path switch`);
+          continue;
+        }
+        const end = html.indexOf("</nav>", start);
+        const current = (html.slice(start, end).match(/aria-current="page"/g) ?? []).length;
+        if (current !== 1) {
+          problems.push(`${t.id} ${route.path}: ${current} current options in the path switch`);
+        }
+      }
+      report[t.id] = checked;
+    }
+    record("pathSwitch", report);
+    expect(problems, problems.join("\n")).toEqual([]);
+  });
+
   test("/cenik/ and every other page with a price render the VAT note (L9)", () => {
     const problems: string[] = [];
     for (const t of templates) {

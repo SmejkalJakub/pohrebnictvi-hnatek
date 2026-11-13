@@ -15,7 +15,13 @@ import {
 } from "../pages-config.ts";
 
 const FIXTURE = path.join(REPO_ROOT, "fixtures", "neutral");
-const TEMPLATES = ["rodinna-tradice", "dustojna-jednoduchost", "nocni-linka", "plny-prehled", "ticha-krajina"] as const;
+const TEMPLATES = [
+  "rodinna-tradice",
+  "dustojna-jednoduchost",
+  "nocni-linka",
+  "dve-cesty",
+  "ticha-krajina",
+] as const;
 /** Templates that declare every optional content type off (A and B, 2026-11-10). */
 const WITHOUT_OPTIONAL_TYPES = ["rodinna-tradice", "dustojna-jednoduchost"] as const;
 

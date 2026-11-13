@@ -14,7 +14,13 @@ import { verifyExpectation } from "../export.ts";
 import { copiesContent, scaffoldClient } from "../new.ts";
 import { validateClient } from "../validate.ts";
 
-const TEMPLATES = ["rodinna-tradice", "dustojna-jednoduchost", "nocni-linka", "plny-prehled", "ticha-krajina"] as const;
+const TEMPLATES = [
+  "rodinna-tradice",
+  "dustojna-jednoduchost",
+  "nocni-linka",
+  "dve-cesty",
+  "ticha-krajina",
+] as const;
 
 let clientsDir: string;
 

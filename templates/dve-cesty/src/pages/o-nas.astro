@@ -1,0 +1,25 @@
+---
+/** O nás (S předstihem): the stone opening, then the body as plain sections (h2 4/12, text 8/12). No photo. */
+import { getPage, getSiteContext } from "@core/content/load.ts";
+import CestyLayout from "../layouts/CestyLayout.astro";
+import PathPanel from "../components/PathPanel.astro";
+import ProseSections from "../components/ProseSections.astro";
+import { getPathLinks } from "../lib/page-links.ts";
+import { seoDescription, seoTitle } from "../lib/site.ts";
+
+const site = await getSiteContext();
+const page = await getPage("o-nas");
+const links = await getPathLinks(site, Astro.url.pathname, "ahead");
+const Body = page.Content;
+---
+<CestyLayout site={site} path="ahead" title={seoTitle(page.data)} description={seoDescription(page.data)}>
+  <PathPanel
+    tone="ahead"
+    title={page.data.title}
+    lead={page.data.lead}
+    placeholder={page.data.placeholder}
+    links={links}
+    emergency={site.emergency}
+  />
+  {page.hasBody ? <ProseSections><Body /></ProseSections> : null}
+</CestyLayout>

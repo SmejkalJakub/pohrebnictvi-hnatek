@@ -1,0 +1,72 @@
+---
+/**
+ * "V této cestě:" and the path's pages, at the top of the opening panel (≥ 64 rem only; below that
+ * the Menu groups the same links by path). Core's order inside the group; the current page bold
+ * with a 3 px underline.
+ */
+import type { PathLink } from "../lib/site.ts";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  links: PathLink[];
+}
+
+const { links } = Astro.props;
+---
+{
+  links.length > 0 ? (
+    <nav class="subnav" aria-label={ui.subnav}>
+      <span class="subnav-lead muted">{ui.subnavLead}</span>
+      <ul role="list">
+        {links.map((item) => (
+          <li>
+            <a href={item.href} aria-current={item.current ? "page" : undefined}>
+              {item.label}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  ) : null
+}
+
+<style>
+  .subnav {
+    display: none;
+  }
+
+  @media (min-width: 64rem) {
+    .subnav {
+      display: flex;
+      flex-wrap: wrap;
+      column-gap: 1.75rem;
+      align-items: baseline;
+      margin-bottom: 1.5rem;
+      border-bottom: 1px solid var(--stone-rule);
+    }
+
+    :global([data-tone="now"]) .subnav {
+      border-color: var(--navy-rule);
+    }
+
+    .subnav ul {
+      display: flex;
+      flex-wrap: wrap;
+      column-gap: 1.75rem;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .subnav a {
+      display: inline-block;
+      padding-block: 0.625rem;
+      font-weight: 700;
+    }
+
+    .subnav a[aria-current="page"] {
+      font-weight: 800;
+      text-decoration-thickness: 3px;
+    }
+  }
+</style>
