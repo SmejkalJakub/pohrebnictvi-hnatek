@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<title>D3 Dvě cesty – Ceník A4</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#111111}a:hover{color:#111111}
+</style>
+</helmet>
+<div style="width: 794px; height: 1123px; box-sizing: border-box; padding: 52px 60px; background: #FFFFFF; font-family: 'Manrope', Arial, sans-serif; color: #111111; display: flex; flex-direction: column; gap: 18px">
+
+<div style="display: flex; justify-content: space-between; align-items: baseline; gap: 24px; border-bottom: 2px solid #111111; padding-bottom: 10px">
+<span style="font-size: 18px; font-weight: 800">Pohřební služba Vzor</span>
+<span style="font-size: 14px">Náměstí 12, 000 00 Vzorov · kancelář +420 000 000 101</span>
+</div>
+
+<div style="display: flex; justify-content: space-between; align-items: end; gap: 24px">
+<div style="display: flex; flex-direction: column; gap: 4px">
+<h1 style="margin: 0; font-size: 30px; line-height: 1.1; font-weight: 800">Ceník</h1>
+<p style="margin: 0; font-size: 15px">Platí od 1.&#160;11.&#160;2026. <strong>Ceny jsou uvedeny včetně DPH.</strong></p>
+</div>
+<span style="font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; border: 1px dashed #111111; padding: 3px 6px">Ukázka: ceny jsou ukázkové</span>
+</div>
+
+<section style="display: flex; flex-direction: column; gap: 8px">
+<div style="display: flex; justify-content: space-between; align-items: baseline; border-top: 1px solid #111111; padding-top: 8px"><h2 style="margin: 0; font-size: 19px; font-weight: 800">Pohřeb bez obřadu</h2><p style="margin: 0; font-size: 19px; font-weight: 800; white-space: nowrap">od 14&#160;900&#160;Kč</p></div>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px; font-size: 14px; line-height: 1.5">
+<div><h3 style="margin: 0 0 2px; font-size: 14px; font-weight: 800">V&#160;ceně je zahrnuto</h3><ul style="margin: 0; padding-left: 18px"><li>převoz zesnulého do 30&#160;km</li><li>úprava a&#160;uložení zesnulého</li><li>jednoduchá dřevěná rakev</li><li>kremace a&#160;základní urna</li><li>vyřízení dokladů na matrice</li></ul></div>
+<div><h3 style="margin: 0 0 2px; font-size: 14px; font-weight: 800">Není zahrnuto</h3><ul style="margin: 0; padding-left: 18px"><li>obřad a&#160;smuteční síň</li><li>květiny</li><li>smuteční oznámení a&#160;jejich tisk</li><li>převoz nad 30&#160;km</li></ul></div>
+</div>
+</section>
+
+<section style="display: flex; flex-direction: column; gap: 8px">
+<div style="display: flex; justify-content: space-between; align-items: baseline; border-top: 1px solid #111111; padding-top: 8px"><h2 style="margin: 0; font-size: 19px; font-weight: 800">Pohřeb s&#160;obřadem</h2><p style="margin: 0; font-size: 19px; font-weight: 800; white-space: nowrap">od 24&#160;900&#160;Kč</p></div>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px; font-size: 14px; line-height: 1.5">
+<div><h3 style="margin: 0 0 2px; font-size: 14px; font-weight: 800">V&#160;ceně je zahrnuto</h3><ul style="margin: 0; padding-left: 18px"><li>vše z&#160;pohřbu bez obřadu</li><li>smuteční síň na 30 minut</li><li>hudba ze záznamu</li><li>výzdoba rakve</li><li>20 smutečních oznámení</li></ul></div>
+<div><h3 style="margin: 0 0 2px; font-size: 14px; font-weight: 800">Není zahrnuto</h3><ul style="margin: 0; padding-left: 18px"><li>řečník a&#160;živá hudba</li><li>kytice a&#160;věnce</li><li>poplatky hřbitova</li><li>smuteční hostina</li></ul></div>
+</div>
+</section>
+
+<section style="display: flex; flex-direction: column; gap: 6px">
+<h2 style="margin: 0; border-top: 1px solid #111111; padding-top: 8px; font-size: 19px; font-weight: 800">Jednotlivé položky</h2>
+<table style="border-collapse: collapse; width: 100%; font-size: 14px; line-height: 1.4; font-variant-numeric: tabular-nums">
+<tbody>
+<tr style="border-bottom: 1px solid #8A8A8A"><th scope="row" style="text-align: left; padding: 6px 12px 6px 0; font-weight: 700">Převoz zesnulého</th><td style="padding: 6px 12px 6px 0">do 30&#160;km, ve dne i&#160;v&#160;noci</td><td style="padding: 6px 0; text-align: right; white-space: nowrap">2&#160;900&#160;Kč</td></tr>
+<tr style="border-bottom: 1px solid #8A8A8A"><th scope="row" style="text-align: left; padding: 6px 12px 6px 0; font-weight: 700">Každý další kilometr</th><td style="padding: 6px 12px 6px 0"></td><td style="padding: 6px 0; text-align: right; white-space: nowrap">35&#160;Kč / km</td></tr>
+<tr style="border-bottom: 1px solid #8A8A8A"><th scope="row" style="text-align: left; padding: 6px 12px 6px 0; font-weight: 700">Uložení v&#160;chladicím zařízení</th><td style="padding: 6px 12px 6px 0">prvních 5 dní v&#160;ceně pohřbu</td><td style="padding: 6px 0; text-align: right; white-space: nowrap">250&#160;Kč / den</td></tr>
+<tr style="border-bottom: 1px solid #8A8A8A"><th scope="row" style="text-align: left; padding: 6px 12px 6px 0; font-weight: 700">Rakev dřevěná</th><td style="padding: 6px 12px 6px 0"></td><td style="padding: 6px 0; text-align: right; white-space: nowrap">od 4&#160;900&#160;Kč</td></tr>
+<tr style="border-bottom: 1px solid #8A8A8A"><th scope="row" style="text-align: left; padding: 6px 12px 6px 0; font-weight: 700">Urna</th><td style="padding: 6px 12px 6px 0"></td><td style="padding: 6px 0; text-align: right; white-space: nowrap">od 900&#160;Kč</td></tr>
+<tr style="border-bottom: 1px solid #8A8A8A"><th scope="row" style="text-align: left; padding: 6px 12px 6px 0; font-weight: 700">Smuteční oznámení</th><td style="padding: 6px 12px 6px 0">20 kusů, tisk a&#160;obálky</td><td style="padding: 6px 0; text-align: right; white-space: nowrap">1&#160;200&#160;Kč</td></tr>
+<tr style="border-bottom: 1px solid #8A8A8A"><th scope="row" style="text-align: left; padding: 6px 12px 6px 0; font-weight: 700">Řečník</th><td style="padding: 6px 12px 6px 0">občanský obřad</td><td style="padding: 6px 0; text-align: right; white-space: nowrap">1&#160;500&#160;Kč</td></tr>
+<tr style="border-bottom: 1px solid #8A8A8A"><th scope="row" style="text-align: left; padding: 6px 12px 6px 0; font-weight: 700">Převoz ze zahraničí</th><td style="padding: 6px 12px 6px 0">podle země a&#160;vzdálenosti</td><td style="padding: 6px 0; text-align: right; white-space: nowrap">na dotaz</td></tr>
+</tbody>
+</table>
+</section>
+
+<div style="margin-top: auto; display: flex; flex-direction: column; gap: 6px; border-top: 2px solid #111111; padding-top: 10px; font-size: 13px; line-height: 1.5">
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px; font-size: 14px"><p style="margin: 0"><strong style="font-size: 15px">Nonstop převoz zesnulých +420 000 000 199</strong><br>ve dne, v&#160;noci i&#160;o&#160;svátcích</p><p style="margin: 0"><strong style="font-size: 15px">Kancelář</strong><br>Po–Čt 7.00–15.30, Pá 7.00–14.00</p></div>
+<p style="margin: 0">Pohřební služba Vzor s.r.o., Náměstí 12, 000 00 Vzorov, IČO 000 00 000, zapsaná u&#160;Krajského soudu v&#160;[MĚSTĚ], oddíl C, vložka 00000. Ceny jsou uvedeny včetně DPH. Spory: Česká obchodní inspekce, adr.coi.cz. Vytištěno z&#160;vzor.example/cenik/.</p>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":794,"height":1123}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>
