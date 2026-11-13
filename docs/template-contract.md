@@ -101,6 +101,7 @@ export default {
     prePlanning: false,           // the page pohreb-predem
     priceInclusions: false,       // renders pricing groups' includes[] / excludes[] (CMS shows them only then)
     landscapes: false,            // full-bleed photos from site/landscapes.json between sections (template E)
+    places: false,                // the firm's places from site/places.json (template G)
   },
 
   homepageSections: {
@@ -137,6 +138,8 @@ export default {
 Templates A and B declare every optional flag `false` (2026-11-10). A template that renders `/pravni-informace/` declares `pageFields["pravni-informace"]`; that is what makes the CMS show the legal-information entry and what obliges the footer link (§6). Image slots for notices and people use the prefixes `notice.` and `person.` (for example `"notice.photo"`, `"person.photo"`); without them the CMS keeps those image fields hidden.
 
 **Landscape photo set (added 2026-11-13 for template E).** `supports.landscapes` pairs with `features.landscapes` like the content types above (G-005 rejects the feature without support). A supporting template renders the photos of `site/landscapes.json` (`getLandscapes()`, content-contract §6.18) as full-bleed bands between sections and declares the slot `"landscape.band"` (E: aspect `32:11`). Bands are never in the first viewport, so the LCP element stays text, and a page must read as complete with no photos. Notice pages never show them (L1). Templates A–D declare `landscapes: false`.
+
+**Places (added 2026-11-13 for template G).** `supports.places` pairs with `features.places` the same way. A supporting template renders `site/places.json` (`getPlaces()`, content-contract §6.19) and declares the slot `"place.photo"` (G: aspect `3:2`). A place without a photo must render as text (name, address, sentence), never as an empty frame. Notice pages never show places. Templates A–E declare `places: false`.
 
 Every value in `options` must be fully implemented and must pass contrast and layout QA. The agent cannot ask for values outside the declared set (`site.config.ts` is validated against the manifest).
 

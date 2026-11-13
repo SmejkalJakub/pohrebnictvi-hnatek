@@ -187,6 +187,7 @@ describe("feature switches", () => {
       prePlanning: false,
       priceInclusions: false,
       landscapes: false,
+      places: false,
     },
     homepageSections: {
       available: ["hero", "next-steps", "services", "contact-summary", "family-story"],

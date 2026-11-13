@@ -26,6 +26,7 @@ const manifest = {
     priceInclusions: true,
     // The template's main idea: full-bleed photos of the client's region between sections.
     landscapes: true,
+    places: false,
   },
 
   // A long, slow read: the text-only opening, the place picker, services, the family, the people

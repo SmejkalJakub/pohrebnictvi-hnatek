@@ -10,10 +10,12 @@ import {
   Contact,
   EmergencyTransport,
   LandscapeSet,
+  PlaceSet,
   LegalInfo,
   OfficeHours,
   Pricing,
   type LandscapeImage,
+  type Place,
   type PageId,
 } from "./schemas.ts";
 import { isCollectionEnabled, isNoticeLive } from "../gate/visibility.ts";
@@ -214,6 +216,18 @@ export async function getLandscapes(): Promise<LandscapeImage[]> {
     return [];
   }
   return parseOrThrow("landscapes.json", LandscapeSet, data.landscapes).images;
+}
+
+/**
+ * The firm's places in list order (content-contract §6.19), each with an optional photo.
+ * Empty while features.places is off or the site has no site/places.json.
+ */
+export async function getPlaces(): Promise<Place[]> {
+  const site = await getSiteContext();
+  if (!site.config.features.places || data.places === null) {
+    return [];
+  }
+  return parseOrThrow("places.json", PlaceSet, data.places).places;
 }
 
 export async function getPricing(): Promise<PricingView | null> {

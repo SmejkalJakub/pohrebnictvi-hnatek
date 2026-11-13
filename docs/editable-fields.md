@@ -235,9 +235,23 @@ CMS entry **"Krajiny"** in the group "Firma a kontakt" (template E; added 2026-1
 
 The list's help text carries the guardrail the schema cannot check: *"Fotografie krajiny nebo budov z vašeho okolí, vlastní nebo zakázkové. Na fotografii nesmí být lidé, západ slunce, mraky ani květiny. Nepoužívejte fotobanky ani obrázky vytvořené počítačem. Na webu se nikdy nezobrazí na začátku stránky. Bez fotografií zůstane mezi oddíly volné místo."* The owner checks the photos against it before launch. The Kontakt building photo is the page field `secondaryImage` of `pages/kontakt.md` (§4.5), not part of this list.
 
+### 4.18 The firm's places (`site/places.json`, only while `features.places` is on)
+
+CMS entry **"Naše místa"** in the group "Firma a kontakt" (template G; added 2026-11-13).
+
+| Field | Agent | Client CMS | Widget / validation | Notes |
+| --- | --- | --- | --- | --- |
+| `places[]` | draft from the client's own material; placeholders otherwise | **CMS**: add, remove, reorder (0–12) | collapsible list, summary `{name}` | the list order is the order on the site |
+| `places[].name` | draft | **CMS**, required | string ≤ 80 | "Kancelář a vazárna květin" |
+| `places[].address` | draft | **CMS** | string ≤ 120 | free text, not a tracked fact |
+| `places[].note` | draft | **CMS** | string ≤ 160 | one sentence |
+| `places[].image` | the client's own photos only | **CMS** | the inline `ImageRef` of §4.10 (optional); file help: "Na šířku, alespoň 1600 px." | `licensed-stock` and `depicts: generic` rejected by the schema; rights as §4.10 |
+
+The list's help text carries the guardrail the schema cannot check: *"Místa, kde se staráte o zesnulé a o rodiny: kancelář, obřadní síň, vůz, vazárna, hřbitov. Fotografie jen vlastní nebo zakázkové, bez smutečních hostů a bez zesnulých. Nepoužívejte fotobanky ani obrázky vytvořené počítačem. Místo bez fotografie se na webu ukáže jako řádek s adresou."*
+
 ### 4.11 Never in the CMS
 
-`site.config.ts` (template, options, homepage order, features, `siteUrl`, `pinnedBuildDate`), `template.manifest.ts`, everything under `src/core/`, `src/layouts/`, `src/components/`, `src/pages/`, `src/styles/`, `astro.config.mjs`, `package*.json`, `.pages.yml` itself, deployment settings, `docs/provenance/` (including the staff consent records), the `articles/` collection (absent for Hnátek), every optional collection, page or singleton whose feature is off (including `site/landscapes.json`), and the `emergency.label`, `emergency.availability` and `emergency.enabled` fields.
+`site.config.ts` (template, options, homepage order, features, `siteUrl`, `pinnedBuildDate`), `template.manifest.ts`, everything under `src/core/`, `src/layouts/`, `src/components/`, `src/pages/`, `src/styles/`, `astro.config.mjs`, `package*.json`, `.pages.yml` itself, deployment settings, `docs/provenance/` (including the staff consent records), the `articles/` collection (absent for Hnátek), every optional collection, page or singleton whose feature is off (including `site/landscapes.json` and `site/places.json`), and the `emergency.label`, `emergency.availability` and `emergency.enabled` fields.
 
 ## 5. CMS validation and failure handling
 
