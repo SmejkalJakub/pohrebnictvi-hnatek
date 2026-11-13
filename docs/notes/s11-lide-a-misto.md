@@ -212,9 +212,9 @@ The number never wraps: "+420 000 000 199" at 46 px bold Archivo is about 390 px
 | Layout | `layouts/EssayLayout.astro` (`data-emphasis` on `<html>`, SeoHead, StructuredData, PrototypeBanner, skip link, `main#obsah` as the section grid, `neutral` prop) |
 | Chrome | `EssayHeader` (wordmark, subtitle, nav row / Menu button), `EssayMenu`, `HighLineStrip`, `NonstopRuleBlock`, `PublisherSentence`, `EssayFooter` (full / neutral) |
 | Figures and places | `NumberedFigure` (figure + `<Picture>` + numbered caption + address + credit), `PlaceGrid` (photo and text cells), `PlaceList` (numbered list fallback), `src/lib/figures.ts` |
-| Home | `PeopleHero` (photo / text-only), `PlacesSection` (family-story), `FirstStepsRow`, `ReceptionSection` (people), `ServiceLinksSection`, `PriceColumn`, `OfficeColumn`, `NoticesColumn`, `CatalogueLinkRow` |
-| Guidance + FAQ | `DeathPlacePicker`, `PhaseSteps`, `StepBlock`, `FaqTopics` |
-| Pricing | `PriceGroupBlock`, `PriceItemRows`, `IncludedExcluded`, `styles/print.css` |
+| Home | `PeopleHero` (photo / text-only), `PlacesSection` (family-story), `FirstStepsRow`, `ReceptionSection` (people), `ServiceLinksSection`, `PriceColumn`, `ReceptionOffice`, `NoticesColumn`, `CatalogueLinkRow` |
+| Guidance + FAQ | `DeathPlacePicker`, `PhaseColumns`, `StepBlock`, `FaqTopics` |
+| Pricing | `PriceGroupRows`, `PriceItemRows`, `IncludedExcluded`, `styles/print.css` |
 | Notices | `NoticeRowList`, `NoticeDetailBlock`, `NoticeQrNote` |
 | People, contact, catalogue, legal | `PortraitGrid`, `PeopleNumberTable`, `OfficeHoursRuled`, `PhoneRows`, `TransportBlock`, `BillingDetails`, `CatalogueFigures`, `CatalogueNumberTable`, `AdrBlock`, `DocumentList`, `RuledProse` (Markdown body split at `##`), `AnchorRow`, `ServiceSection` |
 

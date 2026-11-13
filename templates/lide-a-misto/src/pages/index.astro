@@ -24,7 +24,7 @@ import FirstStepsRow from "../components/FirstStepsRow.astro";
 import ReceptionSection from "../components/ReceptionSection.astro";
 import ServiceLinksSection from "../components/ServiceLinksSection.astro";
 import PriceColumn from "../components/PriceColumn.astro";
-import OfficeColumn from "../components/OfficeColumn.astro";
+import ReceptionOffice from "../components/ReceptionOffice.astro";
 import NoticesColumn from "../components/NoticesColumn.astro";
 import CatalogueLinkRow from "../components/CatalogueLinkRow.astro";
 import { seoDescription } from "../lib/site.ts";
@@ -157,7 +157,7 @@ function colOf(index: number): number | null {
         {section === "price-summary" && pricing !== null ? (
           <PriceColumn pricing={pricing} title={priceTitle} col={colOf(index)} />
         ) : null}
-        {section === "contact-summary" ? <OfficeColumn site={site} col={colOf(index)} /> : null}
+        {section === "contact-summary" ? <ReceptionOffice site={site} col={colOf(index)} /> : null}
         {section === "notices" ? <NoticesColumn title={noticesTitle} count={noticeCount} col={colOf(index)} /> : null}
         {section === "catalogue-links" ? <CatalogueLinkRow links={catalogueLinks} /> : null}
       </>

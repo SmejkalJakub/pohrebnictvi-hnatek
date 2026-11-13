@@ -6,7 +6,7 @@
 import { getFaq, getGuidance, getPage, getSiteContext } from "@core/content/load.ts";
 import EssayLayout from "../layouts/EssayLayout.astro";
 import PageOpening from "../components/PageOpening.astro";
-import PhaseSteps from "../components/PhaseSteps.astro";
+import PhaseColumns from "../components/PhaseColumns.astro";
 import RuledProse from "../components/RuledProse.astro";
 import FaqTopics from "../components/FaqTopics.astro";
 import { seoDescription, seoTitle } from "../lib/site.ts";
@@ -19,7 +19,7 @@ const Body = page.Content;
 ---
 <EssayLayout site={site} title={seoTitle(page.data)} description={seoDescription(page.data)}>
   <PageOpening title={page.data.title} lead={page.data.lead} placeholder={page.data.placeholder} emergency={site.emergency} />
-  <PhaseSteps site={site} guidance={guidance} />
+  <PhaseColumns site={site} guidance={guidance} />
   {page.hasBody ? <RuledProse id="postup-text"><Body /></RuledProse> : null}
   {faq.length > 0 ? <FaqTopics groups={faq} /> : null}
 </EssayLayout>

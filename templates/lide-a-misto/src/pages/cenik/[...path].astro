@@ -14,7 +14,7 @@ import { formatPhone } from "@core/format/phone.ts";
 import EssayLayout from "../../layouts/EssayLayout.astro";
 import PageOpening from "../../components/PageOpening.astro";
 import AnchorRow from "../../components/AnchorRow.astro";
-import PriceGroupBlock from "../../components/PriceGroupBlock.astro";
+import PriceGroupRows from "../../components/PriceGroupRows.astro";
 import RuledProse from "../../components/RuledProse.astro";
 import { mainLocation, primaryOfficePhone, seoDescription, seoTitle } from "../../lib/site.ts";
 import { ui } from "../../i18n/cs.ts";
@@ -53,7 +53,7 @@ const Body = page.Content;
     <p class="muted no-print">{ui.printHint}</p>
   </PageOpening>
   {anchors.length > 1 ? <AnchorRow label={ui.groupsLabel} links={anchors} /> : null}
-  {pricing.groups.map((group) => <PriceGroupBlock group={group} />)}
+  {pricing.groups.map((group) => <PriceGroupRows group={group} />)}
   <div class="frame vat-end">
     <div class="ruled-thin split">
       <VatNote pricing={pricing} class="vat-close" />
