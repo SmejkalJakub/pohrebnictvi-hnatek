@@ -1,0 +1,119 @@
+---
+/**
+ * The contact form (features.contactForm, core/forms/contact.ts). Plain HTML, no JavaScript:
+ * the browser checks the required fields, the hosting provider receives the POST and shows
+ * CONTACT_FORM.successPath. Renders nothing when the feature is off or has no handler.
+ *
+ * Templates give the layout through the class props and own the heading (`labelledBy`). The
+ * nonstop line is always repeated inside the form, so nobody uses the form for an urgent case.
+ */
+import EmergencyPhoneLink from "./EmergencyPhoneLink.astro";
+import type { SiteContext } from "../content/view-models.ts";
+import { CONTACT_FORM, CONTACT_FORM_TEXT, PRIVACY_PATH, contactFormAttributes } from "../forms/contact.ts";
+
+interface Props {
+  site: SiteContext;
+  /** id of the template's heading for the form. */
+  labelledBy: string;
+  class?: string;
+  fieldClass?: string;
+  labelClass?: string;
+  inputClass?: string;
+  hintClass?: string;
+  noteClass?: string;
+  /** The nonstop line at the top of the form; defaults to noteClass. */
+  urgentClass?: string;
+  linkClass?: string;
+  buttonClass?: string;
+}
+
+const {
+  site,
+  labelledBy,
+  class: className,
+  fieldClass,
+  labelClass,
+  inputClass,
+  hintClass,
+  noteClass,
+  urgentClass = noteClass,
+  linkClass,
+  buttonClass,
+} = Astro.props;
+const handler = site.config.contactFormHandler;
+const enabled = site.config.features.contactForm && handler !== null;
+let attributes: Record<string, string> = {};
+if (enabled && handler !== null) {
+  attributes = contactFormAttributes(handler);
+}
+const { fields, maxLength } = CONTACT_FORM;
+const text = CONTACT_FORM_TEXT;
+const id = (field: string): string => `kontaktni-formular-${field}`;
+---
+{
+  enabled ? (
+    <form
+      name={CONTACT_FORM.name}
+      method="POST"
+      action={CONTACT_FORM.successPath}
+      aria-labelledby={labelledBy}
+      class={className}
+      data-contact-form
+      {...attributes}
+    >
+      <input type="hidden" name="form-name" value={CONTACT_FORM.name} />
+      <p hidden>
+        <label>
+          {text.honeypotLabel}
+          <input name={CONTACT_FORM.honeypot} tabindex="-1" autocomplete="off" />
+        </label>
+      </p>
+      {site.emergency.enabled ? (
+        <p class={urgentClass} data-contact-form-urgent>
+          {text.urgent} <EmergencyPhoneLink emergency={site.emergency} variant="number" class={linkClass} />
+        </p>
+      ) : null}
+      <div class={fieldClass}>
+        <label for={id(fields.name)} class={labelClass}>{text.nameLabel}</label>
+        <input
+          id={id(fields.name)}
+          name={fields.name}
+          type="text"
+          autocomplete="name"
+          maxlength={maxLength.name}
+          required
+          class={inputClass}
+        />
+      </div>
+      <div class={fieldClass}>
+        <label for={id(fields.reply)} class={labelClass}>{text.replyLabel}</label>
+        <p id={id(`${fields.reply}-napoveda`)} class={hintClass}>{text.replyHint}</p>
+        <input
+          id={id(fields.reply)}
+          name={fields.reply}
+          type="text"
+          autocomplete="email"
+          maxlength={maxLength.reply}
+          required
+          aria-describedby={id(`${fields.reply}-napoveda`)}
+          class={inputClass}
+        />
+      </div>
+      <div class={fieldClass}>
+        <label for={id(fields.message)} class={labelClass}>{text.messageLabel}</label>
+        <textarea
+          id={id(fields.message)}
+          name={fields.message}
+          rows="6"
+          maxlength={maxLength.message}
+          required
+          class={inputClass}
+        />
+      </div>
+      <p class={noteClass} data-contact-form-privacy>
+        {text.privacyBefore} <a href={PRIVACY_PATH} class={linkClass}>{text.privacyLink}</a>.
+      </p>
+      <button type="submit" class={buttonClass}>{text.submit}</button>
+    </form>
+  ) : null
+}

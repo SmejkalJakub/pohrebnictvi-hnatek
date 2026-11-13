@@ -79,10 +79,10 @@ function yearOrDateToString(value: unknown): unknown {
 export const Order = z.number().int().min(0).max(999).default(100);
 
 // ---------------------------------------------------------------------------
-// Tolerance for what Pages CMS writes (docs/spikes/pages-cms.md B3, B6, B7)
+// Tolerance for what a Git-based CMS writes (docs/cms/architecture.md §4)
 // ---------------------------------------------------------------------------
 
-/** Pages CMS deletes empty values on save, so a whole object of nulls may vanish: treat missing as {}. */
+/** A CMS may drop empty values on save, so a whole object of nulls may vanish: treat missing as {}. */
 export function objectOrEmpty<T extends z.ZodType>(schema: T) {
   return z.preprocess((value) => {
     if (value === undefined || value === null) {
@@ -117,7 +117,7 @@ export function asciiSlug(value: string): string {
 }
 
 /**
- * Lists the client can extend in the CMS: new rows arrive without an `id` (B7). Missing or empty ids
+ * Lists the client can extend in the CMS: new rows arrive without an `id`. Missing or empty ids
  * are derived from a label (ASCII slug, "-2", "-3" on collision). Explicit ids are kept as written, so
  * duplicate explicit ids are still reported by the schema.
  */

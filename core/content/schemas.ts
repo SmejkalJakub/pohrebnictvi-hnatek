@@ -1,6 +1,6 @@
 /**
  * Content schemas: the normative contract from docs/content-contract.md §6.
- * Flat, CMS-shaped objects only (no discriminated unions), so Pages CMS can edit them.
+ * Flat, CMS-shaped objects only (no discriminated unions), so the CMS (Decap) can edit them.
  */
 import { z } from "astro/zod";
 import {
@@ -46,6 +46,13 @@ export const ImageRef = z
     source: z.enum(["client", "existing-website", "own-photo", "licensed-stock", "placeholder"]),
     depicts: z.enum(["actual-business", "generic", "placeholder"]),
     rightsConfirmed: flag(false),
+    /**
+     * The file the rights confirmation was given for. Written by the CMS when the editor confirms the
+     * rights; the gate (G-033) does not accept a confirmation that belongs to a different file, so
+     * replacing a photo never inherits the previous photo's confirmation. Missing or null: not
+     * recorded (content written before the CMS); the confirmation then applies to `file`.
+     */
+    rightsConfirmedFor: optionalText(300),
     focus: z.preprocess(
       emptyToUndefined,
       z.enum(["center", "top", "bottom", "left", "right"]).default("center"),
@@ -81,8 +88,8 @@ function emptyToUndefined(value: unknown): unknown {
 }
 
 /**
- * "No image" may arrive as null, "", a missing key, or an object without a file: Pages CMS keeps
- * booleans such as rightsConfirmed: false, so an untouched optional image is never fully empty (B6).
+ * "No image" may arrive as null, "", a missing key, or an object without a file: a CMS keeps
+ * booleans such as rightsConfirmed: false, so an untouched optional image is never fully empty.
  */
 function emptyImageToNull(value: unknown): unknown {
   if (value === undefined || value === null || value === "") {
@@ -662,7 +669,7 @@ export const PriceGroup = z.object({
 export type PriceGroup = z.infer<typeof PriceGroup>;
 
 /**
- * New price groups and items added in the CMS arrive without ids (B7). Groups get a slug of their
+ * New price groups and items added in the CMS arrive without ids. Groups get a slug of their
  * title; items get "<group id>-<slug of label>", unique across the whole price list, because item
  * ids must be unique list-wide. Explicit ids are kept as written.
  */

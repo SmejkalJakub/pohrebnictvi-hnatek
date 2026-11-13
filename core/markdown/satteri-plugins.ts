@@ -1,8 +1,8 @@
 /**
  * Markdown plugins for Astro 7's default processor (Sätteri), installed by core/integration.ts.
  *
- * Pages CMS's rich-text editor cannot be restricted (it offers H1–H3, docs/spikes/pages-cms.md §5),
- * so instead of failing the build core normalises what the editor produces:
+ * A CMS rich-text editor (or a hand edit) may still produce an H1, so instead of failing the build
+ * core normalises it (the Decap editor offers H2–H4 only, docs/cms/architecture.md §4):
  *  - every `#` heading in a body becomes `##` (the page H1 comes from the title field);
  *  - heading ids are ASCII slugs ("co-sluzba-zahrnuje"), as content-contract §5 requires for anchors.
  *

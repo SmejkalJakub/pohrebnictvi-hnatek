@@ -12,7 +12,7 @@ const manifest = {
   supports: {
     articles: false,
     multipleLocations: false,
-    contactForm: false,
+    contactForm: true,
     // One long /sluzby/ page with anchors (/sluzby/#<slug>); no /sluzby/<slug>/ paths are emitted.
     serviceDetailPages: false,
     mapEmbed: false,

@@ -5,6 +5,7 @@
  * `import type`, so Node can load them directly (type stripping) without a bundler.
  */
 import { z } from "astro/zod";
+import { CONTACT_FORM_HANDLERS } from "../forms/contact.ts";
 import { Id, IsoDate, Url, nullable } from "./primitives.ts";
 
 export const HOMEPAGE_SECTIONS = [
@@ -37,7 +38,11 @@ export const SiteConfig = z
       guestInfo: z.boolean().default(false),
       prePlanning: z.boolean().default(false),
     }),
-    contactFormEndpoint: nullable(Url).default(null),
+    /**
+     * Who receives the contact form (core/forms/contact.ts). "netlify" = Netlify Forms, so the site
+     * must be hosted on Netlify. Required while features.contactForm is on (G-060).
+     */
+    contactFormHandler: z.enum(CONTACT_FORM_HANDLERS).nullable().default(null),
     /**
      * Fixed "today" for deterministic fixture and template-development builds (notice publication
      * windows, upcoming ceremonies). Prototype only: the production gate rejects it (G-073).

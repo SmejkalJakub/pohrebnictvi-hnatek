@@ -76,6 +76,7 @@ describe("individual rules", () => {
         source: "client",
         depicts: "actual-business",
         rightsConfirmed: true,
+        rightsConfirmedFor: null,
         focus: "center",
       };
     }, "prototype");
@@ -181,11 +182,34 @@ describe("individual rules", () => {
         source: "client",
         depicts: "actual-business",
         rightsConfirmed: false,
+        rightsConfirmedFor: null,
         focus: "center",
       };
     };
     expect(rules(productionErrors(mutate), "error")).toEqual(["G-033"]);
     expect(rules(productionErrors(mutate, "prototype"), "warning")).toEqual(["G-033"]);
+  });
+
+  it("G-033 rejects a rights confirmation recorded for a different photo (CMS image replaced)", () => {
+    const image = (rightsConfirmedFor: string | null) => (content: ValidatedContent) => {
+      content.flowers[0]!.data.image = {
+        file: "src/assets/media/placeholder-1x1.png",
+        alt: "Věnec z bílých růží",
+        decorative: false,
+        caption: null,
+        credit: null,
+        source: "client",
+        depicts: "actual-business",
+        rightsConfirmed: true,
+        rightsConfirmedFor,
+        focus: "center",
+      };
+    };
+    const replaced = productionErrors(image("budova-kancelare.jpg"));
+    expect(rules(replaced, "error")).toEqual(["G-033"]);
+    expect(replaced.find((finding) => finding.rule === "G-033")?.cs).toContain("jinou fotografii");
+    expect(rules(productionErrors(image("placeholder-1x1.png")), "error")).toEqual([]);
+    expect(rules(productionErrors(image(null)), "error")).toEqual([]);
   });
 
   it("G-041 stale guidance review warns in production only", () => {
@@ -222,6 +246,18 @@ describe("individual rules", () => {
       content.config.features.map = "embed-on-click";
     });
     expect(rules(findings, "error")).toEqual(["G-060", "G-061"]);
+  });
+
+  it("G-060 contact form needs a handler; with one and the privacy page it passes", () => {
+    const noHandler = productionErrors((content) => {
+      content.config.features.contactForm = true;
+    });
+    expect(rules(noHandler, "error")).toEqual(["G-060"]);
+    const ready = productionErrors((content) => {
+      content.config.features.contactForm = true;
+      content.config.contactFormHandler = "netlify";
+    });
+    expect(rules(ready, "error")).toEqual([]);
   });
 });
 

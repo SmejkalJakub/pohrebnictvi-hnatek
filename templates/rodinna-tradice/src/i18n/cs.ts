@@ -31,6 +31,7 @@ export const ui = {
   registeredOffice: "Sídlo",
   serviceArea: "Oblast",
   privacy: "Ochrana osobních údajů",
+  formLabel: "Dotaz",
   reviewedOn: "Text ověřen",
   sources: "Zdroje",
   foundedSince: "od roku",

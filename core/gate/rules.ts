@@ -24,6 +24,15 @@ import {
   type Publishable,
 } from "./visibility.ts";
 
+/** True when two stored media paths name the same file ("a.jpg", "src/assets/media/a.jpg"). */
+function sameMediaFile(a: string, b: string): boolean {
+  try {
+    return normalizeMediaFile(a) === normalizeMediaFile(b);
+  } catch {
+    return false;
+  }
+}
+
 export type Level = "error" | "warning" | "marker" | "off";
 
 export const RULES = {
@@ -57,7 +66,7 @@ export const RULES = {
     production: "warning",
   },
   "G-051": { title: "Articles only with a supporting template", prototype: "error", production: "error" },
-  "G-060": { title: "Contact form needs endpoint and privacy page", prototype: "error", production: "error" },
+  "G-060": { title: "Contact form needs a handler and the privacy page", prototype: "error", production: "error" },
   "G-061": { title: "Map embed needs privacy page", prototype: "error", production: "error" },
   // Optional content types (research funeral-ux.md §4a, §8; content-contract §8).
   "G-070": { title: "Published notice has a consent record", prototype: "error", production: "error" },
@@ -342,14 +351,14 @@ function checkStructure(content: ValidatedContent, out: Candidate[]): void {
 
   const features = content.config.features;
   if (features.contactForm) {
-    const ready = content.config.contactFormEndpoint !== null && privacyPresent;
+    const ready = content.config.contactFormHandler !== null && privacyPresent;
     if (!ready) {
       out.push({
         rule: "G-060",
         file: "src/site.config.ts",
         path: "features.contactForm",
-        cs: "Kontaktní formulář vyžaduje adresu pro odeslání a stránku ochrany osobních údajů.",
-        en: "Contact form requires contactFormEndpoint and the privacy page.",
+        cs: "Kontaktní formulář vyžaduje příjemce zpráv (contactFormHandler) a stránku ochrany osobních údajů.",
+        en: "Contact form requires contactFormHandler and the privacy page.",
       });
     }
   }
@@ -616,6 +625,17 @@ function checkPlaceholdersAndImages(content: ValidatedContent, buildDate: string
         path: `${use.path}.rightsConfirmed`,
         cs: "Není potvrzeno právo obrázek použít.",
         en: "Image rights are not confirmed.",
+      });
+      continue;
+    }
+    const confirmedFor = use.image.rightsConfirmedFor;
+    if (confirmedFor !== null && !sameMediaFile(confirmedFor, use.image.file)) {
+      out.push({
+        rule: "G-033",
+        file: use.file,
+        path: `${use.path}.rightsConfirmed`,
+        cs: `Právo bylo potvrzeno pro jinou fotografii (${confirmedFor}). Po výměně fotografie potvrďte práva znovu.`,
+        en: `Image rights were confirmed for a different file (${confirmedFor}); confirm them again for the new photo.`,
       });
     }
   }

@@ -16,6 +16,7 @@ import type { AstroIntegration } from "astro";
 import { resolveBuildDate } from "./content/build-date.ts";
 import type { TemplateManifest } from "./content/config.ts";
 import { noticeHref, noticeQrHref } from "./content/optional-views.ts";
+import { CONTACT_FORM } from "./forms/contact.ts";
 import { OPTIONAL_SINGLETON_NAMES, SINGLETON_NAMES } from "./content/schemas.ts";
 import type { ValidatedContent } from "./content/snapshot.ts";
 import { formatFindings, summarize } from "./gate/report.ts";
@@ -44,12 +45,18 @@ interface StaticFiles {
   generated: Map<string, string>;
 }
 
-/** Live notices with noindex: excluded from sitemap.xml and given robots noindex by SeoHead. */
+/**
+ * Excluded from sitemap.xml and given robots noindex by SeoHead: live notices marked noindex, and
+ * the contact form's success page.
+ */
 function noindexPathsOf(content: ValidatedContent, buildDate: string): string[] {
-  return content.notices
+  const paths = content.notices
     .filter((notice) => notice.data.noindex && isNoticeLive(notice.data, content, buildDate))
-    .map((notice) => noticeHref(notice.id))
-    .sort();
+    .map((notice) => noticeHref(notice.id));
+  if (content.config.features.contactForm) {
+    paths.push(CONTACT_FORM.successPath);
+  }
+  return paths.sort();
 }
 
 function staticFilesOf(content: ValidatedContent, buildDate: string): StaticFiles {

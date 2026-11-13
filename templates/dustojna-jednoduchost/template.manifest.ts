@@ -10,7 +10,7 @@ const manifest = {
   supports: {
     articles: false,
     multipleLocations: false,
-    contactForm: false,
+    contactForm: true,
     serviceDetailPages: true,
     mapEmbed: false,
     // Optional content types (research §8): not implemented by this template yet.

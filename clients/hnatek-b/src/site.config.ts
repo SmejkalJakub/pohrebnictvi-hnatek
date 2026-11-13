@@ -7,7 +7,10 @@ const config = {
   template: "dustojna-jednoduchost",
   // The real domain is required in production (G-012). pohrebnictvihnatek.cz is planned but not switched yet (U17).
   siteUrl: "https://example.invalid",
-  features: { articles: false, contactForm: false, map: "link" },
+  // Contact form for testing on Netlify (Netlify Forms). The privacy page is still a placeholder, so
+  // production stays blocked (G-031) until its text covers the form and is approved.
+  features: { articles: false, contactForm: true, map: "link" },
+  contactFormHandler: "netlify",
   // Manifest default, plus catalogue-links because the client has a real coffin and flower catalogue.
   homepage: { sections: ["hero", "next-steps", "services", "catalogue-links", "contact-summary", "family-story"] },
   options: {

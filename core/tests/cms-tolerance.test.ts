@@ -1,5 +1,8 @@
 /**
- * Content must survive what Pages CMS does on save (docs/spikes/pages-cms.md B3, B6, B7, A1–A4).
+ * Content must survive what a Git-based CMS does on save: empty values dropped or written as "",
+ * booleans left null, new list rows without ids, selects instead of booleans
+ * (docs/cms/architecture.md §4). Decap-specific serialisation is tested in
+ * tools/cms/tests/decap-roundtrip.test.ts against the real client content.
  */
 import { describe, expect, it } from "vitest";
 import { Company, Contact, OfficeHours, Page, Pricing } from "../content/schemas.ts";
@@ -7,7 +10,7 @@ import { asciiSlug } from "../content/primitives.ts";
 import { readSiteSnapshot, validateSnapshot } from "../content/snapshot.ts";
 import { FIXTURE_ROOT } from "./helpers.ts";
 
-/** Re-implementation of Pages CMS `sanitizeObject`: drop null, "", [] and {} recursively (false and 0 stay). */
+/** A CMS that drops empty values on save: null, "", [] and {} removed recursively (false and 0 stay). */
 function sanitizeLikeCms(value: unknown): unknown {
   if (Array.isArray(value)) {
     const items = value.map(sanitizeLikeCms).filter((item) => !isEmpty(item));
@@ -39,7 +42,7 @@ function isEmpty(value: unknown): boolean {
   return false;
 }
 
-describe("Pages CMS empty-value stripping (A1)", () => {
+describe("CMS empty-value stripping", () => {
   it("every fixture file still validates after a CMS save", async () => {
     const raw = await readSiteSnapshot(FIXTURE_ROOT);
     const saved = structuredClone(raw);
@@ -63,7 +66,7 @@ describe("Pages CMS empty-value stripping (A1)", () => {
   });
 });
 
-describe("familyOwned as a CMS select (A4)", () => {
+describe("familyOwned as a CMS select", () => {
   const base = { brandName: "Firma", legalName: "Firma s.r.o." };
   it("maps yes / no / unknown", () => {
     expect(Company.parse({ ...base, familyOwned: "yes" }).familyOwned).toBe(true);
@@ -73,7 +76,7 @@ describe("familyOwned as a CMS select (A4)", () => {
   });
 });
 
-describe("optional images (B6)", () => {
+describe("optional images left empty in the CMS", () => {
   const page = { title: "T", navLabel: "N", metaDescription: "D" };
   it("treats an image object without a file as no image", () => {
     expect(
@@ -101,7 +104,7 @@ describe("optional images (B6)", () => {
   });
 });
 
-describe("rows added in the CMS without ids (B7)", () => {
+describe("rows added in the CMS without ids", () => {
   const location = {
     id: "a",
     name: "Kancelář",

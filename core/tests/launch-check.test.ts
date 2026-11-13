@@ -139,6 +139,7 @@ describe("checkLedger", () => {
       source: "client",
       depicts: "actual-business",
       rightsConfirmed: true,
+      rightsConfirmedFor: null,
       focus: "center",
     };
     const approvals = fullApprovals(withImage);

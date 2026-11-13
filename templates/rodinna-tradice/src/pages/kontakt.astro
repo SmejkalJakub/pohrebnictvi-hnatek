@@ -1,17 +1,22 @@
 ---
 /**
  * Kontakt: left an address card in the letterhead style, right the office hours; below,
- * full width, the separately framed nonstop transport panel.
+ * full width, the separately framed nonstop transport panel; last, when features.contactForm is
+ * on, the contact form set like a reply slip (heading in the margin, fields on the text column).
  */
 import LetterLayout from "../layouts/LetterLayout.astro";
 import PageIntro from "../components/PageIntro.astro";
 import AddressCard from "../components/AddressCard.astro";
 import HoursLetter from "../components/HoursLetter.astro";
 import NonstopPanel from "../components/NonstopPanel.astro";
+import ContactForm from "@core/components/ContactForm.astro";
+import { CONTACT_FORM_TEXT } from "@core/forms/contact.ts";
 import { getPage, getSiteContext } from "@core/content/load.ts";
+import { ui } from "../i18n/cs.ts";
 
 const site = await getSiteContext();
 const page = await getPage("kontakt");
+const showForm = site.config.features.contactForm && site.config.contactFormHandler !== null;
 ---
 <LetterLayout site={site} title={page.data.metaTitle ?? page.data.title} description={page.data.metaDescription}>
   <PageIntro title={page.data.title} lead={page.data.lead} placeholder={page.data.placeholder}>
@@ -27,6 +32,28 @@ const page = await getPage("kontakt");
     <div class="contact-nonstop">
       <NonstopPanel site={site} id="kontakt-nonstop" />
     </div>
+    {
+      showForm ? (
+        <section class="reply" aria-labelledby="napiste-nam">
+          <div class="reply-margin">
+            <p class="label">{ui.formLabel}</p>
+            <h2 id="napiste-nam">{CONTACT_FORM_TEXT.heading}</h2>
+          </div>
+          <ContactForm
+            site={site}
+            labelledBy="napiste-nam"
+            class="reply-form"
+            fieldClass="reply-field"
+            labelClass="reply-label"
+            inputClass="reply-input"
+            hintClass="reply-hint"
+            noteClass="reply-note"
+            urgentClass="reply-urgent"
+            buttonClass="reply-button"
+          />
+        </section>
+      ) : null
+    }
   </div>
 </LetterLayout>
 
@@ -44,6 +71,87 @@ const page = await getPage("kontakt");
     margin-top: 3rem;
   }
 
+  .reply {
+    margin-top: 4rem;
+    padding-top: 2.5rem;
+    border-top: 1px solid var(--rule);
+  }
+
+  .reply-margin h2 {
+    margin-top: 0.5rem;
+  }
+
+  .reply :global(.reply-form) {
+    display: grid;
+    gap: 1.5rem;
+    max-width: var(--measure);
+    margin-top: 2rem;
+  }
+
+  .reply :global(.reply-field) {
+    display: grid;
+    gap: 0.375rem;
+  }
+
+  .reply :global(.reply-label) {
+    font-weight: 600;
+  }
+
+  .reply :global(.reply-hint),
+  .reply :global(.reply-note) {
+    color: var(--muted);
+    font-size: 0.9375em;
+  }
+
+  .reply :global(.reply-input) {
+    width: 100%;
+    min-height: 2.75rem;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--rule);
+    border-bottom: 2px solid var(--ink);
+    border-radius: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font: inherit;
+  }
+
+  .reply :global(textarea.reply-input) {
+    min-height: 10rem;
+    resize: vertical;
+  }
+
+  .reply :global(.reply-input:focus-visible) {
+    outline-offset: 1px;
+  }
+
+  .reply :global(.reply-button) {
+    justify-self: start;
+    min-height: 2.75rem;
+    padding: 0.625rem 1.75rem;
+    border: 0;
+    background: var(--strip-bg);
+    color: var(--strip-fg);
+    font: inherit;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+  }
+
+  .reply :global(.reply-button:hover) {
+    background: var(--accent);
+  }
+
+  .reply :global(.reply-urgent) {
+    padding-left: 1rem;
+    border-left: 4px solid var(--strip-bg);
+    color: var(--ink);
+  }
+
+  .reply :global(.reply-urgent a) {
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
   @media (min-width: 48rem) {
     .contact-columns {
       grid-template-columns: 7fr 5fr;
@@ -55,6 +163,21 @@ const page = await getPage("kontakt");
   @media (min-width: 64rem) {
     .contact-columns {
       column-gap: 5rem;
+    }
+
+    .reply {
+      display: grid;
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      column-gap: 2rem;
+    }
+
+    .reply-margin {
+      grid-column: 1 / span 3;
+    }
+
+    .reply :global(.reply-form) {
+      grid-column: 4 / span 8;
+      margin-top: 0;
     }
   }
 </style>

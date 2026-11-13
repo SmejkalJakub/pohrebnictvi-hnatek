@@ -1,0 +1,37 @@
+---
+// /kontakt/odeslano/: shown after the contact form was sent (core/forms/contact.ts). Emitted only
+// while features.contactForm is on; noindex and outside the sitemap (core integration).
+import LetterLayout from "../../layouts/LetterLayout.astro";
+import PageIntro from "../../components/PageIntro.astro";
+import NonstopPanel from "../../components/NonstopPanel.astro";
+import { getSiteContext } from "@core/content/load.ts";
+import { CONTACT_FORM, CONTACT_FORM_TEXT } from "@core/forms/contact.ts";
+
+export async function getStaticPaths() {
+  const site = await getSiteContext();
+  if (!site.config.features.contactForm || site.config.contactFormHandler === null) {
+    return [];
+  }
+  return [{ params: { sent: CONTACT_FORM.successSlug } }];
+}
+
+const site = await getSiteContext();
+---
+<LetterLayout site={site} title={CONTACT_FORM_TEXT.sentTitle} description={CONTACT_FORM_TEXT.sentLead} noindex>
+  <PageIntro title={CONTACT_FORM_TEXT.sentTitle} lead={CONTACT_FORM_TEXT.sentLead} placeholder={false}>
+    <p class="back"><a href="/kontakt/">{CONTACT_FORM_TEXT.sentBack}</a></p>
+  </PageIntro>
+  <div class="frame sent-nonstop">
+    <NonstopPanel site={site} id="odeslano-nonstop" />
+  </div>
+</LetterLayout>
+
+<style>
+  .back {
+    margin-top: 1.5rem;
+  }
+
+  .sent-nonstop {
+    margin-bottom: 4rem;
+  }
+</style>

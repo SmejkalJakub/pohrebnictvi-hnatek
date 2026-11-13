@@ -1,0 +1,31 @@
+---
+// /kontakt/odeslano/: shown after the contact form was sent (core/forms/contact.ts). Emitted only
+// while features.contactForm is on; noindex and outside the sitemap (core integration).
+import { getSiteContext } from "@core/content/load.ts";
+import { CONTACT_FORM, CONTACT_FORM_TEXT } from "@core/forms/contact.ts";
+import Site from "../../layouts/Site.astro";
+import PageHeading from "../../components/PageHeading.astro";
+import EmergencyPanel from "../../components/EmergencyPanel.astro";
+import { resolveOptions } from "../../lib/options.ts";
+
+export async function getStaticPaths() {
+  const site = await getSiteContext();
+  if (!site.config.features.contactForm || site.config.contactFormHandler === null) {
+    return [];
+  }
+  return [{ params: { sent: CONTACT_FORM.successSlug } }];
+}
+
+const site = await getSiteContext();
+const options = resolveOptions(site.config);
+---
+<Site site={site} title={CONTACT_FORM_TEXT.sentTitle} description={CONTACT_FORM_TEXT.sentLead} noindex>
+  <PageHeading title={CONTACT_FORM_TEXT.sentTitle} lead={CONTACT_FORM_TEXT.sentLead}>
+    <p class="mt-4"><a href="/kontakt/" class="text-link">{CONTACT_FORM_TEXT.sentBack}</a></p>
+  </PageHeading>
+  <div class="band">
+    <div class="container-b">
+      <EmergencyPanel emergency={site.emergency} high={options.emergencyEmphasis === "high"} />
+    </div>
+  </div>
+</Site>
