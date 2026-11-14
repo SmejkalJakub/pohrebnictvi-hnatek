@@ -9,18 +9,35 @@ import PlaceholderMark from "@core/components/PlaceholderMark.astro";
 import type { Place } from "@core/content/schemas.ts";
 import PlaceGrid from "./PlaceGrid.astro";
 import PlaceList from "./PlaceList.astro";
+import FigureIndex from "./FigureIndex.astro";
 import { ui } from "../i18n/cs.ts";
 
 interface Props {
   places: Place[];
-  /** First figure number: 2 when the home people photo is figure 01. */
+  /** First figure number: 2 when the home hero photo is figure 01. */
   start: number;
+  /** All the firm's places (for "Všechna místa (n)"), when the hero shows one of them as 01. */
+  total?: number;
+  /** The place the hero shows as figure 01, listed first in the figure index. */
+  heroPlace?: string | null;
   aboutTitle: string;
   aboutText: string;
   aboutPlaceholder: boolean;
 }
 
-const { places, start, aboutTitle, aboutText, aboutPlaceholder } = Astro.props;
+const {
+  places,
+  start,
+  aboutTitle,
+  aboutText,
+  aboutPlaceholder,
+  total = places.length,
+  heroPlace = null,
+} = Astro.props;
+let first: { name: string; number: string; href: string } | null = null;
+if (heroPlace !== null) {
+  first = { name: heroPlace, number: "01", href: "#obrazek-01" };
+}
 const withPhotos = places.some((place) => place.image !== null);
 const phoneLimit = 3;
 ---
@@ -32,13 +49,14 @@ const phoneLimit = 3;
           <h2 id="mista" class="h2">{ui.placesHeading}</h2>
           <a href="/o-nas/#mista" class="go head-link">{ui.placesLink}</a>
         </div>
+        {withPhotos ? <FigureIndex names={places.map((place) => place.name)} start={start} first={first} /> : null}
         {withPhotos ? (
           <PlaceGrid places={places} start={start} layout="home" limitPhone={phoneLimit} />
         ) : (
-          <PlaceList places={places} start={1} layout="home" />
+          <PlaceList places={places} start={start} layout="home" />
         )}
         {withPhotos && places.length > phoneLimit ? (
-          <a href="/o-nas/#mista" class="go phone-all">{ui.allPlaces(places.length)}</a>
+          <a href="/o-nas/#mista" class="go phone-all">{ui.allPlaces(total)}</a>
         ) : null}
       </>
     ) : (

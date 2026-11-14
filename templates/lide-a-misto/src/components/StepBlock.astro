@@ -1,9 +1,11 @@
 ---
 /**
  * One guide step under a 3 px rule with a large green numeral (a step, not a figure): title,
- * summary, a bold-led muted line naming where it applies, native checkboxes, the body in
- * <details>, and the contact prompt (the nonstop link, or the office phone). Hidden by the
- * guide's :target filter when it does not apply.
+ * summary, a bold-led muted line naming where it applies, the step's short guided list
+ * ("Krok za krokem", sub-numbered 3.1, 3.2 in Archivo like the figure index; never tick boxes,
+ * design-differentiation §1.3), the body in <details>, the contact prompt (the nonstop link, or
+ * the office phone) and "Potom: …" to the step that follows. Hidden by the guide's :target filter
+ * when it does not apply. Arriving through a "Potom" link turns the rule green.
  */
 import type { CollectionEntry } from "astro:content";
 import EmergencyPhoneLink from "@core/components/EmergencyPhoneLink.astro";
@@ -11,7 +13,7 @@ import PhoneLink from "@core/components/PhoneLink.astro";
 import PlaceholderMark from "@core/components/PlaceholderMark.astro";
 import UnreviewedMark from "@core/components/UnreviewedMark.astro";
 import { render } from "@core/content/load.ts";
-import { situationsAttribute, type SpecificSituation } from "@core/content/guidance-flow.ts";
+import { guideSentence, situationsAttribute, type SpecificSituation } from "@core/content/guidance-flow.ts";
 import type { SiteContext } from "@core/content/view-models.ts";
 import { formatPhone } from "@core/format/phone.ts";
 import { primaryOfficePhone } from "../lib/site.ts";
@@ -21,9 +23,11 @@ interface Props {
   site: SiteContext;
   entry: CollectionEntry<"guidance">;
   numeral: number;
+  /** The step "Potom" links to (nextGuidanceStep), or null for the last step. */
+  next: { id: string; title: string } | null;
 }
 
-const { site, entry, numeral } = Astro.props;
+const { site, entry, numeral, next } = Astro.props;
 const data = entry.data;
 const office = primaryOfficePhone(site);
 const named = data.situations.filter((situation) => situation !== "any") as SpecificSituation[];
@@ -33,6 +37,7 @@ if (named.length > 0) {
 }
 const { Content } = await render(entry);
 const hasBody = (entry.body ?? "").trim() !== "";
+const sequenceLabelId = `${entry.id}-postupne`;
 ---
 <li id={entry.id} class="step" data-guide-step data-situations={situationsAttribute(entry)}>
   <span class="step-numeral" aria-hidden="true">{numeral}</span>
@@ -45,16 +50,17 @@ const hasBody = (entry.body ?? "").trim() !== "";
     {applies !== null ? <p class="step-when"><b>{ui.appliesWhen}</b> {applies}.</p> : null}
     {
       data.checklist.length > 0 ? (
-        <ul class="step-checks" aria-label={ui.checklist}>
-          {data.checklist.map((item, index) => (
-            <li>
-              <label class="tick">
-                <input type="checkbox" name={`${entry.id}-${index}`} />
-                <span>{item}</span>
-              </label>
-            </li>
-          ))}
-        </ul>
+        <div class="step-guide">
+          <p class="step-guide-label caps" id={sequenceLabelId}>{ui.guideSequence}</p>
+          <ol class="step-sequence" role="list" aria-labelledby={sequenceLabelId}>
+            {data.checklist.map((item, index) => (
+              <li>
+                <span class="seq-num" aria-hidden="true">{numeral}.{index + 1}</span>
+                <span>{guideSentence(item)}</span>
+              </li>
+            ))}
+          </ol>
+        </div>
       ) : null
     }
     {
@@ -81,6 +87,11 @@ const hasBody = (entry.body ?? "").trim() !== "";
         </PhoneLink>
       ) : null
     }
+    {
+      next !== null ? (
+        <a href={`#${next.id}`} class="step-next" data-guide-next>{ui.nextStep(next.title)}</a>
+      ) : null
+    }
   </div>
 </li>
 
@@ -95,6 +106,8 @@ const hasBody = (entry.body ?? "").trim() !== "";
 
   .step-numeral {
     color: var(--green);
+    font-family: var(--font-num);
+    font-variant-numeric: tabular-nums;
     font-size: 1.75rem;
     font-weight: 700;
     line-height: 1;
@@ -122,33 +135,84 @@ const hasBody = (entry.body ?? "").trim() !== "";
     color: var(--ink);
   }
 
-  .step-checks {
-    margin: 0;
+  .step-guide {
+    width: 100%;
+    margin-top: 0.5rem;
+  }
+
+  .step-guide-label {
+    font-size: 0.9375rem;
+  }
+
+  .step-sequence {
+    margin: 0.375rem 0 0;
     padding: 0;
     list-style: none;
   }
 
-  .tick {
+  /* 1 px rules between rows, the sub-number in the figure-index column. */
+  .step-sequence li {
     display: grid;
-    grid-template-columns: 1.5rem minmax(0, 1fr);
-    gap: 0.5rem;
-    align-items: start;
-    padding-block: 0.375rem;
-    cursor: pointer;
+    grid-template-columns: 2.75rem minmax(0, 1fr);
+    column-gap: 0.5rem;
+    padding-block: 0.5rem;
+    border-top: 1px solid var(--ink);
   }
 
-  .tick input {
-    width: 1.25rem;
-    height: 1.25rem;
-    margin: 0.2rem 0 0;
-    accent-color: var(--green);
+  .step-sequence li:last-child {
+    border-bottom: 1px solid var(--ink);
+  }
+
+  .seq-num {
+    padding-top: 0.125rem;
+    color: var(--green);
+    font-family: var(--font-num);
+    font-size: 0.9375rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .step-next {
+    display: inline-block;
+    padding-block: 0.625rem;
+    font-weight: 700;
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+
+  .step-next:hover {
+    color: var(--green);
+    text-decoration-thickness: 2px;
+  }
+
+  /* Arriving through "Potom": the rule turns green, quietly (off under reduced motion, global.css). */
+  .step {
+    scroll-margin-top: 1rem;
+    transition: border-color 200ms var(--ease);
+  }
+
+  .step:target,
+  .step[data-guide-arrived] {
+    border-top-color: var(--green-fill);
+  }
+
+  .step:target .step-numeral,
+  .step[data-guide-arrived] .step-numeral {
+    color: var(--green);
   }
 
   .more summary {
     display: inline-block;
     padding-block: 0.625rem;
     text-decoration: underline;
+    text-underline-offset: 0.2em;
     cursor: pointer;
+    transition: color 140ms var(--ease);
+  }
+
+  .more summary:hover {
+    color: var(--green);
+    text-decoration-thickness: 2px;
   }
 
   @media (min-width: 64rem) {

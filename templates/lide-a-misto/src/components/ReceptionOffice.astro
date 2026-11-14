@@ -4,6 +4,7 @@
  * container, data-office-hours, never next to the nonstop link), the office phone and a link to
  * Kontakt.
  */
+import OfficeStatus from "@core/components/OfficeStatus.astro";
 import PhoneLink from "@core/components/PhoneLink.astro";
 import type { SiteContext } from "@core/content/view-models.ts";
 import { formatAddressLines } from "@core/format/address.ts";
@@ -13,15 +14,15 @@ import { ui } from "../i18n/cs.ts";
 
 interface Props {
   site: SiteContext;
-  col: number | null;
 }
 
-const { site, col } = Astro.props;
+const { site } = Astro.props;
 const [street, cityLine] = formatAddressLines(mainLocation(site).address);
 const office = primaryOfficePhone(site);
 ---
-<section class="home-col ruled" data-section="contact-summary" data-col={col ?? undefined} aria-labelledby="kancelar-souhrn">
+<section class="home-col ruled" data-section="contact-summary" aria-labelledby="kancelar-souhrn">
   <h2 id="kancelar-souhrn" class="col-heading">{ui.officeHeading}</h2>
+  <OfficeStatus site={site} class="office-now" />
   <p>{street}<br />{cityLine}</p>
   <ul class="hour-lines" role="list" data-office-hours>
     {

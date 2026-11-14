@@ -24,6 +24,10 @@ export const ui = {
   placesLink: "O nás a naše místa",
   ourPlaces: "Naše místa",
   allPlaces: (count: number) => `Všechna místa (${count})`,
+  /** The index of numbered figures above a places grid ("numbers are links"). */
+  figureIndex: "Místa na fotografiích",
+  /** Caption of the home people photo when the photo has none of its own. */
+  heroCaption: "Kdo vás přijme",
   storyLink: "Více o nás",
   firstHoursHeading: "Když někdo zemřel",
   fullGuide: "Celý postup podle místa úmrtí",
@@ -48,7 +52,14 @@ export const ui = {
   showAll: "Zobrazit kroky pro všechna místa",
   appliesWhen: "Jen když člověk zemřel",
   readMore: "Podrobnosti",
-  checklist: "Co mít připravené",
+  /** The guide is a guided list, not a checklist (design-differentiation §1.3). */
+  guideCalmLabel: "Než začnete",
+  guideCalm:
+    "Nemusíte všechno vyřešit najednou ani si nic pamatovat. Stačí jít krok za krokem. Když si nebudete jistí, zavolejte nám a poradíme vám.",
+  guideSequence: "Krok za krokem",
+  nextStep: (title: string) => `Potom: ${title}`,
+  guideCloseLabel: "Na závěr",
+  guideClose: "Tím máte to nejdůležitější za sebou. Se vším ostatním vám rádi poradíme.",
   officePrompt: "Kancelář",
   faqHeading: "Časté otázky",
 

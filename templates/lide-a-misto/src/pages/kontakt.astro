@@ -29,7 +29,7 @@ const Body = page.Content;
 ---
 <EssayLayout site={site} title={seoTitle(page.data)} description={seoDescription(page.data)}>
   <PageOpening title={page.data.title} lead={page.data.lead} placeholder={page.data.placeholder} emergency={site.emergency} />
-  {office !== null ? <PageFigure image={office} number="01" /> : null}
+  {office !== null ? <PageFigure image={office} number="01" fallbackName={ui.officeHeading} fallbackHref="#kancelar" /> : null}
   <div class="frame contact">
     <section class="ruled split contact-part" aria-labelledby="kancelar">
       <h2 id="kancelar" class="h2">{ui.officeHeading}</h2>

@@ -13,16 +13,15 @@ import { ui } from "../i18n/cs.ts";
 interface Props {
   pricing: PricingView;
   title: string;
-  col: number | null;
 }
 
-const { pricing, title, col } = Astro.props;
+const { pricing, title } = Astro.props;
 const lines = pricing.groups
   .map((group) => ({ group, item: group.items[0] ?? null }))
   .filter((line) => line.item !== null)
   .slice(0, 3);
 ---
-<section class="home-col ruled" data-section="price-summary" data-col={col ?? undefined} aria-labelledby="cenik-souhrn">
+<section class="home-col ruled" data-section="price-summary" aria-labelledby="cenik-souhrn">
   <h2 id="cenik-souhrn" class="col-heading">{title}</h2>
   <ul class="price-lines" role="list">
     {

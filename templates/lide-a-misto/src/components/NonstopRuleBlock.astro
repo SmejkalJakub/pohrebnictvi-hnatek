@@ -37,7 +37,7 @@ const note = emergency.shortNote;
 <style>
   .nonstop {
     --num-size: 2.125rem;
-    border-top: 3px solid var(--ink);
+    border-top: 3px solid var(--nonstop-rule);
     padding-top: 0.75rem;
   }
 
@@ -74,6 +74,7 @@ const note = emergency.shortNote;
     text-decoration: underline;
     text-decoration-thickness: 3px;
     text-underline-offset: 0.18em;
+    transition: text-decoration-thickness 140ms var(--ease), text-underline-offset 140ms var(--ease);
   }
 
   .nonstop[data-size="footer"] .nonstop-number {
@@ -81,7 +82,17 @@ const note = emergency.shortNote;
   }
 
   .nonstop :global(.nonstop-link:hover) .nonstop-number {
-    text-decoration-thickness: 4px;
+    text-decoration-thickness: 5px;
+    text-underline-offset: 0.24em;
+  }
+
+  .nonstop :global(.nonstop-link:active) .nonstop-number {
+    opacity: 0.8;
+  }
+
+  /* Desktop: a click copies the number (core); confirm it in place too. */
+  .nonstop :global(.nonstop-link[data-copied]) .nonstop-number {
+    text-decoration-style: double;
   }
 
   .nonstop-note {

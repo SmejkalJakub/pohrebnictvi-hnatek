@@ -1,0 +1,86 @@
+---
+/**
+ * The list of numbered places above a grid of figures, like the list of plates in a photo book:
+ * "02 Kancelář · 03 Vazárna · 04 Pohřební vůz". Each number links to its figure (#misto-NN) and
+ * shares data-xref with it, so hovering or focusing either highlights both (the template's
+ * "numbers are links" signature). Without JavaScript it is a plain list of in-page links.
+ * `first`: a place already shown as figure 01 elsewhere on the page (the home hero), listed
+ * first and linked to that figure, so the plate list stays complete.
+ */
+import { figureNumber } from "../lib/figures.ts";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  names: string[];
+  start: number;
+  first?: { name: string; number: string; href: string } | null;
+}
+
+const { names, start, first = null } = Astro.props;
+const items = names.map((name, index) => {
+  const number = figureNumber(start + index);
+  return { name, number, href: `#misto-${number}` };
+});
+if (first !== null) {
+  items.unshift(first);
+}
+---
+<nav class="figure-index" aria-label={ui.figureIndex}>
+  <ol role="list">
+    {
+      items.map((item) => (
+        <li>
+          <a href={item.href} class="index-link" data-xref={item.number}>
+            <span class="fig-num index-num">{item.number}</span>
+            <span class="index-name">{item.name}</span>
+          </a>
+        </li>
+      ))
+    }
+  </ol>
+</nav>
+
+<style>
+  .figure-index ol {
+    display: flex;
+    flex-wrap: wrap;
+    column-gap: 1.5rem;
+    margin: 0;
+    padding: 0.75rem 0 0;
+    list-style: none;
+  }
+
+  .index-link {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    padding-block: 0.625rem;
+    text-decoration: none;
+  }
+
+  .index-num {
+    padding: 0 0.25rem;
+    border-bottom: 2px solid currentcolor;
+    transition:
+      background-color 160ms var(--ease),
+      color 160ms var(--ease);
+  }
+
+  .index-name {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.2em;
+  }
+
+  .index-link[data-xref-active] .index-num,
+  .index-link:hover .index-num {
+    background: var(--green-fill);
+    color: var(--on-green);
+    border-bottom-color: var(--green-fill);
+  }
+
+  .index-link[data-xref-active] {
+    background: none;
+    box-shadow: none;
+  }
+</style>

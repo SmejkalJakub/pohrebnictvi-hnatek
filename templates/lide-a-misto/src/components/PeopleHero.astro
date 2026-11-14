@@ -5,27 +5,80 @@
  * the number), the photo on the right bleeding to the window edge, captioned "01 …". It is the
  * page's first figure and its LCP image (eager, high priority, ≤ 200 KB AVIF at 1280).
  * Without the photo: a 64 px H1 and the lead on the left, the nonstop block beside them.
+ *
+ * Without a people photo the page may hand in a photo of one of the firm's places (`kind:
+ * "place"`, design-differentiation §1.4): it keeps its own 3:2 proportion, is never shown wider
+ * than the file (no upscaling: the office photo is 722 px) and is captioned with the place, like
+ * the place figures below it.
  */
 import PlaceholderMark from "@core/components/PlaceholderMark.astro";
 import type { EmergencyTransport, ImageRef } from "@core/content/schemas.ts";
+import { resolveImage } from "@core/media/resolve.ts";
 import NonstopRuleBlock from "./NonstopRuleBlock.astro";
 import NumberedFigure from "./NumberedFigure.astro";
+import { ui } from "../i18n/cs.ts";
+
+export interface HeroPhoto {
+  image: ImageRef;
+  /** "people": the home people photo; "place": a real photo of the firm's place or work. */
+  kind: "people" | "place";
+  name: string | null;
+  href: string | null;
+  text: string | null;
+  address: string | null;
+}
 
 interface Props {
   title: string;
   lead: string | null;
   placeholder: boolean;
-  image: ImageRef | null;
+  photo: HeroPhoto | null;
   emergency: EmergencyTransport;
 }
 
-const { title, lead, placeholder, image, emergency } = Astro.props;
-let caption: string | null = null;
-if (image !== null) {
-  caption = image.caption;
+const PEOPLE_WIDTHS = [375, 560, 750, 1000, 1400];
+const PLACE_WIDTHS = [375, 560, 750, 1000];
+
+const { title, lead, placeholder, photo, emergency } = Astro.props;
+let captionName: string | null = null;
+let captionHref: string | null = null;
+let captionText: string | null = null;
+let captionAddress: string | null = null;
+let ratio = "9 / 10";
+let ratioWide = "8 / 7";
+let widths = PEOPLE_WIDTHS;
+let maxWidth: string | null = null;
+if (photo !== null) {
+  if (photo.kind === "people") {
+    captionText = photo.image.caption;
+    // Without a caption of its own the number would stand alone under the photo; the photo shows
+    // the firm's people, so it is captioned "01 Kdo vás přijme" with a link to them.
+    if (captionText === null) {
+      captionName = ui.heroCaption;
+      captionHref = "/o-nas/";
+    }
+  } else {
+    captionName = photo.name;
+    captionHref = photo.href;
+    captionText = photo.text;
+    captionAddress = photo.address;
+    ratio = "3 / 2";
+    ratioWide = "3 / 2";
+    const fileWidth = resolveImage(photo.image).src.width;
+    widths = PLACE_WIDTHS.filter((width) => width < fileWidth);
+    widths.push(fileWidth);
+    maxWidth = `${fileWidth}px`;
+  }
 }
 ---
-<section class="hero" data-hero data-photo={image !== null ? "true" : "false"} aria-labelledby="uvod">
+<section
+  class="hero"
+  data-hero
+  data-photo={photo !== null ? "true" : "false"}
+  data-photo-kind={photo !== null ? photo.kind : undefined}
+  aria-labelledby="uvod"
+  style={maxWidth !== null ? `--hero-photo-max: ${maxWidth}` : undefined}
+>
   <div class="hero-text">
     <h1 id="uvod" class="hero-title">{title}</h1>
     <NonstopRuleBlock emergency={emergency} size="hero" class="hero-nonstop" />
@@ -40,14 +93,18 @@ if (image !== null) {
     }
   </div>
   {
-    image !== null ? (
+    photo !== null ? (
       <NumberedFigure
-        image={image}
+        image={photo.image}
         number="01"
-        text={caption}
-        ratio="9 / 10"
-        ratioWide="8 / 7"
-        widths={[375, 560, 750, 1000, 1400]}
+        name={captionName}
+        nameHref={captionHref}
+        xref
+        text={captionText}
+        address={captionAddress}
+        ratio={ratio}
+        ratioWide={ratioWide}
+        widths={widths}
         sizes="(min-width: 80rem) calc(100vw - (100vw - 80rem) / 2 - 36rem), (min-width: 64rem) calc(100vw - 36rem), 100vw"
         priority
         class="hero-figure"
@@ -80,6 +137,12 @@ if (image !== null) {
 
   .hero :global(.hero-figure .fig-caption) {
     padding-inline: var(--gutter);
+  }
+
+  /* A place photo is never stretched past its file width (§1.4). */
+  .hero[data-photo-kind="place"] :global(.hero-figure) {
+    width: 100%;
+    max-width: var(--hero-photo-max, none);
   }
 
   @media (min-width: 64rem) {

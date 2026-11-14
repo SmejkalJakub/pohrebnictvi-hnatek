@@ -25,6 +25,6 @@ const Body = page.Content;
 ---
 <EssayLayout site={site} title={seoTitle(page.data)} description={seoDescription(page.data)}>
   <PageOpening title={page.data.title} lead={page.data.lead} placeholder={page.data.placeholder} emergency={site.emergency} />
-  {page.data.heroImage !== null ? <PageFigure image={page.data.heroImage} number="01" /> : null}
+  {page.data.heroImage !== null ? <PageFigure image={page.data.heroImage} number="01" fallbackName={page.data.title} /> : null}
   {page.hasBody ? <RuledProse id="pro-ucastniky-text"><Body /></RuledProse> : null}
 </EssayLayout>

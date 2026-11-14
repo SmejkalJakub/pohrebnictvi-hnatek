@@ -20,7 +20,7 @@ const { situations } = Astro.props;
     {
       situations.map((situation) => (
         <li>
-          <a href={`#${SITUATION_ANCHOR[situation]}`} class="picker-row" data-place={situation}>
+          <a href={`#${SITUATION_ANCHOR[situation]}`} class="picker-row" data-place={situation} data-vt-anchor>
             <span class="picker-word">{situationRows[situation]}</span>
             <span class="pick-mark"> {ui.picked}</span>
           </a>
@@ -55,6 +55,21 @@ const { situations } = Astro.props;
     font-weight: 700;
     line-height: 1.4;
     text-decoration: none;
+    transition:
+      background-color 160ms var(--ease),
+      color 160ms var(--ease),
+      padding-left 160ms var(--ease);
+  }
+
+  /* Hover and press: the row tints and its word steps in, so the whole row reads as the target. */
+  .picker-row:hover {
+    background: color-mix(in srgb, var(--green-fill) 10%, transparent);
+    color: var(--ink);
+    padding-left: 1.125rem;
+  }
+
+  .picker-row:active {
+    background: color-mix(in srgb, var(--green-fill) 18%, transparent);
   }
 
   .picker-word {

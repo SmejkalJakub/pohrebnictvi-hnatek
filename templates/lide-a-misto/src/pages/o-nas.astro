@@ -13,6 +13,7 @@ import PageOpening from "../components/PageOpening.astro";
 import NumberedFigure from "../components/NumberedFigure.astro";
 import PlaceGrid from "../components/PlaceGrid.astro";
 import PlaceList from "../components/PlaceList.astro";
+import FigureIndex from "../components/FigureIndex.astro";
 import PortraitGrid from "../components/PortraitGrid.astro";
 import PeopleNumberTable from "../components/PeopleNumberTable.astro";
 import { FigureCounter } from "../lib/figures.ts";
@@ -47,6 +48,9 @@ const Body = page.Content;
         <NumberedFigure
           image={hero}
           number={heroNumber}
+          name={hero.caption === null ? ui.aboutHeading : null}
+          nameHref={hero.caption === null && page.hasBody ? "#kdo-jsme" : null}
+          xref
           text={hero.caption}
           ratio="5 / 4"
           ratioWide="12 / 5"
@@ -72,6 +76,7 @@ const Body = page.Content;
         <div class="section-head">
           <h2 id="mista-nadpis" class="h2">{ui.ourPlaces}</h2>
         </div>
+        {placesWithPhotos ? <FigureIndex names={places.map((place) => place.name)} start={placesStart} /> : null}
         {placesWithPhotos ? (
           <PlaceGrid places={places} start={placesStart} layout="essay" />
         ) : (
@@ -94,7 +99,7 @@ const Body = page.Content;
       </section>
     ) : null
   }
-  <div class="frame about-cols about-part">
+  <div class="frame about-cols about-part" style={`--cols: ${guestPage !== null ? 2 : 1}`}>
     <section class="ruled about-col" aria-labelledby="o-nas-kancelar">
       <h2 id="o-nas-kancelar" class="h3">{ui.officeHeading}</h2>
       <p>{street}<br />{cityLine}</p>
@@ -156,9 +161,14 @@ const Body = page.Content;
       padding-inline: 0 var(--gutter);
     }
 
+    /* As many columns as blocks (Kancelář, Pro účastníky), never an empty third. */
     .about-cols {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
       column-gap: 2.5rem;
+    }
+
+    .about-cols > * {
+      max-width: 36rem;
     }
   }
 </style>

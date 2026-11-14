@@ -1,15 +1,17 @@
 ---
 /**
- * The guide: the place picker rows, a tally line per picked place, then one block per phase (the
- * phase as small caps in the label column, the steps on the right with green numerals counted
- * across the page). Picking a row filters the steps with core's :has(:target) mechanism (no
- * JavaScript); phases with nothing left hide too.
+ * The guide: the place picker rows, a tally line per picked place, a calm "Než začnete" lead, then
+ * one block per phase (the phase as small caps in the label column, the steps on the right with
+ * green numerals counted across the page, each linking "Potom: …" to the next), and a closing
+ * line. A guided list, never a checklist (design-differentiation §1.3). Picking a row filters the
+ * steps with core's :has(:target) mechanism (no JavaScript); phases with nothing left hide too.
  */
 import type { CollectionEntry } from "astro:content";
 import {
   SITUATION_ANCHOR,
   SPECIFIC_SITUATIONS,
   chooserSituations,
+  nextGuidanceStep,
   showsFor,
   type SpecificSituation,
 } from "@core/content/guidance-flow.ts";
@@ -34,7 +36,12 @@ const phases = GUIDANCE_PHASES.map((phase) => {
     .filter((entry) => entry.data.phase === phase)
     .map((entry) => {
       counter += 1;
-      return { entry, numeral: counter };
+      const following = nextGuidanceStep(guidance, guidance.indexOf(entry));
+      let next: { id: string; title: string } | null = null;
+      if (following !== null) {
+        next = { id: following.id, title: following.data.title };
+      }
+      return { entry, numeral: counter, next };
     });
   const shownFor = SPECIFIC_SITUATIONS.filter((situation) => steps.some((step) => showsFor(step.entry, situation)));
   return { phase, steps, shownFor };
@@ -49,7 +56,7 @@ const filterCss = situations
       `${target} [data-guide-phase]:not([data-shown-for~="${situation}"]) { display: none; }`,
       `${target} [data-tally="${situation}"] { display: block; }`,
       `${target} [data-tally="none"] { display: none; }`,
-      `${target} [data-place="${situation}"] { background: var(--green); color: var(--on-green); }`,
+      `${target} [data-place="${situation}"] { background: var(--green-fill); color: var(--on-green); }`,
       `${target} [data-place="${situation}"] .picker-word { text-decoration: none; }`,
       `${target} [data-place="${situation}"] .pick-mark { display: inline; }`,
       `${target} [data-place="${situation}"]:focus-visible { outline-color: var(--on-green); outline-offset: -6px; }`,
@@ -69,9 +76,17 @@ const filterCss = situations
         {situations.map((situation) => (
           <p class="tally" data-tally={situation}>
             {ui.tally(situationWords[situation])}{" "}
-            <a href={`#${ALL_ANCHOR}`} class="go">{ui.showAll}</a>
+            <a href={`#${ALL_ANCHOR}`} class="go" data-vt-anchor>{ui.showAll}</a>
           </p>
         ))}
+      </div>
+    ) : null
+  }
+  {
+    phases.length > 0 ? (
+      <div class="frame split guide-calm">
+        <p class="caps">{ui.guideCalmLabel}</p>
+        <p class="calm-text">{ui.guideCalm}</p>
       </div>
     ) : null
   }
@@ -86,11 +101,19 @@ const filterCss = situations
         <h2 id={`faze-${group.phase}`} class="caps">{guidancePhaseLabels[group.phase]}</h2>
         <ol class="steps" role="list">
           {group.steps.map((step) => (
-            <StepBlock site={site} entry={step.entry} numeral={step.numeral} />
+            <StepBlock site={site} entry={step.entry} numeral={step.numeral} next={step.next} />
           ))}
         </ol>
       </section>
     ))
+  }
+  {
+    phases.length > 0 ? (
+      <div class="frame split guide-close">
+        <p class="caps">{ui.guideCloseLabel}</p>
+        <p class="calm-text">{ui.guideClose}</p>
+      </div>
+    ) : null
   }
 </div>
 
@@ -118,6 +141,17 @@ const filterCss = situations
     color: var(--ink);
   }
 
+  .guide-calm,
+  .guide-close {
+    margin-top: 2.25rem;
+  }
+
+  .calm-text {
+    max-width: 45rem;
+    font-size: 1.1875rem;
+    line-height: 1.5;
+  }
+
   .guide-phase {
     margin-top: 2.25rem;
   }
@@ -133,6 +167,18 @@ const filterCss = situations
   @media (min-width: 64rem) {
     .guide-pick {
       margin-top: 4rem;
+    }
+
+    .guide-calm {
+      margin-top: 3rem;
+    }
+
+    .guide-close {
+      margin-top: 3.5rem;
+    }
+
+    .calm-text {
+      font-size: 1.3125rem;
     }
 
     .guide-phase {

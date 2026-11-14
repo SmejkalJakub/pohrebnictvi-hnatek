@@ -26,3 +26,31 @@ export class FigureCounter {
     return this.next;
   }
 }
+
+/**
+ * Column spans on a 12-track grid for `count` cells laid out `perRow` to a row, so no row is left
+ * with an empty column: a short last row is spread across the width, and a last row of one (when
+ * rows hold three or more) is avoided by making the two last rows shorter (4 → 2 + 2, 5 → 3 + 2).
+ * A row with a single cell spans `single` tracks (half the width by default).
+ */
+export function rowSpans(count: number, perRow: number, single = 6): number[] {
+  const spans: number[] = [];
+  let remaining = count;
+  while (remaining > 0) {
+    let row = perRow;
+    if (remaining <= perRow) {
+      row = remaining;
+    } else if (remaining === perRow + 1 && perRow > 2) {
+      row = perRow - 1;
+    }
+    let span = 12 / row;
+    if (row === 1) {
+      span = single;
+    }
+    for (let index = 0; index < row; index++) {
+      spans.push(span);
+    }
+    remaining -= row;
+  }
+  return spans;
+}

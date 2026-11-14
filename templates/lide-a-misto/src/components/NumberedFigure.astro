@@ -17,6 +17,10 @@ interface Props {
   number: string;
   /** Bold lead of the caption (a place or a person); null to use only `text`. */
   name?: string | null;
+  /** Makes the bold lead a link (e.g. the home people photo → O nás). */
+  nameHref?: string | null;
+  /** Element id and data-xref value, so references to this number highlight the figure. */
+  xref?: boolean;
   text?: string | null;
   address?: string | null;
   /** CSS aspect-ratio, e.g. "3 / 2". */
@@ -32,6 +36,8 @@ const {
   image,
   number,
   name = null,
+  nameHref = null,
+  xref = false,
   text = null,
   address = null,
   ratio,
@@ -60,7 +66,13 @@ if (name !== null) {
   }
 }
 ---
-<figure class:list={["fig", className]} data-figure style={`--ratio: ${ratio}; --ratio-wide: ${wide}`}>
+<figure
+  class:list={["fig", className]}
+  data-figure
+  id={xref ? `obrazek-${number}` : undefined}
+  data-xref={xref ? number : undefined}
+  style={`--ratio: ${ratio}; --ratio-wide: ${wide}`}
+>
   <PlaceholderMark active={photo.isPlaceholder} kind="image" as="div" class="fig-frame">
     <Picture
       src={photo.src}
@@ -77,7 +89,12 @@ if (name !== null) {
   </PlaceholderMark>
   <figcaption class="fig-caption">
     <span class="fig-num" data-figure-number>{number}</span>
-    {lead !== "" ? <b class="fig-name">{lead}</b> : null}
+    {lead !== "" && nameHref === null ? <b class="fig-name">{lead}</b> : null}
+    {lead !== "" && nameHref !== null ? (
+      <a href={nameHref} class="fig-name fig-name-link">
+        {lead}
+      </a>
+    ) : null}
     {text !== null ? <span>{text}</span> : null}
     {address !== null ? <span class="fig-address">{address}</span> : null}
     {photo.credit !== null ? <span class="fig-credit">{ui.photoBy}: {photo.credit}</span> : null}
@@ -101,6 +118,10 @@ if (name !== null) {
 
   .fig-name {
     margin-right: 0.25rem;
+  }
+
+  .fig-name-link {
+    font-weight: 700;
   }
 
   .fig-address,

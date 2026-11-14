@@ -1,12 +1,19 @@
 ---
 /**
  * Home: the people opening (hero), then the sections in site.config.homepage.sections order.
- * Price, office and notices form one row of ruled columns when they follow each other
- * (data-col); every other section spans the page. Figures are numbered from 01 on this page: the
- * people photo, then the places.
+ * Price, office and notices form one row of ruled columns when they follow each other (as many
+ * columns as sections); every other section spans the page. Figures are numbered from 01 on this page: the
+ * hero photo, then the places.
+ *
+ * Hero photo (design-differentiation §1.4): the home people photo when it is real; otherwise the
+ * first place with a real photo becomes figure 01 and leaves the places grid (no file is shown
+ * twice, the numbering stays continuous); otherwise another real photo from getHomeImagery() that
+ * the places do not show; with nothing real the hero closes up into the typographic opening,
+ * never a grey placeholder box.
  */
 import {
   getGuidance,
+  getHomeImagery,
   getNoticeIndex,
   getOptionalPage,
   getPage,
@@ -15,10 +22,11 @@ import {
   getPricing,
   getServices,
   getSiteContext,
+  isRealBusinessPhoto,
 } from "@core/content/load.ts";
 import type { HomepageSection } from "@core/content/config.ts";
 import EssayLayout from "../layouts/EssayLayout.astro";
-import PeopleHero from "../components/PeopleHero.astro";
+import PeopleHero, { type HeroPhoto } from "../components/PeopleHero.astro";
 import PlacesSection from "../components/PlacesSection.astro";
 import FirstStepsRow from "../components/FirstStepsRow.astro";
 import ReceptionSection from "../components/ReceptionSection.astro";
@@ -62,9 +70,53 @@ if (cenik !== null) {
   priceTitle = cenik.data.title;
 }
 const noticeCount = noticeIndex.upcoming.length + noticeIndex.recent.length;
-const heroImage = home.data.heroImage;
+const order = site.config.homepage.sections;
+const imagery = await getHomeImagery();
+
+let heroPhoto: HeroPhoto | null = null;
+let homePlaces = places;
+let heroPlace: string | null = null;
+if (order.includes("hero")) {
+  const homeImage = home.data.heroImage;
+  if (isRealBusinessPhoto(homeImage)) {
+    heroPhoto = { image: homeImage, kind: "people", name: null, href: null, text: null, address: null };
+  } else {
+    const placeIndex = places.findIndex((place) => isRealBusinessPhoto(place.image));
+    const place = places[placeIndex];
+    if (place !== undefined && place.image !== null) {
+      heroPhoto = {
+        image: place.image,
+        kind: "place",
+        name: place.name,
+        href: "/o-nas/#mista",
+        text: place.note,
+        address: place.address,
+      };
+      homePlaces = places.filter((_, index) => index !== placeIndex);
+      heroPlace = place.name;
+    } else {
+      const shown = new Set(places.flatMap((entry) => (entry.image === null ? [] : [entry.image.file])));
+      const candidates = [
+        { photo: imagery.place, href: "/o-nas/" },
+        { photo: imagery.flower, href: "/kvetiny/" },
+      ];
+      for (const candidate of candidates) {
+        if (heroPhoto === null && candidate.photo !== null && !shown.has(candidate.photo.image.file)) {
+          heroPhoto = {
+            image: candidate.photo.image,
+            kind: "place",
+            name: candidate.photo.image.caption ?? candidate.photo.title,
+            href: candidate.href,
+            text: null,
+            address: null,
+          };
+        }
+      }
+    }
+  }
+}
 let placesStart = 1;
-if (heroImage !== null) {
+if (heroPhoto !== null) {
   placesStart = 2;
 }
 
@@ -98,69 +150,70 @@ function renders(section: HomepageSection): boolean {
 }
 
 const COLUMN_SECTIONS: readonly HomepageSection[] = ["price-summary", "contact-summary", "notices"];
-const order = site.config.homepage.sections;
 const content = order.filter(renders);
 
-/** Position (1–3) inside a run of adjacent column sections; null when the run has one section. */
-const columns = new Map<number, number | null>();
-let run: number[] = [];
-function closeRun(): void {
-  run.forEach((index, position) => {
-    if (run.length === 1) {
-      columns.set(index, null);
-    } else {
-      columns.set(index, (position % 3) + 1);
-    }
-  });
-  run = [];
-}
-content.forEach((section, index) => {
-  if (COLUMN_SECTIONS.includes(section)) {
-    run.push(index);
+/**
+ * Sections in order; adjacent price, office and notices sections form one row whose column count
+ * is the number of sections in it (two sections = two halves, never an empty third column).
+ */
+type Block = { kind: "single"; section: HomepageSection } | { kind: "columns"; sections: HomepageSection[] };
+const blocks: Block[] = [];
+for (const section of content) {
+  const last = blocks[blocks.length - 1];
+  if (!COLUMN_SECTIONS.includes(section)) {
+    blocks.push({ kind: "single", section });
+  } else if (last !== undefined && last.kind === "columns" && last.sections.length < 3) {
+    last.sections.push(section);
   } else {
-    closeRun();
+    blocks.push({ kind: "columns", sections: [section] });
   }
-});
-closeRun();
-
-function colOf(index: number): number | null {
-  return columns.get(index) ?? null;
 }
 ---
-<EssayLayout site={site} title={home.data.metaTitle} description={seoDescription(home.data)} mainClass="home-grid">
+<EssayLayout site={site} title={home.data.metaTitle} description={seoDescription(home.data)}>
   {
     order.includes("hero") ? (
       <PeopleHero
         title={home.data.title}
         lead={home.data.lead}
         placeholder={home.data.placeholder}
-        image={heroImage}
+        photo={heroPhoto}
         emergency={site.emergency}
       />
     ) : null
   }
   {
-    content.map((section, index) => (
-      <>
-        {section === "family-story" ? (
-          <PlacesSection
-            places={places}
-            start={placesStart}
-            aboutTitle={about.data.title}
-            aboutText={aboutText}
-            aboutPlaceholder={about.data.placeholder}
-          />
-        ) : null}
-        {section === "next-steps" ? <FirstStepsRow steps={firstHours} /> : null}
-        {section === "people" ? <ReceptionSection people={people} /> : null}
-        {section === "services" ? <ServiceLinksSection services={featured} title={servicesPage.data.title} /> : null}
-        {section === "price-summary" && pricing !== null ? (
-          <PriceColumn pricing={pricing} title={priceTitle} col={colOf(index)} />
-        ) : null}
-        {section === "contact-summary" ? <ReceptionOffice site={site} col={colOf(index)} /> : null}
-        {section === "notices" ? <NoticesColumn title={noticesTitle} count={noticeCount} col={colOf(index)} /> : null}
-        {section === "catalogue-links" ? <CatalogueLinkRow links={catalogueLinks} /> : null}
-      </>
-    ))
+    blocks.map((block) =>
+      block.kind === "columns" ? (
+        <div class="frame home-cols" data-count={block.sections.length}>
+          {block.sections.map((section) => (
+            <>
+              {section === "price-summary" && pricing !== null ? <PriceColumn pricing={pricing} title={priceTitle} /> : null}
+              {section === "contact-summary" ? <ReceptionOffice site={site} /> : null}
+              {section === "notices" ? <NoticesColumn title={noticesTitle} count={noticeCount} /> : null}
+            </>
+          ))}
+        </div>
+      ) : (
+        <>
+          {block.section === "family-story" ? (
+            <PlacesSection
+              places={homePlaces}
+              total={places.length}
+              heroPlace={heroPlace}
+              start={placesStart}
+              aboutTitle={about.data.title}
+              aboutText={aboutText}
+              aboutPlaceholder={about.data.placeholder}
+            />
+          ) : null}
+          {block.section === "next-steps" ? <FirstStepsRow steps={firstHours} /> : null}
+          {block.section === "people" ? <ReceptionSection people={people} /> : null}
+          {block.section === "services" ? (
+            <ServiceLinksSection services={featured} title={servicesPage.data.title} />
+          ) : null}
+          {block.section === "catalogue-links" ? <CatalogueLinkRow links={catalogueLinks} /> : null}
+        </>
+      ),
+    )
   }
 </EssayLayout>

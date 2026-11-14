@@ -12,6 +12,9 @@ import "../styles/print.css";
 import SeoHead from "@core/components/SeoHead.astro";
 import StructuredData from "@core/components/StructuredData.astro";
 import PrototypeBanner from "@core/components/PrototypeBanner.astro";
+import BrandStyle from "@core/components/BrandStyle.astro";
+import SiteInteractions from "@core/components/SiteInteractions.astro";
+import { brandAttributes } from "@core/brand/runtime.ts";
 import type { ImageMetadata } from "astro";
 import { getDocuments, getFaq, getOptionalPage, getPeople, hasPage } from "@core/content/load.ts";
 import type { NavItem, SiteContext } from "@core/content/view-models.ts";
@@ -100,7 +103,7 @@ if (about !== undefined) {
 const high = options.emergencyEmphasis === "high" && !neutral;
 const menuLabels = JSON.stringify({ open: ui.menuOpen, close: ui.menuClose });
 ---
-<html lang="cs" class="no-js" data-emphasis={options.emergencyEmphasis}>
+<html lang="cs" class="no-js" data-emphasis={options.emergencyEmphasis} {...brandAttributes()}>
   <head>
     <link rel="preload" href={archivoLatin} as="font" type="font/woff2" crossorigin />
     <link rel="preload" href={archivoLatinExt} as="font" type="font/woff2" crossorigin />
@@ -109,6 +112,7 @@ const menuLabels = JSON.stringify({ open: ui.menuOpen, close: ui.menuClose });
       document.documentElement.classList.replace("no-js", "js");
     </script>
     <StructuredData site={site} />
+    <BrandStyle />
   </head>
   <body>
     <PrototypeBanner />
@@ -126,6 +130,7 @@ const menuLabels = JSON.stringify({ open: ui.menuOpen, close: ui.menuClose });
       hasPrivacyPage={hasPrivacyPage}
       siteLinks={siteLinks}
     />
+    <SiteInteractions />
     <script is:inline define:vars={{ menuLabels }}>
       const labels = JSON.parse(menuLabels);
       const toggle = document.querySelector("[data-menu-toggle]");

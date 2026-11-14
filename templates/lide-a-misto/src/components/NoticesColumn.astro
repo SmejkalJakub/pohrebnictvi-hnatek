@@ -8,12 +8,11 @@ import { ui } from "../i18n/cs.ts";
 interface Props {
   title: string;
   count: number;
-  col: number | null;
 }
 
-const { title, count, col } = Astro.props;
+const { title, count } = Astro.props;
 ---
-<section class="home-col ruled" data-section="notices" data-col={col ?? undefined} aria-labelledby="oznameni-souhrn">
+<section class="home-col ruled" data-section="notices" aria-labelledby="oznameni-souhrn">
   <h2 id="oznameni-souhrn" class="col-heading">{title}</h2>
   <p>{ui.noticesText}</p>
   <a href="/oznameni/" class="go">{ui.noticesLink(count)}</a>

@@ -1,8 +1,8 @@
 ---
 /**
  * Home "next-steps": "Když někdo zemřel" in the label column and the first-hours steps in up to
- * three columns, each under a 3 px rule with a large green numeral (steps, not figures), then the
- * link to the full guide.
+ * three columns (as many columns as steps, so two steps never leave an empty third), each under a
+ * 3 px rule with a large green numeral (steps, not figures), then the link to the full guide.
  */
 import type { CollectionEntry } from "astro:content";
 import { ui } from "../i18n/cs.ts";
@@ -17,7 +17,7 @@ const shown = steps.slice(0, 3);
 <section class="frame home-block split" data-section="next-steps" aria-labelledby="kdyz-nekdo-zemrel">
   <h2 id="kdyz-nekdo-zemrel" class="h2">{ui.firstHoursHeading}</h2>
   <div>
-    <ol class="first-steps" role="list">
+    <ol class="first-steps" role="list" style={`--steps: ${shown.length}`}>
       {
         shown.map((entry, index) => (
           <li class="first-step">
@@ -57,6 +57,8 @@ const shown = steps.slice(0, 3);
   .step-numeral {
     grid-row: span 2;
     color: var(--green);
+    font-family: var(--font-num);
+    font-variant-numeric: tabular-nums;
     font-size: 1.75rem;
     font-weight: 700;
     line-height: 1;
@@ -68,7 +70,7 @@ const shown = steps.slice(0, 3);
 
   @media (min-width: 64rem) {
     .first-steps {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: repeat(var(--steps), minmax(0, 1fr));
       gap: 2rem;
     }
 

@@ -2,13 +2,16 @@
 /**
  * The firm's places (site/places.json, content-contract §6.19) as numbered figures, in list order.
  * A place without a photo is a text cell (number, name, address, sentence under a 1 px rule), never
- * an empty frame. `layout`: "home" (3 columns of 3:2 photos), "essay" (O nás: the first two large,
- * the rest in four columns). `limitPhone` shows only the first n places below 48 rem (home 375).
- * `start` is the first figure number (02 on the home when the people photo is 01).
+ * an empty frame. `layout`: "home" (rows of three 3:2 photos), "essay" (O nás: the first two large,
+ * the rest in rows of four). Rows never leave an empty column (lib/figures.ts rowSpans): a short
+ * last row spreads across the width. `limitPhone` shows only the first n places below 48 rem
+ * (home 375). `start` is the first figure number (02 on the home when the people photo is 01).
+ * Every cell carries data-xref with its number, so a reference elsewhere on the page ("v síni 03")
+ * highlights it (the template's "numbers are links" signature).
  */
 import type { Place } from "@core/content/schemas.ts";
 import NumberedFigure from "./NumberedFigure.astro";
-import { figureNumber } from "../lib/figures.ts";
+import { figureNumber, rowSpans } from "../lib/figures.ts";
 
 interface Props {
   places: Place[];
@@ -18,32 +21,47 @@ interface Props {
 }
 
 const { places, start, layout, limitPhone = null } = Astro.props;
+let spans: number[] = [];
+if (layout === "essay" && places.length !== 3) {
+  // Two large figures, then rows of four (three places read better as one row of three).
+  const large = Math.min(places.length, 2);
+  spans = [...rowSpans(large, 2), ...rowSpans(places.length - large, 4)];
+} else {
+  spans = rowSpans(places.length, 3);
+}
 const cells = places.map((place, index) => {
   let size: "large" | "small" = "small";
-  if (layout === "essay" && index < 2) {
+  if ((spans[index] ?? 4) >= 6) {
     size = "large";
   }
   let hiddenOnPhone = false;
   if (limitPhone !== null && index >= limitPhone) {
     hiddenOnPhone = true;
   }
-  return { place, number: figureNumber(start + index), size, hiddenOnPhone };
+  let span = spans[index] ?? 4;
+  if (place.image === null && places.length === 1) {
+    span = 12;
+  }
+  return { place, number: figureNumber(start + index), size, hiddenOnPhone, span };
 });
 
-function sizesFor(size: "large" | "small"): string {
-  if (layout === "home") {
-    return "(min-width: 64rem) 23rem, (min-width: 48rem) 45vw, 100vw";
-  }
-  if (size === "large") {
-    return "(min-width: 64rem) 36rem, 100vw";
-  }
-  return "(min-width: 64rem) 17rem, (min-width: 48rem) 45vw, 100vw";
+function sizesFor(span: number): string {
+  const wide = Math.round((span / 12) * 73);
+  return `(min-width: 64rem) ${wide}rem, (min-width: 48rem) 45vw, 100vw`;
 }
 ---
 <ol class="places" data-layout={layout} role="list">
   {
     cells.map((cell) => (
-      <li class="place" data-size={cell.size} data-phone-hidden={cell.hiddenOnPhone ? "true" : undefined}>
+      <li
+        id={`misto-${cell.number}`}
+        class="place"
+        data-size={cell.size}
+        data-xref={cell.number}
+        data-phone-hidden={cell.hiddenOnPhone ? "true" : undefined}
+        style={`--span: ${cell.span}`}
+        data-text={cell.place.image === null ? "true" : undefined}
+      >
         {cell.place.image !== null ? (
           <NumberedFigure
             image={cell.place.image}
@@ -54,7 +72,7 @@ function sizesFor(size: "large" | "small"): string {
             ratio="16 / 9"
             ratioWide="3 / 2"
             widths={[360, 560, 760, 1120]}
-            sizes={sizesFor(cell.size)}
+            sizes={sizesFor(cell.span)}
           />
         ) : (
           <div class="place-text">
@@ -80,17 +98,20 @@ function sizesFor(size: "large" | "small"): string {
     list-style: none;
   }
 
+  /* A place without a photo: the number set large, as the photo's stand-in, under a 3 px rule. */
   .place-text {
     display: flex;
     flex-direction: column;
-    gap: 0.25rem;
+    gap: 0.375rem;
+    height: 100%;
     padding-top: 0.875rem;
-    border-top: 1px solid var(--ink);
+    border-top: 3px solid var(--ink);
   }
 
   .place-num {
-    font-size: 1.5rem;
-    line-height: 1.1;
+    font-size: 2.5rem;
+    line-height: 1;
+    margin-bottom: 0.5rem;
   }
 
   .place-name {
@@ -112,21 +133,27 @@ function sizesFor(size: "large" | "small"): string {
     .places {
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
+
+    /* An odd text-only cell at the end takes the full row instead of leaving a hole. */
+    .place[data-text="true"]:last-child:nth-child(odd) {
+      grid-column: 1 / -1;
+    }
   }
 
   @media (min-width: 64rem) {
     .places {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: repeat(12, minmax(0, 1fr));
       gap: 2rem 1.5rem;
       padding-top: 1.75rem;
     }
 
-    .places[data-layout="essay"] {
-      grid-template-columns: repeat(4, minmax(0, 1fr));
+    .place,
+    .place[data-text="true"]:last-child:nth-child(odd) {
+      grid-column: span var(--span);
     }
 
-    .places[data-layout="essay"] .place[data-size="large"] {
-      grid-column: span 2;
+    .place-num {
+      font-size: 3.5rem;
     }
   }
 </style>

@@ -9,14 +9,30 @@ import NumberedFigure from "./NumberedFigure.astro";
 interface Props {
   image: ImageRef;
   number: string;
+  /**
+   * Bold caption lead when the photo has no caption of its own, so the number never stands alone
+   * under the photo (e.g. "01 Kancelář" on Kontakt).
+   */
+  fallbackName: string;
+  /** Where the fallback lead links to (the section the photo shows), or null. */
+  fallbackHref?: string | null;
 }
 
-const { image, number } = Astro.props;
+const { image, number, fallbackName, fallbackHref = null } = Astro.props;
+let name: string | null = null;
+let nameHref: string | null = null;
+if (image.caption === null) {
+  name = fallbackName;
+  nameHref = fallbackHref;
+}
 ---
 <div class="page-figure">
   <NumberedFigure
     image={image}
     number={number}
+    name={name}
+    nameHref={nameHref}
+    xref
     text={image.caption}
     ratio="16 / 10"
     ratioWide="3 / 2"

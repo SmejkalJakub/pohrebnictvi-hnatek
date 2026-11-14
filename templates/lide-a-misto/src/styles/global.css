@@ -9,9 +9,21 @@
   --muted: #3f3f3f;
   --muted-2: #4d4d4d;
   --green: #1f4d45;
+  /* Green as a fill (strip, picked row); the text green above may be a darker brand variant. */
+  --green-fill: var(--green);
   --on-green: #ffffff;
+  /* The 3 px rule over the nonstop block; a brand may give it its secondary colour. */
+  --nonstop-rule: var(--ink);
   --photo: #dcdcd6;
   --font: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  /* Headings; a brand display font replaces it. */
+  --font-head: var(--font);
+  /*
+   * Figure numbers, step numerals and phone numbers stay in Archivo with tabular figures even under
+   * a brand: the numbering system is G's documentary device and must line up in columns.
+   */
+  --font-num: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --ease: cubic-bezier(0.2, 0, 0, 1);
   --gutter: 1rem;
   --label-col: 22.5rem;
   --gap: 3.5rem;
@@ -20,6 +32,32 @@
   --h2: 1.625rem;
   --num: 2.125rem;
   color-scheme: light;
+}
+
+/*
+ * Client brand (template-contract §8a): core's --brand-* roles mapped onto G's tokens. Ground and
+ * ink from the brand, the green becomes the brand primary (text in its legible variant, fills in
+ * the original), the brand's secondary colour only as the thin rule over the nonstop number.
+ * Headings take the brand display font, text the brand body font; numbers stay in Archivo.
+ */
+[data-brand] {
+  --ground: var(--brand-ground);
+  --ink: var(--brand-ink);
+  --muted: var(--brand-muted);
+  --muted-2: var(--brand-muted);
+  --green: var(--brand-primary-text);
+  --green-fill: var(--brand-primary);
+  --on-green: var(--brand-on-primary);
+  --nonstop-rule: var(--brand-secondary);
+  --photo: var(--brand-surface-2);
+}
+
+[data-brand-display] {
+  --font-head: var(--brand-font-display);
+}
+
+[data-brand-body] {
+  --font: var(--brand-font-body);
 }
 
 @media (min-width: 64rem) {
@@ -71,6 +109,7 @@ h1,
 h2,
 h3,
 h4 {
+  font-family: var(--font-head);
   font-weight: 700;
   line-height: 1.15;
   text-wrap: balance;
@@ -87,11 +126,20 @@ a {
   color: var(--ink);
   text-decoration-thickness: 1px;
   text-underline-offset: 0.2em;
+  transition:
+    color 140ms var(--ease),
+    text-decoration-color 140ms var(--ease),
+    text-underline-offset 140ms var(--ease);
 }
 
 a:hover {
   color: var(--green);
   text-decoration-thickness: 2px;
+  text-underline-offset: 0.28em;
+}
+
+a:active {
+  opacity: 0.75;
 }
 
 :focus-visible {
@@ -307,8 +355,87 @@ div[data-placeholder] > [data-placeholder-label] {
 
 /* The two-digit figure number: a figure or a place, nothing else (s11 §4.2). */
 .fig-num {
+  font-family: var(--font-num);
   font-weight: 700;
   font-variant-numeric: tabular-nums;
+}
+
+[data-part="number"] {
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------------------------------------------------------------------------
+ * Numbers are links (the template's signature): a figure number and every reference to it share
+ * data-xref; hovering or focusing either marks both (core/client/interactions.ts).
+ * ------------------------------------------------------------------------- */
+
+a.xref {
+  font-family: var(--font-num);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  text-decoration: none;
+  border-bottom: 2px solid currentcolor;
+}
+
+[data-xref] {
+  transition:
+    background-color 160ms var(--ease),
+    box-shadow 160ms var(--ease),
+    color 160ms var(--ease);
+}
+
+.fig-num[data-xref-active],
+a.xref[data-xref-active] {
+  background: var(--green-fill);
+  color: var(--on-green);
+  box-shadow: 0 0 0 0.25rem var(--green-fill);
+}
+
+figure[data-xref][data-xref-active] .photo,
+li[data-xref][data-xref-active] .photo {
+  outline: 3px solid var(--green-fill);
+  outline-offset: 4px;
+}
+
+.place-text[data-xref-active],
+.place-row[data-xref-active] {
+  box-shadow: inset 0 3px 0 var(--green-fill);
+}
+
+/* ---------------------------------------------------------------------------
+ * Shared enhancements from core (office status, the copy toast)
+ * ------------------------------------------------------------------------- */
+
+[data-office-status] {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  font-weight: 700;
+}
+
+[data-office-status-dot] {
+  flex: none;
+  width: 0.625rem;
+  height: 0.625rem;
+  border-radius: 50%;
+  background: var(--muted);
+}
+
+[data-office-status][data-state="open"] [data-office-status-dot] {
+  background: var(--green-fill);
+}
+
+
+:root {
+  --toast-bg: var(--ink);
+  --toast-fg: var(--ground);
+  --toast-radius: 0;
+}
+
+[data-site-toast] {
+  border-top: 3px solid var(--green-fill);
+  font-weight: 700;
 }
 
 /* An image area while the asset loads, and behind cropped photos. */
@@ -320,56 +447,56 @@ div[data-placeholder] > [data-placeholder-label] {
 }
 
 /* ---------------------------------------------------------------------------
- * Home: sections are direct children of <main>. Price, office and notices sit side by side when
- * they follow each other (data-col 1–3, set by the page); every other section spans the width.
+ * Home: sections are direct children of <main>. Price, office and notices that follow each other
+ * share one row (.home-cols, set by the page) with as many equal columns as sections, so the row
+ * never shows an empty column; every other section spans the width.
  * ------------------------------------------------------------------------- */
+
+.home-cols {
+  display: grid;
+  gap: 2.5rem;
+  margin-top: var(--section);
+}
 
 .home-col {
   display: flex;
   flex-direction: column;
   align-items: start;
   gap: 0.5rem;
-  margin: var(--section) var(--gutter) 0;
-}
-
-.home-col + .home-col {
-  margin-top: 2rem;
+  min-width: 0;
 }
 
 .col-heading {
   font-size: 1.375rem;
 }
 
-@media (min-width: 64rem) {
-  main.home-grid {
-    display: grid;
-    grid-template-columns:
-      minmax(var(--gutter), 1fr) minmax(0, 22.6667rem) 2.5rem minmax(0, 22.6667rem) 2.5rem
-      minmax(0, 22.6667rem) minmax(var(--gutter), 1fr);
+@media (min-width: 48rem) {
+  .home-cols[data-count="2"],
+  .home-cols[data-count="3"] {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .home-grid > * {
+  .home-cols[data-count="3"] > :last-child {
     grid-column: 1 / -1;
   }
+}
 
-  .home-grid > .home-col {
-    margin: var(--section) 0 0;
+@media (min-width: 64rem) {
+  .home-cols[data-count="3"] {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
-  .home-grid > .home-col:not([data-col]) {
-    grid-column: 2 / 7;
+  .home-cols[data-count="3"] > :last-child {
+    grid-column: auto;
   }
 
-  .home-grid > [data-col="1"] {
-    grid-column: 2;
+  /* A single column keeps the label-column rhythm of the other home sections. */
+  .home-cols[data-count="1"] {
+    grid-template-columns: minmax(0, 1fr);
   }
 
-  .home-grid > [data-col="2"] {
-    grid-column: 4;
-  }
-
-  .home-grid > [data-col="3"] {
-    grid-column: 6;
+  .home-cols[data-count="1"] > .home-col {
+    max-width: 45rem;
   }
 
   .col-heading {
