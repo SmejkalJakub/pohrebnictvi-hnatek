@@ -1,0 +1,30 @@
+---
+/** Ochrana osobních údajů (only when the page exists), "Jak chráníme vaše údaje?": the page question as H1, the lead as its answer, then the body with each ## as a field. */
+import { getOptionalPage, getSiteContext } from "@core/content/load.ts";
+import ConversationLayout from "../../layouts/ConversationLayout.astro";
+import QuestionField from "../../components/QuestionField.astro";
+import FieldProse from "../../components/FieldProse.astro";
+import { keepShortWords, seoTitle, toneAt } from "../../lib/conversation.ts";
+import { ui } from "../../i18n/cs.ts";
+
+export async function getStaticPaths() {
+  const page = await getOptionalPage("ochrana-osobnich-udaju");
+  if (page === null) {
+    return [];
+  }
+  return [{ params: { path: undefined } }];
+}
+
+const site = await getSiteContext();
+const page = await getOptionalPage("ochrana-osobnich-udaju");
+if (page === null) {
+  throw new Error("unreachable: page missing");
+}
+const Body = page.Content;
+---
+<ConversationLayout site={site} title={seoTitle(page.data)} description={page.data.metaDescription}>
+  <QuestionField question={ui.privacyQuestion} tone={toneAt(0)} level={1} layout="head">
+    {page.data.lead !== null ? <p>{keepShortWords(page.data.lead)}</p> : null}
+  </QuestionField>
+  <FieldProse show={page.hasBody} startIndex={1}><Body /></FieldProse>
+</ConversationLayout>

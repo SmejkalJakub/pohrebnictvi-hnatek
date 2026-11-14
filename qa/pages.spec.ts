@@ -164,10 +164,20 @@ for (const t of templates) {
               .count();
             const toggleVisible = toggleCount > 0 && (await toggle.isVisible());
             if (!toggleVisible) {
-              // Wide layout without a toggle: the navigation links are shown inline.
-              expect(vp.width, "no visible menu toggle at mobile width").toBeGreaterThanOrEqual(768);
+              // No toggle: the navigation links are shown inline. Below 768 px that is allowed only
+              // for a template whose whole navigation stays visible as words (template D Rodinný
+              // rozhovor has no menu by design), so every link must then be visible.
               const navLinks = page.getByRole("navigation").first().getByRole("link");
               await expect(navLinks.first()).toBeVisible();
+              if (vp.width < 768) {
+                const count = await navLinks.count();
+                for (let i = 0; i < count; i += 1) {
+                  await expect(
+                    navLinks.nth(i),
+                    "a nav link is hidden at mobile width without a toggle",
+                  ).toBeVisible();
+                }
+              }
               return;
             }
             const controls = await toggle.getAttribute("aria-controls");

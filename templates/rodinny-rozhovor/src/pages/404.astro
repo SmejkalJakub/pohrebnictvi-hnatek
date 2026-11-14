@@ -1,0 +1,44 @@
+---
+/** 404: "Tuhle stránku jsme nenašli." / "Co hledáte?" with four answer links; the strip keeps the number. */
+import { getSiteContext } from "@core/content/load.ts";
+import ConversationLayout from "../layouts/ConversationLayout.astro";
+import QuestionField from "../components/QuestionField.astro";
+import { toneAt } from "../lib/conversation.ts";
+import { ui } from "../i18n/cs.ts";
+
+const site = await getSiteContext();
+const links: { label: string; href: string }[] = [{ label: ui.notFoundGuide, href: "/jak-postupovat/" }];
+if (site.nav.some((item) => item.id === "oznameni")) {
+  links.push({ label: ui.notFoundNotices, href: "/oznameni/" });
+}
+if (site.pricingVisible) {
+  links.push({ label: ui.notFoundCost, href: "/cenik/" });
+}
+links.push({ label: ui.notFoundContact, href: "/kontakt/" });
+---
+<ConversationLayout site={site} title={ui.notFoundQuestion} description={ui.notFoundQuestion} noindex>
+  <QuestionField question={ui.notFoundQuestion} tone={toneAt(0)} level={1} layout="stack">
+    <p class="answer-lead">{ui.notFoundAsk}</p>
+    <ul class="found-links" role="list">
+      {
+        links.map((link) => (
+          <li>
+            <a href={link.href}>{link.label}</a>
+          </li>
+        ))
+      }
+    </ul>
+  </QuestionField>
+</ConversationLayout>
+
+<style>
+  .found-links {
+    padding: 0;
+    list-style: none;
+  }
+
+  .found-links a {
+    display: inline-block;
+    padding-block: 0.5rem;
+  }
+</style>

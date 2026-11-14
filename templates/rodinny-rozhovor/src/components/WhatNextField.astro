@@ -1,0 +1,31 @@
+---
+/** Home "Co nás teď čeká?": the guide's lead as the answer, the picker words, "Krok za krokem". */
+import type { ImageRef } from "@core/content/schemas.ts";
+import type { SpecificSituation } from "@core/content/guidance-flow.ts";
+import QuestionField from "./QuestionField.astro";
+import PlaceWords from "./PlaceWords.astro";
+import Drawing from "./Drawing.astro";
+import { keepShortWords, type Tone } from "../lib/conversation.ts";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  tone: Tone;
+  answer: string | null;
+  situations: SpecificSituation[];
+  drawing: ImageRef | undefined;
+}
+
+const { tone, answer, situations, drawing } = Astro.props;
+let margin: "none" | "small" = "none";
+if (drawing !== undefined) {
+  margin = "small";
+}
+---
+<QuestionField question={ui.whatNextQuestion} tone={tone} section="next-steps" margin={margin}>
+  {answer !== null ? <p>{keepShortWords(answer)}</p> : null}
+  <PlaceWords situations={situations} base="/jak-postupovat/" />
+  <p class="label"><a href="/jak-postupovat/">{ui.stepByStep}</a></p>
+  <Fragment slot="margin">
+    <Drawing image={drawing} line="dark" width={96} height={120} />
+  </Fragment>
+</QuestionField>

@@ -1,0 +1,61 @@
+---
+/**
+ * The navigation as plain words, always visible: no menu button, no JavaScript. At most five
+ * words (guardrail: at most six); on phones they wrap into rows of 44 px targets. The current page
+ * is underlined 3 px thick.
+ */
+import type { WordLink } from "../lib/conversation.ts";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  words: WordLink[];
+}
+
+const { words } = Astro.props;
+---
+<nav aria-label={ui.mainNav} class="word-nav">
+  <ul role="list">
+    {
+      words.map((word) => (
+        <li>
+          <a href={word.href} aria-current={word.current ? "page" : undefined}>
+            {word.label}
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+</nav>
+
+<style>
+  ul {
+    display: flex;
+    flex-wrap: wrap;
+    column-gap: 1.125rem;
+    margin: 0.25rem 0 0;
+    padding: 0;
+    list-style: none;
+    font-family: var(--sans);
+    font-size: 1.125rem;
+    font-weight: 500;
+  }
+
+  a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.75rem;
+    text-underline-offset: 0.25em;
+  }
+
+  a[aria-current="page"] {
+    text-decoration-thickness: 3px;
+  }
+
+  @media (min-width: 64rem) {
+    ul {
+      column-gap: 1.625rem;
+      margin: 0;
+      font-size: 1.1875rem;
+    }
+  }
+</style>

@@ -1,0 +1,143 @@
+---
+/**
+ * One guide step as a calm answer (design-differentiation §1.3): the title, the summary, the
+ * step's short list as numbered sentences ("Postupně"), the nonstop or office number when the step
+ * asks for a call, and the longer text unfolding in place ("Povězte mi víc", the template's
+ * signature). Never tick boxes, counts or a reset. data-guide-step / data-situations let the
+ * :target filter hide steps for other situations.
+ */
+import type { CollectionEntry } from "astro:content";
+import EmergencyPhoneLink from "@core/components/EmergencyPhoneLink.astro";
+import PhoneLink from "@core/components/PhoneLink.astro";
+import PlaceholderMark from "@core/components/PlaceholderMark.astro";
+import UnreviewedMark from "@core/components/UnreviewedMark.astro";
+import { render } from "@core/content/load.ts";
+import { guideSentence, situationsAttribute } from "@core/content/guidance-flow.ts";
+import type { SiteContext } from "@core/content/view-models.ts";
+import { formatPhone } from "@core/format/phone.ts";
+import { primaryOfficePhone } from "../lib/conversation.ts";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  site: SiteContext;
+  entry: CollectionEntry<"guidance">;
+  /** Keeps the list label's id unique when a step appears in more than one picked field. */
+  idPrefix: string;
+}
+
+const { site, entry, idPrefix } = Astro.props;
+const data = entry.data;
+const office = primaryOfficePhone(site);
+const officePhone = formatPhone(office.number);
+const emergencyPhone = formatPhone(site.emergency.phone);
+const { Content } = await render(entry);
+const hasBody = (entry.body ?? "").trim() !== "";
+const listId = `${idPrefix}-${entry.id}-postupne`;
+---
+<article class="step" data-guide-step data-situations={situationsAttribute(entry)}>
+  <h3 class="field-h3">{data.title}</h3>
+  <PlaceholderMark active={data.placeholder} as="div">
+    <p class="step-summary">{data.summary}</p>
+    <UnreviewedMark reviewedAt={data.review.reviewedAt} />
+  </PlaceholderMark>
+  {
+    data.checklist.length > 0 ? (
+      <div class="step-path">
+        <p id={listId} class="label step-path-label">{ui.guideList}</p>
+        <ol class="step-path-list" aria-labelledby={listId}>
+          {data.checklist.map((item) => (
+            <li>{guideSentence(item)}</li>
+          ))}
+        </ol>
+      </div>
+    ) : null
+  }
+  {
+    data.contactPrompt === "emergency" && site.emergency.enabled ? (
+      <p class="step-call">
+        {ui.callTransport}{" "}
+        <EmergencyPhoneLink emergency={site.emergency} variant="custom" class="step-number">
+          <span class="nowrap">{emergencyPhone.display}</span>
+        </EmergencyPhoneLink>
+      </p>
+    ) : null
+  }
+  {
+    data.contactPrompt === "office" ? (
+      <p class="step-call">
+        {ui.officePrompt}{" "}
+        <PhoneLink number={office.number} class="step-number">
+          {office.label}{" "}<span class="nowrap">{officePhone.display}</span>
+        </PhoneLink>
+      </p>
+    ) : null
+  }
+  {
+    hasBody ? (
+      <details class="say-more">
+        <summary>{ui.sayMore}</summary>
+        <div class="prose step-body">
+          <Content />
+        </div>
+      </details>
+    ) : null
+  }
+</article>
+
+<style>
+  .step + :global(.step) {
+    margin-top: var(--s4);
+  }
+
+  .step > * + * {
+    margin-top: 0.625rem;
+  }
+
+  .step :global(.step-number) {
+    font-weight: 700;
+  }
+
+  /* The short list: soft serif numerals in the accent, one sentence per line, generous air. A
+     thin line joins the numbers like a path; nothing to tick, nothing to count. */
+  .step-path {
+    margin-top: var(--s2);
+  }
+
+  .step-path-label {
+    color: var(--muted);
+  }
+
+  .step-path-list {
+    margin-top: 0.375rem;
+    padding: 0;
+    list-style: none;
+    counter-reset: path;
+  }
+
+  .step-path-list > li {
+    position: relative;
+    padding: 0.3125rem 0 0.3125rem 2.75rem;
+    counter-increment: path;
+  }
+
+  .step-path-list > li::before {
+    content: counter(path);
+    position: absolute;
+    left: 0;
+    top: 0.3125rem;
+    width: 1.875rem;
+    color: var(--accent);
+    font-family: var(--display);
+    font-weight: 700;
+    text-align: center;
+  }
+
+  .step-path-list > li:not(:last-child)::after {
+    content: "";
+    position: absolute;
+    left: 0.9375rem;
+    top: 2.125rem;
+    bottom: -0.3125rem;
+    border-left: 1px solid var(--rule);
+  }
+</style>

@@ -1,0 +1,226 @@
+---
+/**
+ * Sand footer, every page, with question headings: Kde nás najdete · Kdy jsme v kanceláři
+ * (office hours under their own heading) · Kdykoli, i v noci (the nonstop line, its own heading)
+ * · Dokumenty (when on). Then "Co tu ještě najdete?" with the pages that are not nav words, and the
+ * legal row (research L8, L10). Neutral form (notice pages): no Dokumenty, no page line, the
+ * nonstop column reads "Telefon nonstop".
+ */
+import EmergencyPhoneLink from "@core/components/EmergencyPhoneLink.astro";
+import MissingFact from "@core/components/MissingFact.astro";
+import PhoneLink from "@core/components/PhoneLink.astro";
+import type { DocumentView, SiteContext } from "@core/content/view-models.ts";
+import { formatAddressInline, formatAddressLines } from "@core/format/address.ts";
+import { mainLocation, mapHref, primaryOfficePhone, type WordLink } from "../lib/conversation.ts";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  site: SiteContext;
+  neutral: boolean;
+  documents: DocumentView[];
+  morePages: WordLink[];
+  hasPrivacyPage: boolean;
+}
+
+const { site, neutral, documents, morePages, hasPrivacyPage } = Astro.props;
+const location = mainLocation(site);
+const [street, cityLine] = formatAddressLines(location.address);
+const map = mapHref(location);
+const office = primaryOfficePhone(site);
+const ids = site.company.legalIds;
+const showDocuments = !neutral && documents.length > 0;
+const showMore = !neutral && morePages.length > 0;
+let nightHeading: string = ui.footerNight;
+if (neutral) {
+  nightHeading = ui.neutralPhone;
+}
+---
+<footer class="family-footer" data-neutral={neutral ? "true" : "false"}>
+  <div class="foot-cols">
+    <section aria-labelledby="pata-kde">
+      <h2 id="pata-kde" class="foot-q">{ui.footerWhere}</h2>
+      <p class="foot-text">{street}<br />{cityLine}</p>
+      {map !== null ? <p><a href={map} class="foot-link">{ui.mapLink}</a></p> : null}
+    </section>
+    <section aria-labelledby="pata-kancelar" data-office-hours>
+      <h2 id="pata-kancelar" class="foot-q">{ui.footerOffice}</h2>
+      <ul class="foot-text foot-hours" role="list">
+        {
+          site.officeHoursRows.map((row) => (
+            <li>
+              <span>{row.days}</span> <span class="nowrap">{row.text}</span>
+              {row.note !== null ? <span class="foot-note">{row.note}</span> : null}
+            </li>
+          ))
+        }
+      </ul>
+      <p><PhoneLink number={office.number} class="foot-phone" /></p>
+    </section>
+    {
+      site.emergency.enabled ? (
+        <section aria-labelledby="pata-nonstop" data-emergency-block>
+          <h2 id="pata-nonstop" class="foot-q">{nightHeading}</h2>
+          {neutral ? null : <p class="foot-text">{site.emergency.label}</p>}
+          <p>
+            <EmergencyPhoneLink emergency={site.emergency} variant="number" class="foot-emergency" />
+          </p>
+        </section>
+      ) : null
+    }
+    {
+      showDocuments ? (
+        <section aria-labelledby="pata-dokumenty">
+          <h2 id="pata-dokumenty" class="foot-q">{ui.footerDocuments}</h2>
+          <ul class="foot-docs" role="list">
+            {documents.map((document) => (
+              <li>
+                <a href={document.href}>{document.title}</a> <span class="muted">({ui.pdf})</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null
+    }
+  </div>
+  {
+    showMore ? (
+      <nav class="foot-more" aria-labelledby="pata-dalsi">
+        <h2 id="pata-dalsi" class="foot-q">{ui.footerMore}</h2>
+        <ul role="list">
+          {morePages.map((page) => (
+            <li>
+              <a href={page.href}>{page.label}</a>
+            </li>
+          ))}
+        </ul>
+      </nav>
+    ) : null
+  }
+  <div class="foot-legal">
+    <p data-legal-identification>
+      {site.company.legalName}
+      {", "}
+      {
+        ids.registeredOffice !== null ? (
+          formatAddressInline(ids.registeredOffice)
+        ) : (
+          <MissingFact name="sídlo společnosti" />
+        )
+      }
+      {". "}
+      {ui.ico}{" "}
+      {ids.ico !== null ? <span class="nowrap">{ids.ico}</span> : <MissingFact name="IČO" />}
+      {". "}
+      {ids.registryEntry !== null ? ids.registryEntry : <MissingFact name="zápis v obchodním rejstříku" />}
+      {
+        site.legal !== null ? (
+          <>
+            {" "}
+            {ui.adrFooter}: {site.legal.adr.name},{" "}
+            <a href={site.legal.adr.url}>{site.legal.adr.url.replace(/^https?:\/\//, "")}</a>.
+          </>
+        ) : null
+      }
+    </p>
+    <ul class="foot-legal-links" role="list">
+      {site.legalLink !== null ? <li><a href={site.legalLink.href}>{site.legalLink.label}</a></li> : null}
+      {hasPrivacyPage ? <li><a href="/ochrana-osobnich-udaju/">{ui.privacy}</a></li> : null}
+    </ul>
+  </div>
+</footer>
+
+<style>
+  .family-footer {
+    padding: 2.25rem var(--side) 2.5rem;
+    background: var(--band);
+    font-size: 1.1875rem;
+    line-height: 1.5;
+  }
+
+  .foot-cols {
+    display: grid;
+    gap: 1.75rem;
+  }
+
+  .foot-q {
+    font-size: 1.375rem;
+    line-height: 1.25;
+  }
+
+  .foot-text {
+    margin-top: 0.375rem;
+  }
+
+  .foot-hours,
+  .foot-docs,
+  .foot-more ul,
+  .foot-legal-links {
+    padding: 0;
+    list-style: none;
+  }
+
+  .foot-note {
+    display: block;
+    color: var(--muted);
+  }
+
+  .foot-docs {
+    margin-top: 0.375rem;
+    font-family: var(--sans);
+    font-size: 1.125rem;
+    font-weight: 500;
+  }
+
+  .foot-docs a,
+  .foot-more a,
+  .foot-legal a,
+  .foot-link {
+    display: inline-block;
+    padding-block: 0.375rem;
+  }
+
+  .family-footer :global(.foot-emergency) {
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  .foot-more {
+    margin-top: 2rem;
+  }
+
+  .foot-more ul {
+    display: flex;
+    flex-wrap: wrap;
+    column-gap: 1.25rem;
+    margin-top: 0.25rem;
+    font-family: var(--sans);
+    font-size: 1.125rem;
+    font-weight: 500;
+  }
+
+  .foot-legal {
+    margin-top: 2rem;
+    color: var(--muted);
+    font-family: var(--sans);
+    font-size: 1.125rem;
+    font-weight: 500;
+  }
+
+  .foot-legal-links {
+    display: flex;
+    flex-wrap: wrap;
+    column-gap: 1.25rem;
+    margin-top: 0.25rem;
+  }
+
+  @media (min-width: 64rem) {
+    .family-footer {
+      padding-block: 2.75rem 2.5rem;
+    }
+
+    .foot-cols {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 2rem;
+    }
+  }
+</style>

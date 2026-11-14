@@ -1,0 +1,79 @@
+---
+/**
+ * The inner-page nonstop form: a compact clay strip directly under the header,
+ * "Potřebujete nás hned? Nonstop převoz zesnulých +420 …" (30 px number). One link; its spans are
+ * inline-blocks with a word space between them, never flex (S6 lesson, QA test 9).
+ */
+import EmergencyPhoneLink from "@core/components/EmergencyPhoneLink.astro";
+import type { EmergencyTransport } from "@core/content/schemas.ts";
+import { formatPhone } from "@core/format/phone.ts";
+import { keepShortWords } from "../lib/conversation.ts";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  emergency: EmergencyTransport;
+}
+
+const { emergency } = Astro.props;
+const phone = formatPhone(emergency.phone);
+---
+{
+  emergency.enabled ? (
+    <div class="clay clay-strip">
+      <EmergencyPhoneLink emergency={emergency} variant="custom" class="strip-link">
+        <span class="strip-q">{keepShortWords(`${ui.stripQuestion} ${emergency.label}`)}</span>{" "}
+        <span class="strip-n">{phone.display}</span>
+      </EmergencyPhoneLink>
+    </div>
+  ) : null
+}
+
+<style>
+  .clay-strip {
+    padding: 0.25rem var(--side) 0.375rem;
+    background: var(--deep);
+    color: var(--on-deep);
+  }
+
+  .clay-strip :global(.strip-link) {
+    display: block;
+    color: var(--on-deep);
+    text-decoration: none;
+  }
+
+  .strip-q {
+    display: block;
+    color: var(--on-deep-muted);
+    font-family: var(--sans);
+    font-size: 1.125rem;
+    font-weight: 500;
+    line-height: 1.4;
+  }
+
+  .strip-n {
+    display: inline-block;
+    font-size: min(var(--strip-number), 8.4vw);
+    font-weight: 700;
+    line-height: 1.2;
+    font-variant-numeric: lining-nums;
+    white-space: nowrap;
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 0.2em;
+  }
+
+  .clay-strip :global(.strip-link:hover .strip-n) {
+    text-decoration-thickness: 3px;
+  }
+
+  @media (min-width: 64rem) {
+    .clay-strip {
+      padding-block: 0.375rem;
+    }
+
+    .strip-q {
+      display: inline-block;
+      margin-right: 1.25rem;
+    }
+  }
+</style>

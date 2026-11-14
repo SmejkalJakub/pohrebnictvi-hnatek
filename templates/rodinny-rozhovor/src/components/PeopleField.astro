@@ -1,0 +1,147 @@
+---
+/**
+ * "Kdo vás přijme?" (/o-nas/#lide): with photos 2 × 2 on a sand field, 160 × 200 portrait, the
+ * name, the role as what the person does for you, the direct line; without photos the names sit
+ * in one row of four and the office drawing may end the row. A person without a photo never gets
+ * an empty frame.
+ */
+import { Image } from "astro:assets";
+import PlaceholderMark from "@core/components/PlaceholderMark.astro";
+import type { ImageRef } from "@core/content/schemas.ts";
+import type { PersonView } from "@core/content/view-models.ts";
+import { resolveOptionalImage } from "@core/media/resolve.ts";
+import Drawing from "./Drawing.astro";
+import { keepShortWords, type Tone } from "../lib/conversation.ts";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  people: PersonView[];
+  tone: Tone;
+  drawing: ImageRef | undefined;
+}
+
+const { people, tone, drawing } = Astro.props;
+const withPhotos = people.some((person) => person.photo !== null);
+let layout = "names";
+if (withPhotos) {
+  layout = "photos";
+}
+---
+<section id="lide" class="field people-field" data-tone={tone} aria-labelledby="lide-otazka" data-field>
+  <h2 id="lide-otazka" class="field-q people-q">{keepShortWords(ui.receiveQuestion)}</h2>
+  <ul class="people" role="list" data-people-layout={layout}>
+    {
+      people.map((person) => {
+        const photo = resolveOptionalImage(person.photo);
+        return (
+          <li class="person">
+            <PlaceholderMark active={person.placeholder} as="div" class="person-inner">
+              {photo !== null ? (
+                <Image
+                  src={photo.src}
+                  alt={photo.alt}
+                  width={160}
+                  height={200}
+                  densities={[1, 2]}
+                  loading="lazy"
+                  class="person-photo"
+                  style={`object-fit: cover; object-position: ${photo.objectPosition}`}
+                />
+              ) : null}
+              <div>
+                <p class="person-name">{person.name}</p>
+                <p class="muted">{keepShortWords(person.role)}</p>
+                {person.phone !== null ? (
+                  <p>
+                    <a href={person.phone.href} data-phone-link>
+                      <span class="visually-hidden">{ui.directLine}{" "}</span>
+                      <span class="nowrap">{person.phone.display}</span>
+                    </a>
+                  </p>
+                ) : null}
+              </div>
+            </PlaceholderMark>
+          </li>
+        );
+      })
+    }
+    {
+      !withPhotos && drawing !== undefined ? (
+        <li class="person person-drawing" aria-hidden="true">
+          <Drawing image={drawing} line="dark" width={270} height={180} />
+        </li>
+      ) : null
+    }
+  </ul>
+</section>
+
+<style>
+  .people {
+    display: grid;
+    gap: var(--s3);
+    margin-top: var(--s3);
+    padding: 0;
+    list-style: none;
+  }
+
+  .person :global(.person-inner) {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 1rem;
+    align-items: start;
+  }
+
+  .person :global(.person-photo) {
+    width: 6.25rem;
+    height: auto;
+  }
+
+  .person-name {
+    font-size: 1.625rem;
+    font-weight: 700;
+    line-height: 1.1;
+  }
+
+  .person-drawing {
+    display: none;
+  }
+
+  /* The prototype "Zástupný obsah" label sits above the row, not in a grid column. */
+  :global(.person-inner > [data-placeholder-label]) {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+
+  @media (min-width: 64rem) {
+    .people-field {
+      padding-top: var(--s4);
+      padding-bottom: var(--s4);
+    }
+
+    .people[data-people-layout="photos"] {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 3rem 3.5rem;
+    }
+
+    .people[data-people-layout="names"] {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 2rem;
+    }
+
+    .person :global(.person-inner) {
+      gap: 1.5rem;
+    }
+
+    .person :global(.person-photo) {
+      width: 10rem;
+    }
+
+    .person-name {
+      font-size: 2rem;
+    }
+
+    .person-drawing {
+      display: block;
+    }
+  }
+</style>

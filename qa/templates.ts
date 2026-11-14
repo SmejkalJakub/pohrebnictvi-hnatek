@@ -10,7 +10,7 @@ export interface TemplateUnderTest {
     | "rodinna-tradice"
     | "dustojna-jednoduchost"
     | "nocni-linka"
-    | "dve-cesty"
+    | "rodinny-rozhovor"
     | "ticha-krajina"
     | "lide-a-misto";
   /** Short letter used in the design docs. */
@@ -35,7 +35,7 @@ export const templates: TemplateUnderTest[] = [
   template("rodinna-tradice", "A", 4411),
   template("dustojna-jednoduchost", "B", 4412),
   template("nocni-linka", "C", 4413),
-  template("dve-cesty", "D", 4417),
+  template("rodinny-rozhovor", "D", 4416),
   template("ticha-krajina", "E", 4415),
   template("lide-a-misto", "G", 4418),
 ];

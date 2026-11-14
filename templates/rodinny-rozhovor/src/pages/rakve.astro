@@ -1,0 +1,39 @@
+---
+/** "Jakou rakev vybrat?": the lead, then the coffins on a sand field (CatalogueField), then the body. */
+import { getCoffins, getPage, getSiteContext } from "@core/content/load.ts";
+import ConversationLayout from "../layouts/ConversationLayout.astro";
+import QuestionField from "../components/QuestionField.astro";
+import CatalogueField, { type CatalogueItem } from "../components/CatalogueField.astro";
+import FieldProse from "../components/FieldProse.astro";
+import { keepShortWords, seoTitle, toneAt } from "../lib/conversation.ts";
+import { ui } from "../i18n/cs.ts";
+
+const site = await getSiteContext();
+const page = await getPage("rakve");
+const coffins = await getCoffins();
+const Body = page.Content;
+const items: CatalogueItem[] = coffins.map((entry) => {
+  const details = [entry.data.material, entry.data.code === null ? null : `${ui.code} ${entry.data.code}`].filter(
+    (part) => part !== null,
+  );
+  let detail: string | null = null;
+  if (details.length > 0) {
+    detail = details.join(", ");
+  }
+  return {
+    id: entry.id,
+    name: entry.data.name,
+    detail,
+    summary: entry.data.summary,
+    image: entry.data.image,
+    placeholder: entry.data.placeholder,
+  };
+});
+---
+<ConversationLayout site={site} title={seoTitle(page.data)} description={page.data.metaDescription}>
+  <QuestionField question={ui.coffinsQuestion} tone={toneAt(0)} level={1} layout="head">
+    {page.data.lead !== null ? <p>{keepShortWords(page.data.lead)}</p> : null}
+  </QuestionField>
+  <CatalogueField site={site} items={items} tone={toneAt(1)} aspect="4:3" label={ui.coffinsQuestion} />
+  <FieldProse show={page.hasBody} startIndex={2}><Body /></FieldProse>
+</ConversationLayout>

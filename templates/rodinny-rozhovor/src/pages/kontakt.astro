@@ -1,0 +1,103 @@
+---
+/**
+ * "Kde vás najdeme?": the address and the map link (with the contact drawing at desktop width);
+ * then the office hours as their own question (data-office-hours), the phones and e-mail, and
+ * separately "Co když je to v noci?" (data-emergency-block). Office hours and the nonstop number
+ * never share a field (invariant 2).
+ */
+import EmergencyPhoneLink from "@core/components/EmergencyPhoneLink.astro";
+import PhoneLink from "@core/components/PhoneLink.astro";
+import { getIllustrations, getPage, getSiteContext } from "@core/content/load.ts";
+import { formatAddressLines } from "@core/format/address.ts";
+import { formatPhone } from "@core/format/phone.ts";
+import ConversationLayout from "../layouts/ConversationLayout.astro";
+import QuestionField from "../components/QuestionField.astro";
+import HoursAnswer from "../components/HoursAnswer.astro";
+import Drawing from "../components/Drawing.astro";
+import FieldProse from "../components/FieldProse.astro";
+import { keepShortWords, mainLocation, mapHref, seoTitle, toneAt } from "../lib/conversation.ts";
+import { ui } from "../i18n/cs.ts";
+
+const site = await getSiteContext();
+const page = await getPage("kontakt");
+const drawings = await getIllustrations();
+const location = mainLocation(site);
+const [street, city] = formatAddressLines(location.address);
+const map = mapHref(location);
+const emergencyPhone = formatPhone(site.emergency.phone);
+const Body = page.Content;
+let margin: "none" | "large" = "none";
+if (drawings.contact !== undefined) {
+  margin = "large";
+}
+const nightLines = [site.emergency.shortNote, site.emergency.serviceArea].filter((line) => line !== null);
+let bodyIndex = 3;
+if (site.emergency.enabled) {
+  bodyIndex = 4;
+}
+---
+<ConversationLayout site={site} title={seoTitle(page.data)} description={page.data.metaDescription}>
+  <QuestionField question={ui.findUsQuestion} tone={toneAt(0)} level={1} layout="stack" margin={margin}>
+    <p class="answer-lead">{street}, {city}</p>
+    {location.accessNote !== null ? <p>{keepShortWords(location.accessNote)}</p> : null}
+    {page.data.lead !== null ? <p>{keepShortWords(page.data.lead)}</p> : null}
+    {map !== null ? <p class="label"><a href={map}>{ui.mapLink}</a></p> : null}
+    <Fragment slot="margin">
+      <Drawing image={drawings.contact} line="dark" width={380} height={380} />
+    </Fragment>
+  </QuestionField>
+  <QuestionField question={ui.officeQuestion} tone={toneAt(1)} hook="office-hours">
+    <HoursAnswer site={site} headingId={null} full />
+  </QuestionField>
+  <QuestionField question={ui.reachQuestion} tone={toneAt(2)}>
+    <ul class="reach" role="list">
+      {
+        site.contact.phones.map((phone) => (
+          <li>
+            <PhoneLink number={phone.number}>
+              {phone.label}{" "}<span class="nowrap">{formatPhone(phone.number).display}</span>
+            </PhoneLink>
+          </li>
+        ))
+      }
+      {
+        site.contact.emails.map((email) => (
+          <li>
+            <a href={`mailto:${email.address}`} class="mail">{email.address}</a>
+          </li>
+        ))
+      }
+    </ul>
+  </QuestionField>
+  {
+    site.emergency.enabled ? (
+      <QuestionField question={ui.nightQuestion} tone={toneAt(3)} hook="emergency-block">
+        {nightLines.map((line) => <p>{keepShortWords(line)}</p>)}
+        <p>
+          {ui.nightCall}{" "}
+          <EmergencyPhoneLink emergency={site.emergency} variant="custom" class="night-number">
+            <span class="nowrap">{emergencyPhone.display}</span>
+          </EmergencyPhoneLink>
+        </p>
+      </QuestionField>
+    ) : null
+  }
+  <FieldProse show={page.hasBody} startIndex={bodyIndex}><Body /></FieldProse>
+</ConversationLayout>
+
+<style>
+  .reach {
+    padding: 0;
+    list-style: none;
+  }
+
+  .mail {
+    display: inline-block;
+    padding-block: 0.5rem;
+    overflow-wrap: anywhere;
+  }
+
+  :global(.night-number) {
+    font-weight: 700;
+  }
+</style>

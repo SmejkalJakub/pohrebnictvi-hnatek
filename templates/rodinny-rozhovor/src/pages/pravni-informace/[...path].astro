@@ -1,0 +1,92 @@
+---
+/**
+ * "Kam se obrátit, když nejste spokojeni?" (research L10), built from Kontakt: who settles
+ * disputes (ADR body), where to send a complaint, the documents to download (#dokumenty), the
+ * body. Emitted only when the page exists (the manifest declares pageFields["pravni-informace"]).
+ */
+import { getDocuments, getOptionalPage, getSiteContext } from "@core/content/load.ts";
+import ConversationLayout from "../../layouts/ConversationLayout.astro";
+import QuestionField from "../../components/QuestionField.astro";
+import FieldProse from "../../components/FieldProse.astro";
+import { keepShortWords, seoTitle, toneAt } from "../../lib/conversation.ts";
+import { ui } from "../../i18n/cs.ts";
+
+export async function getStaticPaths() {
+  const page = await getOptionalPage("pravni-informace");
+  if (page === null) {
+    return [];
+  }
+  return [{ params: { path: undefined } }];
+}
+
+const site = await getSiteContext();
+const page = await getOptionalPage("pravni-informace");
+if (page === null) {
+  throw new Error("unreachable: page missing");
+}
+const documents = await getDocuments();
+const Body = page.Content;
+const legal = site.legal;
+let index = 1;
+function next(): number {
+  const current = index;
+  index += 1;
+  return current;
+}
+const adrIndex = legal !== null ? next() : 0;
+const complaintsIndex = legal !== null && legal.complaintsContact !== null ? next() : 0;
+const documentsIndex = documents.length > 0 ? next() : 0;
+const bodyIndex = index;
+---
+<ConversationLayout site={site} title={seoTitle(page.data)} description={page.data.metaDescription}>
+  <QuestionField question={ui.legalQuestion} tone={toneAt(0)} level={1} layout="head">
+    {page.data.lead !== null ? <p>{keepShortWords(page.data.lead)}</p> : null}
+  </QuestionField>
+  {
+    legal !== null ? (
+      <QuestionField question={ui.disputesQuestion} tone={toneAt(adrIndex)} id="spory">
+        <p>
+          {keepShortWords(ui.adrText)} {legal.adr.name}, <a href={legal.adr.url}>{legal.adr.url.replace(/^https?:\/\//, "")}</a>.
+        </p>
+      </QuestionField>
+    ) : null
+  }
+  {
+    legal !== null && legal.complaintsContact !== null ? (
+      <QuestionField question={ui.complaintsQuestion} tone={toneAt(complaintsIndex)} id="reklamace">
+        <p>{keepShortWords(legal.complaintsContact)}</p>
+      </QuestionField>
+    ) : null
+  }
+  {
+    documents.length > 0 ? (
+      <QuestionField question={ui.documentsQuestion} tone={toneAt(documentsIndex)} id="dokumenty">
+        <ul class="doc-links" role="list">
+          {documents.map((document) => (
+            <li>
+              <a href={document.href}>{document.title}</a> <span class="muted">({ui.pdf}</span>
+              {document.validFromText !== null ? (
+                <span class="muted">, {ui.validFrom} {document.validFromText})</span>
+              ) : (
+                <span class="muted">)</span>
+              )}
+            </li>
+          ))}
+        </ul>
+      </QuestionField>
+    ) : null
+  }
+  <FieldProse show={page.hasBody} startIndex={bodyIndex}><Body /></FieldProse>
+</ConversationLayout>
+
+<style>
+  .doc-links {
+    padding: 0;
+    list-style: none;
+  }
+
+  .doc-links a {
+    display: inline-block;
+    padding-block: 0.25rem;
+  }
+</style>

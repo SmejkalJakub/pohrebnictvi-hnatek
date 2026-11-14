@@ -1,0 +1,139 @@
+---
+/**
+ * Coffins or flowers on a sand field, built from the Lidé layout: rows with the image (4:3 or
+ * 1:1, 160 px wide) when there is one, the name large, material or type muted, the summary.
+ * Without images the names sit in rows of four. Zero items: one sentence and the office phone.
+ */
+import { Image } from "astro:assets";
+import PhoneLink from "@core/components/PhoneLink.astro";
+import PlaceholderMark from "@core/components/PlaceholderMark.astro";
+import type { ImageRef } from "@core/content/schemas.ts";
+import type { SiteContext } from "@core/content/view-models.ts";
+import { resolveOptionalImage } from "@core/media/resolve.ts";
+import { keepShortWords, primaryOfficePhone, type Tone } from "../lib/conversation.ts";
+import { ui } from "../i18n/cs.ts";
+
+export interface CatalogueItem {
+  id: string;
+  name: string;
+  detail: string | null;
+  summary: string | null;
+  image: ImageRef | null;
+  placeholder: boolean;
+}
+
+interface Props {
+  site: SiteContext;
+  items: CatalogueItem[];
+  tone: Tone;
+  aspect: "4:3" | "1:1";
+  label: string;
+}
+
+const { site, items, tone, aspect, label } = Astro.props;
+const withImages = items.some((item) => item.image !== null);
+let height = 120;
+if (aspect === "1:1") {
+  height = 160;
+}
+const office = primaryOfficePhone(site);
+let layout = "names";
+if (withImages) {
+  layout = "images";
+}
+---
+<section class="field catalogue-field" data-tone={tone} data-field aria-label={label}>
+  {
+    items.length === 0 ? (
+      <p>
+        {ui.catalogueEmpty}{" "}
+        <PhoneLink number={office.number} />
+      </p>
+    ) : (
+      <ul class="catalogue" role="list" data-catalogue-layout={layout}>
+        {items.map((item) => {
+          const image = resolveOptionalImage(item.image);
+          return (
+            <li id={item.id}>
+              <PlaceholderMark active={item.placeholder} as="div" class="catalogue-item">
+                {image !== null ? (
+                  <Image
+                    src={image.src}
+                    alt={image.alt}
+                    width={160}
+                    height={height}
+                    densities={[1, 2]}
+                    loading="lazy"
+                    class="catalogue-image"
+                    style={`object-fit: cover; object-position: ${image.objectPosition}`}
+                  />
+                ) : null}
+                <div>
+                  <h2 class="catalogue-name">{keepShortWords(item.name)}</h2>
+                  {item.detail !== null ? <p class="muted">{item.detail}</p> : null}
+                  {item.summary !== null ? <p>{keepShortWords(item.summary)}</p> : null}
+                </div>
+              </PlaceholderMark>
+            </li>
+          );
+        })}
+      </ul>
+    )
+  }
+</section>
+
+<style>
+  .catalogue {
+    display: grid;
+    gap: var(--s3);
+    padding: 0;
+    list-style: none;
+  }
+
+  .catalogue :global(.catalogue-item) {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 1rem;
+    align-items: start;
+  }
+
+  .catalogue :global(.catalogue-image) {
+    width: 6.25rem;
+    height: auto;
+  }
+
+  .catalogue-name {
+    font-size: 1.625rem;
+    line-height: 1.15;
+  }
+
+  /* The prototype "Zástupný obsah" label sits above the row, not in a grid column. */
+  :global(.catalogue-item > [data-placeholder-label]) {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+
+  @media (min-width: 64rem) {
+    .catalogue[data-catalogue-layout="images"] {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 3rem 3.5rem;
+    }
+
+    .catalogue[data-catalogue-layout="names"] {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 2rem;
+    }
+
+    .catalogue :global(.catalogue-item) {
+      gap: 1.5rem;
+    }
+
+    .catalogue :global(.catalogue-image) {
+      width: 10rem;
+    }
+
+    .catalogue-name {
+      font-size: 2rem;
+    }
+  }
+</style>

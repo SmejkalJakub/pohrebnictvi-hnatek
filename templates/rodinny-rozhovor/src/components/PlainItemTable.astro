@@ -1,0 +1,57 @@
+---
+/**
+ * Price items as a borderless table: spacing, not rules (the guardrail). Item name (with its
+ * description muted), price bold on the right and never wrapping, through <PriceValue> only.
+ * With several groups each group's title opens its own tbody.
+ */
+import PriceValue from "@core/components/PriceValue.astro";
+import type { PriceGroup } from "@core/content/schemas.ts";
+import { keepShortWords } from "../lib/conversation.ts";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  groups: PriceGroup[];
+  showGroupTitles: boolean;
+}
+
+const { groups, showGroupTitles } = Astro.props;
+---
+<table class="plain-table price-table">
+  <thead class="visually-hidden">
+    <tr>
+      <th scope="col">{ui.itemLabel}</th>
+      <th scope="col">{ui.priceLabel}</th>
+    </tr>
+  </thead>
+  {
+    groups.map((group) => (
+      <tbody id={showGroupTitles ? group.id : undefined}>
+        {showGroupTitles ? (
+          <tr class="group-row">
+            <th scope="rowgroup" colspan="2">
+              {group.title}
+            </th>
+          </tr>
+        ) : null}
+        {group.items.map((item) => (
+          <tr>
+            <th scope="row">
+              {keepShortWords(item.label)}
+              {item.description !== null ? <span class="item-note muted">{keepShortWords(item.description)}</span> : null}
+            </th>
+            <td class="price-cell">
+              <PriceValue item={item} class="price" />
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    ))
+  }
+</table>
+
+<style>
+  .item-note {
+    display: block;
+    font-size: 1.125rem;
+  }
+</style>

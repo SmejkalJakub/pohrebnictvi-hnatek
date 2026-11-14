@@ -1,0 +1,29 @@
+---
+/**
+ * Home "Kde vás najdeme?": the address, the map link and, under its own question, the office
+ * hours (data-office-hours). Never the nonstop number: that is the clay field's answer.
+ */
+import type { SiteContext } from "@core/content/view-models.ts";
+import { formatAddressLines } from "@core/format/address.ts";
+import QuestionField from "./QuestionField.astro";
+import HoursAnswer from "./HoursAnswer.astro";
+import { keepShortWords, mainLocation, mapHref, type Tone } from "../lib/conversation.ts";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  tone: Tone;
+  site: SiteContext;
+}
+
+const { tone, site } = Astro.props;
+const location = mainLocation(site);
+const [street, city] = formatAddressLines(location.address);
+const map = mapHref(location);
+---
+<QuestionField question={ui.findUsQuestion} tone={tone} section="contact-summary">
+  <p>{street}, {city}</p>
+  {location.accessNote !== null ? <p class="muted">{keepShortWords(location.accessNote)}</p> : null}
+  {map !== null ? <p class="label"><a href={map}>{ui.mapLink}</a></p> : null}
+  <HoursAnswer site={site} headingId="domu-hodiny" />
+  <p class="label"><a href="/kontakt/">{ui.allContacts}</a></p>
+</QuestionField>

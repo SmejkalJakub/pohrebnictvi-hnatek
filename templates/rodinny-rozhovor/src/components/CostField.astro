@@ -1,0 +1,56 @@
+---
+/**
+ * Home "Kolik to bude stát?": one sentence with the first price of each package ("Pohřeb bez
+ * obřadu stojí od 14 900 Kč, pohřeb s obřadem od 24 900 Kč."), the VAT note (L9), a line on what
+ * is included, and the link to Ceník. Renders nothing while pricing is hidden.
+ */
+import PriceValue from "@core/components/PriceValue.astro";
+import VatNote from "@core/components/VatNote.astro";
+import type { PricingView } from "@core/content/view-models.ts";
+import QuestionField from "./QuestionField.astro";
+import { keepShortWords, lowerFirst, priceMentions, type Tone } from "../lib/conversation.ts";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  tone: Tone;
+  pricing: PricingView;
+}
+
+const { tone, pricing } = Astro.props;
+const mentions = priceMentions(pricing);
+---
+<QuestionField question={ui.costQuestion} tone={tone} section="price-summary" wide>
+  <p class="answer-cost">
+    {
+      mentions.map((mention, index) => (
+        <>
+          {index === 0 ? keepShortWords(`${mention.title} ${ui.costCosts}`) : keepShortWords(`, ${lowerFirst(mention.title)}`)}{" "}
+          <strong>
+            <PriceValue item={mention.item} class="price" />
+          </strong>
+        </>
+      ))
+    }.
+  </p>
+  <VatNote pricing={pricing} class="muted vat-plain" />
+  <p class="muted">{keepShortWords(ui.costMore)}</p>
+  <p><a href="/cenik/">{ui.costLink}</a></p>
+</QuestionField>
+
+<style>
+  .answer-cost {
+    font-size: 1.3125rem;
+    line-height: 1.45;
+  }
+
+  :global(.vat-plain[data-vat-note]) {
+    font-weight: 400;
+  }
+
+  @media (min-width: 64rem) {
+    .answer-cost {
+      font-size: 1.625rem;
+      line-height: 1.4;
+    }
+  }
+</style>

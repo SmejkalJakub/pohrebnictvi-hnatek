@@ -1,0 +1,58 @@
+---
+/**
+ * "Kde zemřel? doma · v nemocnici · …": the situation picker as a sentence of words, each a
+ * 44 px link to /jak-postupovat/#situace-… (core guidance-flow, :target, no JavaScript). On the
+ * guide the picked word becomes a small clay tag with "(vybráno)" (rules in the guide's CSS).
+ */
+import { SITUATION_ANCHOR, type SpecificSituation } from "@core/content/guidance-flow.ts";
+import { situationWords, ui } from "../i18n/cs.ts";
+
+interface Props {
+  situations: SpecificSituation[];
+  /** "" on the guide itself, "/jak-postupovat/" elsewhere. */
+  base: string;
+}
+
+const { situations, base } = Astro.props;
+---
+{
+  situations.length > 0 ? (
+    <p class="place-words">
+      <span class="place-prompt">{ui.wherePrompt}</span>{" "}
+      {situations.map((situation, index) => (
+        <>
+          {index > 0 ? (
+            <span class="dot" aria-hidden="true">
+              ·
+            </span>
+          ) : null}
+          <a href={`${base}#${SITUATION_ANCHOR[situation]}`} class="place-word" data-place={situation}>
+            {situationWords[situation]}
+            <span class="picked-word"> {ui.picked}</span>
+          </a>
+        </>
+      ))}
+    </p>
+  ) : null
+}
+
+<style>
+  .place-words {
+    font-family: var(--sans);
+    font-size: var(--label);
+    font-weight: 500;
+    line-height: 1.5;
+  }
+
+  .place-word {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.75rem;
+    white-space: nowrap;
+  }
+
+  .picked-word {
+    display: none;
+    white-space: pre;
+  }
+</style>

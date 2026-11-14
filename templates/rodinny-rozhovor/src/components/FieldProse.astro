@@ -1,0 +1,42 @@
+---
+/**
+ * A Markdown body split into fields: each ## opens a new field with that heading as its
+ * question, alternating sand and cream from `startIndex`. Text before the first ## goes into a
+ * field without a heading of its own (inside the previous field's tone). Renders nothing for an
+ * empty body. One-letter words are kept off line ends in the rendered text.
+ */
+import { keepShortWordsHtml, toneAt } from "../lib/conversation.ts";
+
+interface Props {
+  show: boolean;
+  /** Field index of the first field this body opens (0 = cream). */
+  startIndex: number;
+}
+
+const { show, startIndex } = Astro.props;
+let parts: { heading: string | null; id: string | null; html: string }[] = [];
+if (show) {
+  const html = keepShortWordsHtml(await Astro.slots.render("default"));
+  const chunks = html.split(/(?=<h2[\s>])/);
+  parts = chunks
+    .filter((chunk) => chunk.trim() !== "")
+    .map((chunk) => {
+      const match = /^<h2([^>]*)>([\s\S]*?)<\/h2>([\s\S]*)$/.exec(chunk);
+      if (match === null) {
+        return { heading: null, id: null, html: chunk };
+      }
+      const idMatch = /\sid="([^"]+)"/.exec(match[1] ?? "");
+      return { heading: match[2] ?? "", id: idMatch?.[1] ?? null, html: match[3] ?? "" };
+    });
+}
+---
+{
+  parts.map((part, index) => (
+    <section class="field" data-tone={toneAt(startIndex + index)} data-layout="qa" data-field>
+      <div class="field-grid">
+        {part.heading !== null ? <h2 class="field-q" id={part.id ?? undefined} set:html={part.heading} /> : null}
+        <div class="field-a prose" set:html={part.html} />
+      </div>
+    </section>
+  ))
+}

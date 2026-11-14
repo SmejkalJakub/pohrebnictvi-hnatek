@@ -1,0 +1,85 @@
+---
+/**
+ * "Kdo jste?": the lead and the one people photo (about.story), the body as question fields, the
+ * people ("Kdo vás přijme?", #lide), and "Co ještě u nás najdete?" with the pages that are not in
+ * the nav (the guardrail: they are reached from Kdo jsme, page links and the footer).
+ */
+import { getFaq, getIllustrations, getOptionalPage, getPage, getPeople, getSiteContext, hasPage } from "@core/content/load.ts";
+import type { NavItem } from "@core/content/view-models.ts";
+import ConversationLayout from "../layouts/ConversationLayout.astro";
+import QuestionField from "../components/QuestionField.astro";
+import StoryPhoto from "../components/StoryPhoto.astro";
+import FieldProse from "../components/FieldProse.astro";
+import PeopleField from "../components/PeopleField.astro";
+import { footerPages, keepShortWords, seoTitle, toneAt } from "../lib/conversation.ts";
+import { ui } from "../i18n/cs.ts";
+
+const site = await getSiteContext();
+const page = await getPage("o-nas");
+const people = await getPeople();
+const drawings = await getIllustrations();
+const faq = await getFaq();
+const Body = page.Content;
+const photo = page.data.heroImage;
+let margin: "none" | "half" = "none";
+if (photo !== null) {
+  margin = "half";
+}
+
+async function optionalNavItem(id: "pro-ucastniky" | "pohreb-predem", enabled: boolean): Promise<NavItem | null> {
+  if (!enabled) {
+    return null;
+  }
+  const optional = await getOptionalPage(id);
+  if (optional === null) {
+    return null;
+  }
+  return { id, label: optional.data.navLabel, href: `/${id}/` };
+}
+const more = footerPages(site, {
+  guestInfo: await optionalNavItem("pro-ucastniky", site.config.features.guestInfo),
+  prePlanning: await optionalNavItem("pohreb-predem", site.config.features.prePlanning),
+  hasPeople: false,
+  hasFaq: faq.length > 0,
+});
+if (await hasPage("pravni-informace")) {
+  if (site.legalLink !== null) {
+    more.push({ key: "pravni-informace", label: site.legalLink.label, href: site.legalLink.href, current: false });
+  }
+}
+---
+<ConversationLayout site={site} title={seoTitle(page.data)} description={page.data.metaDescription}>
+  <QuestionField question={ui.whoQuestion} tone={toneAt(0)} level={1} layout="stack" margin={margin} marginOnPhone>
+    {page.data.lead !== null ? <p class="answer-lead">{keepShortWords(page.data.lead)}</p> : null}
+    <Fragment slot="margin">
+      <StoryPhoto photo={photo} drawing={undefined} />
+    </Fragment>
+  </QuestionField>
+  <FieldProse show={page.hasBody} startIndex={1}><Body /></FieldProse>
+  {people.length > 0 ? <PeopleField people={people} tone="auto" drawing={drawings.office} /> : null}
+  {
+    more.length > 0 ? (
+      <QuestionField question={ui.moreQuestion} tone="auto">
+        <ul class="more-links" role="list">
+          {more.map((link) => (
+            <li>
+              <a href={link.href}>{link.label}</a>
+            </li>
+          ))}
+        </ul>
+      </QuestionField>
+    ) : null
+  }
+</ConversationLayout>
+
+<style>
+  .more-links {
+    padding: 0;
+    list-style: none;
+  }
+
+  .more-links a {
+    display: inline-block;
+    padding-block: 0.25rem;
+  }
+</style>

@@ -1,0 +1,21 @@
+---
+/**
+ * Home "Kde najdeme oznámení?": a link and a count, never names (research L1: no notice next to
+ * prices or services).
+ */
+import QuestionField from "./QuestionField.astro";
+import type { Tone } from "../lib/conversation.ts";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  tone: Tone;
+  label: string;
+  upcoming: number;
+}
+
+const { tone, label, upcoming } = Astro.props;
+---
+<QuestionField question={ui.noticeQuestion} tone={tone} section="notices">
+  <p><a href="/oznameni/">{label}</a></p>
+  <p class="muted">{ui.noticeCount(upcoming)}</p>
+</QuestionField>

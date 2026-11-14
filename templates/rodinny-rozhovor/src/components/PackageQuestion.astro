@@ -1,0 +1,64 @@
+---
+/**
+ * A price package (a group with inclusion lists) as a question: "Kolik stojí pohřeb bez
+ * obřadu?", the price inside the answer sentence, the group's note, then "V ceně je zahrnuto" /
+ * "Není zahrnuto". A package with several items lists them in a borderless table instead.
+ */
+import PriceValue from "@core/components/PriceValue.astro";
+import type { PriceGroup } from "@core/content/schemas.ts";
+import QuestionField from "./QuestionField.astro";
+import PlainItemTable from "./PlainItemTable.astro";
+import { keepShortWords, lowerFirst, type Tone } from "../lib/conversation.ts";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  group: PriceGroup;
+  first: boolean;
+  tone: Tone;
+}
+
+const { group, first, tone } = Astro.props;
+let question = ui.groupNextQuestion(lowerFirst(group.title));
+if (first) {
+  question = ui.groupFirstQuestion(lowerFirst(group.title));
+}
+const single = group.items.length === 1 ? group.items[0] : undefined;
+---
+<QuestionField question={question} tone={tone} id={group.id} wide class="package">
+  {
+    single !== undefined ? (
+      <p class="answer-lead package-price">
+        <strong><PriceValue item={single} class="price" /></strong>.
+      </p>
+    ) : (
+      <PlainItemTable groups={[group]} showGroupTitles={false} />
+    )
+  }
+  {group.description !== null ? <p>{keepShortWords(group.description)}</p> : null}
+  <div class="two-lists">
+    {
+      group.includes.length > 0 ? (
+        <div>
+          <p class="list-label">{ui.included}</p>
+          <ul>
+            {group.includes.map((line) => (
+              <li>{keepShortWords(line)}</li>
+            ))}
+          </ul>
+        </div>
+      ) : null
+    }
+    {
+      group.excludes.length > 0 ? (
+        <div>
+          <p class="list-label">{ui.excluded}</p>
+          <ul>
+            {group.excludes.map((line) => (
+              <li>{keepShortWords(line)}</li>
+            ))}
+          </ul>
+        </div>
+      ) : null
+    }
+  </div>
+</QuestionField>

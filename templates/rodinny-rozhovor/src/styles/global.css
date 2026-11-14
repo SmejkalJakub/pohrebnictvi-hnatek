@@ -1,0 +1,665 @@
+/*
+ * Template F "Rodinný rozhovor": every section is a full-bleed colour field with the family's
+ * question and a short answer. Fields (cream, sand, the first one deep clay) do all the
+ * separating: no rules between sections, no cards, boxes, shadows, rounded corners or icons.
+ * Exact values: docs/designs/rodinny-rozhovor/html/*.html and tokens.json.
+ */
+
+/* ---------------------------------------------------------------------------
+ * Tokens: palettes (tokens.json), font pairs, scale
+ * ------------------------------------------------------------------------- */
+
+:root,
+[data-palette="hlina"] {
+  --ground: #f6efe4;
+  --band: #e9d9c2;
+  --deep: #5a2e22;
+  --on-deep: #f6efe4;
+  --on-deep-muted: #e9d9c2;
+  --ink: #2b211c;
+  --muted: #5e5047;
+  --accent: #8a3f24;
+  --rule: #9a8670;
+  --photo: #d9c7ae;
+}
+
+[data-palette="med"] {
+  --ground: #f7f1e3;
+  --band: #ebddb8;
+  --deep: #3f3a2a;
+  --on-deep: #f7f1e3;
+  --on-deep-muted: #e6d8b4;
+  --ink: #2a2619;
+  --muted: #5c5543;
+  --accent: #7a5a12;
+  --rule: #968a6c;
+  --photo: #dccb9f;
+}
+
+:root,
+[data-font="alegreya"] {
+  --serif: "Alegreya", "Alegreya Fallback", Georgia, serif;
+  --sans: "Alegreya Sans", "Alegreya Sans Fallback", sans-serif;
+}
+
+[data-font="gelasio"] {
+  --serif: "Gelasio", Georgia, serif;
+  --sans: "Alegreya Sans", "Alegreya Sans Fallback", sans-serif;
+}
+
+/* Headings and the closing lines: the serif by default, the brand's display face with a brand. */
+:root {
+  --display: var(--serif);
+  --display-weight: 700;
+}
+
+/* ---------------------------------------------------------------------------
+ * Brand profile (template-contract §8a). The conversation keeps its shape; the brand recolours
+ * it: the deep answer field takes the brand's primary (Hnátek: forest green, ivory text), cream
+ * is the board's ground and the sand fields a soft tint of the primary. The secondary (gold) is
+ * an ornament only, never text. Brand fonts replace the serif and the label sans.
+ * ------------------------------------------------------------------------- */
+
+[data-brand] {
+  --ground: var(--brand-ground);
+  --band: var(--brand-surface-2);
+  --deep: var(--brand-primary);
+  --on-deep: var(--brand-on-primary);
+  --on-deep-muted: var(--brand-muted-on-primary);
+  --ink: var(--brand-ink);
+  --muted: var(--brand-muted);
+  --accent: var(--brand-primary-text);
+  --rule: var(--brand-rule);
+  --photo: var(--brand-surface);
+  --ornament: var(--brand-secondary);
+}
+
+[data-brand-display] {
+  --display: var(--brand-font-display);
+  --display-weight: 600;
+}
+
+[data-brand-body] {
+  --serif: var(--brand-font-body);
+  --sans: var(--brand-font-body);
+}
+
+/* Toast (phone copied) and in-page jumps (core SiteInteractions). */
+:root {
+  --toast-bg: var(--deep);
+  --toast-fg: var(--on-deep);
+  --toast-radius: 0;
+  --scroll-offset: 1.5rem;
+}
+
+:root {
+  /* Spacing 8 · 16 · 28 · 56 · 80 */
+  --s1: 0.5rem;
+  --s2: 1rem;
+  --s3: 1.75rem;
+  --s4: 3.5rem;
+  --s5: 5rem;
+  --gutter: 1rem;
+  /* 56 px side margin at 1280; content never wider than 1168 px. */
+  --side: var(--gutter);
+  --body: 1.3125rem;
+  --label: 1.125rem;
+  --answer: 1.4375rem;
+  --h1: 2.25rem;
+  --h2: 1.875rem;
+  --number: 2.25rem;
+  --strip-number: 1.875rem;
+  --field-pad-top: 1.75rem;
+  --field-pad-bottom: 2rem;
+}
+
+@media (min-width: 64rem) {
+  :root {
+    --side: max(3.5rem, calc((100% - 73rem) / 2));
+    --label: 1.1875rem;
+    --answer: 1.875rem;
+    --h1: 4rem;
+    --h2: 2.75rem;
+    --number: 3.375rem;
+    --field-pad-top: 4.5rem;
+    --field-pad-bottom: 4.5rem;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * Base
+ * ------------------------------------------------------------------------- */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--serif);
+  font-size: var(--body);
+  line-height: 1.55;
+  overflow-wrap: break-word;
+}
+
+h1,
+h2,
+h3,
+p,
+ul,
+ol,
+dl,
+dd,
+figure,
+blockquote {
+  margin: 0;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--display);
+  font-weight: var(--display-weight);
+}
+
+ul,
+ol {
+  padding-left: 1.375rem;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+a {
+  color: var(--ink);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.25em;
+}
+
+a:hover {
+  text-decoration-thickness: 2px;
+}
+
+:focus-visible {
+  outline: 3px solid var(--ink);
+  outline-offset: 3px;
+}
+
+[data-tone="deep"] :focus-visible,
+.clay :focus-visible {
+  outline-color: var(--on-deep);
+}
+
+strong,
+b {
+  font-weight: 700;
+}
+
+.sans {
+  font-family: var(--sans);
+  font-weight: 500;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.nowrap {
+  white-space: nowrap;
+}
+
+.label {
+  font-family: var(--sans);
+  font-size: var(--label);
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.skip-link {
+  position: absolute;
+  left: var(--gutter);
+  top: -100vh;
+  z-index: 10;
+  padding: 0.75rem 1rem;
+  background: var(--ink);
+  color: var(--ground);
+  font-family: var(--sans);
+  font-weight: 500;
+}
+
+.skip-link:focus {
+  top: var(--s2);
+}
+
+main:focus {
+  outline: none;
+}
+
+/* Every tel: link reaches 44 px without becoming a flex container (S6 lesson: flex drops the
+ * space between a label and its number). */
+[data-phone-link],
+[data-emergency-link] {
+  display: inline-block;
+  padding-block: 0.5rem;
+}
+
+/* A sentence of links ("doma · v nemocnici …"): the dot is a separator element, not a word. */
+.dot {
+  margin-inline: 0.35em;
+  color: var(--muted);
+}
+
+/* ---------------------------------------------------------------------------
+ * Fields: the only separation device
+ * ------------------------------------------------------------------------- */
+
+.field {
+  padding: var(--field-pad-top) var(--side) var(--field-pad-bottom);
+  background: var(--ground);
+}
+
+.field[data-tone="band"] {
+  background: var(--band);
+}
+
+/* Fields after a Markdown body of unknown length continue the alternation by position. */
+main > .field[data-tone="auto"]:nth-child(even of .field) {
+  background: var(--band);
+}
+
+.field[data-tone="deep"] {
+  background: var(--deep);
+  color: var(--on-deep);
+}
+
+.field[data-tone="deep"] a {
+  color: var(--on-deep);
+}
+
+.field-q {
+  font-size: var(--h2);
+  line-height: 1.1;
+}
+
+h1.field-q {
+  font-size: var(--h1);
+  line-height: 1.06;
+}
+
+.field-a {
+  margin-top: 0.625rem;
+  max-width: 40rem;
+}
+
+.field-a > * + *,
+.field-main > * + * {
+  margin-top: 0.75rem;
+}
+
+.field-margin {
+  display: none;
+}
+
+.answer-lead {
+  font-size: var(--answer);
+  line-height: 1.35;
+}
+
+/* The price answer: "od 14 900 Kč." reads as a sentence. */
+.answer-lead::first-letter {
+  text-transform: uppercase;
+}
+
+.field-a h3,
+.field-h3 {
+  font-size: 1.5rem;
+  line-height: 1.2;
+}
+
+.field-a h3:not(:first-child),
+.field-h3:not(:first-child) {
+  margin-top: var(--s3);
+}
+
+@media (min-width: 64rem) {
+  .field-grid {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    column-gap: 1.5rem;
+    align-items: start;
+  }
+
+  .field-q {
+    grid-column: 1 / span 4;
+    line-height: 1.08;
+  }
+
+  .field-a {
+    grid-column: 6 / span 5;
+    margin-top: 0;
+    max-width: none;
+  }
+
+  [data-wide="true"] .field-a {
+    grid-column: 6 / span 6;
+  }
+
+  /* Page head: the question large in cols 1–7, the answer in cols 9–12, on the baseline. */
+  [data-layout="head"] .field-grid {
+    align-items: end;
+  }
+
+  [data-layout="head"] .field-q {
+    grid-column: 1 / span 7;
+  }
+
+  [data-layout="head"] .field-a {
+    grid-column: 9 / span 4;
+  }
+
+  /* Question and answer stacked in cols 1–7 (home hero, Kontakt), the margin in cols 9–12. */
+  [data-layout="stack"] .field-grid {
+    align-items: center;
+  }
+
+  .field-main {
+    grid-column: 1 / span 7;
+  }
+
+  [data-layout="stack"] .field-a {
+    margin-top: 1.125rem;
+  }
+
+  [data-margin="small"] .field-a {
+    grid-column: 6 / span 5;
+  }
+
+  [data-margin="small"] .field-margin {
+    display: block;
+    grid-column: 12 / span 1;
+    justify-self: end;
+    width: 6rem;
+  }
+
+  [data-margin="large"] .field-margin {
+    display: block;
+    grid-column: 9 / span 4;
+  }
+
+  [data-margin="half"] .field-main {
+    grid-column: 1 / span 5;
+  }
+
+  [data-margin="half"] .field-margin {
+    display: block;
+    grid-column: 7 / span 6;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * Drawings: one dark-line file per slot; lightened on the clay field
+ * ------------------------------------------------------------------------- */
+
+.drawing {
+  width: 100%;
+  height: auto;
+}
+
+.drawing[data-line="dark"] {
+  mix-blend-mode: multiply;
+}
+
+.drawing[data-line="light"] {
+  filter: invert(1);
+  mix-blend-mode: screen;
+}
+
+/* Placeholders are drawn plain inside the comp's dashed frame, never blended. */
+.drawing[data-placeholder-drawing] {
+  mix-blend-mode: normal;
+  filter: none;
+  border: 2px dashed var(--rule);
+}
+
+[data-tone="deep"] .drawing[data-placeholder-drawing] {
+  border-color: var(--on-deep-muted);
+}
+
+/* ---------------------------------------------------------------------------
+ * Lists and tables inside answers: spacing, never rules
+ * ------------------------------------------------------------------------- */
+
+.plain-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.plain-table th,
+.plain-table td {
+  padding: 0.4375rem 0;
+  text-align: left;
+  vertical-align: top;
+  font-weight: 400;
+}
+
+/* The amount itself never wraps (.price > :first-child); on a narrow phone the "UKÁZKA" mark may
+ * drop below it rather than push the table past the screen edge. */
+.plain-table .price-cell {
+  padding-left: 1.5rem;
+  text-align: right;
+  font-weight: 700;
+}
+
+.plain-table .group-row th {
+  padding-top: var(--s3);
+  font-family: var(--sans);
+  font-size: var(--label);
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.plain-table tbody:first-of-type .group-row th {
+  padding-top: 0;
+}
+
+.two-lists {
+  display: grid;
+  gap: var(--s3);
+}
+
+@media (min-width: 40rem) {
+  .two-lists {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.list-label {
+  font-family: var(--sans);
+  font-size: var(--label);
+  font-weight: 500;
+}
+
+.two-lists ul {
+  margin-top: 0.375rem;
+}
+
+/* Markdown bodies inside fields */
+.prose > * + * {
+  margin-top: 0.75rem;
+}
+
+.prose h3 {
+  font-size: 1.5rem;
+  line-height: 1.2;
+}
+
+.prose ul,
+.prose ol {
+  padding-left: 1.375rem;
+}
+
+/* ---------------------------------------------------------------------------
+ * Signature (design-differentiation §1.1): a conversation keeps its question in view. On desktop
+ * the question stays beside a long answer while it is read (sticky, no motion), and a longer
+ * answer unfolds in place under "Povězte mi víc" (core animates <details>, off under reduced
+ * motion). A field reached through "Potom" marks its question in the accent.
+ * ------------------------------------------------------------------------- */
+
+@media (min-width: 64rem) {
+  .field[data-layout="qa"] .field-q {
+    position: sticky;
+    top: var(--s3);
+  }
+}
+
+.field .field-q {
+  transition: color 180ms ease;
+}
+
+.field:target .field-q,
+.field[data-guide-arrived] .field-q {
+  color: var(--accent);
+}
+
+.field[data-tone="deep"]:target .field-q,
+.field[data-tone="deep"][data-guide-arrived] .field-q {
+  color: var(--on-deep);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .field .field-q {
+    transition: none;
+  }
+}
+
+details > summary {
+  display: inline-block;
+  min-height: 2.75rem;
+  padding-block: 0.5rem;
+  font-family: var(--sans);
+  font-size: var(--label);
+  font-weight: 500;
+  text-decoration: underline;
+  text-underline-offset: 0.25em;
+  cursor: pointer;
+}
+
+/* ---------------------------------------------------------------------------
+ * Core safety components (styled through their data hooks only; text stays)
+ * ------------------------------------------------------------------------- */
+
+[data-prototype-banner] {
+  padding: 0.5rem var(--side);
+  background: var(--ground);
+  color: var(--muted);
+  font-family: var(--sans);
+  font-size: 1.125rem;
+}
+
+[data-placeholder-label],
+[data-unreviewed-mark],
+[data-missing-fact],
+[data-demo-label] {
+  display: inline-block;
+  padding: 0 0.375rem;
+  border: 1px dashed currentcolor;
+  font-family: var(--sans);
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: 1.5;
+  letter-spacing: 0.02em;
+  vertical-align: middle;
+}
+
+[data-placeholder="content"] > [data-placeholder-label],
+[data-placeholder="image"] > [data-placeholder-label] {
+  margin-bottom: 0.375rem;
+}
+
+[data-demo-label] {
+  margin-left: 0.25rem;
+}
+
+/* The amount (the first child of every <PriceValue class="price">) never wraps. Core's price
+ * attributes are not named here: the stylesheet is inlined into every page, notice pages too,
+ * and the L1 check reads the HTML for them. */
+.price > :first-child {
+  white-space: nowrap;
+}
+
+[data-demo-pricing-notice] {
+  max-width: 40rem;
+  font-size: 1.125rem;
+}
+
+[data-vat-note] {
+  font-weight: 700;
+}
+
+[data-notice-qr] svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+@media (max-width: 63.99rem) {
+  /* The one people photo stays on phones; drawings do not (the 375 comps have none). */
+  .field-margin[data-phone="show"] {
+    display: block;
+    margin-top: var(--s3);
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * Office status (core OfficeStatus, template-contract §6): a sentence under the hours question.
+ * Every state keeps the ink colour; the dot says it by its form: filled (open), half (break),
+ * hollow (closed). Never muted.
+ * ------------------------------------------------------------------------- */
+
+[data-office-status]:not([hidden]) {
+  display: flex;
+  align-items: baseline;
+  gap: 0.625rem;
+  color: var(--ink);
+  font-weight: 700;
+}
+
+[data-office-status-dot] {
+  flex: none;
+  width: 0.75rem;
+  height: 0.75rem;
+  border: 2px solid currentcolor;
+  border-radius: 50%;
+}
+
+[data-office-status][data-state="open"] [data-office-status-dot] {
+  background: currentcolor;
+}
+
+[data-office-status][data-state="break"] [data-office-status-dot] {
+  background: linear-gradient(90deg, currentcolor 50%, transparent 50%);
+}

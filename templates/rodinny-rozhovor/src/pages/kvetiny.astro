@@ -1,0 +1,51 @@
+---
+/**
+ * "Jaké květiny vybrat?": the lead, the arrangements on a sand field, then "Jak květiny objednám?"
+ * with the flowers phone (or the office phone when the client has none).
+ */
+import PhoneLink from "@core/components/PhoneLink.astro";
+import { getFlowers, getPage, getSiteContext } from "@core/content/load.ts";
+import { formatPhone } from "@core/format/phone.ts";
+import ConversationLayout from "../layouts/ConversationLayout.astro";
+import QuestionField from "../components/QuestionField.astro";
+import CatalogueField, { type CatalogueItem } from "../components/CatalogueField.astro";
+import FieldProse from "../components/FieldProse.astro";
+import { flowerPhones, keepShortWords, primaryOfficePhone, seoTitle, toneAt } from "../lib/conversation.ts";
+import { flowerTypeLabels, ui } from "../i18n/cs.ts";
+
+const site = await getSiteContext();
+const page = await getPage("kvetiny");
+const flowers = await getFlowers();
+const Body = page.Content;
+const items: CatalogueItem[] = flowers.map((entry) => ({
+  id: entry.id,
+  name: entry.data.title,
+  detail: flowerTypeLabels[entry.data.type],
+  summary: entry.data.summary,
+  image: entry.data.image,
+  placeholder: entry.data.placeholder,
+}));
+let phones = flowerPhones(site);
+if (phones.length === 0) {
+  phones = [primaryOfficePhone(site)];
+}
+---
+<ConversationLayout site={site} title={seoTitle(page.data)} description={page.data.metaDescription}>
+  <QuestionField question={ui.flowersQuestion} tone={toneAt(0)} level={1} layout="head">
+    {page.data.lead !== null ? <p>{keepShortWords(page.data.lead)}</p> : null}
+  </QuestionField>
+  <CatalogueField site={site} items={items} tone={toneAt(1)} aspect="1:1" label={ui.flowersQuestion} />
+  <QuestionField question={ui.flowersOrderQuestion} tone={toneAt(2)}>
+    <p>{keepShortWords(ui.flowersOrderText)}</p>
+    {
+      phones.map((phone) => (
+        <p>
+          <PhoneLink number={phone.number}>
+            {phone.label}{" "}<span class="nowrap">{formatPhone(phone.number).display}</span>
+          </PhoneLink>
+        </p>
+      ))
+    }
+  </QuestionField>
+  <FieldProse show={page.hasBody} startIndex={3}><Body /></FieldProse>
+</ConversationLayout>

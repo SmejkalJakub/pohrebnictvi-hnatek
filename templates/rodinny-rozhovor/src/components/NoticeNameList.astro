@@ -1,0 +1,87 @@
+---
+/**
+ * Notices on the list page: names in Alegreya 700 as links, the dates muted, then the ceremony
+ * sentence. Plain cream, nothing else (research L1).
+ */
+import PlaceholderMark from "@core/components/PlaceholderMark.astro";
+import type { NoticeView } from "@core/content/view-models.ts";
+import { ceremonyLine } from "../lib/notices.ts";
+import { keepShortWords } from "../lib/conversation.ts";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  notices: NoticeView[];
+  recent: boolean;
+}
+
+const { notices, recent } = Astro.props;
+---
+<ul class="notice-names" role="list" data-recent={recent ? "true" : "false"}>
+  {
+    notices.map((view) => (
+      <li>
+        <PlaceholderMark active={view.placeholder} as="article">
+          <a href={view.href} class="notice-name">
+            {view.fullName}
+          </a>
+          <p class="muted">
+            {view.bornText !== null ? (
+              <>
+                <span aria-hidden="true">*</span>
+                <span class="visually-hidden">{ui.born}:</span> {view.bornText}{"   "}
+              </>
+            ) : null}
+            <span aria-hidden="true">†</span>
+            <span class="visually-hidden">{ui.diedLabel}:</span> {view.diedText}
+            {recent && view.ceremony !== null && view.ceremony.dateText !== null ? (
+              <>
+                {" · "}
+                {ui.ceremonyHeld} {view.ceremony.dateText}
+              </>
+            ) : null}
+          </p>
+          {recent ? null : <p class="notice-sentence">{keepShortWords(ceremonyLine(view))}</p>}
+        </PlaceholderMark>
+      </li>
+    ))
+  }
+</ul>
+
+<style>
+  .notice-names {
+    display: grid;
+    gap: 1.75rem;
+    padding: 0;
+    list-style: none;
+  }
+
+  .notice-name {
+    display: inline-block;
+    padding-block: 0.25rem;
+    font-size: 1.75rem;
+    font-weight: 700;
+    line-height: 1.15;
+  }
+
+  [data-recent="true"] .notice-name {
+    font-size: 1.5rem;
+  }
+
+  .notice-sentence {
+    margin-top: 0.25rem;
+  }
+
+  @media (min-width: 64rem) {
+    .notice-names {
+      gap: 2.5rem;
+    }
+
+    .notice-name {
+      font-size: 2rem;
+    }
+
+    [data-recent="true"] .notice-name {
+      font-size: 1.625rem;
+    }
+  }
+</style>

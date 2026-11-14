@@ -1,0 +1,50 @@
+---
+/**
+ * The last sentence of every page except notices: "Kdykoli potřebujete, volejte +420 …". Its own
+ * (visually hidden) heading keeps it out of the previous section, so it never sits under an
+ * office-hours heading (invariant 2).
+ */
+import EmergencyPhoneLink from "@core/components/EmergencyPhoneLink.astro";
+import type { EmergencyTransport } from "@core/content/schemas.ts";
+import { formatPhone } from "@core/format/phone.ts";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  emergency: EmergencyTransport;
+}
+
+const { emergency } = Astro.props;
+const phone = formatPhone(emergency.phone);
+---
+{
+  emergency.enabled ? (
+    <section class="closing" aria-labelledby="zaver-nonstop" data-emergency-block>
+      <h2 id="zaver-nonstop" class="visually-hidden">{emergency.label}</h2>
+      <p>
+        {ui.closingBefore}{" "}
+        <EmergencyPhoneLink emergency={emergency} variant="custom" class="closing-link">
+          <span class="nowrap">{phone.display}</span>
+        </EmergencyPhoneLink>.
+      </p>
+    </section>
+  ) : null
+}
+
+<style>
+  .closing {
+    padding: 1.75rem var(--side);
+    background: var(--ground);
+    font-size: 1.3125rem;
+  }
+
+  .closing :global(.closing-link) {
+    font-weight: 700;
+  }
+
+  @media (min-width: 64rem) {
+    .closing {
+      padding-block: 2.5rem;
+      font-size: 1.625rem;
+    }
+  }
+</style>

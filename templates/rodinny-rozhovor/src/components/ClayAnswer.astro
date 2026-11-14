@@ -1,0 +1,152 @@
+---
+/**
+ * The nonstop number as the answer to the family's first question, on the deep clay field:
+ * home (the h1 "Kdo nám pomůže hned?") and, with emergencyEmphasis "high", the top of every inner
+ * page (then the question is a paragraph, so the page keeps one h1). Label in Alegreya Sans on
+ * on_deep_muted, the number 54 / 36 px underlined, never wrapping. An optional drawing sits in
+ * cols 9–12 with a light line.
+ */
+import EmergencyPhoneLink from "@core/components/EmergencyPhoneLink.astro";
+import type { EmergencyTransport, ImageRef } from "@core/content/schemas.ts";
+import { formatPhone } from "@core/format/phone.ts";
+import Drawing from "./Drawing.astro";
+import { keepShortWords } from "../lib/conversation.ts";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  emergency: EmergencyTransport;
+  /** True on home: the question is the page's h1 and a homepage section. */
+  isHome: boolean;
+  drawing?: ImageRef | undefined;
+}
+
+const { emergency, isHome, drawing } = Astro.props;
+const phone = formatPhone(emergency.phone);
+let note: string = ui.helpNowFallback;
+if (emergency.shortNote !== null) {
+  note = emergency.shortNote;
+}
+const answer = keepShortWords(`${ui.helpNowAnswer} ${note}`);
+const question = keepShortWords(ui.helpNowQuestion);
+const hasDrawing = drawing !== undefined;
+let section: string | undefined = undefined;
+if (isHome) {
+  section = "hero";
+}
+---
+<section
+  class="field clay clay-answer"
+  data-tone="deep"
+  data-layout="stack"
+  data-margin={hasDrawing ? "large" : undefined}
+  data-section={section}
+  aria-labelledby="pomoc-hned"
+  data-field
+>
+  <div class="field-grid">
+    <div class="field-main">
+      {
+        isHome ? (
+          <h1 id="pomoc-hned" class="clay-q">{question}</h1>
+        ) : (
+          <p id="pomoc-hned" class="clay-q">{question}</p>
+        )
+      }
+      <p class="clay-a">{answer}</p>
+      {
+        emergency.enabled ? (
+          <EmergencyPhoneLink emergency={emergency} variant="custom" class="clay-link">
+            <span class="clay-label">{emergency.label}</span>{" "}
+            <span class="clay-number">{phone.display}</span>
+          </EmergencyPhoneLink>
+        ) : null
+      }
+    </div>
+    {
+      hasDrawing ? (
+        <div class="field-margin">
+          <Drawing image={drawing} line="light" width={380} height={380} />
+        </div>
+      ) : null
+    }
+  </div>
+</section>
+
+<style>
+  .clay-q {
+    font-size: var(--h1);
+    font-weight: 700;
+    line-height: 1.06;
+  }
+
+  .clay-a {
+    margin-top: 0.625rem;
+    font-size: var(--answer);
+    line-height: 1.35;
+  }
+
+  .clay-answer :global(.clay-link) {
+    display: inline-block;
+    margin-top: 1.125rem;
+    color: var(--on-deep);
+    text-decoration: none;
+  }
+
+  .clay-label {
+    display: block;
+    color: var(--on-deep-muted);
+    font-family: var(--sans);
+    font-size: var(--label);
+    font-weight: 500;
+    line-height: 1.4;
+  }
+
+  .clay-number {
+    display: inline-block;
+    font-size: min(var(--number), 10.8vw);
+    font-weight: 700;
+    line-height: 1.2;
+    white-space: nowrap;
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 0.19em;
+  }
+
+  /* Gelasio's figures are about 12% wider than Alegreya's: at 320 px "+420 000 000 199" must
+   * still fit 288 px on one line. */
+  :global([data-font="gelasio"]) .clay-number {
+    font-size: min(var(--number), 9.4vw);
+  }
+
+  .clay-answer :global(.clay-link:hover .clay-number) {
+    text-decoration-thickness: 3px;
+  }
+
+  .clay-answer :global(.field-margin) {
+    max-height: 21.25rem;
+  }
+
+  .clay-answer :global(.drawing) {
+    max-height: 21.25rem;
+    width: auto;
+    margin-left: auto;
+  }
+
+  @media (min-width: 64rem) {
+    .clay-a {
+      margin-top: 1.125rem;
+    }
+
+    .clay-answer :global(.clay-link) {
+      margin-top: 1.875rem;
+    }
+
+    .clay-label {
+      font-size: 1.25rem;
+    }
+
+    .clay-number {
+      line-height: 1.15;
+    }
+  }
+</style>

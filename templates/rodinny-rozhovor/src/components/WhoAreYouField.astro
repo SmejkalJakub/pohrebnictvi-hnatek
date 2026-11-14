@@ -1,0 +1,29 @@
+---
+/** Home "Kdo jste?": the excerpt of O nás, a link, and the people photo or the office drawing. */
+import type { ImageRef } from "@core/content/schemas.ts";
+import QuestionField from "./QuestionField.astro";
+import StoryPhoto from "./StoryPhoto.astro";
+import { keepShortWords, type Tone } from "../lib/conversation.ts";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  tone: Tone;
+  text: string | null;
+  photo: ImageRef | null;
+  drawing: ImageRef | undefined;
+}
+
+const { tone, text, photo, drawing } = Astro.props;
+const hasMargin = photo !== null || drawing !== undefined;
+let margin: "none" | "half" = "none";
+if (hasMargin) {
+  margin = "half";
+}
+---
+<QuestionField question={ui.whoQuestion} tone={tone} section="family-story" layout="stack" margin={margin} marginOnPhone={photo !== null}>
+  {text !== null ? <p>{keepShortWords(text)}</p> : null}
+  <p class="label"><a href="/o-nas/">{ui.aboutLink}</a></p>
+  <Fragment slot="margin">
+    <StoryPhoto photo={photo} drawing={drawing} />
+  </Fragment>
+</QuestionField>

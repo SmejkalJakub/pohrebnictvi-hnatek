@@ -1,0 +1,38 @@
+---
+/**
+ * The one photograph of the people (o-nas heroImage, slot about.story, with the staff's
+ * consent), or the office drawing in its place. Renders nothing without either.
+ */
+import { Image } from "astro:assets";
+import PlaceholderMark from "@core/components/PlaceholderMark.astro";
+import type { ImageRef } from "@core/content/schemas.ts";
+import { resolveOptionalImage } from "@core/media/resolve.ts";
+import Drawing from "./Drawing.astro";
+
+interface Props {
+  photo: ImageRef | null;
+  drawing: ImageRef | undefined;
+}
+
+const { photo, drawing } = Astro.props;
+const resolved = resolveOptionalImage(photo);
+---
+{
+  resolved !== null ? (
+    <PlaceholderMark active={resolved.isPlaceholder} kind="image" as="figure" class="story-photo">
+      <Image
+        src={resolved.src}
+        alt={resolved.alt}
+        width={570}
+        height={428}
+        densities={[1, 2]}
+        loading="lazy"
+        decoding="async"
+        style={`object-fit: cover; object-position: ${resolved.objectPosition}`}
+      />
+      {resolved.caption !== null ? <figcaption class="muted label">{resolved.caption}</figcaption> : null}
+    </PlaceholderMark>
+  ) : (
+    <Drawing image={drawing} line="dark" width={570} height={380} />
+  )
+}

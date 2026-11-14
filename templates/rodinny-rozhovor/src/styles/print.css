@@ -1,0 +1,118 @@
+/*
+ * Print (A4): the fields become thin warm rules, questions stay as headings, the price list keeps
+ * its tables. Black on white; no header nav, strip, drawings or closing sentence; the brand name
+ * prints as a letterhead and the footer's legal row stays (research L8).
+ */
+.print-only {
+  display: none;
+}
+
+@media print {
+  @page {
+    size: A4;
+    margin: 14mm 16mm;
+  }
+
+  :root,
+  [data-palette] {
+    --ground: #fff;
+    --band: #fff;
+    --ink: #2b211c;
+    --muted: #3d332d;
+  }
+
+  body {
+    font-size: 11pt;
+    line-height: 1.4;
+    background: #fff;
+  }
+
+  .print-only {
+    display: block;
+  }
+
+  .no-print,
+  .word-nav,
+  .clay-strip,
+  .skip-link,
+  [data-prototype-banner],
+  .drawing,
+  .field-margin,
+  .foot-more,
+  .foot-cols {
+    display: none !important;
+  }
+
+  .family-header {
+    display: none;
+  }
+
+  .print-letterhead {
+    padding-bottom: 4pt;
+    border-bottom: 1px solid #9a8670;
+    font-size: 15pt;
+    font-weight: 700;
+  }
+
+  .field,
+  .field[data-tone] {
+    padding: 8pt 0 0;
+    background: #fff !important;
+    color: #2b211c;
+    break-inside: avoid;
+  }
+
+  .field + .field {
+    margin-top: 10pt;
+    border-top: 1px solid #9a8670;
+  }
+
+  .field-grid {
+    display: block !important;
+  }
+
+  .field-q,
+  h1.field-q {
+    font-size: 14pt;
+  }
+
+  h1.field-q {
+    font-size: 20pt;
+  }
+
+  .field-a {
+    max-width: none;
+    margin-top: 4pt;
+  }
+
+  .answer-lead {
+    font-size: 12pt;
+  }
+
+  .two-lists {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  a {
+    color: #2b211c;
+    text-decoration: none;
+  }
+
+  .family-footer {
+    margin-top: 14pt;
+    padding: 6pt 0 0;
+    border-top: 1px solid #9a8670;
+    background: #fff;
+    font-size: 9pt;
+  }
+
+  .closing {
+    padding: 8pt 0 0;
+    font-size: 11pt;
+  }
+
+  .print-source {
+    margin-top: 8pt;
+    font-size: 9pt;
+  }
+}

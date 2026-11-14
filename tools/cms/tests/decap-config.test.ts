@@ -36,7 +36,7 @@ const CLIENTS = [
   { id: "hnatek", template: "rodinna-tradice", optional: [], singletons: [] },
   { id: "hnatek-b", template: "dustojna-jednoduchost", optional: [], singletons: [] },
   { id: "hnatek-c", template: "nocni-linka", optional: OPTIONAL_TYPES, singletons: [] },
-  { id: "hnatek-d", template: "dve-cesty", optional: [], singletons: [] },
+  { id: "hnatek-d", template: "rodinny-rozhovor", optional: [], singletons: [] },
   { id: "hnatek-e", template: "ticha-krajina", optional: OPTIONAL_TYPES, singletons: ["landscapes"] },
   { id: "hnatek-g", template: "lide-a-misto", optional: [], singletons: ["places"] },
 ];

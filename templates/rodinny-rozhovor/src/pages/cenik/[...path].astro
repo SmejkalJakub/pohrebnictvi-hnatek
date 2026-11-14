@@ -1,0 +1,66 @@
+---
+/**
+ * "Kolik to bude stát?" (conditional route: no file while pricing is hidden). The VAT note is the
+ * first answer and again under the items table (research L9); the demo notice comes before the
+ * first price. Each package is a question with the price in its answer and two lists; the other
+ * groups form one borderless table, "Co stojí jednotlivé věci?". Prints on A4 with the fields
+ * turned into thin rules (styles/print.css).
+ */
+import DemoPricingNotice from "@core/components/DemoPricingNotice.astro";
+import VatNote from "@core/components/VatNote.astro";
+import { getPage, getPricing, getSiteContext } from "@core/content/load.ts";
+import { formatCzechDate } from "@core/format/date.ts";
+import ConversationLayout from "../../layouts/ConversationLayout.astro";
+import QuestionField from "../../components/QuestionField.astro";
+import PackageQuestion from "../../components/PackageQuestion.astro";
+import PlainItemTable from "../../components/PlainItemTable.astro";
+import FieldProse from "../../components/FieldProse.astro";
+import { isPackage, keepShortWords, seoTitle, toneAt } from "../../lib/conversation.ts";
+import { ui } from "../../i18n/cs.ts";
+
+export async function getStaticPaths() {
+  const pricing = await getPricing();
+  if (pricing === null) {
+    return [];
+  }
+  return [{ params: { path: undefined } }];
+}
+
+const site = await getSiteContext();
+const page = await getPage("cenik");
+const pricing = await getPricing();
+if (pricing === null) {
+  throw new Error("unreachable: pricing hidden");
+}
+const packages = pricing.groups.filter(isPackage);
+const others = pricing.groups.filter((group) => !isPackage(group));
+const Body = page.Content;
+const sourceUrl = `${site.config.siteUrl.replace(/\/$/, "")}/cenik/`;
+const itemsIndex = 1 + packages.length;
+let bodyIndex = itemsIndex;
+if (others.length > 0) {
+  bodyIndex = itemsIndex + 1;
+}
+---
+<ConversationLayout site={site} title={seoTitle(page.data)} description={page.data.metaDescription} noindex={pricing.hasDemo}>
+  <p class="print-only print-letterhead">{site.company.brandName}</p>
+  <QuestionField question={ui.costQuestion} tone={toneAt(0)} level={1} layout="head">
+    <VatNote pricing={pricing} />
+    {page.data.lead !== null ? <p>{keepShortWords(page.data.lead)}</p> : null}
+    {pricing.validFrom !== null ? <p class="muted">{ui.priceValidFrom(formatCzechDate(pricing.validFrom))}</p> : null}
+    <DemoPricingNotice pricing={pricing} brandName={site.company.brandName} />
+    <p class="muted label no-print">{ui.printHint}</p>
+  </QuestionField>
+  {packages.map((group, index) => <PackageQuestion group={group} first={index === 0} tone={toneAt(1 + index)} />)}
+  {
+    others.length > 0 ? (
+      <QuestionField question={ui.itemsQuestion} tone={toneAt(itemsIndex)} id="polozky" wide>
+        <PlainItemTable groups={others} showGroupTitles={others.length > 1} />
+        <VatNote pricing={pricing} class="muted vat-plain" />
+        {pricing.generalNote !== null ? <p class="muted">{keepShortWords(pricing.generalNote)}</p> : null}
+      </QuestionField>
+    ) : null
+  }
+  <FieldProse show={page.hasBody} startIndex={bodyIndex}><Body /></FieldProse>
+  <p class="print-only print-source">{ui.printedFrom} {sourceUrl}</p>
+</ConversationLayout>

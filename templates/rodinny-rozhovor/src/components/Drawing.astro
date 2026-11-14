@@ -1,0 +1,42 @@
+---
+/**
+ * A commissioned pen drawing for one slot (content-contract §6.19), or nothing. The client
+ * uploads one dark-line file per slot; on cream and sand it is multiplied into the field, on the
+ * deep clay field it is inverted and screened, so the line turns light in either palette.
+ * Placeholders are drawn plain in a dashed frame. Never on notice pages (research L1).
+ */
+import { Image } from "astro:assets";
+import PlaceholderMark from "@core/components/PlaceholderMark.astro";
+import type { ImageRef } from "@core/content/schemas.ts";
+import { resolveOptionalImage } from "@core/media/resolve.ts";
+
+interface Props {
+  image: ImageRef | undefined;
+  /** "light" on the deep clay field, "dark" elsewhere. */
+  line: "light" | "dark";
+  width: number;
+  height: number;
+}
+
+const { image, line, width, height } = Astro.props;
+const resolved = resolveOptionalImage(image ?? null);
+---
+{
+  resolved !== null ? (
+    <PlaceholderMark active={resolved.isPlaceholder} kind="image" as="div">
+      <Image
+        src={resolved.src}
+        alt={resolved.alt}
+        width={width}
+        height={height}
+        densities={[1, 2]}
+        loading="lazy"
+        decoding="async"
+        class="drawing"
+        data-line={line}
+        data-placeholder-drawing={resolved.isPlaceholder ? "" : undefined}
+        style={`object-position: ${resolved.objectPosition}`}
+      />
+    </PlaceholderMark>
+  ) : null
+}

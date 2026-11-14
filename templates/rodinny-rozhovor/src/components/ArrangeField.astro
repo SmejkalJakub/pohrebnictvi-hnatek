@@ -1,0 +1,41 @@
+---
+/** Home "Co pro vás můžeme zařídit?": the featured services as a sentence of anchor links. */
+import type { CollectionEntry } from "astro:content";
+import { serviceHref } from "@core/content/view-models.ts";
+import QuestionField from "./QuestionField.astro";
+import type { Tone } from "../lib/conversation.ts";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  tone: Tone;
+  services: CollectionEntry<"services">[];
+  lead: string | null;
+}
+
+const { tone, services, lead } = Astro.props;
+---
+<QuestionField question={ui.arrangeQuestion} tone={tone} section="services">
+  {lead !== null ? <p>{lead}</p> : null}
+  <ul class="service-words" role="list">
+    {
+      services.map((service) => (
+        <li>
+          <a href={serviceHref(service.id, false)}>{service.data.title}</a>
+        </li>
+      ))
+    }
+  </ul>
+  <p class="label"><a href="/sluzby/">{ui.allServices}</a></p>
+</QuestionField>
+
+<style>
+  .service-words {
+    padding: 0;
+    list-style: none;
+  }
+
+  .service-words a {
+    display: inline-block;
+    padding-block: 0.25rem;
+  }
+</style>

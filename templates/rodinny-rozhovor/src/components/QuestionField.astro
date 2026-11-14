@@ -1,0 +1,103 @@
+---
+/**
+ * One full-bleed colour field: the family's question as the heading and a short answer.
+ * Layouts: "qa" (question cols 1–4, answer cols 6–10/11), "head" (page head: question cols 1–7,
+ * answer cols 9–12), "stack" (question and answer in cols 1–7, margin cols 9–12). The optional
+ * margin holds a drawing or the people photo; callers pass `margin` only when it has content.
+ */
+import { keepShortWords } from "../lib/conversation.ts";
+import type { Tone } from "../lib/conversation.ts";
+
+interface Props {
+  question: string;
+  tone: Tone;
+  level?: 1 | 2;
+  layout?: "qa" | "head" | "stack";
+  margin?: "none" | "small" | "large" | "half";
+  /** Show the margin on phones too (the people photo; never drawings). */
+  marginOnPhone?: boolean;
+  wide?: boolean;
+  id?: string;
+  /** Homepage section id (data-section, template-contract §6). */
+  section?: string;
+  /** QA hook for a separately headed block (template-contract §6). */
+  hook?: "office-hours" | "emergency-block";
+  class?: string;
+}
+
+const {
+  question,
+  tone,
+  level = 2,
+  layout = "qa",
+  margin = "none",
+  marginOnPhone = false,
+  wide = false,
+  id,
+  section,
+  hook,
+  class: className,
+} = Astro.props;
+const headingId = `${id ?? section ?? "pole"}-otazka-${Math.abs(hash(question))}`;
+let Heading: "h1" | "h2" = "h2";
+if (level === 1) {
+  Heading = "h1";
+}
+let marginLayout: string | undefined = undefined;
+if (margin !== "none") {
+  marginLayout = margin;
+}
+let phone: string | undefined = undefined;
+if (marginOnPhone) {
+  phone = "show";
+}
+const text = keepShortWords(question);
+
+function hash(value: string): number {
+  let result = 0;
+  for (const char of value) {
+    result = (result * 31 + char.charCodeAt(0)) | 0;
+  }
+  return result;
+}
+---
+<section
+  class:list={["field", className]}
+  id={id}
+  data-section={section}
+  data-tone={tone}
+  data-layout={layout}
+  data-margin={marginLayout}
+  data-wide={wide ? "true" : undefined}
+  aria-labelledby={headingId}
+  data-office-hours={hook === "office-hours" ? "" : undefined}
+  data-emergency-block={hook === "emergency-block" ? "" : undefined}
+  data-field
+>
+  <div class="field-grid">
+    {
+      layout === "stack" ? (
+        <div class="field-main">
+          <Heading id={headingId} class="field-q">{text}</Heading>
+          <div class="field-a">
+            <slot />
+          </div>
+        </div>
+      ) : (
+        <>
+          <Heading id={headingId} class="field-q">{text}</Heading>
+          <div class="field-a">
+            <slot />
+          </div>
+        </>
+      )
+    }
+    {
+      margin !== "none" ? (
+        <div class="field-margin" data-phone={phone}>
+          <slot name="margin" />
+        </div>
+      ) : null
+    }
+  </div>
+</section>

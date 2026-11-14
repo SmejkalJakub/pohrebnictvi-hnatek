@@ -1,0 +1,148 @@
+---
+/**
+ * Home: a conversation. The clay field asks "Kdo nám pomůže hned?" and answers with the nonstop
+ * number; every following section is the family's next question on a field, alternating sand and
+ * cream in site.config.homepage.sections order. Sections with nothing to show are left out
+ * before the tones are counted, so two fields of one colour never meet. Real photos only
+ * (design-differentiation §1.4): the firm's own place under "Kdo jste?", a flower arrangement and a
+ * coffin under "Jakou rakev a jaké květiny?". Drawings show only when real; the hero alone may keep
+ * its placeholder as the one hint of what to commission. At most four services.
+ */
+import {
+  getCoffins,
+  getFaq,
+  getFlowers,
+  getGuidance,
+  getHomeImagery,
+  getIllustrations,
+  getNoticeIndex,
+  getOptionalPage,
+  getPage,
+  getPeople,
+  getPricing,
+  getServices,
+  getSiteContext,
+} from "@core/content/load.ts";
+import { chooserSituations } from "@core/content/guidance-flow.ts";
+import type { HomepageSection } from "@core/content/config.ts";
+import type { ImageRef } from "@core/content/schemas.ts";
+import ConversationLayout from "../layouts/ConversationLayout.astro";
+import ClayAnswer from "../components/ClayAnswer.astro";
+import WhatNextField from "../components/WhatNextField.astro";
+import CostField from "../components/CostField.astro";
+import WhoAreYouField from "../components/WhoAreYouField.astro";
+import ArrangeField from "../components/ArrangeField.astro";
+import FindUsField from "../components/FindUsField.astro";
+import WhoReceivesField from "../components/WhoReceivesField.astro";
+import NoticeAskField from "../components/NoticeAskField.astro";
+import AskAgainField from "../components/AskAgainField.astro";
+import ChooseField from "../components/ChooseField.astro";
+import { priceMentions, toneAt, type CatalogueLine } from "../lib/conversation.ts";
+
+const site = await getSiteContext();
+const home = await getPage("home");
+const about = await getPage("o-nas");
+const guidePage = await getPage("jak-postupovat");
+const servicesPage = await getPage("sluzby");
+const guidance = await getGuidance();
+const services = await getServices();
+const coffins = await getCoffins();
+const flowers = await getFlowers();
+const people = await getPeople();
+const faq = await getFaq();
+const pricing = await getPricing();
+const noticesPage = await getOptionalPage("oznameni");
+const noticeIndex = await getNoticeIndex();
+const drawings = await getIllustrations();
+const imagery = await getHomeImagery();
+
+/** A drawing that is real (not the neutral placeholder), or undefined. */
+function realDrawing(image: ImageRef | undefined): ImageRef | undefined {
+  if (image === undefined || image.depicts === "placeholder") {
+    return undefined;
+  }
+  return image;
+}
+
+const situations = chooserSituations(guidance);
+let featured = services.filter((service) => service.data.featured);
+if (featured.length === 0) {
+  featured = services;
+}
+featured = featured.slice(0, 4);
+const questions = faq
+  .flatMap((group) => group.entries)
+  .slice(0, 3)
+  .map((entry) => ({ id: `otazka-${entry.id}`, question: entry.data.question }));
+const catalogueLines: CatalogueLine[] = [];
+for (const item of site.nav) {
+  if (item.id === "kvetiny") {
+    catalogueLines.push({ key: item.id, label: item.label, href: item.href, count: flowers.length, photo: imagery.flower });
+  }
+}
+for (const item of site.nav) {
+  if (item.id === "rakve") {
+    catalogueLines.push({ key: item.id, label: item.label, href: item.href, count: coffins.length, photo: imagery.coffin });
+  }
+}
+let aboutText = about.data.excerpt;
+if (aboutText === null) {
+  aboutText = about.data.lead;
+}
+
+/* Which configured sections have something to show (G-005 already ensures the features are on). */
+function renders(section: HomepageSection): boolean {
+  if (section === "price-summary") {
+    return pricing !== null && priceMentions(pricing).length > 0;
+  }
+  if (section === "people") {
+    return people.length > 0;
+  }
+  if (section === "faq") {
+    return questions.length > 0;
+  }
+  if (section === "notices") {
+    return noticesPage !== null;
+  }
+  if (section === "catalogue-links") {
+    return catalogueLines.length > 0;
+  }
+  if (section === "services") {
+    return featured.length > 0;
+  }
+  return true;
+}
+const sections = site.config.homepage.sections.filter(renders);
+/* The hero is field 0 (deep); the next field is sand. */
+function tone(section: HomepageSection) {
+  return toneAt(sections.indexOf(section));
+}
+let noticesLabel = "";
+if (noticesPage !== null) {
+  noticesLabel = noticesPage.data.title;
+}
+---
+<ConversationLayout site={site} title={home.data.metaTitle} description={home.data.metaDescription} home>
+  {
+    sections.map((section) => (
+      <>
+        {section === "hero" ? <ClayAnswer emergency={site.emergency} isHome drawing={drawings.hero} /> : null}
+        {section === "next-steps" ? (
+          <WhatNextField tone={tone(section)} answer={guidePage.data.lead} situations={situations} drawing={realDrawing(drawings.guidance)} />
+        ) : null}
+        {section === "price-summary" && pricing !== null ? <CostField tone={tone(section)} pricing={pricing} /> : null}
+        {section === "family-story" ? (
+          <WhoAreYouField tone={tone(section)} text={aboutText} photo={imagery.place?.image ?? null} drawing={realDrawing(drawings.office)} />
+        ) : null}
+        {section === "services" ? <ArrangeField tone={tone(section)} services={featured} lead={servicesPage.data.lead} /> : null}
+        {section === "contact-summary" ? <FindUsField tone={tone(section)} site={site} /> : null}
+        {section === "people" ? <WhoReceivesField tone={tone(section)} people={people} /> : null}
+        {section === "notices" ? (
+          <NoticeAskField tone={tone(section)} label={noticesLabel} upcoming={noticeIndex.upcoming.length} />
+        ) : null}
+        {section === "faq" ? <AskAgainField tone={tone(section)} questions={questions} /> : null}
+        {section === "catalogue-links" ? <ChooseField tone={tone(section)} lines={catalogueLines} /> : null}
+      </>
+    ))
+  }
+</ConversationLayout>

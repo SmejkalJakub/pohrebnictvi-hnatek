@@ -1,0 +1,59 @@
+---
+/**
+ * Office hours as a borderless table under their own question heading (data-office-hours),
+ * never in the clay field or next to the nonstop number (invariant 2). Under the question, core's
+ * live status says whether the office is open right now (hidden without JavaScript).
+ */
+import OfficeStatus from "@core/components/OfficeStatus.astro";
+import type { SiteContext } from "@core/content/view-models.ts";
+import { keepShortWords } from "../lib/conversation.ts";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  site: SiteContext;
+  /** null when the surrounding field's own heading asks the question (Kontakt). */
+  headingId: string | null;
+  /** Show holiday and outside-hours notes and exceptions (Kontakt). */
+  full?: boolean;
+}
+
+const { site, headingId, full = false } = Astro.props;
+const hours = site.officeHours;
+---
+<div class="hours" data-office-hours={headingId !== null ? "" : undefined}>
+  {headingId !== null ? <h3 id={headingId} class="field-h3">{keepShortWords(ui.officeQuestion)}</h3> : null}
+  <OfficeStatus site={site} />
+  <table class="plain-table hours-table">
+    <tbody>
+      {
+        site.officeHoursRows.map((row) => (
+          <tr>
+            <th scope="row">{row.daysLong}</th>
+            <td class="hours-cell">
+              <span class="nowrap">{row.text}</span>
+              {row.note !== null ? <span class="hours-note muted">{row.note}</span> : null}
+            </td>
+          </tr>
+        ))
+      }
+    </tbody>
+  </table>
+  {hours.holidayNote !== null ? <p class="muted">{keepShortWords(hours.holidayNote)}</p> : null}
+  {full && hours.outsideHoursNote !== null ? <p class="muted">{keepShortWords(hours.outsideHoursNote)}</p> : null}
+</div>
+
+<style>
+  .hours > * + * {
+    margin-top: 0.625rem;
+  }
+
+  .hours-cell {
+    padding-left: 1.5rem;
+    text-align: right;
+  }
+
+  .hours-note {
+    display: block;
+    font-size: 1.125rem;
+  }
+</style>

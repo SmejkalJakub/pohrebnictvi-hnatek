@@ -1,0 +1,37 @@
+---
+/** Home "Na co se ještě ptáte?": at most three questions as links (no FAQ wall on home, §7). */
+import QuestionField from "./QuestionField.astro";
+import type { Tone } from "../lib/conversation.ts";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  tone: Tone;
+  questions: { id: string; question: string }[];
+}
+
+const { tone, questions } = Astro.props;
+---
+<QuestionField question={ui.askAgainQuestion} tone={tone} section="faq">
+  <ul class="ask-list" role="list">
+    {
+      questions.map((entry) => (
+        <li>
+          <a href={`/jak-postupovat/#${entry.id}`}>{entry.question}</a>
+        </li>
+      ))
+    }
+  </ul>
+  <p class="label"><a href="/jak-postupovat/#caste-otazky">{ui.allQuestions}</a></p>
+</QuestionField>
+
+<style>
+  .ask-list {
+    padding: 0;
+    list-style: none;
+  }
+
+  .ask-list a {
+    display: inline-block;
+    padding-block: 0.25rem;
+  }
+</style>

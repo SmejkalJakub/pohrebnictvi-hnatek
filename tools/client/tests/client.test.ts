@@ -18,7 +18,7 @@ const TEMPLATES = [
   "rodinna-tradice",
   "dustojna-jednoduchost",
   "nocni-linka",
-  "dve-cesty",
+  "rodinny-rozhovor",
   "ticha-krajina",
   "lide-a-misto",
 ] as const;

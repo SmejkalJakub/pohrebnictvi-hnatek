@@ -1,5 +1,7 @@
 # D · Dvě cesty (`dve-cesty`)
 
+**Superseded 2026-11-14:** the owner asked for D to be replaced; template D is now `rodinny-rozhovor` ([docs/notes/s9-rodinny-rozhovor.md](../../notes/s9-rodinny-rozhovor.md) §12). Kept for the record; `templates/dve-cesty/` was removed.
+
 **Status (2026-11-13):** direction D3 from the owner's canvas "Šablona D – nové směry" was approved and replaces the rejected D `plny-prehled`. The full page set below is drawn on its own canvas; the owner approved it and the plan (`docs/notes/s10-dve-cesty.md`), and the template is built in `templates/dve-cesty/`.
 
 - Approved direction (home 1280, home 375, notice 375): https://claude.ai/artifact/AHgPD1zhPDDoGsdARqgyeQ, row "D3 Dvě cesty"

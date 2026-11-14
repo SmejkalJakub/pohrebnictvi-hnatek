@@ -1,0 +1,133 @@
+---
+/**
+ * Page shell for Template F "Rodinný rozhovor". Options become data attributes on <html>.
+ * Header on cream with the navigation words; then the nonstop form (home: the page's own clay
+ * field; inner pages: the compact clay strip, or the full clay field with emergencyEmphasis
+ * "high"); the page's fields; the closing sentence; the sand footer. The only script is core's
+ * <SiteInteractions /> (progressive: office status, phone copy, smooth anchors, guide jumps); the
+ * page is complete without it. With a brand profile (template-contract §8a) the brand's colours and
+ * fonts replace the palette and font pair through [data-brand] in global.css.
+ * `neutral` switches the chrome to its notice form (research L1): sand publisher strip, two nav
+ * words, no clay, no drawings, no closing sentence, neutral footer.
+ */
+import "../styles/fonts.css";
+import "../styles/global.css";
+import "../styles/print.css";
+import SeoHead from "@core/components/SeoHead.astro";
+import StructuredData from "@core/components/StructuredData.astro";
+import PrototypeBanner from "@core/components/PrototypeBanner.astro";
+import BrandStyle from "@core/components/BrandStyle.astro";
+import SiteInteractions from "@core/components/SiteInteractions.astro";
+import { brandAttributes } from "@core/brand/runtime.ts";
+import type { ImageMetadata } from "astro";
+import { getDocuments, getFaq, getOptionalPage, getPeople, hasPage } from "@core/content/load.ts";
+import type { NavItem, SiteContext } from "@core/content/view-models.ts";
+import alegreyaLatin from "@fontsource/alegreya/files/alegreya-latin-700-normal.woff2?url";
+import alegreyaLatin400 from "@fontsource/alegreya/files/alegreya-latin-400-normal.woff2?url";
+import gelasioLatin from "@fontsource/gelasio/files/gelasio-latin-700-normal.woff2?url";
+import gelasioLatin400 from "@fontsource/gelasio/files/gelasio-latin-400-normal.woff2?url";
+import FamilyHeader from "../components/FamilyHeader.astro";
+import ClayStrip from "../components/ClayStrip.astro";
+import ClayAnswer from "../components/ClayAnswer.astro";
+import PublisherStrip from "../components/PublisherStrip.astro";
+import ClosingSentence from "../components/ClosingSentence.astro";
+import FamilyFooter from "../components/FamilyFooter.astro";
+import { resolveOptions } from "../lib/options.ts";
+import { footerPages, navWords, neutralWords } from "../lib/conversation.ts";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  site: SiteContext;
+  /** Page title without the brand name; null on the homepage. */
+  title?: string | null;
+  description: string;
+  noindex?: boolean;
+  image?: ImageMetadata | null;
+  /** Notice list and notice pages: publisher strip, two nav words, neutral footer. */
+  neutral?: boolean;
+  /** Home: the clay field is the page's first section, so no strip above it. */
+  home?: boolean;
+}
+
+const { site, title = null, description, noindex = false, image = null, neutral = false, home = false } = Astro.props;
+const options = resolveOptions(site.config);
+const path = Astro.url.pathname;
+
+async function optionalNavItem(id: "pro-ucastniky" | "pohreb-predem", enabled: boolean): Promise<NavItem | null> {
+  if (!enabled) {
+    return null;
+  }
+  const page = await getOptionalPage(id);
+  if (page === null) {
+    return null;
+  }
+  return { id, label: page.data.navLabel, href: `/${id}/` };
+}
+
+let words = navWords(site, path);
+if (neutral) {
+  words = neutralWords(site, path);
+}
+const guestInfo = await optionalNavItem("pro-ucastniky", site.config.features.guestInfo);
+const prePlanning = await optionalNavItem("pohreb-predem", site.config.features.prePlanning);
+const faq = await getFaq();
+const people = await getPeople();
+const morePages = footerPages(site, {
+  guestInfo,
+  prePlanning,
+  hasPeople: people.length > 0,
+  hasFaq: faq.length > 0,
+});
+const documents = await getDocuments();
+const hasPrivacyPage = await hasPage("ochrana-osobnich-udaju");
+const highEmphasis = options.emergencyEmphasis === "high";
+
+/*
+ * The largest paint is text: preload the two serif latin faces (700: H1 and the number; 400: the
+ * answers). More preloads measured slower (Lighthouse counts them before the LCP); the
+ * metric-matched fallback faces in fonts.css keep the later swaps from moving the layout.
+ */
+const brand = brandAttributes();
+let preloads = [alegreyaLatin, alegreyaLatin400];
+if (options.fontPair === "gelasio") {
+  preloads = [gelasioLatin, gelasioLatin400];
+}
+/* Brand fonts replace the serif: the template's own faces are then not the largest paint. */
+if (brand["data-brand-body"] !== undefined) {
+  preloads = [];
+}
+---
+<html
+  lang="cs"
+  data-palette={options.palette}
+  data-font={options.fontPair}
+  data-emphasis={options.emergencyEmphasis}
+  {...brand}
+>
+  <head>
+    {preloads.map((href) => <link rel="preload" href={href} as="font" type="font/woff2" crossorigin />)}
+    <SeoHead site={site} title={title} description={description} noindex={noindex} image={image} />
+    <StructuredData site={site} />
+    <BrandStyle />
+  </head>
+  <body>
+    <PrototypeBanner />
+    <a href="#obsah" class="skip-link">{ui.skipLink}</a>
+    <FamilyHeader site={site} words={words} />
+    {neutral ? <PublisherStrip site={site} /> : null}
+    {!neutral && !home && highEmphasis ? <ClayAnswer emergency={site.emergency} isHome={false} /> : null}
+    {!neutral && !home && !highEmphasis ? <ClayStrip emergency={site.emergency} /> : null}
+    <main id="obsah" tabindex="-1" data-neutral={neutral ? "true" : undefined}>
+      <slot />
+    </main>
+    {neutral ? null : <ClosingSentence emergency={site.emergency} />}
+    <FamilyFooter
+      site={site}
+      neutral={neutral}
+      documents={documents}
+      morePages={morePages}
+      hasPrivacyPage={hasPrivacyPage}
+    />
+    <SiteInteractions />
+  </body>
+</html>

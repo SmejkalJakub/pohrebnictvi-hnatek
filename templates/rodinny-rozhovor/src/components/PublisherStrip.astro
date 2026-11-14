@@ -1,0 +1,49 @@
+---
+/**
+ * Neutral nonstop form for notice pages (research L1, ⚖ pending a lawyer's view): a sand strip
+ * with who publishes the notice and an ink "Telefon nonstop <number>" link. No clay, no service
+ * wording on screen; the accessible name still comes from core (label + number).
+ */
+import EmergencyPhoneLink from "@core/components/EmergencyPhoneLink.astro";
+import type { SiteContext } from "@core/content/view-models.ts";
+import { formatPhone } from "@core/format/phone.ts";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  site: SiteContext;
+}
+
+const { site } = Astro.props;
+const phone = formatPhone(site.emergency.phone);
+---
+<div class="publisher-strip" data-neutral-emergency>
+  <p>
+    {ui.neutralPublisher(site.company.brandName)}{" "}
+    <EmergencyPhoneLink emergency={site.emergency} variant="custom" class="publisher-link">
+      {ui.neutralPhone}{" "}<span class="nowrap">{phone.display}</span>
+    </EmergencyPhoneLink>
+  </p>
+</div>
+
+<style>
+  .publisher-strip {
+    padding: 0.125rem var(--side);
+    background: var(--band);
+    color: var(--muted);
+    font-family: var(--sans);
+    font-size: 1.125rem;
+    font-weight: 500;
+    line-height: 1.5;
+  }
+
+  .publisher-strip :global(.publisher-link) {
+    padding-block: 0.5625rem;
+    color: var(--ink);
+  }
+
+  @media (min-width: 64rem) {
+    .publisher-strip {
+      font-size: 1.1875rem;
+    }
+  }
+</style>

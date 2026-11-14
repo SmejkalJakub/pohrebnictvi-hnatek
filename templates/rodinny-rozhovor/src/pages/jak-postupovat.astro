@@ -1,0 +1,261 @@
+---
+/**
+ * "Co teď?": the picker as a sentence of words (links + CSS :has(:target), no JavaScript, core
+ * guidance-flow). Not picked: each first-hours step is its own question ("Zemřel doma?") with its
+ * summary as the answer. Picked: one field "Zemřel doma. Co udělat teď?" with the steps for that
+ * place as calm guided lists (design-differentiation §1.3). Then, in both states, "Co v dalších
+ * dnech?" and "Co po pohřbu?", and the questions people ask (#caste-otazky). Field tones are
+ * precomputed for both states. The page opens with a reassurance and every field ends with
+ * "Potom: <next question>" (data-guide-next: with JavaScript the jump keeps the picked place);
+ * the last field ends with a closing line and the office number instead.
+ */
+import { getFaq, getGuidance, getIllustrations, getPage, getSiteContext } from "@core/content/load.ts";
+import {
+  SITUATION_ANCHOR,
+  chooserSituations,
+  showsFor,
+  type SpecificSituation,
+} from "@core/content/guidance-flow.ts";
+import ConversationLayout from "../layouts/ConversationLayout.astro";
+import QuestionField from "../components/QuestionField.astro";
+import PlaceWords from "../components/PlaceWords.astro";
+import GuidedStep from "../components/GuidedStep.astro";
+import PhoneLink from "@core/components/PhoneLink.astro";
+import { formatPhone } from "@core/format/phone.ts";
+import FaqAnswers from "../components/FaqAnswers.astro";
+import Drawing from "../components/Drawing.astro";
+import { keepShortWords, primaryOfficePhone, seoTitle, toneAt } from "../lib/conversation.ts";
+import { pickedQuestion, situationQuestion, ui } from "../i18n/cs.ts";
+
+const ALL_ANCHOR = "postup";
+const site = await getSiteContext();
+const page = await getPage("jak-postupovat");
+const guidance = await getGuidance();
+const faq = await getFaq();
+const drawings = await getIllustrations();
+const situations = chooserSituations(guidance);
+const Body = page.Content;
+
+const firstHours = guidance.filter((entry) => entry.data.phase === "first-hours");
+const laterDays = guidance.filter((entry) => entry.data.phase === "first-days" || entry.data.phase === "arrangements");
+const after = guidance.filter((entry) => entry.data.phase === "after-funeral");
+const picking = situations.length > 0;
+
+function namedSituations(entry: (typeof guidance)[number]): SpecificSituation[] {
+  return entry.data.situations.filter((situation) => situation !== "any") as SpecificSituation[];
+}
+
+function questionFor(entry: (typeof guidance)[number]): string {
+  const named = namedSituations(entry);
+  if (named.length === 0) {
+    return ui.doNowAny;
+  }
+  return situationQuestion(named);
+}
+
+function firstAnchor(entry: (typeof guidance)[number]): string {
+  const named = namedSituations(entry);
+  const first = named.find((situation) => situations.includes(situation));
+  if (first === undefined) {
+    return `#${ALL_ANCHOR}`;
+  }
+  return `#${SITUATION_ANCHOR[first]}`;
+}
+
+/* Later fields follow the first-hours fields; their tones differ between the two states. */
+interface LaterField {
+  key: string;
+  question: string;
+  steps: typeof guidance;
+}
+const later: LaterField[] = [];
+if (laterDays.length > 0) {
+  later.push({ key: "dalsi-dny", question: ui.laterDaysQuestion, steps: laterDays });
+}
+if (after.length > 0) {
+  later.push({ key: "po-pohrbu", question: ui.afterQuestion, steps: after });
+}
+let unpickedCount = 1;
+if (picking) {
+  unpickedCount = firstHours.length;
+}
+const laterStart = 1 + unpickedCount;
+const faqIndexUnpicked = laterStart + later.length;
+const faqIndexPicked = 2 + later.length;
+
+/* Filter rules, one block per offered situation (the selectors depend on the anchors). */
+const picked = `[data-guide]:has(.guide-target:not(#${ALL_ANCHOR}):target)`;
+const filterCss = [
+  `${picked} [data-unpicked] { display: none; }`,
+  `${picked} .show-all { display: block; }`,
+  `${picked} [data-tone-picked="band"] > .field { background: var(--band); }`,
+  `${picked} [data-tone-picked="ground"] > .field { background: var(--ground); }`,
+  ...situations.map((situation) => {
+    const target = `[data-guide]:has(#${SITUATION_ANCHOR[situation]}:target)`;
+    const hidden = `:not([data-situations~="any"]):not([data-situations~="${situation}"])`;
+    return [
+      `${target} [data-guide-step]${hidden} { display: none; }`,
+      `${target} [data-picked-for="${situation}"] { display: block; }`,
+      `${target} [data-place="${situation}"] { padding-inline: 0.625rem; background: var(--deep); color: var(--on-deep); text-decoration: none; }`,
+      `${target} [data-place="${situation}"] .picked-word { display: inline; }`,
+    ].join("\n");
+  }),
+].join("\n");
+let margin: "none" | "small" = "none";
+if (drawings.guidance !== undefined) {
+  margin = "small";
+}
+
+/** The field a "Potom" link after field `index` of `later` leads to; null after the last. */
+function nextLater(index: number): LaterField | null {
+  return later[index + 1] ?? null;
+}
+const firstLater = later[0] ?? null;
+const office = primaryOfficePhone(site);
+const officePhone = formatPhone(office.number);
+---
+<ConversationLayout site={site} title={seoTitle(page.data)} description={page.data.metaDescription}>
+  <div data-guide class="guide">
+    <style is:inline set:html={filterCss}></style>
+    {situations.map((situation) => <span id={SITUATION_ANCHOR[situation]} class="guide-target"></span>)}
+    <span id={ALL_ANCHOR} class="guide-target"></span>
+    <QuestionField question={ui.guideQuestion} tone={toneAt(0)} level={1} margin={margin}>
+      {page.data.lead !== null ? <p>{keepShortWords(page.data.lead)}</p> : null}
+      <PlaceWords situations={situations} base="" />
+      <p class="label show-all"><a href={`#${ALL_ANCHOR}`}>{ui.showAll}</a></p>
+      <p class="guide-calm">{ui.guideCalm}</p>
+      {page.hasBody ? <div class="prose guide-intro"><Body /></div> : null}
+      <Fragment slot="margin">
+        <Drawing image={drawings.guidance} line="dark" width={96} height={120} />
+      </Fragment>
+    </QuestionField>
+    {
+      picking ? (
+        firstHours.map((entry, index) => (
+          <div data-unpicked>
+            <QuestionField question={questionFor(entry)} tone={toneAt(1 + index)}>
+              <p>{keepShortWords(entry.data.summary)}</p>
+              <p class="label">
+                <a href={firstAnchor(entry)}>{ui.showSteps}</a>
+              </p>
+            </QuestionField>
+          </div>
+        ))
+      ) : (
+        <QuestionField question={ui.doNowAny} tone={toneAt(1)}>
+          {firstHours.map((entry) => (
+            <GuidedStep site={site} entry={entry} idPrefix="ted" />
+          ))}
+          {firstLater !== null ? (
+            <p class="label then-link">
+              <a href={`#${firstLater.key}`} data-guide-next>
+                {ui.thenQuestion}: {firstLater.question}
+              </a>
+            </p>
+          ) : null}
+        </QuestionField>
+      )
+    }
+    {
+      situations.map((situation) => (
+        <div class="picked-field" data-picked-for={situation}>
+          <QuestionField question={pickedQuestion(situation)} tone={toneAt(1)} id={`postup-${SITUATION_ANCHOR[situation]}`}>
+            {firstHours
+              .filter((entry) => showsFor(entry, situation))
+              .map((entry) => (
+                <GuidedStep site={site} entry={entry} idPrefix={situation} />
+              ))}
+            {firstLater !== null ? (
+              <p class="label then-link">
+                <a href={`#${firstLater.key}`} data-guide-next>
+                  {ui.thenQuestion}: {firstLater.question}
+                </a>
+              </p>
+            ) : null}
+          </QuestionField>
+        </div>
+      ))
+    }
+    {
+      later.map((field, index) => (
+        <div class="later-field" data-tone-picked={toneAt(2 + index)}>
+          <QuestionField question={field.question} tone={toneAt(laterStart + index)} id={field.key}>
+            {field.steps.map((entry) => (
+              <GuidedStep site={site} entry={entry} idPrefix={field.key} />
+            ))}
+            {nextLater(index) !== null ? (
+              <p class="label then-link">
+                <a href={`#${nextLater(index)?.key}`} data-guide-next>
+                  {ui.thenQuestion}: {nextLater(index)?.question}
+                </a>
+              </p>
+            ) : (
+              <div class="guide-closing">
+                <p class="guide-closing-line">{ui.guideClosing}</p>
+                <p>
+                  {ui.guideClosingCall}{" "}
+                  <PhoneLink number={office.number} class="guide-closing-number">
+                    {office.label}{" "}<span class="nowrap">{officePhone.display}</span>
+                  </PhoneLink>
+                </p>
+              </div>
+            )}
+          </QuestionField>
+        </div>
+      ))
+    }
+    {
+      faq.length > 0 ? (
+        <div class="later-field" data-tone-picked={toneAt(faqIndexPicked)}>
+          <QuestionField question={ui.askAgainQuestion} tone={toneAt(faqIndexUnpicked)} id="caste-otazky" wide>
+            <FaqAnswers groups={faq} />
+          </QuestionField>
+        </div>
+      ) : null
+    }
+  </div>
+</ConversationLayout>
+
+<style>
+  .guide-target {
+    display: block;
+    scroll-margin-top: 1rem;
+  }
+
+  .show-all,
+  .picked-field {
+    display: none;
+  }
+
+  /* The reassurance reads like a sentence said aloud: the answer size, italic, no frame. */
+  .guide-calm {
+    max-width: 34rem;
+    margin-top: var(--s3);
+    font-size: var(--answer);
+    font-style: italic;
+    line-height: 1.35;
+  }
+
+  .then-link {
+    margin-top: var(--s3);
+  }
+
+  .guide-closing {
+    margin-top: var(--s4);
+  }
+
+  .guide-closing-line {
+    font-family: var(--display);
+    font-size: var(--answer);
+    line-height: 1.3;
+  }
+
+  .guide-closing :global(.guide-closing-number) {
+    font-weight: 700;
+  }
+
+  .guide-intro :global(h2) {
+    font-size: 1.5rem;
+    line-height: 1.2;
+  }
+</style>

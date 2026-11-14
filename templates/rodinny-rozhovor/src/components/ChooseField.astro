@@ -1,0 +1,95 @@
+---
+/**
+ * Home "Jakou rakev a jaké květiny?": the two catalogue pages as pictures (design-differentiation
+ * §1.4). The firm's own flower arrangement leads, larger; the coffin follows, quieter. Product
+ * shots are shown whole at their own proportions, never cropped; the whole picture is the link
+ * and the page name with the count sits under it. A page without a real photo stays a plain link.
+ */
+import { Image } from "astro:assets";
+import { resolveImage } from "@core/media/resolve.ts";
+import QuestionField from "./QuestionField.astro";
+import type { CatalogueLine, Tone } from "../lib/conversation.ts";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  tone: Tone;
+  lines: CatalogueLine[];
+}
+
+const { tone, lines } = Astro.props;
+const pictures = lines.map((line) => {
+  let image = null;
+  if (line.photo !== null) {
+    image = resolveImage(line.photo.image);
+  }
+  return { ...line, image };
+});
+const anyPicture = pictures.some((line) => line.image !== null);
+---
+<QuestionField question={ui.chooseQuestion} tone={tone} section="catalogue-links" wide={anyPicture}>
+  <ul class:list={["choose-list", { "choose-pictures": anyPicture }]} role="list">
+    {
+      pictures.map((line, index) => (
+        <li class:list={["choose-item", { "choose-lead": index === 0 }]}>
+          {line.image !== null ? (
+            <a href={line.href} class="choose-picture" tabindex="-1" aria-hidden="true">
+              <Image
+                src={line.image.src}
+                alt=""
+                widths={[240, 360, Math.min(720, line.image.src.width)]}
+                sizes="(min-width: 64rem) 22rem, 46vw"
+                loading="lazy"
+                decoding="async"
+              />
+            </a>
+          ) : null}
+          <p class="choose-name">
+            <a href={line.href}>{line.label}</a> <span class="muted">{ui.itemCount(line.count)}</span>
+          </p>
+          {line.photo !== null ? <p class="choose-caption muted">{line.photo.title}</p> : null}
+        </li>
+      ))
+    }
+  </ul>
+</QuestionField>
+
+<style>
+  .choose-list {
+    padding: 0;
+    list-style: none;
+  }
+
+  .choose-name a {
+    display: inline-block;
+    padding-block: 0.25rem;
+  }
+
+  .choose-pictures {
+    display: grid;
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+    gap: var(--s3);
+    align-items: end;
+  }
+
+  /* Each photo at its own proportions: the arrangement and the coffin are never cropped. */
+  .choose-picture {
+    display: block;
+  }
+
+  .choose-picture :global(img) {
+    width: 100%;
+    height: auto;
+  }
+
+  .choose-name {
+    margin-top: 0.625rem;
+  }
+
+  .choose-caption {
+    font-size: 1.125rem;
+  }
+
+  .choose-item:not(.choose-lead) .choose-picture {
+    width: 85%;
+  }
+</style>
