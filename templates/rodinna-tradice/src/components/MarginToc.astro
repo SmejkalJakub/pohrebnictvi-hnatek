@@ -3,6 +3,10 @@
  * In-page table of contents for the left margin. Sticky on desktop; on mobile it is a plain
  * list at the top of the article. With `autoNumber`, numbers come from a CSS counter so they stay
  * continuous when the guide hides steps for a chosen situation (items carry `data-situations`).
+ * With `spy` (the template's signature): core's scroll spy marks the section being read with
+ * aria-current="location", shown as a bar that slides in at the margin like a bookmark. With
+ * `keepFilter` (the guide), links carry core's data-guide-next so jumping to a step keeps the
+ * chosen situation. The slot sits under the list.
  */
 import { ui } from "../i18n/cs.ts";
 
@@ -19,26 +23,36 @@ interface Props {
   items: TocItem[];
   label?: string;
   autoNumber?: boolean;
+  spy?: boolean;
+  keepFilter?: boolean;
 }
 
-const { items, label = ui.pageContents, autoNumber = false } = Astro.props;
+const { items, label = ui.pageContents, autoNumber = false, spy = false, keepFilter = false } = Astro.props;
+const guideNext = keepFilter ? "" : undefined;
 ---
-<nav class:list={["toc", { "toc-auto": autoNumber }]} aria-label={label} data-margin-toc>
+<nav
+  class:list={["toc", { "toc-auto": autoNumber, "toc-spy": spy }]}
+  aria-label={label}
+  data-margin-toc
+  data-spy-nav={spy ? "" : undefined}
+>
   <p class="label toc-label" aria-hidden="true">{label}</p>
   <ol class="toc-list">
     {
       items.map((item) => (
         <li data-situations={item.situations}>
-          <a href={item.href}>
+          <a href={item.href} data-guide-next={guideNext}>
             {autoNumber ? <span class="toc-num toc-num-auto" aria-hidden="true" /> : null}
             {!autoNumber && item.number !== undefined ? <span class="toc-num">{item.number}</span> : null}
-            <span>{item.label}</span>
+            <span class="toc-text">{item.label}</span>
           </a>
           {item.children !== undefined && item.children.length > 0 ? (
             <ol class="toc-sub">
               {item.children.map((child) => (
                 <li>
-                  <a href={child.href}>{child.label}</a>
+                  <a href={child.href} data-guide-next={guideNext}>
+                    {child.label}
+                  </a>
                 </li>
               ))}
             </ol>
@@ -47,6 +61,7 @@ const { items, label = ui.pageContents, autoNumber = false } = Astro.props;
       ))
     }
   </ol>
+  <slot />
 </nav>
 
 <style>
@@ -75,6 +90,38 @@ const { items, label = ui.pageContents, autoNumber = false } = Astro.props;
   .toc a:hover {
     color: var(--accent);
     text-decoration: underline;
+  }
+
+  /* Scroll spy: a bar slides in at the left edge of the link being read. */
+  .toc-spy a {
+    position: relative;
+    padding-left: 0.875rem;
+  }
+
+  .toc-spy a::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0.375rem;
+    bottom: 0.375rem;
+    width: 3px;
+    background: var(--accent);
+    scale: 1 0;
+    transform-origin: top;
+  }
+
+  .toc-spy a[aria-current="location"] {
+    color: var(--accent);
+  }
+
+  .toc-spy a[aria-current="location"]::before {
+    scale: 1 1;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .toc-spy a::before {
+      transition: scale 180ms var(--ease);
+    }
   }
 
   .toc-num {

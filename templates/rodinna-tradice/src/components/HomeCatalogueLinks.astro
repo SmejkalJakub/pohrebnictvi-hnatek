@@ -1,24 +1,55 @@
 ---
-/** Optional home section: a short prose pointer to the coffin and flower catalogues. */
-import { getPage } from "@core/content/load.ts";
+/**
+ * Optional home section: the coffin and flower catalogues. With real photos (core
+ * getHomeImagery, design-differentiation §1.4) each catalogue is a captioned print from the
+ * album: the flower arrangement leads, larger; the coffin is the quieter print, smaller and set
+ * lower. Without photos the section is the short prose pair it always was.
+ */
+import { getHomeImagery, getPage } from "@core/content/load.ts";
+import AlbumPrint from "./AlbumPrint.astro";
 import MarginSection from "./MarginSection.astro";
 import { ui } from "../i18n/cs.ts";
 
 const coffins = await getPage("rakve");
 const flowers = await getPage("kvetiny");
+const imagery = await getHomeImagery();
+
+const items = [
+  {
+    key: "flowers",
+    page: flowers,
+    href: "/kvetiny/",
+    linkLabel: ui.catalogueFlowers,
+    photo: imagery.flower,
+    sizes: "(min-width: 64rem) 24rem, (min-width: 48rem) 50vw, calc(100vw - 2.5rem)",
+  },
+  {
+    key: "coffins",
+    page: coffins,
+    href: "/rakve/",
+    linkLabel: ui.catalogueCoffins,
+    photo: imagery.coffin,
+    sizes: "(min-width: 64rem) 17rem, (min-width: 48rem) 40vw, 80vw",
+  },
+];
+const withPrints = items.some((item) => item.photo !== null);
 ---
 <MarginSection id="nabidka" label={ui.sectionLabelCatalogue} heading={ui.catalogueHeading} section="catalogue-links">
-  <div class="pair">
-    <div>
-      <h3>{coffins.data.title}</h3>
-      {coffins.data.lead !== null ? <p>{coffins.data.lead}</p> : null}
-      <a class="more-link" href="/rakve/">{ui.catalogueCoffins}</a>
-    </div>
-    <div>
-      <h3>{flowers.data.title}</h3>
-      {flowers.data.lead !== null ? <p>{flowers.data.lead}</p> : null}
-      <a class="more-link" href="/kvetiny/">{ui.catalogueFlowers}</a>
-    </div>
+  <div class:list={["pair", { "has-prints": withPrints }]}>
+    {
+      items.map((item) => (
+        <div class:list={["entry", `entry-${item.key}`]}>
+          {item.photo !== null ? (
+            <AlbumPrint image={item.photo.image} caption={item.photo.title} href={item.href} sizes={item.sizes} class="entry-print" />
+          ) : null}
+          <h3>{item.page.data.title}</h3>
+          {item.page.data.lead !== null ? <p>{item.page.data.lead}</p> : null}
+          <a class="more-link" href={item.href}>
+            {item.linkLabel}
+          </a>
+        </div>
+      ))
+    }
   </div>
 </MarginSection>
 
@@ -32,15 +63,46 @@ const flowers = await getPage("kvetiny");
     margin-bottom: 0.375rem;
   }
 
+  .has-prints {
+    gap: 3rem;
+  }
+
+  .has-prints :global(.entry-print) {
+    margin-bottom: 1.25rem;
+  }
+
+  .has-prints .entry-flowers :global(.entry-print) {
+    max-width: 26rem;
+  }
+
+  /* The quieter print: smaller, so the flowers lead. */
+  .has-prints .entry-coffins :global(.entry-print) {
+    max-width: 80%;
+  }
+
   @media (min-width: 48rem) {
     .pair {
       grid-template-columns: 1fr 1fr;
       column-gap: 3rem;
     }
 
-    .pair > div + div {
+    .pair:not(.has-prints) > .entry + .entry {
       border-left: 1px solid var(--rule);
       padding-left: 3rem;
+    }
+
+    /* Prints: the flowers wider, the coffin set lower, as two photos laid on an album page. */
+    .has-prints {
+      grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+      align-items: start;
+    }
+
+    .has-prints .entry-coffins {
+      padding-top: 4rem;
+    }
+
+    .has-prints .entry-coffins :global(.entry-print) {
+      max-width: 100%;
     }
   }
 </style>

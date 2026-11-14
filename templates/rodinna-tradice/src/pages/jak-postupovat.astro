@@ -4,9 +4,10 @@
  * through fragment targets (#situace-…) and CSS :has(:target), so no JavaScript is needed and
  * every situation has a shareable link. Steps stay numbered <h2> sections in reading order
  * (numbers from a CSS counter, so they stay continuous when steps are hidden). Each step leads
- * with what to do, a tickable checklist and the right phone; the longer text sits in a
- * <details> "Přečíst podrobnosti", and a "Další krok" link moves the reader on. Without :has()
- * support the full guide simply shows.
+ * with what to do, a calm numbered "Postupně" list (design-differentiation §1.3: a guided list,
+ * never a checklist) and the right phone; the longer text sits in a <details> "Přečíst
+ * podrobnosti", and a "Potom:" link moves the reader on. A short reassurance opens the page and
+ * the last step closes it. Without :has() support the full guide simply shows.
  */
 import LetterLayout from "../layouts/LetterLayout.astro";
 import PageIntro from "../components/PageIntro.astro";
@@ -22,6 +23,7 @@ import {
   SITUATION_ANCHOR,
   SPECIFIC_SITUATIONS,
   chooserSituations,
+  guideSentence,
   nextGuidanceStep,
   situationsAttribute,
 } from "@core/content/guidance-flow.ts";
@@ -79,6 +81,16 @@ const filterCss = SPECIFIC_SITUATIONS.map((situation) => {
 
   <div class="frame guide" data-guide>
     <style is:inline set:html={filterCss}></style>
+    <div class="guide-lead">
+      <p class="guide-lead-text">{ui.guideLead}</p>
+      {
+        officePhone !== undefined ? (
+          <p class="guide-lead-phone">
+            <span>{ui.guideLeadPhone}</span> <PhoneLink number={officePhone.number} class="guide-lead-link" />
+          </p>
+        ) : null
+      }
+    </div>
     {
       situations.length > 0 ? (
         <div class="guide-chooser">
@@ -104,7 +116,7 @@ const filterCss = SPECIFIC_SITUATIONS.map((situation) => {
           <span>
             {ui.filterShowing} <strong>{SITUATION_FILTER_LABEL[situation]}</strong>
           </span>
-          <a class="filter-reset" href={`#${ALL_ANCHOR}`}>
+          <a class="filter-reset" href={`#${ALL_ANCHOR}`} data-vt-anchor>
             {ui.filterShowAll}
           </a>
         </p>
@@ -113,7 +125,7 @@ const filterCss = SPECIFIC_SITUATIONS.map((situation) => {
 
     <div class="article-grid">
       <div class="article-toc">
-        <MarginToc items={toc} autoNumber />
+        <MarginToc items={toc} autoNumber spy keepFilter />
       </div>
       <article class="article" data-guidance-article>
         {
@@ -148,20 +160,16 @@ const filterCss = SPECIFIC_SITUATIONS.map((situation) => {
                     <p class="step-summary">{entry.data.summary}</p>
                   </div>
                   {entry.data.checklist.length > 0 ? (
-                    <fieldset class="step-tasks">
-                      <legend class="step-tasks-legend">{ui.checklistLabel}</legend>
-                      <p class="step-tasks-hint">{ui.stepTicks}</p>
-                      <ul class="step-tasks-list">
-                        {entry.data.checklist.map((item, itemIndex) => (
-                          <li>
-                            <label class="task" for={`${entry.id}-ukol-${itemIndex + 1}`}>
-                              <input type="checkbox" id={`${entry.id}-ukol-${itemIndex + 1}`} class="task-box" />
-                              <span class="task-text">{item}</span>
-                            </label>
-                          </li>
+                    <div class="step-path">
+                      <p class="label step-path-label" id={`${entry.id}-postupne`}>
+                        {ui.stepPath}
+                      </p>
+                      <ol class="step-path-list" aria-labelledby={`${entry.id}-postupne`}>
+                        {entry.data.checklist.map((item) => (
+                          <li>{guideSentence(item)}</li>
                         ))}
-                      </ul>
-                    </fieldset>
+                      </ol>
+                    </div>
                   ) : null}
                   {entry.data.contactPrompt === "emergency" && site.emergency.enabled ? (
                     <p class="step-prompt">
@@ -204,7 +212,7 @@ const filterCss = SPECIFIC_SITUATIONS.map((situation) => {
                   ) : null}
                   {next !== null ? (
                     <p class="step-next">
-                      <a class="step-next-link" href={`#${next.id}`}>
+                      <a class="step-next-link" href={`#${next.id}`} data-guide-next>
                         <span class="step-next-label">{ui.stepNext}</span> {next.data.title}
                         <span aria-hidden="true"> ↓</span>
                       </a>
@@ -309,7 +317,8 @@ const filterCss = SPECIFIC_SITUATIONS.map((situation) => {
     width: 2.75rem;
     height: 2.75rem;
     margin-top: 0.125rem;
-    border: 1px solid var(--accent);
+    border: 1px solid var(--ornament);
+    box-shadow: 0 0 0 3px var(--paper), 0 0 0 4px var(--ornament);
     border-radius: 50%;
     font-family: var(--font-caption);
     font-style: italic;
@@ -337,51 +346,101 @@ const filterCss = SPECIFIC_SITUATIONS.map((situation) => {
     font-size: 1.1875rem;
   }
 
-  .step-tasks {
-    margin-top: 1.5rem;
-    border: 0;
-    padding: 0;
-    min-width: 0;
+  /* The guided list: quiet italic old-style numerals hung in the left margin, a hairline
+     ornament thread joining them, generous leading. Nothing to tick, nothing to count. */
+  .step-path {
+    margin-top: 1.75rem;
   }
 
-  .step-tasks-legend {
+  .step-path-label {
+    margin-bottom: 0.5rem;
+  }
+
+  .step-path-list {
+    counter-reset: path;
+    margin: 0;
     padding: 0;
+    list-style: none;
+  }
+
+  .step-path-list > li {
+    counter-increment: path;
+    position: relative;
+    padding: 0.375rem 0 0.375rem 2.75rem;
+    font-size: 1.125rem;
+    line-height: 1.6;
+  }
+
+  .step-path-list > li::before {
+    content: counter(path);
+    position: absolute;
+    left: 0;
+    top: 0.25rem;
+    width: 1.75rem;
+    text-align: right;
+    font-family: var(--font-caption);
+    font-style: italic;
+    font-size: 1.25rem;
+    font-variant-numeric: oldstyle-nums;
+    color: var(--accent);
+  }
+
+  /* The thread: a hairline between consecutive numerals (ornament colour, non-text). */
+  .step-path-list > li + li::after {
+    content: "";
+    position: absolute;
+    left: 2.125rem;
+    top: -0.375rem;
+    height: 0.75rem;
+    border-left: 1px solid var(--ornament);
+  }
+
+  /* Arriving through a "Potom:" link: the step settles under a quiet paper wash. */
+  .step:target,
+  .step[data-guide-arrived] {
+    background-color: var(--surface);
+    box-shadow:
+      -1rem 0 0 var(--surface),
+      1rem 0 0 var(--surface);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .step {
+      transition:
+        background-color 200ms var(--ease),
+        box-shadow 200ms var(--ease);
+    }
+  }
+
+  .guide-lead {
+    max-width: var(--measure);
+    margin-bottom: 2.5rem;
+    padding: 0.25rem 0 0.25rem 1.5rem;
+    border-left: 1px solid var(--ornament);
+  }
+
+  .guide-lead-text {
+    font-family: var(--font-caption);
+    font-style: italic;
+    font-size: 1.3125rem;
+    line-height: 1.5;
+  }
+
+  .guide-lead-phone {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.25rem 0.75rem;
+    margin-top: 0.75rem;
     font-weight: 600;
   }
 
-  .step-tasks-hint {
-    font-size: 0.9375rem;
-    color: var(--muted);
-  }
-
-  .step-tasks-list {
-    margin-top: 0.5rem;
-    border-top: 1px solid var(--rule);
-  }
-
-  .task {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.875rem;
-    min-height: 3rem;
-    padding-block: 0.625rem;
-    border-bottom: 1px solid var(--rule);
-    cursor: pointer;
-  }
-
-  .task-box {
-    flex: none;
-    width: 1.5rem;
-    height: 1.5rem;
-    margin-top: 0.125rem;
-    accent-color: var(--accent);
-    cursor: pointer;
-  }
-
-  .task-box:checked + .task-text {
-    color: var(--muted);
-    text-decoration: line-through;
-    text-decoration-thickness: 1px;
+  .guide-lead :global(.guide-lead-link) {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.75rem;
+    font-size: 1.1875rem;
+    white-space: nowrap;
   }
 
   .step-prompt {
@@ -526,6 +585,7 @@ const filterCss = SPECIFIC_SITUATIONS.map((situation) => {
       grid-column: 4 / span 7;
     }
 
+    .guide-lead,
     .guide-chooser,
     .intro-body,
     .filter-status {

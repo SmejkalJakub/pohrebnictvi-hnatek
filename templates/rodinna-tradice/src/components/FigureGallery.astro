@@ -91,6 +91,8 @@ const items = entries.map((entry, index) => ({
     aspect-ratio: var(--gallery-aspect);
     object-fit: cover;
     background: var(--surface);
+    /* Product photos come on white: multiply lets the paper show through instead of a white box. */
+    mix-blend-mode: multiply;
   }
 
   .gallery-caption {

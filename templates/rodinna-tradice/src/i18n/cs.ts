@@ -63,11 +63,13 @@ export const ui = {
   filterShowing: "Zobrazujeme postup pro:",
   filterShowAll: "Zobrazit všechny kroky",
   stepDo: "Co udělat",
-  stepTicks: "Hotové body si můžete odškrtnout.",
+  guideLead:
+    "Nemusíte všechno vyřešit najednou ani si nic pamatovat. Stačí jít krok za krokem, tak jak jdou za sebou. Když si nebudete jistí, zavolejte nám a poradíme vám.",
+  guideLeadPhone: "Kancelář:",
+  stepPath: "Postupně",
   stepMore: "Přečíst podrobnosti",
-  stepNext: "Další krok:",
-  stepDone: "Tím je postup u konce. S čímkoli dalším vám rádi poradíme:",
-  checklistLabel: "K tomuto kroku si připravte",
+  stepNext: "Potom:",
+  stepDone: "Tím máte to nejdůležitější za sebou. Když budete potřebovat poradit, zavolejte nám:",
   promptEmergency: "Převoz zesnulého:",
   promptOffice: "Zavolejte nám do kanceláře:",
 

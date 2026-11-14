@@ -27,7 +27,12 @@ const Heading = `h${headingLevel}` as "h2" | "h3";
     {
       situations.map((situation) => (
         <li>
-          <a class="chooser-option" href={`${base}#${SITUATION_ANCHOR[situation]}`} data-situation-link={situation}>
+          <a
+            class="chooser-option"
+            href={`${base}#${SITUATION_ANCHOR[situation]}`}
+            data-situation-link={situation}
+            data-vt-anchor={base === "" ? "" : undefined}
+          >
             <span class="chooser-label">{SITUATION_OPTION_LABEL[situation]}</span>
             <span class="chooser-arrow" aria-hidden="true">→</span>
           </a>
@@ -35,7 +40,11 @@ const Heading = `h${headingLevel}` as "h2" | "h3";
       ))
     }
     <li>
-      <a class="chooser-option chooser-option-all" href={`${base}#${allAnchor}`}>
+      <a
+        class="chooser-option chooser-option-all"
+        href={`${base}#${allAnchor}`}
+        data-vt-anchor={base === "" ? "" : undefined}
+      >
         <span class="chooser-label">{ui.chooserAll}</span>
         <span class="chooser-arrow" aria-hidden="true">→</span>
       </a>
@@ -90,6 +99,21 @@ const Heading = `h${headingLevel}` as "h2" | "h3";
   .chooser-option:hover {
     border-color: var(--accent);
     color: var(--accent);
+    box-shadow: inset 4px 0 0 var(--accent);
+  }
+
+  .chooser-option:active {
+    background: var(--surface);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .chooser-arrow {
+      transition: translate 160ms var(--ease);
+    }
+
+    .chooser-option:hover .chooser-arrow {
+      translate: 0.25rem 0;
+    }
   }
 
   .chooser-option:hover .chooser-label {

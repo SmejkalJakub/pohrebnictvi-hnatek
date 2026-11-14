@@ -8,21 +8,40 @@ import ProseServiceGroups from "../components/ProseServiceGroups.astro";
 import HomeFirstSteps from "../components/HomeFirstSteps.astro";
 import HomeVisitUs from "../components/HomeVisitUs.astro";
 import HomeCatalogueLinks from "../components/HomeCatalogueLinks.astro";
-import { getPage, getSiteContext } from "@core/content/load.ts";
+import { getHomeImagery, getPage, getSiteContext } from "@core/content/load.ts";
 import { resolveOptionalImage } from "@core/media/resolve.ts";
 import { resolveOptions } from "../lib/options.ts";
 
 const site = await getSiteContext();
 const home = await getPage("home");
 const options = resolveOptions(site.config.options);
-const hero = resolveOptionalImage(home.data.heroImage);
 const sections = site.config.homepage.sections;
+// design-differentiation §1.4: the photo hero falls back to the firm's own place when the home
+// page has no image; the family story then leaves that photo out (never the same photo twice).
+let heroRef = home.data.heroImage;
+if (heroRef === null && options.heroVariant === "photo-right" && sections.includes("hero")) {
+  const imagery = await getHomeImagery();
+  if (imagery.place !== null) {
+    heroRef = imagery.place.image;
+  }
+}
+const hero = resolveOptionalImage(heroRef);
+let heroFile: string | null = null;
+if (heroRef !== null && options.heroVariant === "photo-right" && sections.includes("hero")) {
+  heroFile = heroRef.file;
+}
 let ogImage = null;
 if (hero !== null && !hero.isPlaceholder) {
   ogImage = hero.src;
 }
 ---
-<LetterLayout site={site} title={home.data.metaTitle} description={home.data.metaDescription} image={ogImage}>
+<LetterLayout
+  site={site}
+  title={home.data.metaTitle}
+  description={home.data.metaDescription}
+  image={ogImage}
+  compactFooter={sections.includes("contact-summary")}
+>
   {
     sections.map((section) => {
       if (section === "hero") {
@@ -43,7 +62,7 @@ if (hero !== null && !hero.isPlaceholder) {
         );
       }
       if (section === "family-story") {
-        return <HomeFamilyStory />;
+        return <HomeFamilyStory exclude={heroFile} />;
       }
       if (section === "services") {
         return <ProseServiceGroups />;

@@ -9,6 +9,9 @@ import type { ImageMetadata } from "astro";
 import SeoHead from "@core/components/SeoHead.astro";
 import StructuredData from "@core/components/StructuredData.astro";
 import PrototypeBanner from "@core/components/PrototypeBanner.astro";
+import BrandStyle from "@core/components/BrandStyle.astro";
+import SiteInteractions from "@core/components/SiteInteractions.astro";
+import { brandAttributes } from "@core/brand/runtime.ts";
 import type { SiteContext } from "@core/content/view-models.ts";
 import UtilityStrip from "../components/UtilityStrip.astro";
 import LetterheadHeader from "../components/LetterheadHeader.astro";
@@ -23,9 +26,14 @@ interface Props {
   description: string;
   noindex?: boolean;
   image?: ImageMetadata | null;
+  /**
+   * The page already shows the office address and hours (home with "Navštivte nás", Kontakt):
+   * the footer then keeps only the nonstop column and the legal row, so the block is not repeated.
+   */
+  compactFooter?: boolean;
 }
 
-const { site, title = null, description, noindex = false, image = null } = Astro.props;
+const { site, title = null, description, noindex = false, image = null, compactFooter = false } = Astro.props;
 const options = resolveOptions(site.config.options);
 ---
 <!doctype html>
@@ -36,12 +44,14 @@ const options = resolveOptions(site.config.options);
   data-fonts={options.fontPair}
   data-emphasis={options.emergencyEmphasis}
   data-hero={options.heroVariant}
+  {...brandAttributes()}
 >
   <head>
     <script is:inline>document.documentElement.classList.replace("no-js", "js");</script>
     <SeoHead site={site} title={title} description={description} noindex={noindex} image={image} />
     <meta name="theme-color" content="#2b2722" />
     <StructuredData site={site} />
+    <BrandStyle />
   </head>
   <body>
     <PrototypeBanner />
@@ -51,7 +61,8 @@ const options = resolveOptions(site.config.options);
     <main id="obsah" tabindex="-1">
       <slot />
     </main>
-    <RichFooter site={site} />
+    <RichFooter site={site} compact={compactFooter} />
+    <SiteInteractions />
   </body>
 </html>
 

@@ -18,7 +18,12 @@ const site = await getSiteContext();
 const page = await getPage("kontakt");
 const showForm = site.config.features.contactForm && site.config.contactFormHandler !== null;
 ---
-<LetterLayout site={site} title={page.data.metaTitle ?? page.data.title} description={page.data.metaDescription}>
+<LetterLayout
+  site={site}
+  title={page.data.metaTitle ?? page.data.title}
+  description={page.data.metaDescription}
+  compactFooter
+>
   <PageIntro title={page.data.title} lead={page.data.lead} placeholder={page.data.placeholder}>
     <div class="prose intro-body">
       <page.Content />

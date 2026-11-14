@@ -1,8 +1,14 @@
 ---
 /**
- * Typographic panel used instead of a hero photograph: the tradition wording in small caps
- * between hairline rules. States only what the data states (foundedYear only when set).
+ * Typographic panel used instead of a hero photograph, like the seal on a letterhead. With a
+ * brand mark (site.config brand.mark) the mark sits at its centre; the tradition wording is set
+ * large between hairline rules, then the year (only when set) and the place, and at the foot the
+ * live office status. It never repeats the brand name: the letterhead above already carries it
+ * (design review 2026-11-13, §4 A).
  */
+import { Image } from "astro:assets";
+import OfficeStatus from "@core/components/OfficeStatus.astro";
+import { brandMark } from "@core/brand/runtime.ts";
 import type { SiteContext } from "@core/content/view-models.ts";
 import { ui } from "../i18n/cs.ts";
 
@@ -15,16 +21,16 @@ const company = site.company;
 const wording = company.tradition.publicWording;
 const year = company.tradition.foundedYear;
 const location = site.contact.locations[0];
-let kicker: string | null = null;
-if (company.familyOwned === true && wording === null) {
-  kicker = ui.familyOwned;
+const mark = brandMark();
+let headline: string | null = wording;
+if (headline === null && company.familyOwned === true) {
+  headline = ui.familyOwned;
 }
 ---
-<div class="tradition" data-tradition-panel>
+<div class:list={["tradition", { "has-mark": mark !== null }]} data-tradition-panel>
   <div class="tradition-inner">
-    {kicker !== null ? <p class="tradition-kicker">{kicker}</p> : null}
-    <p class="tradition-brand">{company.brandName}</p>
-    {wording !== null ? <p class="tradition-wording">{wording}</p> : null}
+    {mark !== null ? <Image src={mark} alt="" width={168} class="tradition-mark" loading="eager" /> : null}
+    {headline !== null ? <p class="tradition-wording">{headline}</p> : null}
     {
       year !== null ? (
         <p class="tradition-year">
@@ -34,6 +40,7 @@ if (company.familyOwned === true && wording === null) {
     }
     {location !== undefined ? <p class="tradition-place">{location.address.city}</p> : null}
   </div>
+  <OfficeStatus site={site} class="tradition-status" />
 </div>
 
 <style>
@@ -42,55 +49,60 @@ if (company.familyOwned === true && wording === null) {
     padding: 1.25rem;
     height: 100%;
     display: flex;
-    align-items: center;
+    flex-direction: column;
+    justify-content: center;
+    gap: 1rem;
   }
 
   .tradition-inner {
     width: 100%;
-    border-block: 1px solid var(--rule);
+    border-block: 1px solid var(--ornament);
     padding-block: 2rem;
     text-align: center;
     display: grid;
-    gap: 0.75rem;
+    gap: 0.875rem;
     justify-items: center;
   }
 
-  .tradition-kicker,
-  .tradition-wording,
-  .tradition-place {
-    font-family: var(--font-body);
-    font-size: 0.8125rem;
-    font-weight: 600;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    color: var(--accent);
-    max-width: 20rem;
-    line-height: 1.6;
+  .tradition :global(.tradition-mark) {
+    width: 7rem;
+    height: auto;
+    margin-bottom: 0.25rem;
   }
 
   .tradition-wording {
-    color: var(--ink);
-  }
-
-  .tradition-brand {
     font-family: var(--font-display);
     font-weight: var(--display-weight);
-    font-size: 2rem;
-    line-height: 1.15;
+    font-size: 1.625rem;
+    line-height: 1.2;
     text-wrap: balance;
+    max-width: 18rem;
+    color: var(--ink);
   }
 
   .tradition-year {
     font-family: var(--font-caption);
     font-style: italic;
     font-size: 1.25rem;
+    color: var(--accent);
   }
 
   .tradition-place {
+    font-family: var(--font-body);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
     color: var(--muted);
-    border-top: 1px solid var(--rule);
+    border-top: 1px solid var(--ornament);
     padding-top: 0.75rem;
     min-width: 6rem;
+    line-height: 1.6;
+  }
+
+  .tradition :global(.tradition-status) {
+    justify-content: center;
+    text-align: center;
   }
 
   @media (min-width: 64rem) {
@@ -100,12 +112,16 @@ if (company.familyOwned === true && wording === null) {
     }
 
     .tradition-inner {
-      padding-block: 3.5rem;
+      padding-block: 3rem;
       gap: 1rem;
     }
 
-    .tradition-brand {
-      font-size: 2.5rem;
+    .tradition :global(.tradition-mark) {
+      width: 8.5rem;
+    }
+
+    .tradition-wording {
+      font-size: 1.875rem;
     }
   }
 </style>

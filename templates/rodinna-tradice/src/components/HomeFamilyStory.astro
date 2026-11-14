@@ -1,23 +1,61 @@
 ---
-/** Family story excerpt (o-nas excerpt, falling back to its lead) and a "Více o nás" link. */
+/**
+ * Family story excerpt (o-nas excerpt, falling back to its lead) and a "Více o nás" link. With a
+ * real photo of the firm's own place (core getHomeImagery, design-differentiation §1.4) the
+ * story sits beside it as a print from the family album. `exclude` names a file already shown
+ * on the page (the hero), so the same photo never appears twice.
+ */
 import PlaceholderMark from "@core/components/PlaceholderMark.astro";
-import { getPage } from "@core/content/load.ts";
+import { getHomeImagery, getPage, type HomePhoto } from "@core/content/load.ts";
+import AlbumPrint from "./AlbumPrint.astro";
 import MarginSection from "./MarginSection.astro";
 import { ui } from "../i18n/cs.ts";
 
+interface Props {
+  exclude?: string | null;
+}
+
+const { exclude = null } = Astro.props;
 const about = await getPage("o-nas");
 const text = about.data.excerpt ?? about.data.lead;
+const imagery = await getHomeImagery();
+let place: HomePhoto | null = null;
+if (imagery.place !== null && imagery.place.image.file !== exclude) {
+  place = imagery.place;
+}
 ---
 <MarginSection id="nas-pribeh" label={ui.sectionLabelStory} heading={about.data.title} section="family-story">
-  <PlaceholderMark active={about.data.placeholder} kind="content">
-    {text !== null ? <p class="story-text">{text}</p> : null}
-  </PlaceholderMark>
-  <p>
-    <a class="more-link" href="/o-nas/">{ui.moreAboutUs}</a>
-  </p>
+  <div class:list={["story", { "has-print": place !== null }]}>
+    {
+      place !== null ? (
+        <AlbumPrint
+          image={place.image}
+          sizes="(min-width: 40rem) 22rem, calc(100vw - 2.5rem)"
+          class="story-print"
+        />
+      ) : null
+    }
+    <div class="story-body">
+      <PlaceholderMark active={about.data.placeholder} kind="content">
+        {text !== null ? <p class="story-text">{text}</p> : null}
+      </PlaceholderMark>
+      <p>
+        <a class="more-link" href="/o-nas/">{ui.moreAboutUs}</a>
+      </p>
+    </div>
+  </div>
 </MarginSection>
 
 <style>
+  .story {
+    display: grid;
+    gap: 1.75rem;
+  }
+
+  .story :global(.story-print) {
+    max-width: 22rem;
+  }
+
   .story-text {
     font-family: var(--font-caption);
     font-size: 1.375rem;
@@ -28,5 +66,18 @@ const text = about.data.excerpt ?? about.data.lead;
 
   :global([data-fonts="literata"]) .story-text {
     font-size: 1.1875rem;
+  }
+
+  /* Beside the print the story keeps to its own column, like text facing a photo in an album. */
+  @media (min-width: 48rem) {
+    .story.has-print {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      column-gap: 2.5rem;
+      align-items: start;
+    }
+
+    .story.has-print .story-text {
+      margin-top: 0.25rem;
+    }
   }
 </style>

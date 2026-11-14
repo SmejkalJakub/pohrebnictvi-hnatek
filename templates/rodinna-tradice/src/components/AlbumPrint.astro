@@ -1,0 +1,101 @@
+---
+/**
+ * A photograph as a print from a family album (design-differentiation §1.4): the photo whole, at
+ * its own proportions, on a light mat with a hairline edge and a serif italic caption below. Used
+ * on the homepage for the firm's own place and for the catalogue pointers. Product shots on
+ * white sit seamlessly on the mat, so they are never cropped.
+ *
+ * With `href`, the print is also a mouse shortcut to that page; it is hidden from keyboard and
+ * screen readers because the section's own text link goes to the same place.
+ */
+import { Image } from "astro:assets";
+import PlaceholderMark from "@core/components/PlaceholderMark.astro";
+import type { ImageRef } from "@core/content/schemas.ts";
+import { resolveImage } from "@core/media/resolve.ts";
+import { widthsFor } from "../lib/content.ts";
+
+interface Props {
+  image: ImageRef;
+  /** Visible caption; null uses the image's own caption, else its alt text. */
+  caption?: string | null;
+  href?: string;
+  sizes: string;
+  class?: string;
+}
+
+const { image: ref, caption = null, href, sizes, class: className } = Astro.props;
+const image = resolveImage(ref);
+
+let captionText = caption;
+if (captionText === null) {
+  captionText = image.caption;
+}
+if (captionText === null && image.alt !== "") {
+  captionText = image.alt;
+}
+// The caption already says what the photo shows: do not make screen readers hear it twice.
+let alt = image.alt;
+if (captionText === image.alt) {
+  alt = "";
+}
+const widths = widthsFor(image.src, [360, 540, 720]);
+---
+<figure class:list={["print", className]} data-album-print>
+  <PlaceholderMark active={image.isPlaceholder} kind="image" class="print-mark">
+    {
+      href !== undefined ? (
+        <a class="print-mat" href={href} tabindex="-1" aria-hidden="true">
+          <Image src={image.src} alt={alt} widths={widths} sizes={sizes} class="print-image" loading="lazy" />
+        </a>
+      ) : (
+        <span class="print-mat">
+          <Image src={image.src} alt={alt} widths={widths} sizes={sizes} class="print-image" loading="lazy" />
+        </span>
+      )
+    }
+  </PlaceholderMark>
+  {captionText !== null ? <figcaption class="print-caption">{captionText}</figcaption> : null}
+  {image.credit !== null ? <p class="print-credit">{image.credit}</p> : null}
+</figure>
+
+<style>
+  .print {
+    margin: 0;
+  }
+
+  .print-mat {
+    display: block;
+    padding: 0.625rem;
+    background: color-mix(in srgb, var(--paper) 30%, #ffffff);
+    border: 1px solid color-mix(in srgb, var(--rule) 60%, transparent);
+  }
+
+  a.print-mat {
+    transition: border-color 160ms var(--ease);
+  }
+
+  a.print-mat:hover {
+    border-color: var(--rule);
+  }
+
+  .print :global(.print-image) {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  .print-caption {
+    margin-top: 0.625rem;
+    font-family: var(--font-caption);
+    font-style: italic;
+    font-size: 1.0625rem;
+    line-height: 1.45;
+    color: var(--muted);
+  }
+
+  .print-credit {
+    margin-top: 0.25rem;
+    font-size: 0.8125rem;
+    color: var(--muted);
+  }
+</style>

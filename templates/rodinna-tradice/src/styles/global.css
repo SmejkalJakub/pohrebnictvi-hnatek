@@ -78,6 +78,54 @@
   }
 }
 
+/* Ornament colour: the second brand colour, or the rule colour without a brand. */
+:root {
+  --ornament: var(--rule);
+  --scroll-offset: calc(var(--sticky-offset) + 1rem);
+  --ease: cubic-bezier(0.2, 0, 0, 1);
+  --toast-bg: var(--strip-bg);
+  --toast-fg: var(--strip-fg);
+}
+
+/* ------------------------------------------------------------------ */
+/* Client brand (template-contract §8a). Core supplies legible --brand-*  */
+/* roles; A reads them as a letterhead: the board's paper, its ink, the   */
+/* logo colour for links and the strip, the second colour (often gold)    */
+/* only for ornaments that carry no text.                                 */
+/* ------------------------------------------------------------------ */
+[data-brand] {
+  --paper: var(--brand-ground);
+  --surface: var(--brand-surface);
+  --ink: var(--brand-ink);
+  --muted: var(--brand-muted);
+  --accent: var(--brand-primary-text);
+  --rule: var(--brand-rule);
+  --strip-bg: var(--brand-primary);
+  --strip-fg: var(--brand-on-primary);
+  --ornament: var(--brand-secondary);
+}
+
+[data-brand-display] {
+  --font-display: var(--brand-font-display);
+  --font-subhead: var(--brand-font-display);
+  --font-caption: var(--brand-font-display);
+  --display-weight: 500;
+  --display-tracking: -0.01em;
+  --subhead-weight: 600;
+  --subhead-size: 1.3125rem;
+  --caption-size: 1.0625rem;
+}
+
+[data-brand-body] {
+  --font-body: var(--brand-font-body);
+}
+
+/* A serif body reads smaller than Source Sans at the same size: a touch larger, more leading. */
+[data-brand-body="serif"] {
+  --body-size: 1.1875rem;
+  --body-leading: 1.7;
+}
+
 @media (min-width: 64rem) {
   :root {
     --gutter: 3rem;
@@ -163,6 +211,21 @@
 
   a:hover {
     text-decoration-thickness: 2px;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    a,
+    button,
+    summary {
+      transition:
+        color 160ms var(--ease),
+        background-color 160ms var(--ease),
+        border-color 160ms var(--ease),
+        text-decoration-color 160ms var(--ease),
+        text-decoration-thickness 160ms var(--ease),
+        box-shadow 160ms var(--ease),
+        translate 160ms var(--ease);
+    }
   }
 
   :focus-visible {
@@ -365,6 +428,41 @@
   [data-price] {
     font-variant-numeric: tabular-nums lining-nums;
     white-space: nowrap;
+  }
+
+  /* Live office status (core OfficeStatus), letter style: a small dot and an italic line. */
+  [data-office-status] {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    font-family: var(--font-caption);
+    font-style: italic;
+    font-size: 1.0625rem;
+    line-height: 1.4;
+    color: var(--ink);
+  }
+
+  [data-office-status][hidden] {
+    display: none;
+  }
+
+  [data-office-status-dot] {
+    flex: none;
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    background: var(--muted);
+    translate: 0 -0.1em;
+  }
+
+  [data-office-status][data-state="open"] [data-office-status-dot] {
+    background: var(--accent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent);
+  }
+
+  [data-site-toast] {
+    font-family: var(--font-body);
+    border-left: 4px solid var(--ornament);
   }
 }
 

@@ -118,15 +118,30 @@ const tradition = site.company.tradition;
     max-width: 65ch;
   }
 
-  /* Drop cap on the first paragraph only (O nás is the only page with one). */
+  /*
+   * Drop cap on the first paragraph only (O nás is the only page with one), two lines tall so it
+   * also sits on a short opening paragraph. initial-letter aligns it to the text lines where
+   * supported; the float is the fallback.
+   */
   .story-body :global(p:first-of-type::first-letter) {
     float: left;
     font-family: var(--font-display);
     font-weight: var(--display-weight);
-    font-size: 4.25em;
-    line-height: 0.8;
-    padding: 0.08em 0.1em 0 0;
+    font-size: 3.3em;
+    line-height: 0.82;
+    padding: 0.06em 0.08em 0 0;
     color: var(--accent);
+  }
+
+  @supports (initial-letter: 2) or (-webkit-initial-letter: 2) {
+    .story-body :global(p:first-of-type::first-letter) {
+      float: none;
+      font-size: 1em;
+      line-height: inherit;
+      padding: 0 0.12em 0 0;
+      -webkit-initial-letter: 2;
+      initial-letter: 2;
+    }
   }
 
   @media (min-width: 64rem) {

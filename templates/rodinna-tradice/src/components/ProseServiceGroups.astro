@@ -1,17 +1,28 @@
 ---
 /**
- * "Jak vám pomůžeme": services in two or three headed prose paragraphs by category,
- * each service an inline link to its anchor on /sluzby/. Deliberately not cards.
+ * "Jak vám pomůžeme" on the homepage: the featured services (at most four; the first four in
+ * order when none is featured) in headed prose groups by category, then "Přehled všech služeb".
+ * The full list lives on /sluzby/ (design-differentiation §1.4: the homepage is not a menu).
+ * Each service starts its own line (its name as a link to its anchor on /sluzby/, then one
+ * sentence), so a group still reads as a paragraph of a letter but scans by name. Not cards.
  */
 import PlaceholderMark from "@core/components/PlaceholderMark.astro";
 import { getServices, serviceHref } from "@core/content/load.ts";
 import MarginSection from "./MarginSection.astro";
 import { SERVICE_PROSE_GROUPS, ui } from "../i18n/cs.ts";
 
-const services = await getServices();
+const HOME_SERVICE_LIMIT = 4;
+
+const all = await getServices();
+let shown = all.filter((service) => service.data.featured);
+if (shown.length === 0) {
+  shown = all;
+}
+shown = shown.slice(0, HOME_SERVICE_LIMIT);
+
 const groups = SERVICE_PROSE_GROUPS.map((group) => ({
   title: group.title,
-  services: services.filter((service) => group.categories.includes(service.data.category)),
+  services: shown.filter((service) => group.categories.includes(service.data.category)),
 })).filter((group) => group.services.length > 0);
 ---
 <MarginSection id="sluzby-prehled" label={ui.sectionLabelServices} heading={ui.servicesHeading} section="services">
@@ -20,11 +31,12 @@ const groups = SERVICE_PROSE_GROUPS.map((group) => ({
       groups.map((group) => (
         <div class="group">
           <h3>{group.title}</h3>
-          <p>
+          <p class="group-runs">
             {group.services.map((service) => (
               <PlaceholderMark active={service.data.placeholder} kind="content" as="span">
                 <span class="service-run" data-service={service.id}>
-                  <a href={serviceHref(service.id, false)}>{service.data.title}</a>. {service.data.summary}{" "}
+                  <a href={serviceHref(service.id, false)}>{service.data.title}</a>
+                  <span class="service-summary">{service.data.summary}</span>
                 </span>
               </PlaceholderMark>
             ))}
@@ -50,12 +62,31 @@ const groups = SERVICE_PROSE_GROUPS.map((group) => ({
     margin-bottom: 0.375rem;
   }
 
+  .service-run {
+    display: block;
+    padding-block: 0.5rem;
+    border-top: 1px solid color-mix(in srgb, var(--rule) 45%, transparent);
+  }
+
+  .service-run:first-child,
+  :global([data-placeholder="content"]:first-child) > .service-run {
+    border-top: 0;
+    padding-top: 0;
+  }
+
   .service-run a {
-    font-weight: 600;
+    font-family: var(--font-subhead);
+    font-weight: var(--subhead-weight);
+    font-size: 1.1875rem;
+  }
+
+  .service-summary {
+    display: block;
+    color: var(--muted);
   }
 
   .groups :global([data-placeholder="content"]) {
-    display: inline;
+    display: block;
   }
 
   .groups :global([data-placeholder="content"] > [data-placeholder-label]) {

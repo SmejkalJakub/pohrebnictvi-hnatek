@@ -2,7 +2,11 @@
 /**
  * "Rich letter" footer: address and phones | office hours (own heading) | nonstop transport
  * (own heading), then the legal identifiers in small type.
+ * `compact`: the page above already shows the address, hours and nonstop block (home with
+ * "Navštivte nás", Kontakt), so the footer keeps one sign-off line (name, address, the nonstop
+ * number) and the legal row instead of repeating the three columns.
  */
+import EmergencyPhoneLink from "@core/components/EmergencyPhoneLink.astro";
 import MissingFact from "@core/components/MissingFact.astro";
 import type { SiteContext } from "@core/content/view-models.ts";
 import { formatAddressInline } from "@core/format/address.ts";
@@ -14,21 +18,35 @@ import { ui } from "../i18n/cs.ts";
 
 interface Props {
   site: SiteContext;
+  compact?: boolean;
 }
 
-const { site } = Astro.props;
+const { site, compact = false } = Astro.props;
+const location = site.contact.locations[0];
 const company = site.company;
 const legal = company.legalIds;
 const privacy = await getOptionalPage("ochrana-osobnich-udaju");
 const year = new Date().getFullYear();
 ---
-<footer class="footer" data-footer>
+<footer class:list={["footer", { "is-compact": compact }]} data-footer>
   <div class="frame">
-    <div class="footer-columns" data-emergency={site.emergency.enabled ? "true" : "false"}>
-      <AddressCard site={site} id="paticka-adresa" heading={ui.contactHeading} look="letter" phones="office" />
-      <HoursLetter site={site} id="paticka-hodiny" />
-      <NonstopPanel site={site} id="paticka-nonstop" look="column" />
-    </div>
+    {
+      compact ? (
+        <p class="footer-signoff">
+          <span class="signoff-name">{company.brandName}</span>
+          {location !== undefined ? <span>{formatAddressInline(location.address)}</span> : null}
+          {site.emergency.enabled ? (
+            <EmergencyPhoneLink emergency={site.emergency} variant="full" class="signoff-nonstop" />
+          ) : null}
+        </p>
+      ) : (
+        <div class="footer-columns" data-emergency={site.emergency.enabled ? "true" : "false"}>
+          <AddressCard site={site} id="paticka-adresa" heading={ui.contactHeading} look="letter" phones="office" />
+          <HoursLetter site={site} id="paticka-hodiny" />
+          <NonstopPanel site={site} id="paticka-nonstop" look="column" />
+        </div>
+      )
+    }
     <div class="footer-legal">
       <p class="legal-line" data-legal>
         <span>{company.legalName}</span>
@@ -75,8 +93,47 @@ const year = new Date().getFullYear();
     gap: 2.5rem;
   }
 
+  .footer.is-compact {
+    padding-block: 2rem 1.5rem;
+  }
+
+  .footer-signoff {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.25rem 1.5rem;
+  }
+
+  .signoff-name {
+    font-family: var(--font-display);
+    font-weight: var(--display-weight);
+    font-size: 1.375rem;
+  }
+
+  .footer :global(.signoff-nonstop) {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0 0.5rem;
+    min-height: 2.75rem;
+    font-weight: 600;
+  }
+
+  .footer :global(.signoff-nonstop [data-part="number"]) {
+    white-space: nowrap;
+  }
+
+  .footer.is-compact .footer-legal {
+    margin-top: 1.25rem;
+  }
+
   .footer-columns :global(h2) {
     font-size: 1.75rem;
+  }
+
+  /* Brand display faces (Playfair and the like) run larger than EB Garamond. */
+  :global([data-brand-display]) .footer-columns :global(h2) {
+    font-size: 1.4375rem;
   }
 
   .footer-legal {

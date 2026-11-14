@@ -173,6 +173,28 @@ function isCurrent(href: string): boolean {
     font-size: 1.125rem;
   }
 
+  /* Hover and press: the underline draws in under the word (the colour fades from transparent). */
+  .nav-list a {
+    text-decoration-line: underline;
+    text-decoration-color: transparent;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.3em;
+  }
+
+  .nav-list a:hover {
+    color: var(--accent);
+    text-decoration-color: currentColor;
+  }
+
+  .nav-list a:active {
+    text-decoration-thickness: 2px;
+  }
+
+  .menu-toggle:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
   .nav-list a[aria-current="page"] {
     color: var(--accent);
     text-decoration: underline;
