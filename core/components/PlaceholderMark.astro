@@ -1,5 +1,13 @@
 ---
-/** Wraps placeholder content or images with a visible label (prototype builds only; production rejects placeholders). */
+/**
+ * Wraps placeholder content or images with a visible label (prototype builds only; production
+ * rejects placeholders).
+ *
+ * When a `class` is passed, the wrapper element is rendered whether or not the content is a
+ * placeholder: templates use that element for layout (a grid cell, a column), so dropping it once
+ * the client approves the content would break the layout (design review 2026-11-13, §2.1). Without
+ * a class, inactive content renders bare, as before.
+ */
 interface Props {
   active: boolean;
   kind?: "content" | "image";
@@ -14,6 +22,7 @@ let label = "Zástupný obsah";
 if (kind === "image") {
   label = "Zástupný obrázek";
 }
+const keepWrapper = className !== undefined && className.trim() !== "";
 ---
 {
   active ? (
@@ -21,6 +30,10 @@ if (kind === "image") {
       <span class={labelClass} data-placeholder-label>
         {label}
       </span>
+      <slot />
+    </Tag>
+  ) : keepWrapper ? (
+    <Tag class={className}>
       <slot />
     </Tag>
   ) : (

@@ -159,6 +159,19 @@ describe("prototype build of the neutral fixture", () => {
     expect(hoursBlock).not.toMatch(/nonstop|tel:\+420000000199/i);
   });
 
+  it("keeps a PlaceholderMark wrapper with a class once the content is approved", async () => {
+    const page = await html("komponenty/index.html");
+    expect(page).toMatch(/<div class="layout-cell"><p>Schválený text<\/p><\/div>/);
+    expect(page).toMatch(/id="mark-inactive-bare">\s*<p>Holý text<\/p>/);
+    expect(page).toMatch(/<div class="layout-cell" data-placeholder="content">/);
+  });
+
+  it("renders the office status hidden until the browser fills it, and glues one-letter words", async () => {
+    const page = await html("komponenty/index.html");
+    expect(page).toMatch(/<p data-office-status(?:="true")? data-variant="long" data-hours="[^"]+" hidden>/);
+    expect(page).toContain("Volejte nám i\u00a0v\u00a0noci a\u00a0o\u00a0svátcích.");
+  });
+
   it("marks placeholders and missing facts", async () => {
     const page = await html("index.html");
     expect(page).toContain("Zástupný obsah");
@@ -214,7 +227,7 @@ describe("notices and other optional content (prototype)", () => {
   it("renders the notice with its QR code and without anything promotional", async () => {
     const page = await html("oznameni/jan-vzorovy/index.html");
     expect(page).toContain("data-notice-qr");
-    expect(page).toMatch(/<svg [^>]*role="img"><title>QR kód s odkazem na oznámení: Jan Vzorový<\/title>/);
+    expect(page).toMatch(/<svg [^>]*role="img"><title>QR kód s\sodkazem na oznámení: Jan Vzorový<\/title>/);
     expect(page).toContain("Sledovat přenos obřadu");
     const article = page.slice(page.indexOf("<article"), page.indexOf("</article>"));
     expect(article).not.toMatch(/\/sluzby\/|\/cenik\/|data-price|Objednejte/);

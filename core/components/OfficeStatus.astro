@@ -1,0 +1,26 @@
+---
+/**
+ * Live office status ("Kancelář je teď otevřená, do 15:30."), filled in the browser by
+ * core/client/interactions.ts from office-hours.json for Europe/Prague. Hidden without JavaScript
+ * and on public holidays the site cannot judge, so it never shows a wrong state. The template
+ * styles it through [data-state="open" | "break" | "closed"]. Never a substitute for the office
+ * hours table, which stays on the page.
+ */
+import type { SiteContext } from "../content/view-models.ts";
+
+interface Props {
+  site: SiteContext;
+  /** "long" = a sentence; "short" = "Otevřeno do 15:30". */
+  variant?: "long" | "short";
+  class?: string;
+  as?: "p" | "span" | "div";
+}
+
+const { site, variant = "long", class: className, as = "p" } = Astro.props;
+const Tag = as;
+const hours = JSON.stringify(site.officeHours);
+---
+<Tag class={className} data-office-status data-variant={variant} data-hours={hours} hidden>
+  <span data-office-status-dot aria-hidden="true"></span>
+  <span data-office-status-text></span>
+</Tag>

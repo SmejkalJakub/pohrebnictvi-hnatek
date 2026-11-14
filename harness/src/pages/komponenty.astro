@@ -1,0 +1,23 @@
+---
+// Core components in isolation, checked by harness/tests/harness.test.ts.
+import Harness from "../layouts/Harness.astro";
+import OfficeStatus from "@core/components/OfficeStatus.astro";
+import PlaceholderMark from "@core/components/PlaceholderMark.astro";
+import { getSiteContext } from "@core/content/load.ts";
+
+const site = await getSiteContext();
+---
+<Harness site={site} title="Komponenty" description="Kontrola sdílených komponent." noindex>
+  <h1>Komponenty</h1>
+  <div id="mark-inactive-class">
+    <PlaceholderMark active={false} class="layout-cell"><p>Schválený text</p></PlaceholderMark>
+  </div>
+  <div id="mark-inactive-bare">
+    <PlaceholderMark active={false}><p>Holý text</p></PlaceholderMark>
+  </div>
+  <div id="mark-active">
+    <PlaceholderMark active={true} class="layout-cell"><p>Zástupný text</p></PlaceholderMark>
+  </div>
+  <OfficeStatus site={site} />
+  <p id="glue">Volejte nám i v noci a o svátcích.</p>
+</Harness>

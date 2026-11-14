@@ -1060,7 +1060,8 @@ function guidanceCollection(): DecapFolderCollection {
       ]),
       {
         name: "checklist",
-        label: "Co si připravit",
+        label: "Postup v krocích",
+        hint: "Krátké kroky v pořadí, jak je rodina udělá, např. „zavolat lékaře na čísle 155“. Na webu se zobrazí jako klidný číslovaný postup, ne jako seznam k odškrtávání.",
         widget: "list",
         required: false,
         collapsed: true,

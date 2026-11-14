@@ -9,6 +9,9 @@ export default defineConfig(
       "**/.astro/**",
       // Generated client exports (npm run export); verified separately by export:verify.
       "exports/**",
+      // Playwright output (gitignored); a failed QA run leaves trace-viewer bundles here.
+      "qa/playwright-report/**",
+      "qa/test-results/**",
       // Logo design mockup exported from a design tool (vendored React runtime); reference material, not code.
       "Hn*-html/**",
     ],

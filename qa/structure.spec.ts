@@ -6,7 +6,14 @@
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { basename, dirname, extname, join, relative, resolve, sep } from "node:path";
 import { expect, test, type Page } from "@playwright/test";
-import { baseUrlFor, discoverRoutes, repoRoot, templatePairs, templates, type TemplateUnderTest } from "./templates.ts";
+import {
+  baseUrlFor,
+  discoverRoutes,
+  repoRoot,
+  templatePairs,
+  templates,
+  type TemplateUnderTest,
+} from "./templates.ts";
 
 const coreDir = join(repoRoot, "core");
 const evidenceFile = join(repoRoot, "docs/qa/structure.json");
@@ -109,7 +116,9 @@ async function homeStructure(
     const main = document.querySelector("main");
     // Interludes between sections (E's landscape bands and stamp lines, marked data-interlude) are
     // decoration, not sections: they are left out so no template passes the order check by them.
-    const children = Array.from(main?.children ?? []).filter((child) => !child.hasAttribute("data-interlude"));
+    const children = Array.from(main?.children ?? []).filter(
+      (child) => !child.hasAttribute("data-interlude"),
+    );
     const sections = children.map((child) => {
       const section = child.getAttribute("data-section");
       if (section !== null) {
@@ -204,6 +213,16 @@ test.describe("cross-template structure", () => {
     expect(violations, violations.join("\n")).toEqual([]);
   });
 
+  /**
+   * The only core components that may emit CSS (template-contract §6, §8a): BrandStyle writes the
+   * client's --brand-* tokens and font faces (no rules), SiteInteractions the motion-policy baseline
+   * with zero-specificity defaults that every template restyles.
+   */
+  const CORE_STYLE_ALLOWED = new Set([
+    "core/components/BrandStyle.astro",
+    "core/components/SiteInteractions.astro",
+  ]);
+
   test("core contains no <style> blocks, stylesheets or default class names", () => {
     const files = listFiles(coreDir, (f) => [".astro", ".css", ".scss"].includes(extname(f)));
     const problems: string[] = [];
@@ -214,7 +233,7 @@ test.describe("cross-template structure", () => {
         continue;
       }
       const source = readFileSync(file, "utf8");
-      if (/<style[\s>]/.test(source)) {
+      if (/<style[\s>]/.test(source) && !CORE_STYLE_ALLOWED.has(rel)) {
         problems.push(`${rel}: <style> block`);
       }
       // A literal class attribute (class="…" or class='…') is a default class name; class={prop} is fine.
@@ -255,7 +274,9 @@ test.describe("cross-template structure", () => {
       }
       differingByPair[pair] = differing;
       if (differing.length < 3) {
-        problems.push(`${pair}: order differs in ${differing.length} positions (${a.sections.join(" → ")} / ${b.sections.join(" → ")})`);
+        problems.push(
+          `${pair}: order differs in ${differing.length} positions (${a.sections.join(" → ")} / ${b.sections.join(" → ")})`,
+        );
       }
       if (a.header === b.header) {
         problems.push(`${pair}: same header outline`);
@@ -310,9 +331,10 @@ test.describe("cross-template structure", () => {
           await page.goto(`${baseUrlFor(t)}${path}`);
           outlines.push(await page.evaluate(mainOutline));
         }
-        expect(outlines[0], `${first.letter}/${second.letter}: identical routes and identical ${path} structure`).not.toBe(
-          outlines[1],
-        );
+        expect(
+          outlines[0],
+          `${first.letter}/${second.letter}: identical routes and identical ${path} structure`,
+        ).not.toBe(outlines[1]);
       }
     }
     record("sameRouteSetPairs", sameRoutes);
@@ -423,11 +445,15 @@ test.describe("law: notices, footer identification, VAT note", () => {
           await page.setViewportSize(size);
           await page.goto(`${baseUrlFor(t)}${route.path}`);
           const tops = await page.evaluate(() =>
-            Array.from(document.querySelectorAll("[data-band]")).map((band) => band.getBoundingClientRect().top),
+            Array.from(document.querySelectorAll("[data-band]")).map(
+              (band) => band.getBoundingClientRect().top,
+            ),
           );
           for (const top of tops) {
             if (top < size.height) {
-              problems.push(`${t.id} ${route.path} @${size.width}: a band starts at ${Math.round(top)} px, inside the first viewport`);
+              problems.push(
+                `${t.id} ${route.path} @${size.width}: a band starts at ${Math.round(top)} px, inside the first viewport`,
+              );
             }
           }
         }

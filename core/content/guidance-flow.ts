@@ -63,6 +63,24 @@ export function situationsAttribute(entry: GuidanceLike): string {
 }
 
 /**
+ * One item of a step's guided list as a sentence: capital first letter and a full stop. Content
+ * keeps items short and lower-case ("zavolat lékaře na čísle 155 nebo 112"); templates show
+ * them as calm numbered instructions, never as tick boxes (design-differentiation §1.3).
+ */
+export function guideSentence(item: string): string {
+  const text = item.trim();
+  if (text === "") {
+    return text;
+  }
+  const first = text.charAt(0).toLocaleUpperCase("cs");
+  const rest = text.slice(1);
+  if (/[.!?…:]$/.test(text)) {
+    return `${first}${rest}`;
+  }
+  return `${first}${rest}.`;
+}
+
+/**
  * The step to link as "Další krok" from entries[index]: the first later entry that is visible
  * whenever entries[index] is visible, so the link never points at a step hidden by the filter.
  * Returns null for the last step.
@@ -79,7 +97,9 @@ export function nextGuidanceStep<T extends GuidanceLike>(entries: readonly T[], 
     if (appliesToAll(current)) {
       continue;
     }
-    const coversCurrent = current.data.situations.every((situation) => candidate.data.situations.includes(situation));
+    const coversCurrent = current.data.situations.every((situation) =>
+      candidate.data.situations.includes(situation),
+    );
     if (coversCurrent) {
       return candidate;
     }

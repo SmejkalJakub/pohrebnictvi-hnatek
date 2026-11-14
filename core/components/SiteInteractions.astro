@@ -1,0 +1,94 @@
+---
+/**
+ * Shared progressive enhancements and the motion baseline (design-differentiation §1.1, motion
+ * policy). Every template includes this once in its layout, at the end of <body>.
+ *
+ * The styles below are deliberately weak (:where(), custom properties) so templates restyle them;
+ * all motion is feedback or state change, ≤ 250 ms, and off under prefers-reduced-motion.
+ * Behaviour: core/client/interactions.ts.
+ */
+---
+<script>
+  import { initSiteInteractions } from "../client/interactions.ts";
+
+  initSiteInteractions();
+</script>
+
+<style is:global>
+  html {
+    scroll-padding-top: var(--scroll-offset, 1.5rem);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    @view-transition {
+      navigation: auto;
+    }
+
+    /* Smooth only while an in-page link click scrolls (core/client/interactions.ts); keyboard
+       focus always jumps straight to the element. */
+    html[data-smooth-scroll] {
+      scroll-behavior: smooth;
+    }
+
+    :root {
+      interpolate-size: allow-keywords;
+    }
+
+    ::view-transition-old(root),
+    ::view-transition-new(root) {
+      animation-duration: 180ms;
+    }
+
+    @supports selector(::details-content) {
+      :where(details)::details-content {
+        block-size: 0;
+        overflow-y: clip;
+        transition:
+          block-size 240ms ease,
+          content-visibility 240ms allow-discrete;
+      }
+
+      :where(details[open])::details-content {
+        block-size: auto;
+      }
+    }
+  }
+
+  :where([data-site-toast]) {
+    position: fixed;
+    inset-inline: 1rem;
+    bottom: calc(1rem + var(--toast-offset, 0px));
+    z-index: 60;
+    max-width: 30rem;
+    margin: 0 auto;
+    padding: 0.875rem 1.125rem;
+    background: var(--toast-bg, #1b1b1b);
+    color: var(--toast-fg, #ffffff);
+    font: inherit;
+    font-size: 1.0625rem;
+    line-height: 1.4;
+    border-radius: var(--toast-radius, 0);
+    opacity: 0;
+    translate: 0 0.5rem;
+    pointer-events: none;
+    transition:
+      opacity 160ms ease,
+      translate 160ms ease;
+  }
+
+  :where([data-site-toast][data-visible="true"]) {
+    opacity: 1;
+    translate: 0 0;
+  }
+
+  /* A guide step reached through "Potom" is focused for screen readers; the template's arrival
+     mark shows it, so the whole step gets no focus ring. */
+  :where([data-guide-arrived]:focus) {
+    outline: none;
+  }
+
+  /* Normal specificity and !important: a template's display rule must never undo [hidden]. */
+  [data-office-status][hidden] {
+    display: none !important;
+  }
+</style>

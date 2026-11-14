@@ -158,7 +158,12 @@ export default function siteCore(options: SiteCoreOptions = {}): AstroIntegratio
   return {
     name: "site-core",
     hooks: {
-      "astro:config:setup": async ({ command, config, updateConfig, logger }) => {
+      "astro:config:setup": async ({ command, config, updateConfig, logger, addMiddleware }) => {
+        // Czech typesetting on every HTML page (one-letter words never end a line).
+        addMiddleware({
+          entrypoint: fileURLToPath(new URL("./typography/middleware.ts", import.meta.url)),
+          order: "post",
+        });
         const installed = installContractMarkdownPlugins(config.markdown.processor);
         if (!installed) {
           logger.warn(
