@@ -11,12 +11,21 @@ const config = {
   // production stays blocked (G-031) until its text covers the form and is approved.
   features: { articles: false, contactForm: true, map: "link" },
   contactFormHandler: "netlify",
-  homepage: { sections: ["hero", "next-steps", "services", "family-story", "catalogue-links", "contact-summary"] },
+  homepage: { sections: ["hero", "next-steps", "family-story", "services", "catalogue-links", "contact-summary"] },
   options: {
     palette: "ivory-forest",
     fontPair: "garamond-source",
     heroVariant: "typographic",
     emergencyEmphasis: "high",
+  },
+  // Brand board pasted by the owner on 2026-11-13 (brand/preview/brand-overview.png): forest green,
+  // gold, grey and warm cream; Playfair Display for headings, Source Serif 4 for text. Core keeps
+  // text legible (the gold is darkened for text on cream, G-090); the template maps the roles.
+  brand: {
+    colors: { primary: "#0B3D2C", secondary: "#C9A24A", neutral: "#8A8A8A", ground: "#F9F6EF" },
+    fonts: { display: "playfair-display", body: "source-serif-4" },
+    mark: "brand-mark-hnatek.svg",
+    source: "brand/preview/brand-overview.png (2026-11-13)",
   },
 } satisfies SiteConfigInput;
 
