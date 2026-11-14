@@ -18,7 +18,8 @@ Split it into numbered items, each one of:
 - **Sign-off** (copy, prices, guidance review, image rights, staff consent): goes into `approvals.json`.
 - **Notice** (publish, correct or take down a death notice): content only, with the orderer's consent record.
 - **Copy** (wording, tone, shorter, add a section): content files only.
-- **Design** (colour, font, "nonstop number more prominent", section order, hero image): `src/site.config.ts` options and `homepage.sections` only.
+- **Design** (colour, font, "nonstop number more prominent", section order, hero image): `src/site.config.ts` options, `homepage.sections` and the `brand` block only.
+- **Brand** (a new or corrected brand board, "use our gold more", "different heading font", a new logo package): the `brand` block (`/site-build` §2a); colours only from the client's board or files.
 - **Out of scope** (a new layout, custom CSS, a new page type, a contact form, condolence comments, a livestream embed, switching on a content type the template does not support): do not do it; explain that it is a template change and record it for the owner.
 
 Read the list back only if an item is ambiguous.
@@ -36,6 +37,7 @@ Read the list back only if an item is ambiguous.
 - **Documents.** Replace a placeholder PDF only with the client's file; update `validFrom`; set `placeholder: false` and record the copy approval.
 - **Feature switches.** Turn a content type on (`features.*` in `src/site.config.ts`) only when the template supports it and its required page exists (G-002, G-005).
 - **Design.** Use only values in `templates/<template>/template.manifest.ts` (G-005). Example: "make the nonstop number more prominent, move family history higher" → `emergencyEmphasis: "high"` and move `family-story` up in `homepage.sections`.
+- **Brand.** Update `brand.colors`, `brand.fonts` (registry ids in `core/brand/fonts.ts`), `brand.mark` and `brand.source` as in `/site-build` §2a. "Use our gold for the headings" on a light ground cannot be honoured as is: core darkens it to a legible tone (G-090); explain that and offer the gold for rules and ornaments instead. A font outside the registry, or a request that needs a different layout, is a template or core change: record it for the owner.
 
 Append the round to `clients/<id>/notes/feedback.md`: date, each item, what changed (files), what was not done and why.
 

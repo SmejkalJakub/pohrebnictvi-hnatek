@@ -48,7 +48,7 @@ Create `clients/<id>/notes/research.md` (not exported, never deployed):
 - Prices found: item, amount, unit, source URL, and whether VAT is stated. These are not approved prices.
 - Coffins, flowers: does a catalogue exist, how many items, image URLs.
 - Images worth reusing (logo, premises, vehicles): URL, what it shows, likely rights holder. Do not download yet.
-- Logo: URL or file, colours (hex), typefaces if identifiable; tone of voice (formal, warm, practical).
+- Logo and brand: logo URL or file, colours (hex), typefaces if identifiable; tone of voice (formal, warm, practical). If the client has a brand package or brand board (often in `clients/<id>/brand/`), note its files and the colours and fonts it prints; `/site-build` §2a turns them into the `brand` profile.
 - Old-site URLs (for redirects later).
 - Open questions for the client, numbered, one line each (missing IČO, which phone is the nonstop line, holiday closures, …).
 

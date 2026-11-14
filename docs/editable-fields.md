@@ -250,6 +250,17 @@ CMS entry **"Naše místa"** in the group "Firma a kontakt" (template G; added 2
 
 The list's help text carries the guardrail the schema cannot check: *"Místa, kde se staráte o zesnulé a o rodiny: kancelář, obřadní síň, vůz, vazárna, hřbitov. Fotografie jen vlastní nebo zakázkové, bez smutečních hostů a bez zesnulých. Nepoužívejte fotobanky ani obrázky vytvořené počítačem. Místo bez fotografie se na webu ukáže jako řádek s adresou."*
 
+
+### 4.19 Drawings (`site/illustrations.json`, only while `features.illustrations` is on)
+
+CMS entry **"Kresby"** in "Základní informace" (template D Rodinný rozhovor; added 2026-11-14).
+
+| Field | Agent | Client CMS | Widget / validation | Notes |
+| --- | --- | --- | --- | --- |
+| `images[]` | placeholders until the client commissions drawings | **CMS**: add, remove (0 to the number of the template's `illustration.*` slots) | collapsible list, summary `{slot}` | help text: commissioned pen drawings only; no doves, candles, hands or wilting flowers; no stock, no computer-generated images |
+| `images[].slot` | draft | **CMS**, required | select of the slots the manifest declares | each slot at most once |
+| `images[].image` | the client's commissioned drawing | **CMS** | the inline `ImageRef` of §4.10; file help: one dark-line file per slot | `licensed-stock` rejected; the rights checkbox states the drawing was commissioned (G-033) |
+
 ### 4.11 Never in the CMS
 
 `site.config.ts` (template, options, homepage order, features, `siteUrl`, `pinnedBuildDate`), `template.manifest.ts`, everything under `src/core/`, `src/layouts/`, `src/components/`, `src/pages/`, `src/styles/`, `astro.config.mjs`, `package*.json`, `public/admin/` (the editor and its `config.yml`) itself, `wrangler.jsonc`, `.github/workflows/`, deployment settings, `docs/provenance/` (including the staff consent records), the `articles/` collection (absent for Hnátek), every optional collection, page or singleton whose feature is off (including `site/landscapes.json` and `site/places.json`), and the `emergency.label`, `emergency.availability` and `emergency.enabled` fields.

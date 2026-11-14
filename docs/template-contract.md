@@ -102,6 +102,7 @@ export default {
     priceInclusions: false,       // renders pricing groups' includes[] / excludes[] (CMS shows them only then)
     landscapes: false,            // full-bleed photos from site/landscapes.json between sections (template E)
     places: false,                // the firm's places from site/places.json (template G)
+    illustrations: false,         // optional: commissioned drawings per slot, site/illustrations.json (template D)
   },
 
   homepageSections: {
@@ -140,6 +141,8 @@ Templates A and B declare every optional flag `false` (2026-11-10). A template t
 **Landscape photo set (added 2026-11-13 for template E).** `supports.landscapes` pairs with `features.landscapes` like the content types above (G-005 rejects the feature without support). A supporting template renders the photos of `site/landscapes.json` (`getLandscapes()`, content-contract §6.18) as full-bleed bands between sections and declares the slot `"landscape.band"` (E: aspect `32:11`). Bands are never in the first viewport, so the LCP element stays text, and a page must read as complete with no photos. Notice pages never show them (L1). Templates A–D declare `landscapes: false`.
 
 **Places (added 2026-11-13 for template G).** `supports.places` pairs with `features.places` the same way. A supporting template renders `site/places.json` (`getPlaces()`, content-contract §6.19) and declares the slot `"place.photo"` (G: aspect `3:2`). A place without a photo must render as text (name, address, sentence), never as an empty frame. Notice pages never show places. Templates A–E declare `places: false`.
+
+**Drawings (added 2026-11-14 with template D Rodinný rozhovor).** `supports.illustrations` is optional (absent means unsupported) and pairs with `features.illustrations`. A supporting template renders `site/illustrations.json` (`getIllustrations()`, content-contract §6.20) and declares its slots as `illustration.<slot>` (`hero`, `guidance`, `contact`, `office`, `services`); the CMS offers only those. One dark-line file per slot, lightened by the template on dark fields (`filter: invert(1)` + `mix-blend-mode: screen`; `multiply` on light fields). The template must look complete without any drawing, must close up a slot without a real drawing, and must never show drawings on notice pages (L1).
 
 Every value in `options` must be fully implemented and must pass contrast and layout QA. The agent cannot ask for values outside the declared set (`site.config.ts` is validated against the manifest).
 
@@ -232,7 +235,7 @@ These are tested by the shared QA suite in Phase 2 (S6), not just reviewed.
 | --- | --- | --- |
 | `<PriceValue item>` | every price | formatted amount; "UKÁZKA" text for demo items |
 | `<DemoPricingNotice>` | `/cenik/` when any demo item is present | the notice paragraph (`role="note"`) |
-| `<PlaceholderMark>` | wraps placeholder entries/images | "Zástupný obsah" / "Zástupný obrázek" label |
+| `<PlaceholderMark>` | wraps placeholder entries/images | "Zástupný obsah" / "Zástupný obrázek" label. With a `class` it renders its wrapper element whether or not the content is a placeholder, so a template may use it as a layout element (fixed 2026-11-13: approved content used to lose the wrapper and break grids) |
 | `<MissingFact name>` | null required facts in prototype | "[Doplnit: …]" |
 | `<PrototypeBanner>` | prototype mode, top of `<body>` | banner text |
 | `<EmergencyPhoneLink variant>` | the emergency CTA | `tel:` href, label + number in the accessible name |
@@ -245,6 +248,10 @@ These are tested by the shared QA suite in Phase 2 (S6), not just reviewed.
 - `data-office-hours` on every block that shows office hours, headed by its own heading (not a styled `<p>`);
 - `data-emergency-block` on every separately headed emergency block (footer, contact page);
 - `data-section="<homepage section id>"` on every homepage section, in rendered order.
+- Core stays headless: no stylesheets, default classes or `<style>` blocks, except `<BrandStyle>` (brand tokens and font faces, no rules) and `<SiteInteractions>` (the motion baseline with zero-specificity defaults); QA `structure.spec.ts` allows exactly these two.
+- Every layout spreads `brandAttributes()` (`@core/brand/runtime.ts`) on `<html>`, renders `<BrandStyle />` last in `<head>` and `<SiteInteractions />` once before `</body>` (§8a, design-differentiation §1.1).
+- Office status (`<OfficeStatus>`): every state (open, break, closed) keeps full-strength text (ink, or on-deep on dark grounds), never the muted colour; a sign plate or its border reaches 3:1 against the page and the dot 3:1 against the plate. States differ by form (filled, half, hollow), not by fading (2026-11-14).
+- The guide is a guided list, never a checklist (design-differentiation §1.3): a step's `checklist` items render as an `<ol>` of `guideSentence()` sentences, with no form controls, completion counts or reset. Next-step links carry `data-guide-next`. Picker links carry `data-vt-anchor`.
 
 **Optional content types (added 2026-11-10; content-contract §6.13–§6.17)**
 
@@ -262,7 +269,7 @@ These are tested by the shared QA suite in Phase 2 (S6), not just reviewed.
 - Fully keyboard operable. A mobile navigation toggle is a `<button aria-expanded aria-controls>` and works without other JS.
 - Tap targets ≥ 44 × 44 px for primary actions, ≥ 24 × 24 px minimum elsewhere (2.5.8).
 - Text resizes to 200 % without loss; reflow at 320 px with no horizontal scroll (1.4.10).
-- `prefers-reduced-motion` respected. In practice there is no decorative motion at all.
+- `prefers-reduced-motion` respected: every transition, smooth scroll and view transition is off under `reduce` (design-differentiation §1.1 motion policy). There is no decorative motion at all; motion is only feedback and state change.
 - Images use `alt` from `ImageRef`; decorative images use `alt=""`.
 - The map is a link ("Zobrazit na mapě"). A click-to-load embed is allowed only with the privacy page (gate G-061).
 
@@ -277,7 +284,8 @@ These are tested by the shared QA suite in Phase 2 (S6), not just reviewed.
 
 **Technical**
 
-- Static output only (`output: "static"`). No client framework islands. Vanilla JS is limited to the nav disclosure and is optional.
+- Static output only (`output: "static"`). No client framework islands. Vanilla JS is limited to the nav disclosure and core's `<SiteInteractions />` (`core/client/interactions.ts`, about 3.5 KB gzipped): checklist memory and progress, copy-number on desktop, the live office status, scroll-spy, cross-references and view transitions for the guide filter. All of it is progressive: every page is complete and usable without JavaScript, and nothing is hidden until a script runs.
+- **Czech typesetting.** Core's middleware glues one-letter words (k, s, v, z, o, u, i, a) to the next word with a non-breaking space on every HTML page (`core/typography/czech.ts`); templates need no helper of their own.
 - **Guided guidance (added 2026-11-09).** `/jak-postupovat/` offers a "Kde blízký člověk zemřel?" chooser when guidance names specific situations (`chooserSituations()` in `core/content/guidance-flow.ts`). Each option is a link to `#situace-<anchor>` (`SITUATION_ANCHOR`); the page hides the steps that do not apply with CSS `:has(:target)` on `[data-guide]`, `[data-guide-step]` and `data-situations` (`situationsAttribute()`), so the filter needs no JavaScript, works from other pages (`/jak-postupovat/#situace-doma`) and degrades to the full guide. Step numbers come from CSS counters so they stay continuous. "Další krok" links use `nextGuidanceStep()`, which never points at a step the filter can hide. Checklists are native checkboxes; longer text sits in `<details>`. Interactive behaviour stays native HTML/CSS; the JS limit above is unchanged.
 - Fonts are self-hosted (`@fontsource/*` packages or files in the repo). Calls to Google Fonts or other CDNs are forbidden, both for privacy and so the export works without them.
 - No third-party scripts, trackers or embeds by default.
@@ -291,7 +299,7 @@ Everything else. The minimum differences required for the pilot are specified in
 - the header and navigation pattern, and the placement pattern of the emergency CTA (within invariant 1);
 - homepage sections, their order and composition (within manifest constraints);
 - services architecture: one long page with anchors, or an index plus detail pages;
-- how guidance is presented: narrative, phased checklist, etc.;
+- how guidance is presented: narrative, phased guide, etc. (always a guided list, §1.3 of design-differentiation);
 - catalogue presentation, pricing presentation (list, table or definition list), footer structure;
 - typography, palette, spacing system, rules and ornaments, image proportions and how much photography is used;
 - which optional page fields are rendered (`pageFields`).
@@ -324,7 +332,29 @@ The config is validated by `SiteConfig` (schema) and by `checkConfigAgainstManif
 
 The scenario in Phase 5 ("make the nonstop number more prominent, move family history higher") is answered entirely by `options.emergencyEmphasis` and `homepage.sections`. Template source is untouched, which keeps the diff small and keeps unrelated design unchanged.
 
+The client's visual identity (colours, fonts, the logo's mark) is the `brand` block, §8a.
+
 Per-client changes to template source are **not** customisation. They are a template change, made in `templates/<id>`, versioned, and re-exported. Free-form per-client CSS overrides were rejected (§10).
+
+## 8a. Brand profile: templates as a guideline, the brand as the personalisation
+
+Added 2026-11-13. A template fixes **structure and behaviour** (page flow, density, navigation, emergency pattern, separation device, signature interaction). The client's **brand** decides colour, type and the mark. The same template therefore looks like the client's own site, and two templates with the same brand still differ in everything structural.
+
+```ts
+brand: {
+  colors: { primary: "#0B3D2C", secondary: "#C9A24A", neutral: "#8A8A8A", ground: "#F9F6EF" },
+  fonts: { display: "playfair-display", body: "source-serif-4" },   // ids from core/brand/fonts.ts
+  mark: "brand-mark-hnatek.svg",          // the logo symbol in src/assets/media (decorative)
+  source: "brand/preview/brand-overview.png (2026-11-13)",
+},
+```
+
+- **Schema:** `BrandProfile` in `core/brand/profile.ts`; `brand: null` (the default) keeps the template's own palette and font options. Only `primary` is required. Colours are hex; `ground` must be light (lightness ≥ 0.9) or core replaces it.
+- **Roles, not raw colours.** Core derives `--brand-*` roles (`deriveBrandTokens`): `ground`, `surface`, `surface-2`, `ink`, `muted`, `rule`, `primary-text`, `secondary-text` for light grounds; `primary`, `on-primary`, `muted-on-primary`, `rule-on-primary`, `primary-hover` for fills; `deep`, `deep-2`, `on-deep`, `muted-on-deep`, `rule-on-deep`, `primary-on-deep`, `signal-on-deep` for dark grounds; `secondary`, `neutral` for decoration only; `font-display`, `font-body`. Every text role meets 4.5:1 against the background it is meant for: core moves a brand colour along its own hue until it does and reports each move (G-090, warning). The original colour stays available for fills and ornaments.
+- **Fonts** come only from the registry in `core/brand/fonts.ts`: self-hosted `@fontsource` packages (core dependencies), SIL OFL, latin-ext verified. Only the chosen fonts are emitted. A board that names another font gets the closest registry font, and the report says so. Add a font to the registry (with its Czech check) rather than loading it from a CDN.
+- **Mark:** `brand.mark` is a file in `src/assets/media` (G-091 fails a missing file). Templates show it, decoratively, in at most one quiet place of their choosing, never next to the logo.
+- **Template side:** each template maps the roles onto its own tokens in `global.css` under `[data-brand]` (colours), `[data-brand-display]` and `[data-brand-body]` (fonts). The mapping is the template's interpretation of a brand (design-differentiation §1.2): A puts the primary into the utility strip and the accent; C builds its night ground from `deep` and uses the brand's second colour as the signal; D turns the primary into the "Teď hned" field. Without `[data-brand]` the template's own palettes apply unchanged.
+- **Still forbidden:** per-client CSS, colours outside the profile, brand gold or any light colour as text on a light ground (core prevents it), web fonts from CDNs.
 
 ## 9. Standalone export
 

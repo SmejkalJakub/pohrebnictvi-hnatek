@@ -12,7 +12,7 @@ Related: [content-contract.md](content-contract.md) (provenance, schemas, gate) 
 | --- | --- | --- | --- |
 | 1. Scaffold | agent or owner | `npm run client:new -- <id> --template <rodinna-tradice\|dustojna-jednoduchost>` | `clients/<id>/` from the neutral fixture; passes prototype validation |
 | 2. Research | agent | `/site-research <id> <url>` | `provenance/facts.json` filled from the old website and public registers; `notes/research.md` |
-| 3. Build | agent | `/site-build <id>` | content from the ledger, template options, media; `client:validate` passes |
+| 3. Build | agent | `/site-build <id>` | content from the ledger, template options, the brand profile from the client's brand board (colours, fonts, mark), media; `client:validate` passes |
 | 4. Review | owner | `npm run client:dev -- <id>` | local preview at `http://localhost:4321` |
 | 5. Revise (repeat) | agent | `/site-revise <id> <feedback>` | content, ledger and approvals updated; `notes/feedback.md` |
 | 6. Ship | owner | `/site-ship <id>` (prints a checklist) | export, GitHub repo, DecapBridge, Netlify (or Cloudflare), then go-live after `check:launch` |
@@ -35,7 +35,7 @@ The launch check needs no wrapper: `npm run check:launch -- clients/<id>`.
 
 ```
 clients/<id>/
-  src/site.config.ts        # template, options, homepage order, siteUrl (agent only)
+  src/site.config.ts        # template, options, homepage order, brand profile, siteUrl (agent only)
   src/content/              # content-contract §2
   src/assets/media/         # client media (starts with the fixture's placeholder graphics)
   src/assets/documents/     # optional: PDFs (documents, printed parte), copied to the site as they are
@@ -56,7 +56,7 @@ The export copies `src/content`, `src/assets/media`, `src/assets/documents` (whe
 - **No invention.** A fact appears in content only if the ledger has it, with the same value (L-004). Unknown stays `UNKNOWN`/`null`; where the schema requires a value, the obviously fake fixture stand-in stays until the client answers (`check:launch` reports it as L-005).
 - **Statuses.** The agent writes only `EXISTING_WEBSITE` (old website or public register, with `source` and `retrievedAt`) and `UNKNOWN`. `VERIFIED` and `CLIENT_PROVIDED` come only from the operator relaying the client, with a name and date (`/site-revise`).
 - **Synthetic content is marked.** Placeholder copy keeps `placeholder: true`, prices are `demo`, AI-drafted copy is `DRAFT`, guidance stays unreviewed. Production builds reject all of them.
-- **Design levers are the manifest's options only.** No per-client CSS or template edits (template-contract §8).
+- **Design levers are the manifest's options and the brand profile.** The template is the guideline (structure, behaviour); the `brand` block personalises colour, type and the mark from the client's brand board (template-contract §8a). No per-client CSS or template edits (template-contract §8).
 - **Optional content types need template support.** `features.notices`, `people`, `faq`, `documents`, `guestInfo` and `prePlanning` may be switched on only for a template whose manifest supports them (G-005); A and B support none yet. Notices and staff need recorded consent (G-070, G-074), notices carry nothing promotional (G-072), and only the client's own PDFs are published.
 - **Notices expire only when the site is rebuilt.** With notices on, the client's host should run the production build daily (for example a scheduled run of `publish.yml`), so a notice disappears the day after `publishUntil`.
 

@@ -32,6 +32,7 @@ src/
       legal.json                # OPTIONAL: ADR body and complaints contact (§6.17)
       landscapes.json           # OPTIONAL: commissioned landscape photos for bands (§6.18)
       places.json               # OPTIONAL: the firm's own places, photo optional (§6.19)
+      illustrations.json        # OPTIONAL: commissioned pen drawings per slot (§6.20)
     pages/                      # one Markdown file per fixed route (page copy)
       home.md  jak-postupovat.md  sluzby.md  rakve.md  kvetiny.md
       o-nas.md  kontakt.md  cenik.md  ochrana-osobnich-udaju.md
@@ -156,6 +157,7 @@ After handover the client owns the content. CMS edits are by definition client-p
 | Optional: legal information (ADR, complaints) | `site/legal.json` + `pages/pravni-informace.md` | `LegalInfo` §6.17 |
 | Optional: landscape photos for bands (template E) | `site/landscapes.json` | `LandscapeSet` §6.18 |
 | Optional: the firm's places (template G) | `site/places.json` | `PlaceSet` §6.19 |
+| Optional: commissioned drawings (template D Rodinný rozhovor) | `site/illustrations.json` | `IllustrationSet` §6.20 |
 | Optional: guests of a funeral, planning ahead | `pages/pro-ucastniky.md`, `pages/pohreb-predem.md` | `Page` §6.6 |
 | What a price includes / excludes | `site/pricing.json` → `groups[].includes`, `excludes` | `Pricing` §6.11 |
 
@@ -672,6 +674,8 @@ Consumer law requires telling consumers about the ADR body (research L10, ⚖). 
 
 Added 2026-11-13 for template E `ticha-krajina` (docs/notes/s8-ticha-krajina.md §2). A per-client set of commissioned photographs of the region (landscapes or buildings) for the full-bleed bands a supporting template draws between sections.
 
+**Unused since 2026-11-14:** template E `ticha-krajina`, the only template that supported landscapes, was replaced by `krok-za-krokem` (docs/notes/s12-krok-za-krokem.md). The schema, gate rules and CMS singleton stay for a future template; no shipped manifest sets `supports.landscapes`.
+
 ```ts
 export const LandscapeImage = z.object({
   image: ImageRef,      // §6.3; the design's "caption" is ImageRef.caption
@@ -706,6 +710,26 @@ export const PlaceSet = z.object({ places: z.array(Place).max(12).default([]) })
 - **Guardrail (not checkable by the schema):** no mourners and no deceased in the photos; no stock or computer-generated images. The CMS shows this as the list's help text.
 - **G-080:** the feature on without the file is an error in every mode, because the CMS cannot create files. An empty list (`{ "places": [] }`) is valid: the template then omits the places block.
 - `client:new` copies the fixture's file (six neutral places, four with placeholder photos) only for a supporting template; the feature stays off until /site-build switches it on.
+
+### 6.20 Drawings: kresby (optional singleton, `site/illustrations.json`; `features.illustrations`)
+
+Added 2026-11-13 for template `rodinny-rozhovor` (`docs/notes/s9-rodinny-rozhovor.md`), on the same pattern as the landscape set (§6.18); ported to main on 2026-11-14, when that template became D.
+
+```ts
+export const ILLUSTRATION_SLOTS = ["hero", "guidance", "contact", "office", "services"] as const;
+export const IllustrationImage = z.object({
+  slot: z.enum(ILLUSTRATION_SLOTS),
+  image: ImageRef,                                       // alt or decorative, source, rights …
+});                                                      // source "licensed-stock" is rejected
+export const IllustrationSet = z.object({
+  images: z.array(IllustrationImage).max(5).default([]), // each slot at most once
+});
+```
+
+- **What:** commissioned pen drawings, one per slot, for templates that support them (`supports.illustrations`, optional in the manifest; slots `illustration.<slot>`). **One file per slot**: a dark line on a white or transparent ground (a scan of ink on paper); the template lightens it on a dark field with CSS (invert + screen) and multiplies it into light fields, so the same file works in every palette. Every layout is complete without drawings: a slot without a real drawing closes up (on the homepage at most the hero keeps its prototype placeholder, design-differentiation §1.4).
+- **Guardrail (not checkable by the schema):** doves, candles, hands, wilting flowers, stock and AI-generated images are forbidden (CMS help text and the owner's review). Stock fails validation (G-001). The CMS rights checkbox states that the drawing was commissioned, so G-033 needs the client's statement before production.
+- **Switch and images:** while `features.illustrations` is on, the drawings are published images: G-003, G-032, G-033 and the launch check's rights evidence (L-008) apply. With it off the file is ignored and its media are not emitted. `getIllustrations()` returns the drawings by slot, empty while the feature is off.
+- **G-078:** the feature on without the file is an error in every mode (the CMS cannot create files). `{ "images": [] }` is valid.
 
 ## 7. Cross-cutting content rules
 
@@ -799,9 +823,10 @@ Gate rules. Each has an id; the `prototype` column gives its behaviour in protot
 | G-075 | Referenced PDF (document, parte) missing from `src/assets/documents` (even on drafts) | fail | fail |
 | G-076 | `legal.json` exists but `pages/pravni-informace.md` does not | warn | warn |
 | G-077 | `features.landscapes` is on but `site/landscapes.json` does not exist | fail | fail |
+| G-078 | `features.illustrations` is on but `site/illustrations.json` does not exist | fail | fail |
 | G-080 | `features.places` is on but `site/places.json` does not exist | fail | fail |
 
-G-002 also requires the page of every switched-on feature (`oznameni`, `pro-ucastniky`, `pohreb-predem`), and G-005 rejects a switched-on feature (`notices`, `people`, `faq`, `documents`, `guestInfo`, `prePlanning`) that the template manifest does not support. Content of a switched-off feature is still schema-checked (G-001), its files must exist (G-003, G-075), and its bodies follow §7.3, but it is never built and no other rule looks at it.
+G-002 also requires the page of every switched-on feature (`oznameni`, `pro-ucastniky`, `pohreb-predem`), and G-005 rejects a switched-on feature (`notices`, `people`, `faq`, `documents`, `guestInfo`, `prePlanning`, `landscapes`, `places`, `illustrations`) that the template manifest does not support. Content of a switched-off feature is still schema-checked (G-001), its files must exist (G-003, G-075), and its bodies follow §7.3, but it is never built and no other rule looks at it.
 
 The gate prints one line per violation with its id, file and field path, in Czech and English. CMS users read Czech; developers read English.
 

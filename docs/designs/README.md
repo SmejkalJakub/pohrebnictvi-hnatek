@@ -11,10 +11,11 @@ Source canvas (private, owner’s account): https://claude.ai/artifact/SAzhHqwcH
 | Board | Folder | One idea |
 | --- | --- | --- |
 | F | [nocni-linka/](nocni-linka/README.md) · Noční linka | dark; sticky side rail with the number; one statement per screen |
-| G | [ticha-krajina/](ticha-krajina/README.md) · Tichá krajina | airy long scroll; full-bleed local landscapes between sections |
+| G | [ticha-krajina/](ticha-krajina/README.md) · Tichá krajina | airy long scroll; full-bleed local landscapes between sections. **Superseded:** built as E on 2026-11-13, replaced by Krok za krokem on 2026-11-14 |
 | H | [plny-prehled/](plny-prehled/README.md) · Plný přehled | dense one-screen directory; tables; highlighted nonstop box. **Superseded:** built as D, rejected by the owner on 2026-11-13 |
-| D3 | [dve-cesty/](dve-cesty/README.md) · Dvě cesty | the home splits by situation (navy “Teď hned” · stone “S předstihem”); a path switch keeps the two apart site-wide. Built as D (2026-11-13) |
-| I | [rodinny-rozhovor/](rodinny-rozhovor/README.md) · Rodinný rozhovor | questions and answers on warm colour fields; pen drawings |
+| D3 | [dve-cesty/](dve-cesty/README.md) · Dvě cesty | the home splits by situation (navy “Teď hned” · stone “S předstihem”); a path switch keeps the two apart site-wide. **Superseded:** built as D on 2026-11-13, replaced by Rodinný rozhovor on 2026-11-14 |
+| I | [rodinny-rozhovor/](rodinny-rozhovor/README.md) · Rodinný rozhovor | questions and answers on warm colour fields; pen drawings. Built (as F) 2026-11-13; **template D since 2026-11-14**, replacing Dvě cesty |
+| E1 | [krok-za-krokem/](krok-za-krokem/README.md) · Krok za krokem | the home page is the guide: one vertical thread with gold rings, photos at the stops; sage band for prices and family. **Template E since 2026-11-14**, replacing Tichá krajina (canvas https://claude.ai/artifact/VJYiee9aetpkbigX355zYF) |
 
 Board letters F–I are canvas labels only. Assign the template letter when a direction is built.
 
