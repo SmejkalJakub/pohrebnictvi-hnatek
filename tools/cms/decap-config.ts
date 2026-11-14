@@ -774,6 +774,46 @@ function placesFile(): DecapFile {
   ]);
 }
 
+/** Czech labels of the drawing slots (content-contract §6.20), in ILLUSTRATION_SLOTS order. */
+const ILLUSTRATION_SLOT_LABELS: Record<string, string> = {
+  hero: "Úvodní pole na hlavní stránce",
+  guidance: "Postup (co dělat)",
+  contact: "Kontakt",
+  office: "Kancelář",
+  services: "Služby",
+};
+
+/** Guardrail of the drawings (content-contract §6.20), shown above the list. */
+export const ILLUSTRATIONS_HELP =
+  "Kresby perem, které pro vás nakreslil ilustrátor: strom na náměstí, vchod do kanceláře, cesta ke " +
+  "hřbitovu. Žádné holubice, svíčky, ruce ani vadnoucí květiny. Nepoužívejte fotobanky ani obrázky " +
+  "vytvořené počítačem. Bez kreseb zůstane místo prázdné, stránka je úplná i tak.";
+
+/**
+ * site/illustrations.json: one commissioned drawing per slot the template declares
+ * (`illustration.<slot>`, features.illustrations). The rights checkbox states the drawing was
+ * commissioned, so the production gate (G-033) needs the client's confirmation.
+ */
+function illustrationsFile(manifest: TemplateManifest): DecapFile {
+  const slots: SelectOption[] = Object.keys(manifest.imageSlots)
+    .filter((slot) => slot.startsWith("illustration."))
+    .map((slot) => slot.slice("illustration.".length))
+    .map((slot) => ({ value: slot, label: ILLUSTRATION_SLOT_LABELS[slot] ?? slot }));
+  const image = imageWithFileHint(
+    "image",
+    "Kresba",
+    "Jedna kresba pro každé místo: tmavá linka na bílém pozadí (sken), PNG nebo JPEG. Na tmavém poli ji web sám zesvětlí.",
+  );
+  return jsonFile("illustrations", "Kresby", "illustrations.json", [
+    listOf("images", "Kresby", [select("slot", "Místo na webu", slots, { required: true }), image], {
+      min: 0,
+      max: slots.length,
+      summary: "{{fields.slot}}",
+      hint: ILLUSTRATIONS_HELP,
+    }),
+  ]);
+}
+
 /** §4.9: each price is "demo" until the client sets it to approved; currency is locked. */
 function pricingFile(inclusions: boolean): DecapFile {
   return jsonFile("pricing", "Ceník", "pricing.json", [
@@ -1448,7 +1488,7 @@ export function generateDecapConfig(input: DecapConfigInput): DecapConfig {
   const { manifest, features, pageIds } = input;
   const articles = features.articles && manifest.supports.articles;
   const enabled = (feature: ContentFeature): boolean =>
-    features[feature] === true && manifest.supports[feature];
+    features[feature] === true && manifest.supports[feature] === true;
   const showLegal = input.legal === true && manifest.pageFields["pravni-informace"] !== undefined;
 
   const basicFiles = [companyFile(), contactFile(), officeHoursFile()];
@@ -1460,6 +1500,9 @@ export function generateDecapConfig(input: DecapConfigInput): DecapConfig {
   }
   if (enabled("places")) {
     basicFiles.push(placesFile());
+  }
+  if (enabled("illustrations")) {
+    basicFiles.push(illustrationsFile(manifest));
   }
   const collections: DecapCollection[] = [
     {

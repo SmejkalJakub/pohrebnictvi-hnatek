@@ -14,6 +14,8 @@ declare module "virtual:site-core/data" {
   export const landscapes: unknown;
   /** site/places.json, or null when the site has none. */
   export const places: unknown;
+  /** site/illustrations.json, or null when the site has none. */
+  export const illustrations: unknown;
   export const mode: "prototype" | "production";
   export const siteUrl: string | null;
   /** "Today" for notice windows (YYYY-MM-DD): SITE_BUILD_DATE, pinnedBuildDate or the Prague date. */

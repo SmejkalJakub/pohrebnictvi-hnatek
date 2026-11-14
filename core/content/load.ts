@@ -9,11 +9,14 @@ import {
   Company,
   Contact,
   EmergencyTransport,
+  IllustrationSet,
   LandscapeSet,
   PlaceSet,
   LegalInfo,
   OfficeHours,
   Pricing,
+  type IllustrationSlot,
+  type ImageRef,
   type LandscapeImage,
   type Place,
   type PageId,
@@ -240,6 +243,23 @@ export async function getPlaces(): Promise<Place[]> {
     return [];
   }
   return parseOrThrow("places.json", PlaceSet, data.places).places;
+}
+
+/**
+ * The client's commissioned drawings by slot (content-contract §6.20). Empty while
+ * features.illustrations is off or the site has no site/illustrations.json.
+ */
+export async function getIllustrations(): Promise<Partial<Record<IllustrationSlot, ImageRef>>> {
+  const site = await getSiteContext();
+  if (!site.config.features.illustrations || data.illustrations === null) {
+    return {};
+  }
+  const set = parseOrThrow("illustrations.json", IllustrationSet, data.illustrations);
+  const bySlot: Partial<Record<IllustrationSlot, ImageRef>> = {};
+  for (const entry of set.images) {
+    bySlot[entry.slot] = entry.image;
+  }
+  return bySlot;
 }
 
 export async function getPricing(): Promise<PricingView | null> {

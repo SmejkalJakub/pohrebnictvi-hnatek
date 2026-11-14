@@ -1,0 +1,54 @@
+{
+  "images": [
+    {
+      "slot": "hero",
+      "image": {
+        "file": "placeholder-kresba-1x1.png",
+        "alt": "Zástupný rámec místo kresby na hlavní stránce",
+        "decorative": true,
+        "source": "placeholder",
+        "depicts": "placeholder"
+      }
+    },
+    {
+      "slot": "guidance",
+      "image": {
+        "file": "placeholder-kresba-4x5.png",
+        "alt": "Zástupný rámec místo kresby u postupu",
+        "decorative": true,
+        "source": "placeholder",
+        "depicts": "placeholder"
+      }
+    },
+    {
+      "slot": "contact",
+      "image": {
+        "file": "placeholder-kresba-1x1.png",
+        "alt": "Zástupný rámec místo kresby u kontaktu",
+        "decorative": true,
+        "source": "placeholder",
+        "depicts": "placeholder"
+      }
+    },
+    {
+      "slot": "office",
+      "image": {
+        "file": "placeholder-kresba-3x2.png",
+        "alt": "Zástupný rámec místo kresby kanceláře",
+        "decorative": true,
+        "source": "placeholder",
+        "depicts": "placeholder"
+      }
+    },
+    {
+      "slot": "services",
+      "image": {
+        "file": "placeholder-kresba-4x5.png",
+        "alt": "Zástupný rámec místo kresby u služeb",
+        "decorative": true,
+        "source": "placeholder",
+        "depicts": "placeholder"
+      }
+    }
+  ]
+}

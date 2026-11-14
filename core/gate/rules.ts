@@ -94,6 +94,11 @@ export const RULES = {
     prototype: "error",
     production: "error",
   },
+  "G-078": {
+    title: "Illustration set present while the feature is on",
+    prototype: "error",
+    production: "error",
+  },
   "G-080": {
     title: "Places set present while the feature is on",
     prototype: "error",
@@ -187,7 +192,24 @@ export function collectPublishedImages(content: ValidatedContent, buildDate?: st
   if (content.config.features.places) {
     uses.push(...placeImageUses(content));
   }
+  if (content.config.features.illustrations) {
+    uses.push(...illustrationImageUses(content));
+  }
   return uses;
+}
+
+const ILLUSTRATIONS_FILE = "src/content/site/illustrations.json";
+
+/** Drawings of site/illustrations.json (content-contract §6.20), whatever the feature switch says. */
+function illustrationImageUses(content: ValidatedContent): ImageUse[] {
+  if (content.illustrations === null) {
+    return [];
+  }
+  return content.illustrations.images.map((entry, index) => ({
+    file: ILLUSTRATIONS_FILE,
+    path: `images.${index}.image`,
+    image: entry.image,
+  }));
 }
 
 const PLACES_FILE = "src/content/site/places.json";
@@ -350,6 +372,15 @@ function checkStructure(content: ValidatedContent, out: Candidate[]): void {
       en: 'features.places is on but site/places.json is missing; create it (even { "places": [] }) so the CMS can edit it.',
     });
   }
+  if (content.config.features.illustrations && content.illustrations === null) {
+    out.push({
+      rule: "G-078",
+      file: ILLUSTRATIONS_FILE,
+      path: "",
+      cs: 'Funkce "illustrations" je zapnutá, ale soubor site/illustrations.json chybí. Vytvořte jej (i prázdný: { "images": [] }), jinak do něj nepůjde v CMS přidat kresby.',
+      en: 'features.illustrations is on but site/illustrations.json is missing; create it (even { "images": [] }) so the CMS can edit it.',
+    });
+  }
   const privacyPresent = present.has("ochrana-osobnich-udaju");
   if (content.legal !== null && !present.has("pravni-informace")) {
     out.push({
@@ -471,7 +502,8 @@ export function collectReferencedMediaFiles(content: ValidatedContent): string[]
     const disabledPerson = !isCollectionEnabled("people", content) && use.file.startsWith(PEOPLE_DIR);
     const disabledLandscape = !content.config.features.landscapes && use.file === LANDSCAPES_FILE;
     const disabledPlace = !content.config.features.places && use.file === PLACES_FILE;
-    if (disabledNotice || disabledPerson || disabledLandscape || disabledPlace) {
+    const disabledIllustration = !content.config.features.illustrations && use.file === ILLUSTRATIONS_FILE;
+    if (disabledNotice || disabledPerson || disabledLandscape || disabledPlace || disabledIllustration) {
       continue;
     }
     files.add(normalizeMediaFile(use.image.file));
@@ -507,6 +539,7 @@ function collectAllImages(content: ValidatedContent): ImageUse[] {
   uses.push(...featureImageUses(content.notices, content.people));
   uses.push(...landscapeImageUses(content));
   uses.push(...placeImageUses(content));
+  uses.push(...illustrationImageUses(content));
   return uses;
 }
 

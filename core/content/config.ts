@@ -50,6 +50,8 @@ export const SiteConfig = z
       landscapes: z.boolean().default(false),
       // Numbered places of the firm from site/places.json (content-contract §6.19).
       places: z.boolean().default(false),
+      // Commissioned pen drawings from site/illustrations.json (content-contract §6.20).
+      illustrations: z.boolean().default(false),
     }),
     /**
      * Who receives the contact form (core/forms/contact.ts). "netlify" = Netlify Forms, so the site
@@ -110,6 +112,7 @@ export const CONTENT_FEATURES = [
   "prePlanning",
   "landscapes",
   "places",
+  "illustrations",
 ] as const;
 export type ContentFeature = (typeof CONTENT_FEATURES)[number];
 
@@ -151,6 +154,11 @@ export interface TemplateManifest {
     landscapes: boolean;
     /** Naše místa: the firm's places from site/places.json, with optional photos (features.places). */
     places: boolean;
+    /**
+     * Kresby: commissioned drawings per slot from site/illustrations.json (features.illustrations).
+     * Optional: a manifest without it does not support drawings.
+     */
+    illustrations?: boolean;
   };
   homepageSections: {
     available: readonly HomepageSection[];
@@ -241,7 +249,7 @@ export function checkConfigAgainstManifest(config: SiteConfig, manifest: Templat
     issues.push({ path: "features.map", message: 'Template does not support an embedded map; use "link".' });
   }
   for (const feature of CONTENT_FEATURES) {
-    if (config.features[feature] && !manifest.supports[feature]) {
+    if (config.features[feature] && manifest.supports[feature] !== true) {
       issues.push({
         path: `features.${feature}`,
         message: `Template does not support "${feature}"; switch the feature off or choose another template.`,

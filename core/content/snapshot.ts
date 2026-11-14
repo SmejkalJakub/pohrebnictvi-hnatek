@@ -30,6 +30,7 @@ import {
   type Guidance,
   type LandscapeSet,
   type PlaceSet,
+  type IllustrationSet,
   type LegalInfo,
   type Notice,
   type OfficeHours,
@@ -237,6 +238,8 @@ export interface ValidatedContent {
   landscapes: LandscapeSet | null;
   /** site/places.json (the firm's places), or null when the site has none. */
   places: PlaceSet | null;
+  /** site/illustrations.json (drawings per slot), or null when the site has none. */
+  illustrations: IllustrationSet | null;
   mediaFiles: string[];
   documentFiles: string[];
   articlesDirExists: boolean;
@@ -311,6 +314,11 @@ export function validateSnapshot(raw: RawSnapshot): ValidationResult {
   if (placesFile !== undefined) {
     places = parseWith(OPTIONAL_SINGLETON_SCHEMAS.places, placesFile, problems);
   }
+  let illustrations: IllustrationSet | null = null;
+  const illustrationsFile = raw.optionalSingletons.illustrations;
+  if (illustrationsFile !== undefined) {
+    illustrations = parseWith(OPTIONAL_SINGLETON_SCHEMAS.illustrations, illustrationsFile, problems);
+  }
 
   const collections: Record<CollectionName, ContentEntry<unknown>[]> = {
     pages: [],
@@ -370,6 +378,7 @@ export function validateSnapshot(raw: RawSnapshot): ValidationResult {
       legal,
       landscapes,
       places,
+      illustrations,
       mediaFiles: raw.mediaFiles,
       documentFiles: raw.documentFiles,
       articlesDirExists: raw.articlesDirExists,

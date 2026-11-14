@@ -273,6 +273,7 @@ describe("SiteConfig and manifest", () => {
       prePlanning: false,
       landscapes: false,
       places: false,
+      illustrations: false,
     });
     expect(config.pinnedBuildDate).toBeNull();
   });

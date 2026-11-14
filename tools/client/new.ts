@@ -84,6 +84,7 @@ const OPTIONAL_CONTENT: Record<string, ContentFeature> = {
   "pages/pohreb-predem.md": "prePlanning",
   "site/landscapes.json": "landscapes",
   "site/places.json": "places",
+  "site/illustrations.json": "illustrations",
 };
 
 /** Legal information is not a feature: it is copied when the template renders /pravni-informace/. */
@@ -94,7 +95,7 @@ export function copiesContent(manifest: TemplateManifest, relative: string): boo
   const normalised = relative.split(path.sep).join("/");
   for (const [prefix, feature] of Object.entries(OPTIONAL_CONTENT)) {
     if (normalised === prefix || normalised.startsWith(`${prefix}/`)) {
-      return manifest.supports[feature];
+      return manifest.supports[feature] === true;
     }
   }
   if (LEGAL_CONTENT.includes(normalised)) {

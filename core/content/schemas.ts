@@ -718,6 +718,53 @@ export const PlaceSet = z.object({
 export type PlaceSet = z.infer<typeof PlaceSet>;
 
 // ---------------------------------------------------------------------------
+// §6.20 Kresby (site/illustrations.json, optional; features.illustrations)
+// ---------------------------------------------------------------------------
+
+/** Places a template can show a commissioned drawing; each has an `illustration.<slot>` image slot. */
+export const ILLUSTRATION_SLOTS = ["hero", "guidance", "contact", "office", "services"] as const;
+export type IllustrationSlot = (typeof ILLUSTRATION_SLOTS)[number];
+
+/**
+ * One commissioned pen drawing for one slot: dark line on a white or transparent ground (the
+ * template lightens it on a dark field). Stock images are not allowed: the drawings only work as
+ * the client's own, made for them.
+ */
+export const IllustrationImage = z
+  .object({
+    slot: z.enum(ILLUSTRATION_SLOTS),
+    image: ImageRef,
+  })
+  .superRefine((entry, ctx) => {
+    if (entry.image.source === "licensed-stock") {
+      issue(
+        ctx,
+        ["image", "source"],
+        "Kresby musí být zakázkové, nakreslené pro vás. Obrázky z fotobanky nelze použít.",
+      );
+    }
+  });
+export type IllustrationImage = z.infer<typeof IllustrationImage>;
+
+export const IllustrationSet = z
+  .object({
+    images: z
+      .array(IllustrationImage)
+      .max(ILLUSTRATION_SLOTS.length, `Nejvýše ${ILLUSTRATION_SLOTS.length} kreseb, jedna pro každé místo.`)
+      .default([]),
+  })
+  .superRefine((set, ctx) => {
+    const seen = new Set<string>();
+    set.images.forEach((entry, index) => {
+      if (seen.has(entry.slot)) {
+        issue(ctx, ["images", index, "slot"], `Kresba pro místo "${entry.slot}" je uvedena vícekrát.`);
+      }
+      seen.add(entry.slot);
+    });
+  });
+export type IllustrationSet = z.infer<typeof IllustrationSet>;
+
+// ---------------------------------------------------------------------------
 // §6.11 Pricing
 // ---------------------------------------------------------------------------
 
@@ -868,6 +915,7 @@ export const OPTIONAL_SINGLETON_SCHEMAS = {
   legal: LegalInfo,
   landscapes: LandscapeSet,
   places: PlaceSet,
+  illustrations: IllustrationSet,
 } as const;
 export type OptionalSingletonName = keyof typeof OPTIONAL_SINGLETON_SCHEMAS;
 export const OPTIONAL_SINGLETON_NAMES = Object.keys(OPTIONAL_SINGLETON_SCHEMAS) as OptionalSingletonName[];
