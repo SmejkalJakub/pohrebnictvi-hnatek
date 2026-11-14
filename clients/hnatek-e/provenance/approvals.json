@@ -393,22 +393,5 @@
     "src/assets/media/logo-hnatek-horizontal.svg": {
       "rightsEvidence": "Compact horizontal logo (hnatek-horizontal-compact.svg) from the logo web pack the client (Jakub Smejkal) supplied on 2026-11-09 (Pohrebnictvi_Hnatek_logo_web_assets.zip); full pack kept in clients/hnatek/brand/."
     }
-  },
-  "people": {
-    "people/eva-vzorova.md": {
-      "consentAt": null,
-      "recordedBy": null,
-      "method": null
-    },
-    "people/hana-prikladna.md": {
-      "consentAt": null,
-      "recordedBy": null,
-      "method": null
-    },
-    "people/petr-ukazka.md": {
-      "consentAt": null,
-      "recordedBy": null,
-      "method": null
-    }
   }
 }

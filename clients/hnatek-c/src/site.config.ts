@@ -2,16 +2,15 @@
 // Allowed values: templates/nocni-linka/template.manifest.ts (options, homepageSections).
 // Plain object + `import type` only, so Node can load it without a bundler.
 //
-// TRIAL CLIENT for template C (S6): a copy of clients/hnatek with placeholder notices, people,
-// FAQ and documents from the neutral fixture (fictional, placeholder: true). Not a client deliverable.
+// Hnátek prototype on template C (nocni-linka): the content of clients/hnatek, optional content
+// types off until the client supplies real notices, people, FAQ or documents.
 import type { SiteConfigInput } from "../../../core/content/config.ts";
 
 const config = {
   template: "nocni-linka",
   // The real domain is required in production (G-012).
   siteUrl: "https://example.invalid",
-  // Placeholder notices, people, FAQ and documents for the trial only; real ones come from the client.
-  features: { articles: false, contactForm: false, map: "link", notices: true, people: true, faq: true, documents: true },
+  features: { articles: false, contactForm: false, map: "link" },
   // Manifest default, plus catalogue-links because the client has a real coffin and flower catalogue.
   homepage: { sections: ["hero", "next-steps", "family-story", "services", "catalogue-links", "contact-summary"] },
   options: {

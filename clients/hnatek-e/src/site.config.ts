@@ -2,25 +2,15 @@
 // Allowed values: templates/krok-za-krokem/template.manifest.ts (options, homepageSections).
 // Plain object + `import type` only, so Node can load it without a bundler.
 //
-// TRIAL CLIENT for template E (S12, Krok za krokem): a copy of clients/hnatek with placeholder
-// notices, people, FAQ and documents from the neutral fixture (fictional, placeholder: true).
-// Not a client deliverable.
+// Hnátek prototype on template E (krok-za-krokem): the content of clients/hnatek, optional content
+// types off until the client supplies real notices, people, FAQ or documents.
 import type { SiteConfigInput } from "../../../core/content/config.ts";
 
 const config = {
   template: "krok-za-krokem",
   // The real domain is required in production (G-012).
   siteUrl: "https://example.invalid",
-  // Placeholder notices, people, FAQ and documents for the trial only; real ones come from the client.
-  features: {
-    articles: false,
-    contactForm: false,
-    map: "link",
-    notices: true,
-    people: true,
-    faq: true,
-    documents: true,
-  },
+  features: { articles: false, contactForm: false, map: "link" },
   // Manifest default: the opening, the thread, then prices and the family on the sage band.
   homepage: { sections: ["hero", "next-steps", "price-summary", "family-story"] },
   options: {

@@ -30,14 +30,19 @@ import {
   resolvePublishing,
 } from "../settings.ts";
 
-/** Optional collections and singletons each client turns on in its site.config features. */
+/** Optional collections a site turns on in its site.config features, in menu order. */
 const OPTIONAL_TYPES = ["notices", "faq", "people", "documents"];
-const CLIENTS = [
+/**
+ * The Hnátek prototypes and the optional collections and singletons each turns on. None of them
+ * has optional collections since 2026-11-14 (hnatek-c and hnatek-e dropped their fictional trial
+ * content); the neutral fixture covers those below.
+ */
+const CLIENTS: { id: string; template: string; optional: string[]; singletons: string[] }[] = [
   { id: "hnatek", template: "rodinna-tradice", optional: [], singletons: [] },
   { id: "hnatek-b", template: "dustojna-jednoduchost", optional: [], singletons: [] },
-  { id: "hnatek-c", template: "nocni-linka", optional: OPTIONAL_TYPES, singletons: [] },
+  { id: "hnatek-c", template: "nocni-linka", optional: [], singletons: [] },
   { id: "hnatek-d", template: "rodinny-rozhovor", optional: [], singletons: [] },
-  { id: "hnatek-e", template: "krok-za-krokem", optional: OPTIONAL_TYPES, singletons: [] },
+  { id: "hnatek-e", template: "krok-za-krokem", optional: [], singletons: [] },
   { id: "hnatek-g", template: "lide-a-misto", optional: [], singletons: ["places"] },
 ];
 
@@ -285,6 +290,22 @@ describe.each(CLIENTS)("Decap config for $id ($template)", ({ id, template, opti
   it("renders YAML that parses back to the same config", async () => {
     const { config, yaml } = await clientConfig(id, template);
     expect(parse(yaml)).toEqual(JSON.parse(JSON.stringify(config)));
+  });
+});
+
+describe.each(["nocni-linka", "krok-za-krokem"])("Decap config for the neutral fixture on %s", (template) => {
+  it("offers notices, FAQ, people and documents when the site turns them on", async () => {
+    const { config } = await generateDecapConfigForSite({
+      templateId: template,
+      siteRoot: path.join(REPO_ROOT, "fixtures", "neutral"),
+      configFile: path.join(REPO_ROOT, "templates", template, "fixture.site.config.ts"),
+      publishing: settings(),
+    });
+    const names = config.collections.map((entry) => entry.name);
+    const optional = names.filter((name) => OPTIONAL_TYPES.includes(name));
+    expect(optional).toEqual(OPTIONAL_TYPES);
+    expect(names.indexOf("flowers")).toBeLessThan(names.indexOf("notices"));
+    expect(names.indexOf("documents")).toBeLessThan(names.indexOf("zverejneni"));
   });
 });
 
