@@ -11,6 +11,7 @@ import {
   type Contact,
   type EmergencyTransport,
   type Guidance,
+  type ImageRef,
   type LegalInfo,
   type OfficeHours,
   type Page,
@@ -199,4 +200,67 @@ export function buildPricingView(pricing: Pricing): PricingView | null {
     group.items.some((item) => item.status === "demo"),
   );
   return { ...pricing, hasDemo };
+}
+
+// ---------------------------------------------------------------------------
+// Homepage imagery (2026-11-14). The owner found the homepages sterile, "like a restaurant menu":
+// the real photos (the office, the firm's own flower arrangements and coffins) lived only on
+// inner pages. Templates place these on the homepage, each in its own way. Only photos that show
+// the real business: placeholders and generic or stock images are never pulled onto the homepage.
+// ---------------------------------------------------------------------------
+
+export interface HomePhoto {
+  image: ImageRef;
+  /** What the photo shows, for a caption or link text, e.g. "Kytice na rakev v bílých tónech". */
+  title: string;
+}
+
+export interface HomeImagery {
+  /** The firm's own place: /o-nas/ heroImage, else its secondaryImage. */
+  place: HomePhoto | null;
+  /** The first published flower arrangement with a real photo (catalogue order). */
+  flower: HomePhoto | null;
+  /** The first published coffin with a real photo (catalogue order). */
+  coffin: HomePhoto | null;
+}
+
+/** True for a photo of the business itself (not a placeholder, stock or generic image). */
+export function isRealBusinessPhoto(image: ImageRef | null): image is ImageRef {
+  if (image === null) {
+    return false;
+  }
+  return image.depicts === "actual-business";
+}
+
+interface CatalogueLike {
+  data: { published: boolean; image: ImageRef | null; placeholder?: boolean; name?: string; title?: string };
+}
+
+function firstRealPhoto(entries: readonly CatalogueLike[]): HomePhoto | null {
+  for (const entry of entries) {
+    if (!entry.data.published || entry.data.placeholder === true) {
+      continue;
+    }
+    if (isRealBusinessPhoto(entry.data.image)) {
+      return { image: entry.data.image, title: entry.data.name ?? entry.data.title ?? "" };
+    }
+  }
+  return null;
+}
+
+/** Pick the homepage photos from content already sorted in catalogue order. */
+export function buildHomeImagery(input: {
+  about: Pick<Page, "title" | "heroImage" | "secondaryImage"> | null;
+  flowers: readonly CatalogueLike[];
+  coffins: readonly CatalogueLike[];
+}): HomeImagery {
+  let place: HomePhoto | null = null;
+  if (input.about !== null) {
+    for (const image of [input.about.heroImage, input.about.secondaryImage]) {
+      if (place === null && isRealBusinessPhoto(image)) {
+        place = { image, title: input.about.title };
+      }
+    }
+  }
+  return { place, flower: firstRealPhoto(input.flowers), coffin: firstRealPhoto(input.coffins) };
 }

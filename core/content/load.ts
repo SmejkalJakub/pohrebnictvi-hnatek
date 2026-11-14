@@ -27,6 +27,7 @@ import {
   buildPricingView,
   buildSiteContext,
   groupFaq,
+  buildHomeImagery,
   sortCatalogue,
   sortDocuments,
   sortGuidance,
@@ -34,6 +35,7 @@ import {
   sortServices,
   type DocumentView,
   type FaqGroup,
+  type HomeImagery,
   type NoticeIndex,
   type NoticeView,
   type PersonView,
@@ -119,6 +121,16 @@ export async function getOptionalPage(id: PageId): Promise<LoadedPage | null> {
 
 export async function hasPage(id: PageId): Promise<boolean> {
   return (await findPage(id)) !== undefined;
+}
+
+/** Real photos for the homepage (view-models.ts buildHomeImagery). */
+export async function getHomeImagery(): Promise<HomeImagery> {
+  const about = await findPage("o-nas");
+  let aboutData = null;
+  if (about !== undefined) {
+    aboutData = about.data;
+  }
+  return buildHomeImagery({ about: aboutData, flowers: await getFlowers(), coffins: await getCoffins() });
 }
 
 export async function getServices(): Promise<CollectionEntry<"services">[]> {
