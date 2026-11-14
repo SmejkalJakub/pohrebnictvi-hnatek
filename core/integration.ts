@@ -13,6 +13,8 @@ import { copyFile, mkdir, readFile, readdir, writeFile } from "node:fs/promises"
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import type { AstroIntegration } from "astro";
+import { brandModuleSource } from "./brand/module.ts";
+import type { BrandProfile } from "./brand/profile.ts";
 import { resolveBuildDate } from "./content/build-date.ts";
 import type { TemplateManifest } from "./content/config.ts";
 import { noticeHref, noticeQrHref } from "./content/optional-views.ts";
@@ -91,8 +93,10 @@ async function buildDataModule(
   referencedMedia: string[] | null,
   buildDate: string,
   noindexPaths: string[],
+  brand: BrandProfile | null,
 ): Promise<string> {
   const lines: string[] = [];
+  lines.push(brandModuleSource(brand));
   lines.push(`export { default as config } from ${JSON.stringify(paths.configFile)};`);
   for (const name of SINGLETON_NAMES) {
     const file = path.join(paths.contentDir, "site", `${name}.json`);
@@ -196,6 +200,7 @@ export default function siteCore(options: SiteCoreOptions = {}): AstroIntegratio
           referencedMedia,
           buildDate,
           noindexPaths,
+          run.content?.config.brand ?? null,
         );
         // Builds keep "always". The dev server answers Astro's image endpoint at "/_image?…"
         // (no slash), which "always" turns into a 404, so dev uses "ignore".

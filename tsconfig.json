@@ -28,6 +28,8 @@
     "core/content/load.ts",
     "core/content/collections.ts",
     "core/media/resolve.ts",
+    "core/brand/runtime.ts",
+    "core/client/**",
     "core/env.d.ts"
   ]
 }

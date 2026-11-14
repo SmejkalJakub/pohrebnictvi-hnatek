@@ -5,6 +5,7 @@
  * `import type`, so Node can load them directly (type stripping) without a bundler.
  */
 import { z } from "astro/zod";
+import { BrandProfile } from "../brand/profile.ts";
 import { CONTACT_FORM_HANDLERS } from "../forms/contact.ts";
 import { Id, IsoDate, Url, nullable } from "./primitives.ts";
 
@@ -65,6 +66,11 @@ export const SiteConfig = z
       sections: z.array(z.enum(HOMEPAGE_SECTIONS)).min(1),
     }),
     options: z.record(z.string(), z.string()).default({}),
+    /**
+     * The client's brand (template-contract §8a): colours, fonts and mark from the brand board.
+     * null = the template's own palette and fonts (options.palette / options.fontPair).
+     */
+    brand: BrandProfile.nullable().default(null),
   })
   .superRefine((config, ctx) => {
     const seen = new Set<string>();

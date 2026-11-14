@@ -5,6 +5,7 @@
 import { formatPhone } from "../format/phone.ts";
 import { checkMarkdownBody } from "../markdown/restrict-body.ts";
 import { normalizeDocumentFile } from "../media/documents.ts";
+import { deriveBrandTokens } from "../brand/profile.ts";
 import { normalizeMediaFile } from "../media/normalize.ts";
 import type { SiteMode } from "../mode.ts";
 import type { TemplateManifest } from "../content/config.ts";
@@ -66,7 +67,11 @@ export const RULES = {
     production: "warning",
   },
   "G-051": { title: "Articles only with a supporting template", prototype: "error", production: "error" },
-  "G-060": { title: "Contact form needs a handler and the privacy page", prototype: "error", production: "error" },
+  "G-060": {
+    title: "Contact form needs a handler and the privacy page",
+    prototype: "error",
+    production: "error",
+  },
   "G-061": { title: "Map embed needs privacy page", prototype: "error", production: "error" },
   // Optional content types (research funeral-ux.md §4a, §8; content-contract §8).
   "G-070": { title: "Published notice has a consent record", prototype: "error", production: "error" },
@@ -94,6 +99,12 @@ export const RULES = {
     prototype: "error",
     production: "error",
   },
+  "G-090": {
+    title: "Brand profile is usable (mark file present; colours adjusted for legibility are reported)",
+    prototype: "warning",
+    production: "warning",
+  },
+  "G-091": { title: "Brand mark file exists", prototype: "error", production: "error" },
 } as const satisfies Record<string, { title: string; prototype: Level; production: Level }>;
 
 export type RuleId = keyof typeof RULES;
@@ -464,6 +475,9 @@ export function collectReferencedMediaFiles(content: ValidatedContent): string[]
       continue;
     }
     files.add(normalizeMediaFile(use.image.file));
+  }
+  if (content.config.brand?.mark) {
+    files.add(normalizeMediaFile(content.config.brand.mark));
   }
   return [...files].sort();
 }
@@ -894,6 +908,7 @@ export function runGate(content: ValidatedContent, options: GateOptions): Findin
   checkNotices(content, buildDate, candidates);
   checkPeople(content, candidates);
   checkBuildDate(content, candidates);
+  checkBrand(content, candidates);
 
   const findings: Finding[] = [];
   for (const candidate of candidates) {
@@ -904,6 +919,45 @@ export function runGate(content: ValidatedContent, options: GateOptions): Findin
     findings.push({ ...candidate, level });
   }
   return findings;
+}
+
+function checkBrand(content: ValidatedContent, out: Candidate[]): void {
+  const brand = content.config.brand;
+  if (brand === null) {
+    return;
+  }
+  const file = "src/site.config.ts";
+  if (brand.mark !== null) {
+    const name = normalizeMediaFile(brand.mark);
+    if (!content.mediaFiles.includes(name)) {
+      out.push({
+        rule: "G-091",
+        file,
+        path: "brand.mark",
+        cs: `Značka "${name}" není ve složce src/assets/media.`,
+        en: `Brand mark "${name}" not found in src/assets/media.`,
+      });
+    }
+  }
+  const tokens = deriveBrandTokens(brand);
+  if (tokens.groundReplaced) {
+    out.push({
+      rule: "G-090",
+      file,
+      path: "brand.colors.ground",
+      cs: "Podkladová barva značky je příliš tmavá na pozadí stránky; šablona použije světlý podklad odvozený od hlavní barvy.",
+      en: "The brand ground is too dark for a page background; a light ground derived from the primary colour is used.",
+    });
+  }
+  for (const adjustment of tokens.adjustments) {
+    out.push({
+      rule: "G-090",
+      file,
+      path: `brand (${adjustment.role})`,
+      cs: `Barva ${adjustment.from} upravena na ${adjustment.to} (${adjustment.reason}). Původní odstín zůstává pro plochy a ozdoby.`,
+      en: `Colour ${adjustment.from} adjusted to ${adjustment.to} for ${adjustment.role} (legibility). The original stays for fills and ornaments.`,
+    });
+  }
 }
 
 export function hasErrors(findings: readonly Finding[]): boolean {

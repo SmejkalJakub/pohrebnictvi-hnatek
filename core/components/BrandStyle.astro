@@ -1,0 +1,8 @@
+---
+/**
+ * The client's brand fonts and --brand-* roles (core/brand/profile.ts), in <head>. Renders nothing
+ * without a brand profile. Place it after the template's own stylesheet links.
+ */
+import { brandCss } from "virtual:site-core/data";
+---
+{brandCss !== "" ? <style is:inline set:html={brandCss} /> : null}

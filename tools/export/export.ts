@@ -20,6 +20,8 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
+import { BRAND_FONTS } from "../../core/brand/fonts.ts";
+import type { BrandProfile } from "../../core/brand/profile.ts";
 import type { SiteConfig, TemplateManifest } from "../../core/content/config.ts";
 import { loadValidatedContent } from "../../core/content/snapshot.ts";
 import { buildMediaInventory, inventoryToMarkdown } from "../../core/media/inventory.ts";
@@ -353,13 +355,17 @@ async function filesUnder(dir: string): Promise<string[]> {
   return files;
 }
 
-/** Fonts referenced by the exported template source, with licences read from the installed packages. */
+/**
+ * Fonts referenced by the exported template source, plus the client's brand fonts (core
+ * dependencies, template-contract §8a), with licences read from the installed packages.
+ */
 async function fontCredits(
   outDir: string,
   templateId: string,
   dependencies: Record<string, string>,
+  brandPackages: readonly string[] = [],
 ): Promise<FontCredit[]> {
-  const used = new Set<string>();
+  const used = new Set<string>(brandPackages);
   for (const file of await filesUnder(path.join(outDir, "src"))) {
     if (!/\.(css|astro|ts)$/.test(file) || isInside(path.join(outDir, "src", "core"), file)) {
       continue;
@@ -391,6 +397,20 @@ async function fontCredits(
     });
   }
   return credits;
+}
+
+/** The @fontsource packages of the fonts a brand profile names. */
+function brandFontPackages(brand: BrandProfile | null): string[] {
+  if (brand === null) {
+    return [];
+  }
+  const packages: string[] = [];
+  for (const id of [brand.fonts.display, brand.fonts.body]) {
+    if (id !== null) {
+      packages.push(BRAND_FONTS[id].package);
+    }
+  }
+  return packages;
 }
 
 /** Fontsource attributions repeat the notice per font file ("… Foo-Italic[wght].ttf: Copyright …"). */
@@ -609,7 +629,9 @@ export async function exportSite(options: ExportOptions): Promise<ExportResult> 
       ...common,
       decapVersion: DECAP_VERSION,
       decapDir: DECAP_DIR_NAME,
-      fontTable: fontTable(await fontCredits(outDir, templateId, dependencies)),
+      fontTable: fontTable(
+        await fontCredits(outDir, templateId, dependencies, brandFontPackages(content.config.brand)),
+      ),
       imageNote,
       imageTable: inventoryToMarkdown(inventory),
     }),

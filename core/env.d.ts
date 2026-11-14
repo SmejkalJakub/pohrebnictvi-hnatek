@@ -22,4 +22,17 @@ declare module "virtual:site-core/data" {
   export const noindexPaths: readonly string[];
   export const media: Record<string, ImageMetadata>;
   export const icons: { svg: boolean; ico: boolean; appleTouch: boolean; manifest: boolean };
+  /** Brand font faces and the :root --brand-* roles; "" without a brand profile. */
+  export const brandCss: string;
+  /** What the layout needs from the brand profile; null without one. */
+  export const brand: {
+    fonts: {
+      display: string | null;
+      body: string | null;
+      displayCategory: "serif" | "sans-serif" | null;
+      bodyCategory: "serif" | "sans-serif" | null;
+    };
+    mark: string | null;
+    adjustments: { role: string; from: string; to: string; reason: string }[];
+  } | null;
 }
