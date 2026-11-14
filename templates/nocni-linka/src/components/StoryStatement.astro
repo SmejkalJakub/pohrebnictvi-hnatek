@@ -1,5 +1,12 @@
 ---
-/** Home "family-story": kicker "O nás", the about page title, its excerpt (or lead), one link. */
+/**
+ * Home "family-story": kicker "O nás", the about page title, the firm's own place as one quiet
+ * photo at column width (design-differentiation §1.4; never wider than the file, no filter or
+ * overlay), its excerpt (or lead), one link. Without a real photo the statement is text only.
+ */
+import { Image } from "astro:assets";
+import type { HomePhoto } from "@core/content/view-models.ts";
+import { resolveImage } from "@core/media/resolve.ts";
 import Statement from "./Statement.astro";
 import { ui } from "../i18n/cs.ts";
 
@@ -7,12 +14,58 @@ interface Props {
   title: string;
   text: string | null;
   tradition: string | null;
+  photo?: HomePhoto | null;
 }
 
-const { title, text, tradition } = Astro.props;
+const { title, text, tradition, photo = null } = Astro.props;
+
+let image = null;
+let widths: number[] = [];
+if (photo !== null) {
+  image = resolveImage(photo.image);
+  const fileWidth = image.src.width;
+  widths = [360, 560, 720].filter((width) => width < fileWidth);
+  widths.push(Math.min(fileWidth, 1080));
+}
 ---
 <Statement id="o-nas-uvod" kicker={ui.storyKicker} heading={title} class="home-st" data-section="family-story">
+  {
+    image !== null ? (
+      <figure class="story-photo" style={`--photo-max: ${image.src.width}px`}>
+        <Image
+          src={image.src}
+          alt={image.alt}
+          widths={widths}
+          sizes="(min-width: 64rem) 36rem, calc(100vw - 2rem)"
+          class="story-img"
+          style={`object-position: ${image.objectPosition}`}
+          loading="lazy"
+        />
+      </figure>
+    ) : null
+  }
   {tradition !== null ? <p class="st-text muted">{tradition}</p> : null}
   {text !== null ? <p class="st-text">{text}</p> : null}
   <a href="/o-nas/" class="st-link">{ui.storyLink}</a>
 </Statement>
+
+<style>
+  .story-photo {
+    max-width: min(36rem, var(--photo-max));
+    margin: 1.25rem 0 0.25rem;
+  }
+
+  .story-img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: 2px;
+  }
+
+  @media (min-width: 64rem) {
+    .story-photo {
+      margin-top: 2rem;
+      margin-bottom: 0.75rem;
+    }
+  }
+</style>

@@ -1,14 +1,23 @@
 ---
 /**
  * Home: a sequence of single statements in site.config.homepage.sections order. The hero is one
- * screen tall on desktop; the notices statement follows it while notices are on.
+ * screen tall on desktop; the notices statement follows it while notices are on. The featured
+ * services share one statement of ruled rows (at most four). The firm's real photos sit in the
+ * story and catalogue statements (design-differentiation §1.4).
  */
-import { getGuidance, getOptionalPage, getPage, getServices, getSiteContext } from "@core/content/load.ts";
+import {
+  getGuidance,
+  getHomeImagery,
+  getOptionalPage,
+  getPage,
+  getServices,
+  getSiteContext,
+} from "@core/content/load.ts";
 import { chooserSituations } from "@core/content/guidance-flow.ts";
 import NightLayout from "../layouts/NightLayout.astro";
 import OpeningStatement from "../components/OpeningStatement.astro";
 import NoticesTeaser from "../components/NoticesTeaser.astro";
-import FeaturedStatements from "../components/FeaturedStatements.astro";
+import ServiceRows from "../components/ServiceRows.astro";
 import PlaceLinks from "../components/PlaceLinks.astro";
 import Statement from "../components/Statement.astro";
 import OfficeStatement from "../components/OfficeStatement.astro";
@@ -25,11 +34,16 @@ const services = await getServices();
 const guidance = await getGuidance();
 const noticesPage = await getOptionalPage("oznameni");
 const sections = site.config.homepage.sections;
+/* Real photos only (design-differentiation §1.4): the office in "O nás", flower and coffin as the
+ * catalogue picture links. Each photo appears once. */
+const imagery = await getHomeImagery();
 
 let featured = services.filter((service) => service.data.featured);
 if (featured.length === 0) {
   featured = services.slice(0, 1);
 }
+/* At most four on the home page, with a link to all (§1.4: not the whole menu). */
+featured = featured.slice(0, 4);
 const situations = chooserSituations(guidance);
 const firstHours = guidance.filter((entry) => entry.data.phase === "first-hours");
 let showNoticesTeaser = false;
@@ -45,12 +59,15 @@ if (about.data.excerpt !== null) {
   aboutText = about.data.excerpt;
 }
 const catalogueLinks = site.nav.filter((item) => item.id === "rakve" || item.id === "kvetiny");
+/* The office statement closing the page already shows address, hours and phone: the footer
+ * then drops its own copy (review 2026-11-13, §3.1). */
+const compactFooter = sections[sections.length - 1] === "contact-summary";
 let description = home.data.title;
 if (home.data.metaDescription !== null) {
   description = home.data.metaDescription;
 }
 ---
-<NightLayout site={site} title={home.data.metaTitle} description={description}>
+<NightLayout site={site} title={home.data.metaTitle} description={description} compactFooter={compactFooter}>
   {
     sections.map((section) => (
       <>
@@ -64,11 +81,7 @@ if (home.data.metaDescription !== null) {
           />
         ) : null}
         {section === "hero" && showNoticesTeaser ? <NoticesTeaser kicker={noticesKicker} /> : null}
-        {section === "services" ? (
-          <div data-section="services">
-            <FeaturedStatements services={featured} context="home" class="home-st" />
-          </div>
-        ) : null}
+        {section === "services" ? <ServiceRows services={featured} class="home-st" /> : null}
         {section === "next-steps" ? (
           <Statement
             id="kroky"
@@ -92,10 +105,15 @@ if (home.data.metaDescription !== null) {
           </Statement>
         ) : null}
         {section === "family-story" ? (
-          <StoryStatement title={about.data.title} text={aboutText} tradition={site.company.tradition.publicWording} />
+          <StoryStatement
+            title={about.data.title}
+            text={aboutText}
+            tradition={site.company.tradition.publicWording}
+            photo={imagery.place}
+          />
         ) : null}
         {section === "contact-summary" ? <OfficeStatement site={site} /> : null}
-        {section === "catalogue-links" ? <CatalogueLinksLine links={catalogueLinks} /> : null}
+        {section === "catalogue-links" ? <CatalogueLinksLine links={catalogueLinks} flower={imagery.flower} coffin={imagery.coffin} /> : null}
       </>
     ))
   }

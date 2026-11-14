@@ -1,7 +1,10 @@
 ---
 /**
  * Jak postupovat: the "Kde blízký člověk zemřel?" picker (links + CSS :has(:target), no JS), a
- * tally of the steps shown, then one step per statement, then Časté otázky (#caste-otazky).
+ * tally of the steps shown, one calm reassurance lead, then one step per statement (each a guided
+ * list, design-differentiation §1.3), a closing statement, then Časté otázky (#caste-otazky).
+ * The signature: on desktop the rail tracks the reader ("Krok n z N" and the steps with the one
+ * being read marked), filtered with the steps (core interactions: data-spy-nav).
  */
 import { getFaq, getGuidance, getPage, getSiteContext } from "@core/content/load.ts";
 import {
@@ -9,6 +12,7 @@ import {
   chooserSituations,
   nextGuidanceStep,
   showsFor,
+  situationsAttribute,
   type SpecificSituation,
 } from "@core/content/guidance-flow.ts";
 import NightLayout from "../layouts/NightLayout.astro";
@@ -18,7 +22,9 @@ import StepStatement from "../components/StepStatement.astro";
 import StatementProse from "../components/StatementProse.astro";
 import TopicQuestions from "../components/TopicQuestions.astro";
 import { ui } from "../i18n/cs.ts";
-import { seoTitle } from "../lib/site.ts";
+import PhoneLink from "@core/components/PhoneLink.astro";
+import { formatPhone } from "@core/format/phone.ts";
+import { primaryOfficePhone, seoTitle } from "../lib/site.ts";
 
 const ALL_ANCHOR = "postup";
 const site = await getSiteContext();
@@ -27,6 +33,8 @@ const guidance = await getGuidance();
 const faq = await getFaq();
 const situations = chooserSituations(guidance);
 const Body = page.Content;
+const office = primaryOfficePhone(site);
+const officeDisplay = formatPhone(office.number).display;
 
 const bySituation: Partial<Record<SpecificSituation, number>> = {};
 for (const situation of situations) {
@@ -47,11 +55,24 @@ const filterCss = situations
       `${target} [data-place="${situation}"] { background: var(--ink); color: var(--ground); }`,
       `${target} [data-place="${situation}"] .arrow { display: none; }`,
       `${target} [data-place="${situation}"] .picked-word { display: inline; }`,
+      `body:has(#${SITUATION_ANCHOR[situation]}:target) [data-rail-step]${hidden} { display: none; }`,
     ].join("\n");
   })
   .join("\n");
 ---
 <NightLayout site={site} title={seoTitle(page.data)} description={page.data.metaDescription ?? page.data.title}>
+  <nav slot="rail" class="track" aria-label={ui.railTrackLabel} data-spy-nav data-spy-counter="rail-krok">
+    <p id="rail-krok" class="track-count" data-template={ui.railTrackCounter} hidden></p>
+    <ol class="track-list">
+      {
+        guidance.map((entry) => (
+          <li data-rail-step data-situations={situationsAttribute(entry)}>
+            <a href={`#${entry.id}`}>{entry.data.title}</a>
+          </li>
+        ))
+      }
+    </ol>
+  </nav>
   <TitleStatement kicker={ui.heroKicker} title={page.data.title} lead={page.data.lead} placeholder={page.data.placeholder} />
   <div data-guide class="guide">
     <style is:inline set:html={filterCss}></style>
@@ -65,12 +86,13 @@ const filterCss = situations
           {situations.map((situation) => (
             <p class="tally small" data-tally={situation}>
               {ui.tally(bySituation[situation] ?? 0, guidance.length)}{" "}
-              <a href={`#${ALL_ANCHOR}`}>{ui.showAll}</a>
+              <a href={`#${ALL_ANCHOR}`} data-vt-anchor>{ui.showAll}</a>
             </p>
           ))}
         </div>
       ) : null
     }
+    <p class="guide-lead">{ui.guideLead}</p>
     <StatementProse show={page.hasBody} class="guide-intro"><Body /></StatementProse>
     <ol class="steps">
       {
@@ -79,6 +101,14 @@ const filterCss = situations
         ))
       }
     </ol>
+    <section class="st guide-close" aria-labelledby="postup-zaver">
+      <h2 id="postup-zaver" class="st-heading">{ui.guideCloseHeading}</h2>
+      <p class="st-text">{ui.guideCloseText}</p>
+      <p class="st-text">
+        {ui.officePrompt}:{" "}
+        <PhoneLink number={office.number}>{office.label}{" "}<span class="nowrap">{officeDisplay}</span></PhoneLink>
+      </p>
+    </section>
   </div>
   {
     faq.length > 0 ? (
@@ -111,6 +141,86 @@ const filterCss = situations
     margin-top: 0.875rem;
   }
 
+  /* The reassurance lead: steady, a little larger than body text, a signal rule on its left. */
+  .guide-lead {
+    max-width: 30em;
+    margin-top: 1.5rem;
+    padding-left: 1rem;
+    border-left: 3px solid var(--signal);
+    font-size: 1.25rem;
+    line-height: 1.45;
+  }
+
+  /* The rail tracker (desktop rail only). */
+  .track {
+    padding-top: 1rem;
+    border-top: 1px solid var(--rule);
+  }
+
+  .track-count {
+    font-family: var(--font-display);
+    font-size: 1.75rem;
+    font-weight: var(--display-weight);
+    line-height: 1.1;
+    letter-spacing: var(--display-tracking);
+    font-variant-numeric: lining-nums tabular-nums;
+  }
+
+  .track-list {
+    margin: 1rem 0 0;
+    padding: 0;
+    list-style: none;
+    counter-reset: track;
+  }
+
+  .track-list li {
+    counter-increment: track;
+  }
+
+  .track-list a {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1.75rem minmax(0, 1fr);
+    padding: 0.3125rem 0 0.3125rem 0.875rem;
+    color: var(--muted);
+    font-size: 1.0625rem;
+    line-height: 1.35;
+    text-decoration: none;
+    transition:
+      color 150ms ease,
+      padding-left 150ms ease;
+  }
+
+  .track-list a::before {
+    content: counter(track);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* The step being read: full ink, bold, and a 3 px bar on its left edge. */
+  .track-list a::after {
+    content: "";
+    position: absolute;
+    inset-block: 0.3125rem;
+    left: 0;
+    width: 3px;
+    background: var(--ink);
+    opacity: 0;
+    transition: opacity 150ms ease;
+  }
+
+  .track-list a:hover {
+    color: var(--ink);
+  }
+
+  .track-list a[aria-current="location"] {
+    color: var(--ink);
+    font-weight: 700;
+  }
+
+  .track-list a[aria-current="location"]::after {
+    opacity: 1;
+  }
+
   .steps {
     margin: 0;
     padding: 0;
@@ -124,6 +234,11 @@ const filterCss = situations
   @media (min-width: 64rem) {
     .guide-pick {
       margin-top: 3rem;
+    }
+
+    .guide-lead {
+      margin-top: 2.5rem;
+      font-size: 1.5rem;
     }
   }
 </style>

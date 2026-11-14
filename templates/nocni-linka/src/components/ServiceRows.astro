@@ -1,0 +1,121 @@
+---
+/**
+ * Home "services": ONE statement with the featured services as large ruled rows (name, one line,
+ * an arrow), so the home page reads opening → services → picker → story → office instead of a run
+ * of identical statements (review 2026-11-13, §4 C). Each row is one link to the service's page.
+ */
+import type { CollectionEntry } from "astro:content";
+import PlaceholderMark from "@core/components/PlaceholderMark.astro";
+import Statement from "./Statement.astro";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  services: CollectionEntry<"services">[];
+  class?: string;
+}
+
+const { services, class: className } = Astro.props;
+---
+<Statement id="sluzby" kicker={ui.servicesKicker} heading={ui.servicesHeading} class={className} data-section="services">
+  <ul class="service-rows" role="list">
+    {
+      services.map((service) => (
+        <li>
+          <a href={`/sluzby/${service.id}/`} class="service-row">
+            <span class="service-name">{service.data.title}</span>
+            <PlaceholderMark active={service.data.placeholder} as="span" class="service-line">
+              {service.data.summary}
+            </PlaceholderMark>
+            <span class="service-arrow" aria-hidden="true">→</span>
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+  <a href="/sluzby/" class="st-link">{ui.allServices}</a>
+</Statement>
+
+<style>
+  .service-rows {
+    margin-top: 1.75rem;
+    padding: 0;
+    list-style: none;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .service-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: 1.5rem;
+    row-gap: 0.25rem;
+    padding: 1.125rem 0;
+    border-top: 1px solid var(--rule);
+    text-decoration: none;
+    transition:
+      background-color 150ms ease,
+      padding 150ms ease;
+  }
+
+  .service-name {
+    grid-column: 1;
+    font-family: var(--font-display);
+    font-size: 1.625rem;
+    font-weight: var(--display-weight);
+    line-height: 1.15;
+    letter-spacing: var(--display-tracking);
+    text-decoration: underline;
+    text-decoration-color: color-mix(in srgb, currentColor 40%, transparent);
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.2em;
+    transition: text-decoration-color 150ms ease;
+  }
+
+  .service-row :global(.service-line) {
+    grid-column: 1;
+    display: block;
+    max-width: 34em;
+    color: var(--muted);
+    font-size: 1.125rem;
+    line-height: 1.45;
+  }
+
+  .service-arrow {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    align-self: center;
+    font-size: 1.5rem;
+    transition: translate 150ms ease;
+  }
+
+  .service-row:hover {
+    padding-inline: 0.75rem;
+    background: var(--rail);
+  }
+
+  .service-row:hover .service-name {
+    text-decoration-color: currentColor;
+    text-decoration-thickness: 2px;
+  }
+
+  .service-row:hover .service-arrow {
+    translate: 0.375rem 0;
+  }
+
+  @media (min-width: 64rem) {
+    .service-rows {
+      margin-top: 2.5rem;
+    }
+
+    .service-row {
+      padding: 1.5rem 0;
+    }
+
+    .service-name {
+      font-size: 2.25rem;
+    }
+
+    .service-row :global(.service-line) {
+      font-size: 1.25rem;
+    }
+  }
+</style>

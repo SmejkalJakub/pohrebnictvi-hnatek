@@ -1,24 +1,202 @@
 ---
-/** Home "catalogue-links": one statement with inline links to the coffin and flower pages. */
-import type { NavItem } from "@core/content/view-models.ts";
+/**
+ * Home "catalogue-links" (design-differentiation §1.4): the flower and coffin pages as two picture
+ * links side by side, flower first, each a real catalogue photo with the page name and what the
+ * photo shows beneath. Product shots keep their whole subject: the photo sits on a dark mat
+ * (object-fit: contain), like a print in a frame, so a white studio ground never fills the tile.
+ * A page without a real photo stays a plain link in the line below; with no photos at all the
+ * statement is the inline line it always was.
+ */
+import { Image } from "astro:assets";
+import type { HomePhoto, NavItem } from "@core/content/view-models.ts";
+import { resolveImage, type ResolvedImage } from "@core/media/resolve.ts";
 import Statement from "./Statement.astro";
 import { ui } from "../i18n/cs.ts";
 
 interface Props {
   links: NavItem[];
+  flower?: HomePhoto | null;
+  coffin?: HomePhoto | null;
 }
 
-const { links } = Astro.props;
+const { links, flower = null, coffin = null } = Astro.props;
+
+interface Tile {
+  link: NavItem;
+  photo: HomePhoto;
+  image: ResolvedImage;
+}
+
+function photoFor(link: NavItem): HomePhoto | null {
+  if (link.id === "kvetiny") {
+    return flower;
+  }
+  if (link.id === "rakve") {
+    return coffin;
+  }
+  return null;
+}
+
+/** Flower first: the warmer picture leads, the coffin is the quieter one. */
+function rank(link: NavItem): number {
+  if (link.id === "kvetiny") {
+    return 0;
+  }
+  return 1;
+}
+
+const tiles: Tile[] = [];
+const plain: NavItem[] = [];
+for (const link of [...links].sort((a, b) => rank(a) - rank(b))) {
+  const photo = photoFor(link);
+  if (photo === null) {
+    plain.push(link);
+  } else {
+    tiles.push({ link, photo, image: resolveImage(photo.image) });
+  }
+}
+
+function widthsFor(image: ResolvedImage): number[] {
+  const fileWidth = image.src.width;
+  const widths = [320, 480, 640].filter((width) => width < fileWidth);
+  widths.push(Math.min(fileWidth, 960));
+  return widths;
+}
 ---
 <Statement id="katalog" kicker={ui.catalogueKicker} class="home-st" data-section="catalogue-links">
-  <p class="inline-links">
-    {
-      links.map((link, index) => (
-        <>
-          {index > 0 ? <span aria-hidden="true"> · </span> : null}
-          <a href={link.href}>{link.label}</a>
-        </>
-      ))
-    }
-  </p>
+  {
+    tiles.length > 0 ? (
+      <ul class="cat-tiles" role="list">
+        {tiles.map((tile) => (
+          <li>
+            <a href={tile.link.href} class="cat-tile">
+              <span class="cat-mat">
+                <Image
+                  src={tile.image.src}
+                  alt={tile.image.alt}
+                  widths={widthsFor(tile.image)}
+                  sizes="(min-width: 64rem) 17rem, calc(50vw - 1.5rem)"
+                  class="cat-img"
+                  style={`object-position: ${tile.image.objectPosition}`}
+                  loading="lazy"
+                />
+              </span>
+              <span class="cat-name">{tile.link.label}</span>
+              <span class="cat-what">{tile.photo.title}</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    ) : null
+  }
+  {
+    plain.length > 0 ? (
+      <p class="inline-links">
+        {plain.map((link, index) => (
+          <>
+            {index > 0 ? <span aria-hidden="true"> · </span> : null}
+            <a href={link.href}>{link.label}</a>
+          </>
+        ))}
+      </p>
+    ) : null
+  }
 </Statement>
+
+<style>
+  /* Side by side at every width: two small prints stay quiet; stacked full width, a white studio
+     shot would glare on the night page. */
+  .cat-tiles {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    max-width: 36rem;
+    margin-top: 1.25rem;
+    padding: 0;
+    list-style: none;
+  }
+
+  @media (min-width: 40rem) {
+    .cat-tiles {
+      gap: 1.5rem;
+    }
+  }
+
+  .cat-tile {
+    display: grid;
+    gap: 0.25rem;
+    color: var(--ink);
+    text-decoration: none;
+  }
+
+  .cat-mat {
+    display: block;
+    aspect-ratio: 4 / 3;
+    padding: 0.5rem;
+    background: var(--rail);
+    border: 1px solid var(--rule);
+    transition: border-color 150ms ease;
+  }
+
+  .cat-img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  .cat-name {
+    margin-top: 0.625rem;
+    font-family: var(--font-display);
+    font-weight: var(--display-weight);
+    letter-spacing: var(--display-tracking);
+    font-size: 1.25rem;
+    line-height: 1.2;
+    text-decoration: underline;
+    text-decoration-color: color-mix(in srgb, currentColor 55%, transparent);
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.18em;
+    transition: text-decoration-color 150ms ease;
+  }
+
+  .cat-what {
+    color: var(--muted);
+    font-size: 0.9375rem;
+    line-height: 1.35;
+  }
+
+  @media (min-width: 40rem) {
+    .cat-mat {
+      padding: 0.75rem;
+    }
+
+    .cat-name {
+      font-size: 1.5rem;
+    }
+
+    .cat-what {
+      font-size: 1rem;
+    }
+  }
+
+  .cat-tile:hover .cat-mat,
+  .cat-tile:focus-visible .cat-mat {
+    border-color: var(--ink);
+  }
+
+  .cat-tile:hover .cat-name {
+    text-decoration-color: currentColor;
+    text-decoration-thickness: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .cat-mat,
+    .cat-name {
+      transition: none;
+    }
+  }
+
+  .inline-links {
+    margin-top: 1.5rem;
+  }
+</style>

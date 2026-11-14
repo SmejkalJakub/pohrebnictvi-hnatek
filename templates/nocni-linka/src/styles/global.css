@@ -4,7 +4,9 @@
  * scales with the browser setting and at 200 % zoom.
  *
  * Separation device: darkness and space, and one 1 px rule at the top of each statement.
- * Amber (--signal) is used for the nonstop number only. No radius, shadows, gradients or motion.
+ * Amber (--signal) is used for the nonstop number only. No radius, shadows or gradients.
+ * Motion is feedback only (hover, press, open, state), ≤ 200 ms, off under reduced motion
+ * (design-differentiation §1, motion policy); the amber number never animates on its own.
  */
 @import "./fonts.css";
 @import "./print.css";
@@ -28,8 +30,26 @@
   --rule: #75777c;
 }
 
+/*
+ * Client brand (template-contract §8a): core's --brand-* roles on C's night palette. The ground is
+ * the brand's deep tone, the rail one step lighter, and the brand's second colour (gold for
+ * Hnátek) becomes the signal, still used for the nonstop number only. Print stays light.
+ */
+:root[data-brand] {
+  --ground: var(--brand-deep);
+  --rail: var(--brand-deep-2);
+  --ink: var(--brand-on-deep);
+  --muted: var(--brand-muted-on-deep);
+  --signal: var(--brand-signal-on-deep);
+  --rule: var(--brand-rule-on-deep);
+}
+
 :root {
   --font: "Schibsted Grotesk", ui-sans-serif, system-ui, sans-serif;
+  /* Headings use the text font unless the brand names a display font. */
+  --font-display: var(--font);
+  --display-weight: 700;
+  --display-tracking: -0.01em;
   /* Spacing scale (px): 8 · 16 · 32 · 64 · 96 · 160 */
   --s1: 0.5rem;
   --s2: 1rem;
@@ -53,6 +73,21 @@
 
 :root[data-font="hanken-grotesk"] {
   --font: "Hanken Grotesk", ui-sans-serif, system-ui, sans-serif;
+}
+
+/* Brand fonts: a serif display face is set lighter and a touch tighter, so the large statements
+ * read as composed type rather than bold grotesque swapped for a serif. */
+:root[data-brand-body] {
+  --font: var(--brand-font-body);
+}
+
+:root[data-brand-display] {
+  --font-display: var(--brand-font-display);
+}
+
+:root[data-brand-display="serif"] {
+  --display-weight: 600;
+  --display-tracking: -0.015em;
 }
 
 /*
@@ -104,8 +139,10 @@ h1,
 h2,
 h3,
 h4 {
-  font-weight: 700;
+  font-family: var(--font-display);
+  font-weight: var(--display-weight);
   line-height: 1.08;
+  letter-spacing: var(--display-tracking);
   text-wrap: balance;
 }
 
@@ -115,15 +152,36 @@ img {
   height: auto;
 }
 
+/*
+ * Links: at rest the underline is half-tone; on hover it turns full ink, thickens and moves up to
+ * the text, so the change is visible on a dark ground (review 2026-11-13, §4 C).
+ */
 a {
   color: var(--ink);
   text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, currentColor 55%, transparent);
   text-decoration-thickness: 1px;
   text-underline-offset: 0.3125em;
+  transition:
+    text-decoration-color 150ms ease,
+    text-underline-offset 150ms ease,
+    color 150ms ease;
 }
 
 a:hover {
+  text-decoration-color: currentColor;
   text-decoration-thickness: 2px;
+  text-underline-offset: 0.2em;
+}
+
+a:active {
+  opacity: 0.8;
+}
+
+/* Copy-to-clipboard confirmation (core interactions) on the night ground. */
+:root {
+  --toast-bg: var(--ink);
+  --toast-fg: var(--ground);
 }
 
 :focus-visible {
@@ -497,6 +555,16 @@ a:hover {
   border-bottom: 1px solid var(--rule);
 }
 
+.link-rows a {
+  transition:
+    padding-left 150ms ease,
+    text-decoration-color 150ms ease;
+}
+
+.link-rows a:hover {
+  padding-left: 0.5rem;
+}
+
 /* A large bordered link (situation picker, 58 px) */
 .big-links {
   display: flex;
@@ -519,6 +587,29 @@ a:hover {
   font-weight: 700;
   line-height: 1.2;
   text-decoration: none;
+}
+
+.big-link {
+  transition:
+    background-color 150ms ease,
+    color 150ms ease,
+    border-color 150ms ease;
+}
+
+.big-link .arrow {
+  transition: translate 150ms ease;
+}
+
+.big-link:hover {
+  background: var(--rail);
+}
+
+.big-link:hover .arrow {
+  translate: 0.375rem 0;
+}
+
+.big-link:active {
+  translate: 0 1px;
 }
 
 .big-link .picked-word {

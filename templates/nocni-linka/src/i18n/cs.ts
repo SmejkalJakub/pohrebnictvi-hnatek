@@ -26,6 +26,7 @@ export const ui = {
   noticesLink: "Najít oznámení",
   servicesKicker: "Služby",
   serviceLink: "Co služba zahrnuje",
+  servicesHeading: "S čím vám pomůžeme",
   allServices: "Všechny služby",
   stepsKicker: "Jak postupovat",
   firstHoursHeading: "Co udělat jako první",
@@ -45,10 +46,18 @@ export const ui = {
   step: "Krok",
   appliesTo: "Platí, když člověk zemřel",
   readMore: "Podrobnosti",
-  nextStep: "Další krok",
-  checklist: "Co mít hotové",
+  /** Guided list (design-differentiation §1.3): calm instructions, never tick boxes. */
+  guideListHeading: "Postupně",
+  then: "Potom",
+  guideLead:
+    "Nemusíte všechno vyřešit najednou. Ani si nic pamatovat. Stačí jít krok za krokem. Když si nebudete jistí, zavolejte nám. Poradíme vám.",
+  guideCloseHeading: "Tím máte to nejdůležitější za sebou.",
+  guideCloseText: "Se vším ostatním vám pomůžeme při sjednání pohřbu.",
   officePrompt: "Domluvte se s kanceláří",
   faqHeading: "Časté otázky",
+  railTrackLabel: "Kroky na této stránce",
+  railTrackCounter: "Krok {n} z {total}",
+  railMoreNav: "Ostatní stránky",
 
   // Services
   moreServices: "Další služby",
@@ -60,7 +69,8 @@ export const ui = {
   included: "V ceně je zahrnuto",
   excluded: "Není zahrnuto",
   otherItems: "Jednotlivé položky",
-  printHint: "Ceník vytisknete klávesami Ctrl + P (na Macu Cmd + P). Vytiskne se světle, černě na bílém papíře.",
+  printHint:
+    "Ceník vytisknete klávesami Ctrl + P (na Macu Cmd + P). Vytiskne se světle, černě na bílém papíře.",
   printedFrom: "Vytištěno z",
   priceValidFrom: (date: string) => `Ceny platí od ${date}.`,
 
@@ -105,7 +115,8 @@ export const ui = {
   condolencesText: "Kondolenci můžete poslat rodině prostřednictvím pohřební služby na adresu",
   condolencesAfter: "Předáme ji.",
   qrHeading: "QR kód oznámení",
-  qrText: "Oznámení vytisknete klávesami Ctrl + P (na Macu Cmd + P). Výtisk je světlý, černý text na bílém papíře.",
+  qrText:
+    "Oznámení vytisknete klávesami Ctrl + P (na Macu Cmd + P). Výtisk je světlý, černý text na bílém papíře.",
   qrFile: "QR kód k tisku (SVG)",
   livestreamShort: "přenos",
 

@@ -3,6 +3,8 @@
  * "Kde blízký člověk zemřel?": four full-width 58 px bordered links. Each one opens the guide
  * filtered to that situation through a fragment (:target), no JavaScript. On the guide itself
  * the picked link is inverted and says "vybráno" in words (rules in StepStatement's filter CSS).
+ * On the guide itself the links carry data-vt-anchor: with JavaScript the filter change cross-fades
+ * (core interactions, view transition) instead of snapping.
  */
 import { SITUATION_ANCHOR, type SpecificSituation } from "@core/content/guidance-flow.ts";
 import { situationLabels, ui } from "../i18n/cs.ts";
@@ -20,7 +22,12 @@ const { situations, base, labelledBy } = Astro.props;
   {
     situations.map((situation) => (
       <li>
-        <a href={`${base}#${SITUATION_ANCHOR[situation]}`} class="big-link" data-place={situation}>
+        <a
+          href={`${base}#${SITUATION_ANCHOR[situation]}`}
+          class="big-link"
+          data-place={situation}
+          data-vt-anchor={base === "" ? "" : undefined}
+        >
           <span>{situationLabels[situation]}</span>
           <span class="arrow" aria-hidden="true">→</span>
           <span class="picked-word">{ui.picked}</span>

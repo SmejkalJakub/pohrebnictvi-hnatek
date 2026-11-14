@@ -5,8 +5,12 @@
  * heading · Dokumenty (when documents are on). Below, the legal row (research L8, L10): legal
  * name, sídlo, IČO, register entry, the ADR body, Právní informace and the privacy page.
  * Neutral form (notice pages): no Dokumenty column, "Telefon nonstop" in ink, no amber.
+ * Compact form (home ending with the office statement): no address and office columns, which the
+ * page shows just above; the nonstop line, documents and the legal row stay.
  */
+import { Image } from "astro:assets";
 import EmergencyPhoneLink from "@core/components/EmergencyPhoneLink.astro";
+import { brandMark } from "@core/brand/runtime.ts";
 import MissingFact from "@core/components/MissingFact.astro";
 import PhoneLink from "@core/components/PhoneLink.astro";
 import type { DocumentView, SiteContext } from "@core/content/view-models.ts";
@@ -19,41 +23,53 @@ interface Props {
   neutral: boolean;
   documents: DocumentView[];
   hasPrivacyPage: boolean;
+  compact?: boolean;
 }
 
-const { site, neutral, documents, hasPrivacyPage } = Astro.props;
+const { site, neutral, documents, hasPrivacyPage, compact = false } = Astro.props;
 const location = mainLocation(site);
 const [street, cityLine] = formatAddressLines(location.address);
 const map = mapHref(location);
 const office = primaryOfficePhone(site);
 const ids = site.company.legalIds;
 const showDocuments = !neutral && documents.length > 0;
+/* The brand mark (light emblem) signs the legal row, quietly; not on neutral notice pages. */
+let mark = brandMark();
+if (neutral) {
+  mark = null;
+}
 let emergencyHeading = site.emergency.label;
 if (neutral) {
   emergencyHeading = ui.neutralPhone;
 }
 ---
-<footer class="night-footer" data-neutral={neutral ? "true" : "false"}>
+<footer class="night-footer" data-neutral={neutral ? "true" : "false"} data-compact={compact ? "true" : "false"}>
   <div class="foot-cols">
-    <div class="foot-col">
-      <p class="foot-brand">{site.company.brandName}</p>
-      <p class="foot-muted">{street}<br />{cityLine}</p>
-      {map !== null ? <p class="foot-gap"><a href={map}>{ui.mapLink}</a></p> : null}
-    </div>
-    <section class="foot-col" aria-labelledby="pata-kancelar" data-office-hours>
-      <h2 id="pata-kancelar" class="foot-heading">{site.officeHours.label}</h2>
-      <ul class="foot-hours">
-        {
-          site.officeHoursRows.map((row) => (
-            <li>
-              <span>{row.days}</span> <span class="nowrap">{row.text}</span>
-              {row.note !== null ? <span class="foot-note">{row.note}</span> : null}
-            </li>
-          ))
-        }
-      </ul>
-      <p class="foot-gap"><PhoneLink number={office.number} class="foot-phone" /></p>
-    </section>
+    {
+      compact ? null : (
+        <div class="foot-col">
+          <p class="foot-brand">{site.company.brandName}</p>
+          <p class="foot-muted">{street}<br />{cityLine}</p>
+          {map !== null ? <p class="foot-gap"><a href={map}>{ui.mapLink}</a></p> : null}
+        </div>
+      )
+    }
+    {
+      compact ? null : (
+        <section class="foot-col" aria-labelledby="pata-kancelar" data-office-hours>
+          <h2 id="pata-kancelar" class="foot-heading">{site.officeHours.label}</h2>
+          <ul class="foot-hours">
+            {site.officeHoursRows.map((row) => (
+              <li>
+                <span>{row.days}</span> <span class="nowrap">{row.text}</span>
+                {row.note !== null ? <span class="foot-note">{row.note}</span> : null}
+              </li>
+            ))}
+          </ul>
+          <p class="foot-gap"><PhoneLink number={office.number} class="foot-phone" /></p>
+        </section>
+      )
+    }
     {
       site.emergency.enabled ? (
         <section class="foot-col" aria-labelledby="pata-nonstop" data-emergency-block>
@@ -79,7 +95,8 @@ if (neutral) {
       ) : null
     }
   </div>
-  <div class="foot-legal">
+  <div class="foot-legal" data-mark={mark !== null ? "true" : "false"}>
+    {mark !== null ? <Image src={mark} alt="" width={44} class="foot-mark" loading="lazy" /> : null}
     <p class="foot-muted" data-legal-identification>
       {site.company.legalName}
       {", "}
@@ -190,6 +207,12 @@ if (neutral) {
     padding-block: 0.375rem;
   }
 
+  .foot-legal :global(.foot-mark) {
+    width: 2.75rem;
+    height: auto;
+    opacity: 0.85;
+  }
+
   @media (min-width: 48rem) {
     .foot-cols {
       grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -210,6 +233,11 @@ if (neutral) {
       grid-template-columns: minmax(0, 1fr) auto;
       gap: 2rem;
       margin-top: 2.5rem;
+    }
+
+    .foot-legal[data-mark="true"] {
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      align-items: start;
     }
 
     .foot-legal .foot-muted {

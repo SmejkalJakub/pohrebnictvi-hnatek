@@ -11,6 +11,9 @@ import "../styles/global.css";
 import SeoHead from "@core/components/SeoHead.astro";
 import StructuredData from "@core/components/StructuredData.astro";
 import PrototypeBanner from "@core/components/PrototypeBanner.astro";
+import BrandStyle from "@core/components/BrandStyle.astro";
+import SiteInteractions from "@core/components/SiteInteractions.astro";
+import { brandAttributes } from "@core/brand/runtime.ts";
 import type { ImageMetadata } from "astro";
 import { getDocuments, getFaq, getOptionalPage, hasPage } from "@core/content/load.ts";
 import type { NavItem, SiteContext } from "@core/content/view-models.ts";
@@ -33,9 +36,25 @@ interface Props {
   image?: ImageMetadata | null;
   /** Notice list and notice pages: neutral rail, reduced nav, neutral footer. */
   neutral?: boolean;
+  /**
+   * The page already shows the office (address, hours, phone) just above the footer (home with
+   * contact-summary last): the footer drops its own copy and keeps the nonstop line and legal row.
+   */
+  compactFooter?: boolean;
 }
 
-const { site, title = null, description, noindex = false, image = null, neutral = false } = Astro.props;
+const {
+  site,
+  title = null,
+  description,
+  noindex = false,
+  image = null,
+  neutral = false,
+  compactFooter = false,
+} = Astro.props;
+/* A page that fills the "rail" slot (the guide's step tracker) gets the main nav folded behind a
+ * toggle in the rail on desktop, so the tracker fits beside the content. */
+const tracked = Astro.slots.has("rail");
 const options = resolveOptions(site.config);
 const path = Astro.url.pathname;
 
@@ -74,6 +93,7 @@ const menuLabels = JSON.stringify({ open: ui.menuOpen, close: ui.menuClose });
   data-font={options.fontPair}
   data-hero={options.heroVariant}
   data-emphasis={options.emergencyEmphasis}
+  {...brandAttributes()}
 >
   <head>
     {preloads.map((href) => <link rel="preload" href={href} as="font" type="font/woff2" crossorigin />)}
@@ -82,17 +102,27 @@ const menuLabels = JSON.stringify({ open: ui.menuOpen, close: ui.menuClose });
       document.documentElement.classList.replace("no-js", "js");
     </script>
     <StructuredData site={site} />
+    <BrandStyle />
   </head>
   <body>
     <PrototypeBanner />
     <a href="#obsah" class="skip-link">{ui.skipLink}</a>
     <div class="frame">
-      <NightRail site={site} links={links} neutral={neutral} />
+      <NightRail site={site} links={links} neutral={neutral} tracked={tracked}>
+        <slot name="rail" />
+      </NightRail>
       <main id="obsah" tabindex="-1" class="content">
         <slot />
       </main>
     </div>
-    <NightFooter site={site} neutral={neutral} documents={documents} hasPrivacyPage={hasPrivacyPage} />
+    <NightFooter
+      site={site}
+      neutral={neutral}
+      compact={compactFooter}
+      documents={documents}
+      hasPrivacyPage={hasPrivacyPage}
+    />
+    <SiteInteractions />
     <script is:inline define:vars={{ menuLabels }}>
       const labels = JSON.parse(menuLabels);
       for (const toggle of document.querySelectorAll("[data-menu-toggle]")) {
