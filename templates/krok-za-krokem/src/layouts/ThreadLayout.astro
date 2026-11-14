@@ -1,0 +1,224 @@
+---
+/**
+ * Page shell for Template E "Krok za krokem". Options become data attributes on <html>.
+ * Below 64 rem a full-width nonstop strip in the primary sits above the header (E1 phone board);
+ * from 64 rem the nonstop number stands at the header's right instead. High emphasis keeps the
+ * strip on every width. Then the header (wordmark, text navigation or "Menu"), the page on the
+ * thread's axis, the deep footer.
+ * `neutral` switches the chrome to its notice form (research L1): no strip, a muted publisher
+ * sentence with the nonstop link, reduced navigation, a footer without the nonstop block.
+ */
+import "../styles/fonts.css";
+import "../styles/global.css";
+import "../styles/print.css";
+import SeoHead from "@core/components/SeoHead.astro";
+import StructuredData from "@core/components/StructuredData.astro";
+import PrototypeBanner from "@core/components/PrototypeBanner.astro";
+import BrandStyle from "@core/components/BrandStyle.astro";
+import SiteInteractions from "@core/components/SiteInteractions.astro";
+import EmergencyPhoneLink from "@core/components/EmergencyPhoneLink.astro";
+import { brandAttributes } from "@core/brand/runtime.ts";
+import type { ImageMetadata } from "astro";
+import { getDocuments, getFaq, getOptionalPage, getPeople, hasPage } from "@core/content/load.ts";
+import type { NavItem, SiteContext } from "@core/content/view-models.ts";
+import { formatPhone } from "@core/format/phone.ts";
+import loraLatin from "@fontsource/lora/files/lora-latin-500-normal.woff2?url";
+import loraLatinExt from "@fontsource/lora/files/lora-latin-ext-500-normal.woff2?url";
+import literataLatin from "@fontsource/literata/files/literata-latin-500-normal.woff2?url";
+import literataLatinExt from "@fontsource/literata/files/literata-latin-ext-500-normal.woff2?url";
+import ThreadHeader from "../components/ThreadHeader.astro";
+import ThreadFooter from "../components/ThreadFooter.astro";
+import NoticePublisherLine from "../components/NoticePublisherLine.astro";
+import { resolveOptions } from "../lib/options.ts";
+import { fullNav, neutralNav } from "../lib/site.ts";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  site: SiteContext;
+  /** Page title without the brand name; null on the homepage. */
+  title?: string | null;
+  description: string;
+  noindex?: boolean;
+  image?: ImageMetadata | null;
+  /** Notice list and notice pages: publisher line, reduced nav, no strip, neutral footer. */
+  neutral?: boolean;
+  /**
+   * The page already shows the office (home with contact-summary): the footer leaves out its own
+   * Kancelář column so the same address and hours do not repeat one screen apart.
+   */
+  officeOnPage?: boolean;
+}
+
+const {
+  site,
+  title = null,
+  description,
+  noindex = false,
+  image = null,
+  neutral = false,
+  officeOnPage = false,
+} = Astro.props;
+const options = resolveOptions(site.config);
+const path = Astro.url.pathname;
+const brand = brandAttributes();
+
+async function optionalNavItem(id: "pro-ucastniky" | "pohreb-predem", enabled: boolean): Promise<NavItem | null> {
+  if (!enabled) {
+    return null;
+  }
+  const page = await getOptionalPage(id);
+  if (page === null) {
+    return null;
+  }
+  return { id, label: page.data.navLabel, href: `/${id}/` };
+}
+
+const documents = await getDocuments();
+const people = await getPeople();
+const faq = await getFaq();
+const hasLegalPage = await hasPage("pravni-informace");
+const hasPrivacyPage = await hasPage("ochrana-osobnich-udaju");
+let links = fullNav(site, path, {
+  guestInfo: await optionalNavItem("pro-ucastniky", site.config.features.guestInfo),
+  prePlanning: await optionalNavItem("pohreb-predem", site.config.features.prePlanning),
+  hasPeople: people.length > 0,
+  hasFaq: faq.length > 0,
+  hasDocuments: documents.length > 0 && hasLegalPage,
+});
+if (neutral) {
+  links = neutralNav(site, path);
+}
+const showStrip = !neutral && site.emergency.enabled;
+const emergencyDisplay = formatPhone(site.emergency.phone).display;
+
+/* Preload the display face at 500: the H1, the largest paint, is text (Czech needs latin-ext). */
+let preloads: string[] = [loraLatin, loraLatinExt];
+if (options.fontPair === "literata") {
+  preloads = [literataLatin, literataLatinExt];
+}
+if (brand["data-brand-display"] !== undefined) {
+  preloads = [];
+}
+const menuLabels = JSON.stringify({ open: ui.menuOpen, close: ui.menuClose });
+---
+<html
+  lang="cs"
+  class="no-js"
+  data-palette={options.palette}
+  data-font={options.fontPair}
+  data-emphasis={options.emergencyEmphasis}
+  {...brand}
+>
+  <head>
+    {preloads.map((href) => <link rel="preload" href={href} as="font" type="font/woff2" crossorigin />)}
+    <SeoHead site={site} title={title} description={description} noindex={noindex} image={image} />
+    <script is:inline>
+      document.documentElement.classList.replace("no-js", "js");
+    </script>
+    <StructuredData site={site} />
+    <BrandStyle />
+  </head>
+  <body>
+    <PrototypeBanner />
+    <a href="#obsah" class="skip-link">{ui.skipLink}</a>
+    {
+      showStrip ? (
+        <EmergencyPhoneLink emergency={site.emergency} variant="custom" class="nonstop-strip">
+          <span class="strip-label">{site.emergency.label}</span>{" "}
+          <span class="strip-number nowrap">{emergencyDisplay}</span>
+        </EmergencyPhoneLink>
+      ) : null
+    }
+    <ThreadHeader site={site} links={links} neutral={neutral} />
+    {neutral ? <NoticePublisherLine site={site} /> : null}
+    <main id="obsah" tabindex="-1" data-neutral={neutral ? "true" : "false"}>
+      <slot />
+    </main>
+    <ThreadFooter
+      site={site}
+      neutral={neutral}
+      documents={documents}
+      hasPrivacyPage={hasPrivacyPage}
+      officeOnPage={officeOnPage}
+    />
+    <SiteInteractions />
+    <script is:inline define:vars={{ menuLabels }}>
+      const labels = JSON.parse(menuLabels);
+      const toggle = document.querySelector("[data-menu-toggle]");
+      let panel = null;
+      if (toggle !== null) {
+        panel = document.getElementById(toggle.getAttribute("aria-controls"));
+      }
+      if (toggle !== null && panel !== null) {
+        const setOpen = (open) => {
+          toggle.setAttribute("aria-expanded", String(open));
+          if (open) {
+            toggle.textContent = labels.close;
+          } else {
+            toggle.textContent = labels.open;
+          }
+          panel.toggleAttribute("data-open", open);
+        };
+        toggle.addEventListener("click", () => {
+          setOpen(toggle.getAttribute("aria-expanded") !== "true");
+        });
+        document.addEventListener("keydown", (event) => {
+          if (event.key === "Escape" && toggle.getAttribute("aria-expanded") === "true") {
+            setOpen(false);
+            toggle.focus();
+          }
+        });
+      }
+    </script>
+  </body>
+</html>
+
+<style>
+  main {
+    display: block;
+    padding-bottom: 4rem;
+  }
+
+  main:focus {
+    outline: none;
+  }
+
+  /*
+   * The phone strip (E1 375 board): the whole line is one link, label and number on the primary,
+   * centred, at least 44 px tall. From 64 rem the header carries the number instead, unless the
+   * client chose high emphasis.
+   */
+  :global(.nonstop-strip) {
+    /* Block, never flex: a flex container drops the space before the number (QA test 9). */
+    display: block;
+    min-height: 2.75rem;
+    padding: 0.625rem var(--gutter);
+    background: var(--primary-fill);
+    color: var(--on-primary);
+    font-size: 1rem;
+    line-height: 1.4;
+    text-align: center;
+    text-decoration: none;
+  }
+
+  :global(.nonstop-strip):hover {
+    color: var(--on-primary);
+    text-decoration: underline;
+  }
+
+  :global(.nonstop-strip):focus-visible {
+    outline-color: var(--ornament);
+    outline-offset: -4px;
+  }
+
+  :global(.nonstop-strip) .strip-number {
+    font-size: 1.125rem;
+    font-weight: 600;
+  }
+
+  @media (min-width: 64rem) {
+    :global(html:not([data-emphasis="high"])) :global(.nonstop-strip) {
+      display: none;
+    }
+  }
+</style>

@@ -1,0 +1,322 @@
+---
+/**
+ * Home `next-steps`, the heart of E1: the home page is the guide itself. A hairline, "Co vás čeká,
+ * krok za krokem" with the reassurance lead beside it, then one stop per guidance phase on the
+ * thread, the first published step of the phase standing for it:
+ *  - V prvních hodinách: the step, its guided list, the nonstop line when the step asks for it,
+ *    and the other places as one sentence ("Zemřel jinde? v nemocnici · …") into the filtered guide;
+ *  - V následujících dnech: the step and its list, with the firm's own place photo beside it;
+ *  - Příprava pohřbu: the step, the featured ceremonies as three short notes, and the first real
+ *    flower and coffin photos as links to the catalogues;
+ *  - Po pohřbu: the step.
+ * Further steps of a phase are listed as "Také: …" links into the guide. Photos come only from
+ * core getHomeImagery() (real business photos); a stop without one shows text only (§1.4).
+ * The thread closes with "Tím máte to nejdůležitější za sebou." and the full guide link.
+ * Signature: the ring of the stop being read fills with the primary (data-spy-nav on the <ol>).
+ */
+import type { CollectionEntry } from "astro:content";
+import EmergencyPhoneLink from "@core/components/EmergencyPhoneLink.astro";
+import PlaceholderMark from "@core/components/PlaceholderMark.astro";
+import { chooserSituations, guideSentence } from "@core/content/guidance-flow.ts";
+import { GUIDANCE_PHASES } from "@core/content/schemas.ts";
+import { serviceHref, type HomeImagery, type NavItem, type SiteContext } from "@core/content/view-models.ts";
+import { formatAddressInline } from "@core/format/address.ts";
+import { formatPhone } from "@core/format/phone.ts";
+import PlaceSentence from "./PlaceSentence.astro";
+import StopPhoto from "./StopPhoto.astro";
+import { mainLocation, nbsp } from "../lib/site.ts";
+import { guidancePhaseLabels, ui } from "../i18n/cs.ts";
+
+interface Props {
+  site: SiteContext;
+  guidance: CollectionEntry<"guidance">[];
+  /** Featured ceremonies for the "Příprava pohřbu" stop (at most three). */
+  ceremonies: CollectionEntry<"services">[];
+  imagery: HomeImagery;
+  flowersNav: NavItem | null;
+  coffinsNav: NavItem | null;
+}
+
+const { site, guidance, ceremonies, imagery, flowersNav, coffinsNav } = Astro.props;
+const GUIDE = "/jak-postupovat/";
+const location = mainLocation(site);
+const allSituations = chooserSituations(guidance);
+
+const stops = GUIDANCE_PHASES.map((phase) => {
+  const entries = guidance.filter((entry) => entry.data.phase === phase);
+  const lead = entries[0] ?? null;
+  return { phase, lead, rest: entries.slice(1) };
+}).filter((stop) => stop.lead !== null);
+
+/* The places the first step does not cover, offered as a sentence into the filtered guide. */
+function otherPlaces(entry: CollectionEntry<"guidance">) {
+  if (entry.data.situations.includes("any")) {
+    return [];
+  }
+  return allSituations.filter((situation) => !entry.data.situations.includes(situation));
+}
+
+let flowerPhoto = null;
+if (imagery.flower !== null && flowersNav !== null) {
+  flowerPhoto = imagery.flower;
+}
+let coffinPhoto = null;
+if (imagery.coffin !== null && coffinsNav !== null) {
+  coffinPhoto = imagery.coffin;
+}
+const catalogueLinks = [flowersNav, coffinsNav].filter((item): item is NavItem => item !== null);
+---
+<section class="home-thread" data-section="next-steps" aria-labelledby="cesta">
+  <div class="thread-intro">
+    <h2 id="cesta" class="band-heading thread-heading">{ui.threadHeading}</h2>
+    <p class="thread-lead">{ui.guideLead}</p>
+  </div>
+  <ol class="thread" data-spy-nav>
+    {
+      stops.map((stop) => {
+        const entry = stop.lead;
+        if (entry === null) {
+          return null;
+        }
+        const data = entry.data;
+        const places = otherPlaces(entry);
+        const listId = `domu-${entry.id}-potreba`;
+        const hasPlacePhoto = stop.phase === "first-days" && imagery.place !== null;
+        const isArrangements = stop.phase === "arrangements";
+        return (
+          <li id={`domu-${stop.phase}`} class="stop home-stop" data-phase={stop.phase}>
+            <p class="label stop-label">{guidancePhaseLabels[stop.phase]}</p>
+            <a href={`#domu-${stop.phase}`} class="stop-ring" tabindex="-1" aria-hidden="true"></a>
+            <div class="stop-body" data-with-photo={hasPlacePhoto ? "true" : undefined}>
+              <div class="stop-main">
+                <h3 class="stop-title">{data.title}</h3>
+                <PlaceholderMark active={data.placeholder} as="div">
+                  <p class="stop-text">{data.summary}</p>
+                </PlaceholderMark>
+                {data.checklist.length > 0 ? (
+                  <>
+                    <p id={listId} class="stop-list-label">{ui.guideListLabel}</p>
+                    <ol class="stop-list" aria-labelledby={listId}>
+                      {data.checklist.map((item) => (
+                        <li>{guideSentence(item)}</li>
+                      ))}
+                    </ol>
+                  </>
+                ) : null}
+                {data.contactPrompt === "emergency" && site.emergency.enabled ? (
+                  <p class="stop-call">
+                    <EmergencyPhoneLink emergency={site.emergency} variant="custom" class="stop-call-link">
+                      {site.emergency.label}{" "}<span class="nowrap">{formatPhone(site.emergency.phone).display}</span>
+                    </EmergencyPhoneLink>
+                  </p>
+                ) : null}
+                {places.length > 0 ? (
+                  <PlaceSentence
+                    situations={places}
+                    base={GUIDE}
+                    questionId={`domu-${entry.id}-jinde`}
+                    question={ui.otherPlaceQuestion}
+                    inline
+                  />
+                ) : null}
+                {stop.rest.length > 0 && places.length === 0 ? (
+                  <p class="stop-also">
+                    {ui.alsoInPhase}:{" "}
+                    {stop.rest.map((other, index) => (
+                      <>
+                        <a href={`${GUIDE}#${other.id}`} class="go">{other.data.title}</a>
+                        {index < stop.rest.length - 1 ? <span aria-hidden="true"> · </span> : null}
+                      </>
+                    ))}
+                  </p>
+                ) : null}
+              </div>
+              {hasPlacePhoto && imagery.place !== null ? (
+                <StopPhoto
+                  image={imagery.place.image}
+                  caption={formatAddressInline(location.address)}
+                  maxWidth={360}
+                  class="stop-side-photo"
+                />
+              ) : null}
+              {isArrangements && ceremonies.length > 0 ? (
+                <ul class="ceremonies" role="list">
+                  {ceremonies.map((service) => (
+                    <li>
+                      <h4 class="ceremony-title">
+                        <a href={serviceHref(service.id, false)}>{service.data.title}</a>
+                      </h4>
+                      <p class="ceremony-text">{nbsp(service.data.summary)}</p>
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+              {isArrangements && (flowerPhoto !== null || coffinPhoto !== null) ? (
+                <div class="stop-photos">
+                  {flowerPhoto !== null && flowersNav !== null ? (
+                    <StopPhoto image={flowerPhoto.image} href={flowersNav.href} maxWidth={300} />
+                  ) : null}
+                  {coffinPhoto !== null && coffinsNav !== null ? (
+                    <StopPhoto image={coffinPhoto.image} href={coffinsNav.href} maxWidth={300} />
+                  ) : null}
+                </div>
+              ) : null}
+              {isArrangements && catalogueLinks.length > 0 ? (
+                <p class="stop-also">
+                  {catalogueLinks.map((item, index) => (
+                    <>
+                      <a href={item.href} class="go">{item.label}</a>
+                      {index < catalogueLinks.length - 1 ? <span aria-hidden="true"> · </span> : null}
+                    </>
+                  ))}
+                </p>
+              ) : null}
+            </div>
+          </li>
+        );
+      })
+    }
+  </ol>
+  <div class="thread-close">
+    <p class="thread-close-line">{ui.guideClosing}</p>
+    <p><a href={GUIDE} class="go">{ui.fullGuide}</a></p>
+  </div>
+</section>
+
+<style>
+  .home-thread {
+    width: 100%;
+    max-width: calc(var(--page) + 2 * var(--gutter));
+    margin-inline: auto;
+    padding: 2.5rem var(--gutter) 0;
+  }
+
+  .thread-intro {
+    margin-bottom: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--card-rule);
+  }
+
+  .thread-heading {
+    font-size: var(--h2);
+    line-height: 1.15;
+  }
+
+  .thread-lead {
+    margin-top: 0.75rem;
+    color: var(--muted);
+    font-size: 1.0625rem;
+  }
+
+  .stop-call :global(.stop-call-link) {
+    display: inline-block;
+    padding-block: 0.625rem;
+    color: var(--primary);
+    font-weight: 600;
+  }
+
+  .stop-also {
+    font-size: 1.0625rem;
+  }
+
+  .stop-body :global(.pick) {
+    font-size: 1.0625rem;
+  }
+
+  .stop-main > * + * {
+    margin-top: 0.75rem;
+  }
+
+  .stop-main > :global(.stop-list-label) {
+    margin-top: 1.125rem;
+  }
+
+  .stop-main > :global(.stop-list-label + .stop-list) {
+    margin-top: 0.25rem;
+  }
+
+  .stop-body :global(.stop-side-photo) {
+    margin-top: 1.25rem;
+  }
+
+  .ceremonies {
+    display: grid;
+    gap: 1rem;
+    margin-top: 1.25rem;
+    padding: 0;
+    list-style: none;
+  }
+
+  .ceremony-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    line-height: 1.35;
+  }
+
+  .ceremony-title a {
+    display: inline-block;
+    padding-block: 0.375rem;
+    color: var(--ink);
+    text-decoration-color: var(--ornament);
+  }
+
+  .ceremony-title a:hover {
+    color: var(--primary);
+  }
+
+  .ceremony-text {
+    color: var(--muted);
+    font-size: 1rem;
+  }
+
+  .stop-photos {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.625rem;
+    margin-top: 1.25rem;
+    max-width: 38rem;
+  }
+
+  @media (min-width: 48rem) {
+    .ceremonies {
+      grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+      column-gap: 2rem;
+    }
+
+    .stop-photos {
+      gap: 1.25rem;
+    }
+  }
+
+  @media (min-width: 64rem) {
+    .home-thread {
+      padding-top: 0;
+    }
+
+    .thread-intro {
+      display: grid;
+      grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+      column-gap: 3rem;
+      align-items: baseline;
+      margin-bottom: 3rem;
+      padding-top: 2.5rem;
+    }
+
+    .thread-lead {
+      margin-top: 0;
+      font-size: 1.1875rem;
+    }
+
+    /* "Sjednání": the text and the place photo side by side. */
+    .stop-body[data-with-photo] {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 20rem);
+      column-gap: 2.5rem;
+      align-items: start;
+    }
+
+    .stop-body[data-with-photo] :global(.stop-side-photo) {
+      margin-top: 0.375rem;
+    }
+  }
+</style>

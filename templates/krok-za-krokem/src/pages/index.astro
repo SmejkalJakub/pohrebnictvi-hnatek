@@ -1,0 +1,147 @@
+---
+/**
+ * Home (E1): the opening with the Spojení card (hero), the thread (next-steps: the guide itself,
+ * photos at its stops), then the sage band holding price-summary and family-story as one block,
+ * then any further sections in the client's order on the axis. The band takes the place of the
+ * first of its two sections in that order.
+ */
+import {
+  getGuidance,
+  getHomeImagery,
+  getNoticeIndex,
+  getOptionalPage,
+  getPage,
+  getPeople,
+  getPricing,
+  getServices,
+  getSiteContext,
+} from "@core/content/load.ts";
+import type { HomepageSection } from "@core/content/config.ts";
+import ThreadLayout from "../layouts/ThreadLayout.astro";
+import ThreadOpening from "../components/ThreadOpening.astro";
+import HomeThread from "../components/HomeThread.astro";
+import HomeBand from "../components/HomeBand.astro";
+import ServicesPassage from "../components/ServicesPassage.astro";
+import PeoplePassage from "../components/PeoplePassage.astro";
+import OfficePassage from "../components/OfficePassage.astro";
+import CatalogueWords from "../components/CatalogueWords.astro";
+import NoticesCountLine from "../components/NoticesCountLine.astro";
+import { seoDescription } from "../lib/site.ts";
+
+const site = await getSiteContext();
+const home = await getPage("home");
+const about = await getPage("o-nas");
+const services = await getServices();
+const guidance = await getGuidance();
+const people = await getPeople();
+const pricing = await getPricing();
+const noticesPage = await getOptionalPage("oznameni");
+const noticeIndex = await getNoticeIndex();
+const imagery = await getHomeImagery();
+
+let featured = services.filter((service) => service.data.featured);
+if (featured.length === 0) {
+  featured = services.slice(0, 1);
+}
+/* The ceremonies at the "Příprava pohřbu" stop: featured services that are not transport. */
+const ceremonies = featured.filter((service) => service.data.category !== "transport").slice(0, 3);
+let aboutText = about.data.lead;
+if (about.data.excerpt !== null) {
+  aboutText = about.data.excerpt;
+}
+const flowersNav = site.nav.find((item) => item.id === "kvetiny") ?? null;
+const coffinsNav = site.nav.find((item) => item.id === "rakve") ?? null;
+const catalogueLinks = site.nav.filter((item) => item.id === "rakve" || item.id === "kvetiny");
+let noticesTitle = "";
+if (noticesPage !== null) {
+  noticesTitle = noticesPage.data.title;
+}
+
+/** Sections after the hero that have something to show, in the client's order. */
+function renders(section: HomepageSection): boolean {
+  if (section === "hero") {
+    return false;
+  }
+  if (section === "next-steps") {
+    return guidance.length > 0;
+  }
+  if (section === "services") {
+    return featured.length > 0;
+  }
+  if (section === "people") {
+    return people.length > 0;
+  }
+  if (section === "catalogue-links") {
+    return catalogueLinks.length > 0;
+  }
+  if (section === "notices") {
+    return site.config.features.notices && noticesPage !== null;
+  }
+  if (section === "price-summary") {
+    return pricing !== null && pricing.groups.some((group) => group.items.length > 0);
+  }
+  if (section === "documents" || section === "faq") {
+    return false;
+  }
+  return true;
+}
+
+const order = site.config.homepage.sections;
+const content = order.filter(renders);
+const BAND_SECTIONS: readonly HomepageSection[] = ["price-summary", "family-story"];
+const firstBandSection = content.find((section) => BAND_SECTIONS.includes(section)) ?? null;
+let bandPricing = null;
+if (content.includes("price-summary")) {
+  bandPricing = pricing;
+}
+let bandStory = null;
+if (content.includes("family-story")) {
+  bandStory = {
+    title: about.data.title,
+    text: aboutText,
+    tradition: site.company.tradition.publicWording,
+    placeholder: about.data.placeholder,
+  };
+}
+---
+<ThreadLayout
+  site={site}
+  title={home.data.metaTitle}
+  description={seoDescription(home.data)}
+  officeOnPage={content.includes("contact-summary")}
+>
+  {
+    order.includes("hero") ? (
+      <ThreadOpening
+        site={site}
+        title={home.data.title}
+        lead={home.data.lead}
+        placeholder={home.data.placeholder}
+        card="full"
+        hero
+      />
+    ) : null
+  }
+  {
+    content.map((section) => (
+      <>
+        {section === "next-steps" ? (
+          <HomeThread
+            site={site}
+            guidance={guidance}
+            ceremonies={ceremonies}
+            imagery={imagery}
+            flowersNav={flowersNav}
+            coffinsNav={coffinsNav}
+          />
+        ) : null}
+        {section === firstBandSection ? <HomeBand pricing={bandPricing} story={bandStory} /> : null}
+        {section === "services" ? <ServicesPassage services={featured} /> : null}
+        {section === "people" ? <PeoplePassage people={people} /> : null}
+        {section === "contact-summary" ? <OfficePassage site={site} /> : null}
+        {section === "catalogue-links" ? <CatalogueWords links={catalogueLinks} /> : null}
+        {section === "notices" ? <NoticesCountLine title={noticesTitle} upcoming={noticeIndex.upcoming.length} /> : null}
+      </>
+    ))
+  }
+</ThreadLayout>

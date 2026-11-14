@@ -1,0 +1,48 @@
+---
+/**
+ * Květiny: the opening, the body, the arrangements as a grid of whole photos on the content
+ * column, then where to call. Handles zero entries.
+ */
+import PhoneLink from "@core/components/PhoneLink.astro";
+import { getFlowers, getPage, getSiteContext } from "@core/content/load.ts";
+import { formatPhone } from "@core/format/phone.ts";
+import ThreadLayout from "../layouts/ThreadLayout.astro";
+import ThreadOpening from "../components/ThreadOpening.astro";
+import CatalogueRows from "../components/CatalogueRows.astro";
+import AxisSection from "../components/AxisSection.astro";
+import ProsePassages from "../components/ProsePassages.astro";
+import { flowerPhones, primaryOfficePhone, seoDescription, seoTitle } from "../lib/site.ts";
+import { flowerTypeLabels, ui } from "../i18n/cs.ts";
+
+const site = await getSiteContext();
+const page = await getPage("kvetiny");
+const flowers = await getFlowers();
+const items = flowers.map((entry) => ({
+  id: entry.id,
+  name: entry.data.title,
+  detail: flowerTypeLabels[entry.data.type],
+  summary: entry.data.summary,
+  image: entry.data.image,
+  placeholder: entry.data.placeholder,
+}));
+let phones = flowerPhones(site);
+if (phones.length === 0) {
+  phones = [primaryOfficePhone(site)];
+}
+const Body = page.Content;
+---
+<ThreadLayout site={site} title={seoTitle(page.data)} description={seoDescription(page.data)}>
+  <ThreadOpening site={site} title={page.data.title} lead={page.data.lead} placeholder={page.data.placeholder} />
+  {page.hasBody ? <ProsePassages idPrefix="kvetiny-text"><Body /></ProsePassages> : null}
+  <CatalogueRows site={site} items={items} />
+  <AxisSection id="objednavka" heading={ui.flowersOrder}>
+    <p>{ui.flowersOrderText}</p>
+    {
+      phones.map((phone) => (
+        <p>
+          <PhoneLink number={phone.number}>{phone.label}{" "}<span class="nowrap">{formatPhone(phone.number).display}</span></PhoneLink>
+        </p>
+      ))
+    }
+  </AxisSection>
+</ThreadLayout>

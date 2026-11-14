@@ -1,0 +1,136 @@
+---
+/**
+ * Rakve and Květiny on the content column of the axis (E1 rule for catalogues): the photos shown
+ * whole on the ground (never cropped; product photos on white are multiplied onto the ground),
+ * two per row on phones, three from 48 rem; under each the name in the display face, the type,
+ * material or code in small gold capitals and the summary. Without any image the names sit two
+ * per row; an item without an image gets no empty frame. Zero items: one sentence and the office
+ * phone.
+ */
+import { Image } from "astro:assets";
+import PhoneLink from "@core/components/PhoneLink.astro";
+import PlaceholderMark from "@core/components/PlaceholderMark.astro";
+import type { ImageRef } from "@core/content/schemas.ts";
+import type { SiteContext } from "@core/content/view-models.ts";
+import { formatPhone } from "@core/format/phone.ts";
+import { resolveOptionalImage } from "@core/media/resolve.ts";
+import { primaryOfficePhone } from "../lib/site.ts";
+import { ui } from "../i18n/cs.ts";
+
+export interface CatalogueItem {
+  id: string;
+  name: string;
+  detail: string | null;
+  summary: string | null;
+  image: ImageRef | null;
+  placeholder: boolean;
+}
+
+interface Props {
+  site: SiteContext;
+  items: CatalogueItem[];
+}
+
+const { site, items } = Astro.props;
+const rows = items.map((item) => ({ item, photo: resolveOptionalImage(item.image) }));
+const withImages = rows.some((row) => row.photo !== null);
+/* Display width of one photo at three per row on the 820 px column. */
+const width = 260;
+const office = primaryOfficePhone(site);
+---
+{
+  rows.length === 0 ? (
+    <div class="passage">
+      <div class="passage-body">
+        <p>{ui.catalogueEmpty}</p>
+        <p>
+          <PhoneLink number={office.number}>{office.label}{" "}<span class="nowrap">{formatPhone(office.number).display}</span></PhoneLink>
+        </p>
+      </div>
+    </div>
+  ) : (
+    <div class="passage">
+      <div class="passage-body">
+        <ul class="items" role="list" data-layout={withImages ? "photos" : "names"}>
+          {rows.map(({ item, photo }) => (
+            <li id={item.id} class="item">
+              {photo !== null ? (
+                <PlaceholderMark active={photo.isPlaceholder} kind="image" as="div" class="item-image-wrap">
+                  <Image
+                    src={photo.src}
+                    alt={photo.alt}
+                    width={width}
+                    densities={[1, 2]}
+                    loading="lazy"
+                    class="item-image"
+                  />
+                </PlaceholderMark>
+              ) : null}
+              <PlaceholderMark active={item.placeholder} as="div" class="item-text">
+                <h2 class="item-name">{item.name}</h2>
+                {item.detail !== null ? <p class="label">{item.detail}</p> : null}
+                {item.summary !== null ? <p class="item-summary">{item.summary}</p> : null}
+              </PlaceholderMark>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  )
+}
+
+<style>
+  .items {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 2rem 1rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .items[data-layout="names"] {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  /* Product photos on white: multiply drops the white box onto the page ground. */
+  .items :global(.item-image) {
+    width: 100%;
+    height: auto;
+    border-radius: 0.25rem;
+    mix-blend-mode: multiply;
+  }
+
+  .items :global(.item-text) {
+    margin-top: 0.625rem;
+  }
+
+  .items :global(.item-text) > * + * {
+    margin-top: 0.25rem;
+  }
+
+  .item-name {
+    font-size: 1.1875rem;
+    line-height: 1.25;
+  }
+
+  .item-summary {
+    color: var(--muted);
+    font-size: 1rem;
+  }
+
+  @media (min-width: 48rem) {
+    .items {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      column-gap: 1.75rem;
+    }
+
+    .items[data-layout="names"] {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .item-name {
+      font-size: 1.375rem;
+    }
+  }
+</style>

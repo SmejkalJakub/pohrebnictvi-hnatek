@@ -1,0 +1,163 @@
+---
+/**
+ * The soft sage band after the thread (E1): "Kolik to bude stát" (home `price-summary`: the first
+ * item of each price group, at most three, the VAT note, the link to Ceník; core has no group
+ * price, so the first item stands for it) and "Rodinná firma" (home `family-story`: the brand mark
+ * when there is one, the O nás title, the tradition wording, the excerpt or lead, "Více o nás").
+ * Either half renders alone when the client shows only one. One block on the page, so the
+ * homepage order counts it once.
+ */
+import { Image } from "astro:assets";
+import { brandMark } from "@core/brand/runtime.ts";
+import PlaceholderMark from "@core/components/PlaceholderMark.astro";
+import PriceValue from "@core/components/PriceValue.astro";
+import VatNote from "@core/components/VatNote.astro";
+import type { PriceItem } from "@core/content/schemas.ts";
+import type { PricingView } from "@core/content/view-models.ts";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  pricing: PricingView | null;
+  story: {
+    title: string;
+    text: string | null;
+    tradition: string | null;
+    placeholder: boolean;
+  } | null;
+}
+
+const { pricing, story } = Astro.props;
+const mark = brandMark();
+const lines: { title: string; item: PriceItem }[] = [];
+if (pricing !== null) {
+  for (const group of pricing.groups) {
+    const item = group.items[0];
+    if (item !== undefined && lines.length < 3) {
+      lines.push({ title: group.title, item });
+    }
+  }
+}
+const showPrice = pricing !== null && lines.length > 0;
+---
+<div class="band">
+  <div class="band-inner">
+    {
+      showPrice && pricing !== null ? (
+        <section class="band-part" data-section="price-summary" aria-labelledby="cena-domu">
+          <h2 id="cena-domu" class="band-heading">{ui.priceHeading}</h2>
+          <ul class="price-lines" role="list">
+            {lines.map((line) => (
+              <li>
+                {line.title}{" "}
+                <PriceValue item={line.item} class="price-strong" />
+              </li>
+            ))}
+          </ul>
+          <VatNote pricing={pricing} class="band-quiet" />
+          <p>
+            <a href="/cenik/" class="go">{ui.priceLink}</a>
+          </p>
+        </section>
+      ) : null
+    }
+    {
+      story !== null ? (
+        <section class="band-part band-story" data-section="family-story" aria-labelledby="o-nas-domu">
+          {mark !== null ? <Image src={mark} alt="" width={56} densities={[1, 2]} class="band-mark" /> : null}
+          <div class="band-story-text">
+            <h2 id="o-nas-domu" class="band-heading">{story.title}</h2>
+            <PlaceholderMark active={story.placeholder} as="div">
+              {story.tradition !== null ? <p class="label">{story.tradition}</p> : null}
+              {story.text !== null ? <p>{story.text}</p> : null}
+            </PlaceholderMark>
+            <p>
+              <a href="/o-nas/" class="go">{ui.storyLink}</a>
+            </p>
+          </div>
+        </section>
+      ) : null
+    }
+  </div>
+</div>
+
+<style>
+  .band {
+    margin-top: 3.5rem;
+    background: var(--band);
+  }
+
+  .band-inner {
+    display: grid;
+    gap: 2.5rem;
+    width: 100%;
+    max-width: calc(var(--page) + 2 * var(--gutter));
+    margin-inline: auto;
+    padding: 2.5rem var(--gutter);
+  }
+
+  .band-heading {
+    font-size: 1.625rem;
+    line-height: 1.2;
+  }
+
+  .band-part > * + *,
+  .band-story-text > * + * {
+    margin-top: 0.625rem;
+  }
+
+  .band-story-text :global([data-placeholder]) > * + * {
+    margin-top: 0.5rem;
+  }
+
+  .price-lines {
+    padding: 0;
+    list-style: none;
+  }
+
+  .price-lines > li + li {
+    margin-top: 0.25rem;
+  }
+
+  .price-lines :global(.price-strong [data-price-amount]) {
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .band :global(.band-quiet) {
+    color: var(--muted);
+    font-size: 1rem;
+  }
+
+  .band-story {
+    display: flex;
+    gap: 1.25rem;
+    align-items: flex-start;
+  }
+
+  .band-story :global(.band-mark) {
+    flex: none;
+    width: 2.75rem;
+    height: auto;
+    margin-top: 0.25rem;
+  }
+
+  @media (min-width: 64rem) {
+    .band {
+      margin-top: 4.5rem;
+    }
+
+    .band-inner {
+      grid-template-columns: repeat(auto-fit, minmax(22rem, 1fr));
+      column-gap: 4rem;
+      padding-block: 3.5rem;
+    }
+
+    .band-heading {
+      font-size: 1.875rem;
+    }
+
+    .band-story :global(.band-mark) {
+      width: 3.5rem;
+    }
+  }
+</style>

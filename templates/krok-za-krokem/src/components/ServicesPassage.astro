@@ -1,0 +1,31 @@
+---
+/**
+ * Home `services`: one passage per featured service (the title as the H2, the summary, a link to
+ * its passage on /sluzby/), wrapped in one data-section so the client's order stays one block.
+ */
+import type { CollectionEntry } from "astro:content";
+import PlaceholderMark from "@core/components/PlaceholderMark.astro";
+import { serviceHref } from "@core/content/view-models.ts";
+import AxisSection from "./AxisSection.astro";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  services: CollectionEntry<"services">[];
+}
+
+const { services } = Astro.props;
+---
+<div class="services-block" data-section="services">
+  {
+    services.map((service) => (
+      <AxisSection id={`domu-${service.id}`} heading={service.data.title}>
+        <PlaceholderMark active={service.data.placeholder} as="div">
+          <p>{service.data.summary}</p>
+        </PlaceholderMark>
+        <p>
+          <a href={serviceHref(service.id, false)} class="go">{ui.servicePriceLink}</a>
+        </p>
+      </AxisSection>
+    ))
+  }
+</div>

@@ -1,0 +1,140 @@
+---
+/**
+ * The one navigation list. From 64 rem: one plain row of underlined words between the wordmark
+ * and the nonstop line (wrapping when long), the current page marked by a small gold ring before
+ * the word (the thread's ring, never a pill or a box). Below: the panel the "Menu" button opens,
+ * the words one per line on hairlines. The <nav> landmark is always present; only the panel
+ * inside it hides. The anchor items (Lidé, Časté otázky, Dokumenty) are phone-menu only.
+ */
+import type { ThreadLink } from "../lib/site.ts";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  id: string;
+  links: ThreadLink[];
+}
+
+const { id, links } = Astro.props;
+---
+<nav aria-label={ui.mainNav} class="thread-nav">
+  <div id={id} class="menu-panel">
+    <ul class="nav-list" role="list">
+      {
+        links.map((link) => (
+          <li data-anchor={link.anchor === true ? "true" : undefined}>
+            <a href={link.href} class="nav-link" aria-current={link.current ? "page" : undefined}>
+              {link.label}
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</nav>
+
+<style>
+  .nav-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .menu-panel {
+    padding: 0.75rem 0 0.5rem;
+  }
+
+  :global(.js) .menu-panel:not([data-open]) {
+    display: none;
+  }
+
+  .nav-list > li {
+    border-top: 1px solid var(--rule);
+  }
+
+  .nav-list > li:last-child {
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .nav-link {
+    position: relative;
+    display: block;
+    padding: 0.625rem 0 0.625rem 1.75rem;
+    color: var(--primary);
+    font-family: var(--display);
+    font-size: 1.375rem;
+    font-weight: var(--display-weight);
+    line-height: 1.35;
+    text-decoration: none;
+  }
+
+  .nav-link:hover {
+    color: var(--ink);
+    text-decoration: underline;
+  }
+
+  /* The current page: the thread's ring before the word, filled with the primary. */
+  .nav-link[aria-current="page"]::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 0.125rem;
+    width: 0.875rem;
+    height: 0.875rem;
+    border: 2px solid var(--ornament);
+    border-radius: 50%;
+    background: var(--primary-fill);
+    translate: 0 -50%;
+  }
+
+  @media (min-width: 64rem) {
+    :global(.js) .menu-panel:not([data-open]),
+    .menu-panel {
+      display: block;
+      padding: 0;
+    }
+
+    .nav-list {
+      display: flex;
+      flex-wrap: wrap;
+      column-gap: 1.5rem;
+      row-gap: 0;
+    }
+
+    .nav-list > li,
+    .nav-list > li:last-child {
+      border: 0;
+    }
+
+    li[data-anchor="true"] {
+      display: none;
+    }
+
+    .nav-link {
+      display: inline-block;
+      padding: 0.625rem 0;
+      font-family: var(--serif);
+      font-size: 1.0625rem;
+      font-weight: 400;
+      line-height: 1.4;
+      text-decoration: underline;
+      text-decoration-thickness: 1px;
+      text-underline-offset: 0.22em;
+    }
+
+    .nav-link:hover {
+      text-decoration-thickness: 2px;
+    }
+
+    .nav-link[aria-current="page"] {
+      padding-left: 1.125rem;
+      color: var(--ink);
+      text-decoration: none;
+    }
+
+    .nav-link[aria-current="page"]::before {
+      left: 0;
+      width: 0.625rem;
+      height: 0.625rem;
+    }
+  }
+</style>

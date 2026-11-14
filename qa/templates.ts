@@ -11,7 +11,7 @@ export interface TemplateUnderTest {
     | "dustojna-jednoduchost"
     | "nocni-linka"
     | "rodinny-rozhovor"
-    | "ticha-krajina"
+    | "krok-za-krokem"
     | "lide-a-misto";
   /** Short letter used in the design docs. */
   letter: "A" | "B" | "C" | "D" | "E" | "G";
@@ -36,7 +36,7 @@ export const templates: TemplateUnderTest[] = [
   template("dustojna-jednoduchost", "B", 4412),
   template("nocni-linka", "C", 4413),
   template("rodinny-rozhovor", "D", 4416),
-  template("ticha-krajina", "E", 4415),
+  template("krok-za-krokem", "E", 4417),
   template("lide-a-misto", "G", 4418),
 ];
 

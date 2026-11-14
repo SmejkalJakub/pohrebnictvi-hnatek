@@ -1,0 +1,20 @@
+---
+/** Služby: one long page with anchors on the thread's axis (supports.serviceDetailPages: false). */
+import { getPage, getPricing, getServices, getSiteContext } from "@core/content/load.ts";
+import ThreadLayout from "../../layouts/ThreadLayout.astro";
+import ThreadOpening from "../../components/ThreadOpening.astro";
+import ServicePassages from "../../components/ServicePassages.astro";
+import ProsePassages from "../../components/ProsePassages.astro";
+import { seoDescription, seoTitle } from "../../lib/site.ts";
+
+const site = await getSiteContext();
+const page = await getPage("sluzby");
+const services = await getServices();
+const pricing = await getPricing();
+const Body = page.Content;
+---
+<ThreadLayout site={site} title={seoTitle(page.data)} description={seoDescription(page.data)}>
+  <ThreadOpening site={site} title={page.data.title} lead={page.data.lead} placeholder={page.data.placeholder} />
+  <ServicePassages services={services} pricing={pricing} />
+  {page.hasBody ? <ProsePassages idPrefix="sluzby-text"><Body /></ProsePassages> : null}
+</ThreadLayout>

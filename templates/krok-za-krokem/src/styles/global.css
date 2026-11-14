@@ -1,0 +1,866 @@
+/*
+ * Template E "Krok za krokem": tokens, base, the thread axis, core hooks.
+ * Values from docs/designs/krok-za-krokem/html/*.dc.html (direction E1). Plain CSS (no Tailwind).
+ *
+ * One axis carries every page: a label column (230 px), a ring column (60 px) and the content
+ * column (up to 820 px). On the home and the guide the ring column holds the thread with its gold
+ * rings; on every other page each section heading sits in the label column with a ring beside it,
+ * so all pages line up on the thread's axis. Guardrails: no cards except the opening's Spojení
+ * card, no shadows, no icons, no full-bleed photos; gold is ornament only (rings, hairlines).
+ */
+
+:root,
+:root[data-palette="salvej"] {
+  --ground: #f7f5ef;
+  --ink: #1b2620;
+  --muted: #4e5c55;
+  --primary: #2f5446;
+  --primary-fill: #2f5446;
+  --on-primary: #f7f5ef;
+  --ornament: #b08d4e;
+  --ornament-text: #75592a;
+  --thread: #c3cec7;
+  --band: #e5eae4;
+  --deep: #213a31;
+  --on-deep: #f1eee6;
+  --muted-on-deep: #c7d1cb;
+  --rule: #d8d2c4;
+  --rule-strong: #7c8a83;
+  --card: #ffffff;
+  --card-rule: #d9d2c2;
+}
+
+:root[data-palette="modrava"] {
+  --ground: #f5f6f3;
+  --ink: #1c232a;
+  --muted: #4d5862;
+  --primary: #2e4a5e;
+  --primary-fill: #2e4a5e;
+  --on-primary: #f5f6f3;
+  --ornament: #a98a5a;
+  --ornament-text: #6f562a;
+  --thread: #c2ccd3;
+  --band: #e3e8ec;
+  --deep: #1f3140;
+  --on-deep: #eef1f3;
+  --muted-on-deep: #c3cdd5;
+  --rule: #d5d8d4;
+  --rule-strong: #7a8691;
+  --card: #ffffff;
+  --card-rule: #d3d6d2;
+}
+
+:root {
+  --display: "Lora", Georgia, "Times New Roman", serif;
+  --serif: "Source Serif 4", Georgia, "Times New Roman", serif;
+  --display-weight: 500;
+  --gutter: 1rem;
+  --page: 75rem;
+  --col-label: 14.375rem;
+  --col-ring: 3.75rem;
+  --col-content: 51.25rem;
+  --ring: 1.5rem;
+  /* E1 has no sans face: small practical text is the body serif (aliases for shared components). */
+  --sans: var(--serif);
+  --accent: var(--primary);
+  --photo: var(--band);
+  --s3: 3rem;
+  --s4: 4.5rem;
+  --h1: 2.25rem;
+  --h2: 1.75rem;
+  --h3: 1.5rem;
+  color-scheme: light;
+}
+
+:root[data-font="literata"] {
+  --display: "Literata", Georgia, "Times New Roman", serif;
+  --serif: "Literata", Georgia, "Times New Roman", serif;
+}
+
+/*
+ * Client brand (template-contract §8a), interpreted as E1 draws it: the ground is the board's
+ * cream, the thread a pale tint of the primary, the rings the second brand colour (gold) as pure
+ * ornament, gold text only at the darkened text role, the sage band the primary's second surface,
+ * the footer the brand's deep colour. The first stop's ring is filled with the primary.
+ */
+:root[data-brand] {
+  --ground: var(--brand-ground);
+  --ink: var(--brand-ink);
+  --muted: var(--brand-muted);
+  --primary: var(--brand-primary-text);
+  --primary-fill: var(--brand-primary);
+  --on-primary: var(--brand-on-primary);
+  --ornament: var(--brand-secondary);
+  --ornament-text: var(--brand-secondary-text);
+  --thread: color-mix(in oklab, var(--brand-primary) 24%, var(--brand-ground));
+  --band: var(--brand-surface-2);
+  --deep: var(--brand-deep);
+  --on-deep: var(--brand-on-deep);
+  --muted-on-deep: var(--brand-muted-on-deep);
+  --rule: color-mix(in oklab, var(--brand-rule) 40%, var(--brand-ground));
+  --rule-strong: var(--brand-rule);
+  --card: color-mix(in oklab, #ffffff 75%, var(--brand-ground));
+  --card-rule: color-mix(in oklab, var(--brand-rule) 45%, var(--brand-ground));
+}
+
+:root[data-brand-display] {
+  --display: var(--brand-font-display);
+}
+
+:root[data-brand-body] {
+  --serif: var(--brand-font-body);
+}
+
+/* Shared core hooks: the copy-number toast and the scroll offset for in-page links. */
+:root {
+  --toast-bg: var(--deep);
+  --toast-fg: var(--on-deep);
+  --toast-radius: 0.375rem;
+  --scroll-offset: 1.5rem;
+}
+
+@media (min-width: 48rem) {
+  :root {
+    --gutter: 2rem;
+    --h1: 3rem;
+    --h2: 2.25rem;
+    --h3: 1.75rem;
+  }
+}
+
+@media (min-width: 64rem) {
+  :root {
+    --gutter: 2.5rem;
+    --h1: 3.625rem;
+    --h2: 2.5rem;
+    --h3: 1.875rem;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * Base
+ * ------------------------------------------------------------------------- */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--serif);
+  font-size: 1.125rem;
+  font-weight: 400;
+  line-height: 1.6;
+  overflow-wrap: break-word;
+}
+
+@media (min-width: 64rem) {
+  body {
+    font-size: 1.1875rem;
+  }
+}
+
+p,
+h1,
+h2,
+h3,
+h4,
+ul,
+ol,
+dl,
+dd,
+figure,
+blockquote {
+  margin: 0;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-weight: 600;
+  line-height: 1.2;
+  text-wrap: balance;
+}
+
+/* Headings and names in the display face, at its middle weight, in the primary colour. */
+.opening-title,
+.passage-heading,
+.stop-title,
+.item-name,
+.person-name,
+.notice-name,
+.band-heading {
+  font-family: var(--display);
+  font-weight: var(--display-weight);
+  color: var(--primary);
+}
+
+img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+a {
+  color: var(--primary);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+  transition:
+    color 160ms ease,
+    text-decoration-thickness 160ms ease;
+}
+
+/* Feedback, never the only cue: links are always underlined; hover thickens the line. */
+a:hover {
+  color: var(--ink);
+  text-decoration-thickness: 2px;
+}
+
+a:active {
+  opacity: 0.7;
+}
+
+:focus-visible {
+  outline: 3px solid var(--primary);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.nowrap {
+  white-space: nowrap;
+}
+
+/* E1 has no sans: small practical text is the body serif, slightly smaller. */
+.sans {
+  font-size: 1.0625rem;
+  line-height: 1.5;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.lead {
+  font-size: 1.1875rem;
+  line-height: 1.55;
+}
+
+@media (min-width: 64rem) {
+  .lead {
+    font-size: 1.3125rem;
+  }
+}
+
+/* Small letter-spaced capitals in gold (text role): phase names and section labels. */
+.label {
+  color: var(--ornament-text);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  line-height: 1.5;
+  text-transform: uppercase;
+}
+
+@media (min-width: 64rem) {
+  .label {
+    font-size: 0.875rem;
+    letter-spacing: 0.16em;
+  }
+}
+
+.skip-link {
+  position: absolute;
+  left: var(--gutter);
+  top: -100vh;
+  z-index: 10;
+  padding: 0.75rem 1rem;
+  background: var(--deep);
+  color: var(--on-deep);
+}
+
+.skip-link:focus {
+  top: var(--gutter);
+}
+
+/* Every text link that stands alone is a 44 px target (inline-block + padding, never flex). */
+.go {
+  display: inline-block;
+  padding-block: 0.625rem;
+}
+
+/* ---------------------------------------------------------------------------
+ * Core safety components (styled through their data hooks only; text stays)
+ * ------------------------------------------------------------------------- */
+
+[data-prototype-banner] {
+  padding: 0.5rem var(--gutter);
+  border-bottom: 1px solid var(--rule);
+  color: var(--muted);
+  font-size: 1rem;
+  text-align: center;
+}
+
+[data-placeholder-label],
+[data-unreviewed-mark],
+[data-missing-fact],
+[data-demo-label] {
+  display: inline-block;
+  padding: 0 0.375rem;
+  border: 1px dashed var(--muted);
+  color: var(--muted);
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.5;
+  letter-spacing: 0.06em;
+  vertical-align: middle;
+}
+
+[data-placeholder="content"] > [data-placeholder-label],
+[data-placeholder="image"] > [data-placeholder-label] {
+  margin-bottom: 0.5rem;
+}
+
+[data-demo-label] {
+  margin-left: 0.25rem;
+}
+
+/* Live office status: one sentence in full ink; the dot's form says the state (contract §6). */
+[data-office-status] {
+  display: flex;
+  gap: 0.625rem;
+  align-items: baseline;
+  color: var(--ink);
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+[data-office-status-dot] {
+  flex: none;
+  width: 0.625rem;
+  height: 0.625rem;
+  border: 2px solid currentColor;
+  border-radius: 50%;
+  translate: 0 -0.05em;
+}
+
+[data-office-status][data-state="open"] [data-office-status-dot] {
+  border-color: var(--primary-fill);
+  background: var(--primary-fill);
+}
+
+[data-office-status][data-state="break"] [data-office-status-dot] {
+  background: linear-gradient(90deg, currentColor 50%, transparent 50%);
+}
+
+[data-notice-qr] svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/*
+ * Phone numbers never wrap; a label before the number may. Phone links are 44 px targets:
+ * inline-block + padding, never flex (a flex container drops the space between a label text run
+ * and the number span: QA test 9).
+ */
+[data-part="number"],
+[data-phone-link]:not(:has(span)) {
+  white-space: nowrap;
+}
+
+[data-phone-link] {
+  display: inline-block;
+  padding-block: 0.625rem;
+}
+
+/* ---------------------------------------------------------------------------
+ * The page and the axis
+ * ------------------------------------------------------------------------- */
+
+/* A plain block on the page's left edge (notice detail), aligned with the page width. */
+.wrap {
+  padding-inline: var(--gutter);
+}
+
+@media (min-width: 75rem) {
+  .wrap {
+    margin-left: max(0px, calc((100% - var(--page)) / 2 - var(--gutter)));
+  }
+}
+
+.page-width {
+  width: 100%;
+  max-width: calc(var(--page) + 2 * var(--gutter));
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+/*
+ * A passage on the axis: heading in the label column with a gold ring beside it (ring column),
+ * text in the content column. One column below 64 rem, the ring at the heading's left.
+ */
+.passage {
+  position: relative;
+  width: 100%;
+  max-width: calc(var(--page) + 2 * var(--gutter));
+  margin-inline: auto;
+  padding: 3rem var(--gutter) 0;
+}
+
+.passage-head {
+  position: relative;
+  padding-left: 2.25rem;
+}
+
+/* The ring: decoration only (aria-hidden by being a pseudo-element). */
+.passage-head::before {
+  content: "";
+  position: absolute;
+  top: 0.3em;
+  left: 0;
+  width: var(--ring);
+  height: var(--ring);
+  border: 2px solid var(--ornament);
+  border-radius: 50%;
+  background: var(--ground);
+}
+
+/* Notice pages: no ornament (research L1), the headings keep the axis without their rings. */
+main[data-neutral="true"] .passage-head::before {
+  display: none;
+}
+
+main[data-neutral="true"] .passage-head {
+  padding-left: 0;
+}
+
+.passage-heading {
+  font-size: var(--h3);
+  line-height: 1.2;
+}
+
+.passage-body {
+  margin-top: 0.875rem;
+}
+
+.passage-body > * + * {
+  margin-top: 0.875rem;
+}
+
+.passage > .passage-full {
+  margin-top: 0.875rem;
+}
+
+/* A passage without a heading (text before a body's first ##): text only, on the content column. */
+.passage:not(:has(.passage-head)) > .passage-body {
+  margin-top: 0;
+}
+
+@media (min-width: 64rem) {
+  .passage {
+    display: grid;
+    grid-template-columns: var(--col-label) var(--col-ring) minmax(0, var(--col-content));
+    padding-top: 4rem;
+  }
+
+  .passage-head {
+    grid-column: 1 / span 2;
+    padding-left: 0;
+    padding-right: var(--col-ring);
+  }
+
+  .passage-head::before {
+    top: 0.35em;
+    right: calc((var(--col-ring) - var(--ring)) / 2);
+    left: auto;
+  }
+
+  .passage-heading {
+    font-size: 1.625rem;
+  }
+
+  .passage > .passage-body {
+    grid-column: 3;
+    margin-top: 0;
+    max-width: 51.25rem;
+  }
+
+  .passage > .passage-full {
+    grid-column: 3;
+    margin-top: 0;
+  }
+
+  .passage:not(:has(.passage-head)) > .passage-body {
+    grid-column: 3;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * Page openings: H1 and lead on the left; the Spojení card on the right (desktop).
+ * ------------------------------------------------------------------------- */
+
+.opening {
+  width: 100%;
+  max-width: calc(var(--page) + 2 * var(--gutter));
+  margin-inline: auto;
+  padding: 2rem var(--gutter) 0;
+}
+
+.opening-title {
+  font-size: var(--h1);
+  line-height: 1.1;
+  letter-spacing: -0.005em;
+}
+
+.opening-main > * + * {
+  margin-top: 1.125rem;
+}
+
+.opening-main .label + * {
+  margin-top: 0.75rem;
+}
+
+.opening-side {
+  margin-top: 1.5rem;
+}
+
+@media (min-width: 64rem) {
+  .opening {
+    display: flex;
+    gap: 3rem;
+    align-items: flex-start;
+    justify-content: space-between;
+    padding-top: 3.5rem;
+  }
+
+  .opening-main {
+    flex: 1 1 37.5rem;
+    min-width: 0;
+    max-width: 50rem;
+  }
+
+  .opening-main > * + * {
+    margin-top: 1.5rem;
+  }
+
+  .opening-side {
+    flex: 0 1 23.75rem;
+    margin-top: 0;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * Prose (Markdown bodies)
+ * ------------------------------------------------------------------------- */
+
+.prose > * + * {
+  margin-top: 0.875rem;
+}
+
+.prose h2,
+.prose h3 {
+  margin-top: 1.75rem;
+  font-family: var(--display);
+  font-size: 1.375rem;
+  font-weight: var(--display-weight);
+  line-height: 1.3;
+  color: var(--primary);
+}
+
+.prose h2 + *,
+.prose h3 + * {
+  margin-top: 0.5rem;
+}
+
+.prose ul,
+.prose ol {
+  padding-left: 1.375rem;
+}
+
+.prose li + li {
+  margin-top: 0.375rem;
+}
+
+.dot-list {
+  padding-left: 1.375rem;
+}
+
+.dot-list li + li {
+  margin-top: 0.25rem;
+}
+
+/* ---------------------------------------------------------------------------
+ * Hairline tables (prices, office hours)
+ * ------------------------------------------------------------------------- */
+
+.hairlines {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.hairlines th,
+.hairlines td {
+  padding: 0.75rem 0;
+  border-top: 1px solid var(--rule-strong);
+  vertical-align: top;
+  text-align: left;
+  font-weight: 400;
+}
+
+.hairlines .num {
+  padding-left: 1.5rem;
+  text-align: right;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* ---------------------------------------------------------------------------
+ * Details (FAQ, step bodies)
+ * ------------------------------------------------------------------------- */
+
+details > summary {
+  cursor: pointer;
+}
+
+.more > summary {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  color: var(--primary);
+  font-size: 1.0625rem;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.print-only {
+  display: none;
+}
+
+/* ---------------------------------------------------------------------------
+ * The thread (home and Jak postupovat): one vertical line in the ring column, a gold ring at
+ * every stop, the line running BEHIND the rings (owner, 2026-11-14: rings z-index 1, line 0).
+ * The ring of the stop being read fills with the primary (core data-spy-nav on the <ol>, rings are
+ * aria-hidden links with tabindex -1); without JavaScript the first ring is filled.
+ * Phone: ring column 24 px at the left edge, the phase label above the heading.
+ * ≥ 64 rem: label column 230 px · ring column 60 px · content up to 820 px.
+ * ------------------------------------------------------------------------- */
+
+.thread {
+  position: relative;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.thread::before {
+  content: "";
+  position: absolute;
+  top: 0.875rem;
+  bottom: 0;
+  left: calc(var(--ring) / 2 - 1px);
+  z-index: 0;
+  width: 2px;
+  background: var(--thread);
+}
+
+.stop {
+  display: grid;
+  grid-template-columns: var(--ring) minmax(0, 1fr);
+  column-gap: 0.875rem;
+  align-items: start;
+  padding-bottom: 2.5rem;
+  scroll-margin-top: var(--scroll-offset);
+}
+
+.stop:last-child {
+  padding-bottom: 0;
+}
+
+.stop-label {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.stop-ring {
+  position: relative;
+  z-index: 1;
+  grid-column: 1;
+  grid-row: 1;
+  display: block;
+  width: var(--ring);
+  height: var(--ring);
+  margin-top: 0.0625rem;
+  border: 2px solid var(--ornament);
+  border-radius: 50%;
+  background: var(--ground);
+  transition: background-color 200ms ease;
+}
+
+.stop-ring[aria-current="location"],
+.thread:not(:has(.stop-ring[aria-current])) > .stop:first-child .stop-ring {
+  background: var(--primary-fill);
+}
+
+.stop-body {
+  grid-column: 2;
+  grid-row: 2;
+  min-width: 0;
+  max-width: var(--col-content);
+  padding-top: 0.25rem;
+}
+
+/* A stop without a phase label: the heading takes the ring's row. */
+.stop:not(:has(.stop-label)) > .stop-body {
+  grid-row: 1;
+  padding-top: 0;
+}
+
+.stop-title {
+  font-size: var(--h3);
+  line-height: 1.2;
+}
+
+.stop-body > * + * {
+  margin-top: 0.75rem;
+}
+
+.stop-text {
+  max-width: 36em;
+}
+
+/* The guided list (design-differentiation §1.3): plain numbered sentences, never tick boxes. */
+.stop-list-label {
+  color: var(--muted);
+  font-size: 0.875rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.stop-list {
+  padding-left: 1.4em;
+  font-size: 1.0625rem;
+}
+
+.stop-list > li + li {
+  margin-top: 0.375rem;
+}
+
+.stop-list > li::marker {
+  color: var(--ornament-text);
+  font-weight: 600;
+}
+
+* + .stop-list-label {
+  margin-top: 1.125rem;
+}
+
+.stop-list-label + .stop-list {
+  margin-top: 0.25rem;
+}
+
+/* The closing line after the last stop, on the content column. */
+.thread-close {
+  margin-top: 2.5rem;
+  padding-left: calc(var(--ring) + 0.875rem);
+}
+
+.thread-close-line {
+  color: var(--primary);
+  font-family: var(--display);
+  font-size: 1.3125rem;
+  font-style: italic;
+  font-weight: 400;
+  line-height: 1.35;
+}
+
+.thread-close-line + * {
+  margin-top: 0.5rem;
+}
+
+@media (min-width: 64rem) {
+  .thread::before {
+    top: 1rem;
+    left: calc(var(--col-label) + var(--col-ring) / 2 - 1px);
+  }
+
+  .stop {
+    grid-template-columns: var(--col-label) var(--col-ring) minmax(0, var(--col-content));
+    column-gap: 0;
+    padding-bottom: 4rem;
+  }
+
+  .stop-label {
+    grid-column: 1;
+    grid-row: 1;
+    padding: 0.5rem 1.5rem 0 0;
+  }
+
+  .stop-ring {
+    grid-column: 2;
+    justify-self: center;
+    margin-top: 0.375rem;
+  }
+
+  .stop-body,
+  .stop:not(:has(.stop-label)) > .stop-body {
+    grid-column: 3;
+    grid-row: 1;
+    padding-top: 0;
+  }
+
+  .stop-list {
+    font-size: 1.125rem;
+  }
+
+  .thread-close {
+    margin-top: 3.5rem;
+    padding-left: calc(var(--col-label) + var(--col-ring));
+  }
+
+  .thread-close-line {
+    font-size: 1.625rem;
+  }
+}
+
+@media print {
+  .thread::before {
+    display: none;
+  }
+
+  .stop {
+    display: block;
+    padding-bottom: 5mm;
+  }
+}

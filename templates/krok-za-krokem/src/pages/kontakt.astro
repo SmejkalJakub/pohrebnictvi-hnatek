@@ -1,0 +1,84 @@
+---
+/**
+ * Kontakt: the opening (H1 + one sentence), then passages Kancelář, Úřední
+ * hodiny (data-office-hours, its own heading), Telefony, Převoz zesnulých (its own emergency
+ * block), and Kdo vás přijme
+ * (#lide) when people are on.
+ */
+import OfficeStatus from "@core/components/OfficeStatus.astro";
+import PhoneLink from "@core/components/PhoneLink.astro";
+import { getPage, getPeople, getSiteContext } from "@core/content/load.ts";
+import { formatAddressLines } from "@core/format/address.ts";
+import { formatPhone } from "@core/format/phone.ts";
+import ThreadLayout from "../layouts/ThreadLayout.astro";
+import ThreadOpening from "../components/ThreadOpening.astro";
+import AxisSection from "../components/AxisSection.astro";
+import OfficeHoursHairlines from "../components/OfficeHoursHairlines.astro";
+import TransportPassage from "../components/TransportPassage.astro";
+import PeoplePortraitRows from "../components/PeoplePortraitRows.astro";
+import ProsePassages from "../components/ProsePassages.astro";
+import { mainLocation, mapHref, seoDescription, seoTitle } from "../lib/site.ts";
+import { ui } from "../i18n/cs.ts";
+
+const site = await getSiteContext();
+const page = await getPage("kontakt");
+const people = await getPeople();
+const location = mainLocation(site);
+const [street, cityLine] = formatAddressLines(location.address);
+const map = mapHref(location);
+const phones = site.contact.phones.map((phone) => ({ ...phone, display: formatPhone(phone.number).display }));
+const Body = page.Content;
+---
+<ThreadLayout site={site} title={seoTitle(page.data)} description={seoDescription(page.data)}>
+  <ThreadOpening site={site} title={page.data.title} lead={page.data.lead} placeholder={page.data.placeholder} card="none" />
+  <AxisSection id="kancelar" heading={ui.officeHeading}>
+    <p>{location.name}<br />{street}<br />{cityLine}</p>
+    {map !== null ? <p class="sans"><a href={map} class="go">{ui.mapLink}</a></p> : null}
+    {location.accessNote !== null ? <p class="muted">{location.accessNote}</p> : null}
+  </AxisSection>
+  <AxisSection id="hodiny" heading={ui.hoursHeading} data-office-hours>
+    <OfficeStatus site={site} />
+    <OfficeHoursHairlines site={site} id="hodiny-tabulka" withHeading={false} />
+  </AxisSection>
+  <AxisSection id="telefony" heading={ui.phonesHeading}>
+    <ul class="lines" role="list">
+      {
+        phones.map((phone) => (
+          <li>
+            <PhoneLink number={phone.number}>
+              {phone.label}{" "}<span class="nowrap">{phone.display}</span>
+            </PhoneLink>
+          </li>
+        ))
+      }
+      {
+        site.contact.emails.map((email) => (
+          <li>
+            <a href={`mailto:${email.address}`} class="go mail">{email.address}</a>
+          </li>
+        ))
+      }
+    </ul>
+  </AxisSection>
+  <TransportPassage emergency={site.emergency} />
+  {
+    people.length > 0 ? (
+      <AxisSection id="lide" heading={ui.peopleHeading}>
+        <PeoplePortraitRows people={people} />
+      </AxisSection>
+    ) : null
+  }
+  {page.hasBody ? <ProsePassages idPrefix="kontakt-text"><Body /></ProsePassages> : null}
+</ThreadLayout>
+
+<style>
+  .lines {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .mail {
+    overflow-wrap: anywhere;
+  }
+</style>

@@ -37,7 +37,7 @@ const CLIENTS = [
   { id: "hnatek-b", template: "dustojna-jednoduchost", optional: [], singletons: [] },
   { id: "hnatek-c", template: "nocni-linka", optional: OPTIONAL_TYPES, singletons: [] },
   { id: "hnatek-d", template: "rodinny-rozhovor", optional: [], singletons: [] },
-  { id: "hnatek-e", template: "ticha-krajina", optional: OPTIONAL_TYPES, singletons: ["landscapes"] },
+  { id: "hnatek-e", template: "krok-za-krokem", optional: OPTIONAL_TYPES, singletons: [] },
   { id: "hnatek-g", template: "lide-a-misto", optional: [], singletons: ["places"] },
 ];
 
@@ -452,7 +452,8 @@ describe("optional collections", () => {
 describe.each([
   {
     feature: "landscapes",
-    template: "ticha-krajina",
+    // No shipped template supports landscapes since 2026-11-14; the test switches support on.
+    template: "krok-za-krokem",
     file: "landscapes.json",
     label: "Krajiny",
     list: "images",

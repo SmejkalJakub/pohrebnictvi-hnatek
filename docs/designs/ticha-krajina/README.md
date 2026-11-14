@@ -1,5 +1,7 @@
 # G · Tichá krajina (`ticha-krajina`)
 
+**Superseded (2026-11-14):** built as template E `ticha-krajina` on 2026-11-13; the owner replaced it with E Krok za krokem (`docs/designs/krok-za-krokem/`). The template was removed from `templates/`; this folder stays as a record.
+
 **Status (2026-11-10):** round-2 direction, liked by the owner. Home, a notice page and the full page set are drawn. **Build from the pictures and the HTML;** the text below explains them and lists what must not change.
 
 **Concept.** For a firm in a rural region that wants the site to feel like air and distance, not like a shop. The page is one long, slow scroll: short text sections alternate with full-bleed photographs of the local landscape, commissioned, without people and never in the first screen. The nonstop number is set as one long ruled line, a “stamp”, after the opening and again before the footer, so it is found at both ends of the read.

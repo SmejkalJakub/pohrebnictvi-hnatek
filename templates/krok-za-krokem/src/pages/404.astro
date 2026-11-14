@@ -1,0 +1,17 @@
+---
+/** 404: one sentence with two inline links (home, the guide), under the opening. */
+import { getSiteContext } from "@core/content/load.ts";
+import ThreadLayout from "../layouts/ThreadLayout.astro";
+import ThreadOpening from "../components/ThreadOpening.astro";
+import { ui } from "../i18n/cs.ts";
+
+const site = await getSiteContext();
+---
+<ThreadLayout site={site} title={ui.notFoundTitle} description={ui.notFoundTitle} noindex>
+  <ThreadOpening site={site} title={ui.notFoundTitle} kicker={ui.notFoundKicker}>
+    <p>
+      {ui.notFoundBefore} <a href="/">{ui.notFoundHome}</a> {ui.notFoundOr}{" "}
+      <a href="/jak-postupovat/">{ui.notFoundGuide}</a>.
+    </p>
+  </ThreadOpening>
+</ThreadLayout>

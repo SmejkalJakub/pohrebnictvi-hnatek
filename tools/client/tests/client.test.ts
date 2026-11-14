@@ -19,7 +19,7 @@ const TEMPLATES = [
   "dustojna-jednoduchost",
   "nocni-linka",
   "rodinny-rozhovor",
-  "ticha-krajina",
+  "krok-za-krokem",
   "lide-a-misto",
 ] as const;
 
@@ -162,13 +162,15 @@ describe("client:new and the landscape photo set", () => {
       const manifest = await loadManifest(templateId);
       expect(copiesContent(manifest, "site/landscapes.json"), templateId).toBe(manifest.supports.landscapes);
     }
-    expect((await loadManifest("ticha-krajina")).supports.landscapes).toBe(true);
+    // No shipped template draws landscape bands since E Tichá krajina was retired (2026-11-14);
+    // the rule still holds for a template that would.
+    const manifest = await loadManifest("krok-za-krokem");
+    const supporting = { ...manifest, supports: { ...manifest.supports, landscapes: true } };
+    expect(copiesContent(supporting, "site/landscapes.json")).toBe(true);
   });
 
-  it("starts the landscape feature off, with the file in place for the CMS", async () => {
-    const site = await loadClient("test-ticha-krajina", clientsDir);
-    expect(site.config.features.landscapes).toBe(false);
-    expect(existsSync(path.join(clientsDir, "test-ticha-krajina", "src/content/site/landscapes.json"))).toBe(true);
+  it("leaves the landscape file out for templates without landscape bands", () => {
+    expect(existsSync(path.join(clientsDir, "test-krok-za-krokem", "src/content/site/landscapes.json"))).toBe(false);
     expect(existsSync(path.join(clientsDir, "test-rodinna-tradice", "src/content/site/landscapes.json"))).toBe(false);
   });
 });
@@ -186,6 +188,6 @@ describe("client:new and the places set", () => {
     const site = await loadClient("test-lide-a-misto", clientsDir);
     expect(site.config.features.places).toBe(false);
     expect(existsSync(path.join(clientsDir, "test-lide-a-misto", "src/content/site/places.json"))).toBe(true);
-    expect(existsSync(path.join(clientsDir, "test-ticha-krajina", "src/content/site/places.json"))).toBe(false);
+    expect(existsSync(path.join(clientsDir, "test-krok-za-krokem", "src/content/site/places.json"))).toBe(false);
   });
 });

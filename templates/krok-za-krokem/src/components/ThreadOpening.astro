@@ -1,0 +1,190 @@
+---
+/**
+ * The opening of every page (E1 hero): the H1 in the display face and the lead on the left; on the
+ * right the white "Spojení" card, the template's only card: the nonstop label, the number large,
+ * the short note, a hairline, the live office status, the address and the office phone. Never a
+ * photo here.
+ * `card`: "full" on home (below 64 rem it shrinks to the office status and one sentence, since
+ * the strip above the header carries the number); "desktop" on inner pages (hidden below 64 rem);
+ * "none" on notices and where the page itself is the contact page.
+ * On home it is the `hero` section.
+ */
+import EmergencyPhoneLink from "@core/components/EmergencyPhoneLink.astro";
+import OfficeStatus from "@core/components/OfficeStatus.astro";
+import PhoneLink from "@core/components/PhoneLink.astro";
+import PlaceholderMark from "@core/components/PlaceholderMark.astro";
+import type { SiteContext } from "@core/content/view-models.ts";
+import { formatAddressInline } from "@core/format/address.ts";
+import { formatPhone } from "@core/format/phone.ts";
+import { mainLocation, primaryOfficePhone } from "../lib/site.ts";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  site: SiteContext;
+  title: string;
+  lead?: string | null;
+  placeholder?: boolean;
+  /** Small gold line above the H1 (e.g. "Chyba 404"). */
+  kicker?: string | null;
+  /** Home only: marks the hero for the homepage order (data-section="hero"). */
+  hero?: boolean;
+  card?: "full" | "desktop" | "none";
+  leadClass?: string;
+}
+
+const {
+  site,
+  title,
+  lead = null,
+  placeholder = false,
+  kicker = null,
+  hero = false,
+  card = "desktop",
+  leadClass = "lead",
+} = Astro.props;
+const location = mainLocation(site);
+const office = primaryOfficePhone(site);
+const emergencyDisplay = formatPhone(site.emergency.phone).display;
+let emergencyNote: string = ui.emergencyAlways;
+if (site.emergency.shortNote !== null) {
+  emergencyNote = site.emergency.shortNote;
+}
+const showCard = card !== "none";
+---
+<section class="opening" data-section={hero ? "hero" : undefined} data-hero={hero ? "" : undefined}>
+  <div class="opening-main">
+    {kicker !== null ? <p class="label">{kicker}</p> : null}
+    <PlaceholderMark active={placeholder} as="div">
+      <h1 class="opening-title">{title}</h1>
+    </PlaceholderMark>
+    {lead !== null ? <p class={leadClass}>{lead}</p> : null}
+    <slot />
+  </div>
+  {
+    showCard ? (
+      <div class="opening-side spojeni" role="group" aria-label={ui.connectionLabel} data-card={card}>
+        {site.emergency.enabled ? (
+          <div class="spojeni-nonstop">
+            <p class="spojeni-small">{site.emergency.label}</p>
+            <EmergencyPhoneLink emergency={site.emergency} variant="custom" class="spojeni-number">
+              <span class="nowrap">{emergencyDisplay}</span>
+            </EmergencyPhoneLink>
+            <p class="spojeni-small spojeni-note">{emergencyNote}</p>
+          </div>
+        ) : null}
+        <div class="spojeni-office">
+          <OfficeStatus site={site} class="spojeni-status" />
+          {site.emergency.enabled ? <p class="spojeni-phone-only">{ui.emergencyAvailable}</p> : null}
+          <p class="spojeni-where">
+            {formatAddressInline(location.address)}
+            <span aria-hidden="true"> · </span>
+            <PhoneLink number={office.number}>
+              {office.label}{" "}<span class="nowrap">{formatPhone(office.number).display}</span>
+            </PhoneLink>
+          </p>
+        </div>
+      </div>
+    ) : null
+  }
+</section>
+
+<style>
+  .spojeni {
+    padding: 1.125rem 1.125rem 0.5rem;
+    border: 1px solid var(--card-rule);
+    border-radius: 0.375rem;
+    background: var(--card);
+  }
+
+  .spojeni[data-card="desktop"] {
+    display: none;
+  }
+
+  .spojeni-small {
+    color: var(--muted);
+    font-size: 1rem;
+    line-height: 1.45;
+  }
+
+  .spojeni :global(.spojeni-number) {
+    display: inline-block;
+    padding-block: 0.25rem;
+    color: var(--primary);
+    font-family: var(--display);
+    font-size: 2rem;
+    font-weight: var(--display-weight);
+    line-height: 1.2;
+    text-decoration: none;
+  }
+
+  .spojeni :global(.spojeni-number):hover {
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+  }
+
+  .spojeni-note {
+    margin-top: 0.25rem;
+  }
+
+  .spojeni-office {
+    font-size: 1rem;
+    line-height: 1.5;
+  }
+
+  .spojeni-office > * + * {
+    margin-top: 0.375rem;
+  }
+
+  .spojeni-office :global(.spojeni-status) {
+    font-size: 1rem;
+  }
+
+  .spojeni-where {
+    color: var(--ink);
+  }
+
+  /* Phone (home): the strip above the header carries the number; the card keeps the office. */
+  .spojeni-nonstop,
+  .spojeni-where {
+    display: none;
+  }
+
+  .spojeni-phone-only {
+    padding-bottom: 0.625rem;
+  }
+
+  .spojeni-office :global(.spojeni-status:not([hidden])) + .spojeni-phone-only {
+    margin-top: 0.25rem;
+  }
+
+  @media (min-width: 64rem) {
+    .spojeni,
+    .spojeni[data-card="desktop"] {
+      display: block;
+      padding: 1.75rem 2rem 1.25rem;
+    }
+
+    .spojeni-nonstop,
+    .spojeni-where {
+      display: block;
+    }
+
+    .spojeni-phone-only {
+      display: none;
+    }
+
+    .spojeni-office {
+      margin-top: 1.25rem;
+      padding-top: 1.25rem;
+      border-top: 1px solid var(--card-rule);
+    }
+
+    .spojeni :global(.spojeni-number) {
+      font-size: 2.25rem;
+    }
+
+    .spojeni[data-card="desktop"] :global(.spojeni-number) {
+      font-size: 1.875rem;
+    }
+  }
+</style>

@@ -1,0 +1,123 @@
+/*
+ * Print (A4): black on white, no photographs, no thread, no band, no card shadows of colour. The
+ * Ceník keeps the axis at reduced size (group name left, lists right), with a letterhead and the
+ * legal identification; notices print with their QR code; the guide prints as a plain list of steps.
+ */
+@media print {
+  @page {
+    size: A4;
+    margin: 16mm 18mm;
+  }
+
+  :root,
+  :root[data-palette],
+  :root[data-brand] {
+    --ground: #ffffff;
+    --ink: #1b1f1e;
+    --muted: #3d4442;
+    --primary: #1b1f1e;
+    --primary-fill: #ffffff;
+    --ornament: #7e8a88;
+    --ornament-text: #3d4442;
+    --band: #ffffff;
+    --deep: #ffffff;
+    --on-deep: #1b1f1e;
+    --muted-on-deep: #3d4442;
+    --rule: #7e8a88;
+    --rule-strong: #7e8a88;
+    --card: #ffffff;
+    --card-rule: #7e8a88;
+    --gutter: 0;
+  }
+
+  body {
+    font-size: 11pt;
+    line-height: 1.5;
+  }
+
+  .skip-link,
+  .menu-btn,
+  .thread-nav,
+  .nonstop-strip,
+  .top-nonstop,
+  [data-prototype-banner],
+  [data-print-hide],
+  .no-print,
+  .foot-cols,
+  .foot-emergency,
+  .foot-mark,
+  .thread-line,
+  .stop-ring,
+  .stop-photo,
+  .opening-side {
+    display: none !important;
+  }
+
+  .print-only {
+    display: block;
+  }
+
+  .top {
+    display: block;
+    padding: 0;
+  }
+
+  .wordmark {
+    padding: 0;
+    font-size: 14pt;
+  }
+
+  .opening,
+  .passage,
+  .band {
+    display: block;
+    padding: 6mm 0 0;
+    background: none;
+    break-inside: avoid;
+  }
+
+  .passage-head::before {
+    display: none;
+  }
+
+  .passage-head {
+    padding: 0;
+  }
+
+  .opening-title {
+    font-size: 24pt;
+  }
+
+  .passage-heading,
+  .stop-title,
+  .band-heading {
+    font-size: 16pt;
+  }
+
+  .lead {
+    font-size: 11pt;
+  }
+
+  .label,
+  .sans {
+    font-size: 10pt;
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .foot {
+    padding: 6mm 0 0;
+    background: none;
+    color: var(--ink);
+  }
+
+  .foot-legal {
+    margin-top: 0;
+    padding-top: 3mm;
+    border-top: 1px solid var(--rule);
+    font-size: 9pt;
+  }
+}

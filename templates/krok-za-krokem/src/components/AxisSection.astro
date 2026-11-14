@@ -1,0 +1,32 @@
+---
+/**
+ * One section on the thread's axis (E1): the heading in the label column with a small gold ring
+ * in the ring column beside it (an optional small label above the heading, the "head" slot under
+ * it), the text in the content column. One column below 64 rem, the ring at the heading's left.
+ * Sections are separated by space only: no boxes, no tinted backgrounds.
+ */
+import type { HTMLAttributes } from "astro/types";
+
+interface Props extends HTMLAttributes<"section"> {
+  id: string;
+  heading: string;
+  level?: 2 | 3;
+  /** Small gold label above the heading (price group name, phase). */
+  label?: string | null;
+  headingClass?: string;
+}
+
+const { id, heading, level = 2, label = null, headingClass, class: className, ...rest } = Astro.props;
+const Heading = `h${level}` as "h2" | "h3";
+const headingId = `${id}-nadpis`;
+---
+<section id={id} class:list={["passage", className]} aria-labelledby={headingId} {...rest}>
+  <div class="passage-head">
+    {label !== null ? <p class="label">{label}</p> : null}
+    <Heading id={headingId} class:list={["passage-heading", headingClass]}>{heading}</Heading>
+    <slot name="head" />
+  </div>
+  <div class="passage-body">
+    <slot />
+  </div>
+</section>
