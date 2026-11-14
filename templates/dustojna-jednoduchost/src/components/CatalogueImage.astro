@@ -1,5 +1,9 @@
 ---
-/** Image cell of the uniform catalogue grid: the image, or a quiet frame of the same size. */
+/**
+ * Image cell of the uniform catalogue grid: the image, or a quiet frame of the same size.
+ * Product photos come on white; multiply lets the white fall onto the page ground instead of
+ * sitting as a white box on a tinted page.
+ */
 import { Image } from "astro:assets";
 import PlaceholderMark from "@core/components/PlaceholderMark.astro";
 import type { ResolvedImage } from "@core/media/resolve.ts";
@@ -21,7 +25,7 @@ const { image, aspectClass } = Astro.props;
           alt={image.alt}
           widths={[360, 540, 720]}
           sizes="(min-width: 64rem) 22rem, (min-width: 40rem) 45vw, 100vw"
-          class:list={["w-full bg-band object-cover", aspectClass]}
+          class:list={["catalogue-photo w-full object-cover", aspectClass]}
           style={`object-position: ${image.objectPosition}`}
           loading="lazy"
         />
@@ -38,3 +42,9 @@ const { image, aspectClass } = Astro.props;
     )
   }
 </div>
+
+<style>
+  :global(.catalogue-photo) {
+    mix-blend-mode: multiply;
+  }
+</style>

@@ -3,6 +3,8 @@
  * "Kde blízký člověk zemřel?": a grid of large signage-style buttons. Each one opens
  * /jak-postupovat/ filtered to that situation through a fragment (:target); no JavaScript.
  * Used on the guide page and, in place of the stepper, in the homepage "next-steps" band.
+ * On the guide itself the links carry data-vt-anchor: with JavaScript the filter change is a short
+ * view transition instead of a jump.
  */
 import { SITUATION_ANCHOR, type SpecificSituation } from "@core/content/guidance-flow.ts";
 import LineIcon from "./LineIcon.astro";
@@ -27,7 +29,12 @@ const Heading = `h${headingLevel}` as "h2" | "h3";
     {
       situations.map((situation) => (
         <li>
-          <a href={`${base}#${SITUATION_ANCHOR[situation]}`} class="picker-btn" data-situation-link={situation}>
+          <a
+            href={`${base}#${SITUATION_ANCHOR[situation]}`}
+            class="picker-btn"
+            data-situation-link={situation}
+            data-vt-anchor={base === "" ? "" : undefined}
+          >
             <span>{situationLabels[situation]}</span>
             <LineIcon name="chevron" class="picker-chev" />
           </a>
@@ -35,7 +42,7 @@ const Heading = `h${headingLevel}` as "h2" | "h3";
       ))
     }
     <li>
-      <a href={`${base}#${allAnchor}`} class="picker-btn picker-btn-all">
+      <a href={`${base}#${allAnchor}`} class="picker-btn picker-btn-all" data-vt-anchor={base === "" ? "" : undefined}>
         <span>{ui.pickerAll}</span>
         <LineIcon name="chevron" class="picker-chev" />
       </a>
@@ -68,12 +75,21 @@ const Heading = `h${headingLevel}` as "h2" | "h3";
     font-weight: 600;
     line-height: 1.25;
     text-decoration: none;
+    transition:
+      background-color 150ms var(--ease),
+      border-color 150ms var(--ease),
+      color 150ms var(--ease),
+      scale 120ms var(--ease);
   }
 
   .picker-btn:hover {
     background: var(--c-band);
     text-decoration: underline;
     text-underline-offset: 0.2em;
+  }
+
+  .picker-btn:active {
+    scale: 0.985;
   }
 
   .picker-btn-all {
@@ -85,6 +101,11 @@ const Heading = `h${headingLevel}` as "h2" | "h3";
   .picker-btn :global(.picker-chev) {
     flex: none;
     color: var(--c-accent);
+    transition: translate 150ms var(--ease);
+  }
+
+  .picker-btn:hover :global(.picker-chev) {
+    translate: 0.25rem 0;
   }
 
   @media (min-width: 48rem) {

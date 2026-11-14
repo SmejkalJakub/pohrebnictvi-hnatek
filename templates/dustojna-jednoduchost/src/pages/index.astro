@@ -3,14 +3,28 @@
  * Homepage. Sections render in site.config.homepage.sections order; bands alternate by
  * position so any declared order stays legible. Default (manifest): hero → next-steps →
  * services → contact-summary → family-story.
+ *
+ * Photography (design-differentiation §1.4): the hero keeps its own image; "Rakve a květiny" shows
+ * the client's flower and coffin photos as picture cards; "O nás" shows the place photo only when
+ * the hero shows no real photo of its own. At most four services.
  */
 import PlaceholderMark from "@core/components/PlaceholderMark.astro";
-import { getGuidance, getPage, getServices, getSiteContext } from "@core/content/load.ts";
+import {
+  getGuidance,
+  getHomeImagery,
+  getPage,
+  getServices,
+  getSiteContext,
+  isRealBusinessPhoto,
+} from "@core/content/load.ts";
+import { resolveImage } from "@core/media/resolve.ts";
 import Site from "../layouts/Site.astro";
 import PracticalHero from "../components/PracticalHero.astro";
 import FirstStepsStepper from "../components/FirstStepsStepper.astro";
 import ServiceIndexList from "../components/ServiceIndexList.astro";
 import InfoRow from "../components/InfoRow.astro";
+import CataloguePictureCards from "../components/CataloguePictureCards.astro";
+import StoryFigure from "../components/StoryFigure.astro";
 import LineIcon from "../components/LineIcon.astro";
 import { ui } from "../i18n/cs.ts";
 import { resolveOptions } from "../lib/options.ts";
@@ -30,6 +44,21 @@ let featured = services.filter((service) => service.data.featured);
 if (featured.length === 0) {
   featured = services;
 }
+featured = featured.slice(0, 4);
+const imagery = await getHomeImagery();
+
+/* The place photo in "O nás" only when the hero shows no real photo: the hero's photo is
+   usually the same place (often another crop of the same file), and no photo appears twice. */
+let storyImage = null;
+if (imagery.place !== null && !isRealBusinessPhoto(home.data.heroImage)) {
+  storyImage = resolveImage(imagery.place.image);
+}
+
+const catalogueCards = [
+  { href: "/kvetiny/", title: flowersPage.data.title, lead: flowersPage.data.lead, photo: imagery.flower },
+  { href: "/rakve/", title: coffinsPage.data.title, lead: coffinsPage.data.lead, photo: imagery.coffin },
+];
+const anyCatalogueImage = catalogueCards.some((card) => card.photo !== null);
 const sections = site.config.homepage.sections;
 
 function bandFor(index: number): string {
@@ -98,13 +127,18 @@ if (home.data.metaTitle !== null) {
                 {site.company.tradition.publicWording !== null ? (
                   <p class="font-semibold">{site.company.tradition.publicWording}</p>
                 ) : null}
-                {about.data.excerpt !== null ? <p class="mt-2 max-w-[42rem] text-muted">{about.data.excerpt}</p> : null}
-                <p class="mt-3">
-                  <a href="/o-nas/" class="text-link">
-                    {ui.moreAboutUs}
-                    <LineIcon name="chevron" />
-                  </a>
-                </p>
+                <div class="grid gap-6 md:grid-cols-[minmax(0,1fr)_auto] md:gap-x-8">
+                  <div>
+                    {about.data.excerpt !== null ? <p class="mt-2 max-w-[42rem] text-muted">{about.data.excerpt}</p> : null}
+                    <p class="mt-3">
+                      <a href="/o-nas/" class="text-link">
+                        {ui.moreAboutUs}
+                        <LineIcon name="chevron" />
+                      </a>
+                    </p>
+                  </div>
+                  {storyImage !== null ? <StoryFigure image={storyImage} /> : null}
+                </div>
               </PlaceholderMark>
             </div>
           </section>
@@ -115,6 +149,9 @@ if (home.data.metaTitle !== null) {
           <section class:list={["band", bandFor(index)]} aria-labelledby="katalogy-prehled" data-section="catalogue-links">
             <div class="container-b">
               <h2 id="katalogy-prehled">{ui.catalogueLinks}</h2>
+              {anyCatalogueImage ? (
+                <CataloguePictureCards cards={catalogueCards} />
+              ) : (
               <ul class="mt-6 grid gap-6 md:grid-cols-2 md:gap-0 md:divide-x md:divide-line">
                 {[
                   { href: "/rakve/", page: coffinsPage.data },
@@ -128,6 +165,7 @@ if (home.data.metaTitle !== null) {
                   </li>
                 ))}
               </ul>
+              )}
             </div>
           </section>
         );

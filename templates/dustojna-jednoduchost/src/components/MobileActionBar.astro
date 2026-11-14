@@ -3,9 +3,12 @@
  * Fixed bottom action bar below 768 px: "Nonstop převoz" (filled) and "Kancelář" (outlined).
  * <body> reserves --bar-h of bottom padding and scroll-padding, so the bar never covers
  * content or the focused element. Hidden from 768 px (the header button takes over) and in print.
+ * The Kancelář button shows a one-word live state ("otevřeno" / "zavřeno") from core's
+ * OfficeStatus; the full sentence is in the hero's office tier. Without JavaScript it is absent.
  */
 import EmergencyPhoneLink from "@core/components/EmergencyPhoneLink.astro";
 import PhoneLink from "@core/components/PhoneLink.astro";
+import OfficeStatus from "@core/components/OfficeStatus.astro";
 import type { SiteContext } from "@core/content/view-models.ts";
 import { formatPhone } from "@core/format/phone.ts";
 import LineIcon from "./LineIcon.astro";
@@ -49,7 +52,10 @@ if (high) {
     <PhoneLink number={office.number} class="btn btn-outline bar-btn">
       <LineIcon name="phone" />
       <span class="bar-text">
-        <span>{ui.officeShort}</span>
+        <span class="bar-office">
+          <span>{ui.officeShort}</span>
+          <OfficeStatus site={site} as="span" variant="short" class="bar-status" />
+        </span>
         {high ? <span class="num bar-number">{officeNumber.display}</span> : <span class="sr-only-b">{officeNumber.spoken}</span>}
       </span>
     </PhoneLink>
@@ -118,6 +124,52 @@ if (high) {
     grid-area: number;
   }
 
+  .bar-office {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.125rem;
+  }
+
+  /* One word per state; the full sentence lives in the hero's office tier. */
+  .bar-office :global(.bar-status:not([hidden])) {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    line-height: 1.1;
+  }
+
+  .bar-office :global(.bar-status [data-office-status-text]) {
+    display: none;
+  }
+
+  .bar-office :global(.bar-status [data-office-status-dot]) {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    border: 2px solid currentColor;
+  }
+
+  .bar-office :global(.bar-status[data-state="open"] [data-office-status-dot]) {
+    background: currentColor;
+  }
+
+  .bar-office :global(.bar-status[data-state="open"])::after {
+    content: "otevřeno";
+  }
+
+  .bar-office :global(.bar-status[data-state="break"])::after {
+    content: "přestávka";
+  }
+
+  .bar-office :global(.bar-status[data-state="closed"])::after {
+    content: "zavřeno";
+  }
+
   .bar-grid :global(.bar-number) {
     font-size: 0.875rem;
     font-weight: 600;
@@ -128,7 +180,53 @@ if (high) {
       font-size: 0.9375rem;
     }
 
-    .bar-grid :global(.bar-number) {
+    .bar-office {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.125rem;
+  }
+
+  /* One word per state; the full sentence lives in the hero's office tier. */
+  .bar-office :global(.bar-status:not([hidden])) {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    line-height: 1.1;
+  }
+
+  .bar-office :global(.bar-status [data-office-status-text]) {
+    display: none;
+  }
+
+  .bar-office :global(.bar-status [data-office-status-dot]) {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    border: 2px solid currentColor;
+  }
+
+  .bar-office :global(.bar-status[data-state="open"] [data-office-status-dot]) {
+    background: currentColor;
+  }
+
+  .bar-office :global(.bar-status[data-state="open"])::after {
+    content: "otevřeno";
+  }
+
+  .bar-office :global(.bar-status[data-state="break"])::after {
+    content: "přestávka";
+  }
+
+  .bar-office :global(.bar-status[data-state="closed"])::after {
+    content: "zavřeno";
+  }
+
+  .bar-grid :global(.bar-number) {
       font-size: 0.8125rem;
     }
   }

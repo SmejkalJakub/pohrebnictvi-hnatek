@@ -1,0 +1,118 @@
+---
+/**
+ * Homepage "Rakve a květiny" as picture cards (design-differentiation §1.4): the client's own
+ * flower arrangement first, a coffin second, each a uniform 4:3 photo above the catalogue's title
+ * and lead, the whole card one link. Photos come from core getHomeImagery() (real photos only);
+ * a card without a photo shows its text alone, never a grey box. Both photos sit whole
+ * (contain) on the same light mat: product shots on white use multiply so the white becomes the
+ * mat, and a flower on its own flat ground reads as a print on it, so the two cards match.
+ */
+import { Image } from "astro:assets";
+import type { HomePhoto } from "@core/content/load.ts";
+import { resolveImage } from "@core/media/resolve.ts";
+import LineIcon from "./LineIcon.astro";
+
+export interface PictureCard {
+  href: string;
+  title: string;
+  lead: string | null;
+  photo: HomePhoto | null;
+}
+
+interface Props {
+  cards: PictureCard[];
+}
+
+const { cards } = Astro.props;
+const resolved = cards.map((card) => {
+  let image = null;
+  if (card.photo !== null) {
+    image = resolveImage(card.photo.image);
+  }
+  return { ...card, image };
+});
+---
+<ul class="picture-cards mt-6 grid gap-8 sm:grid-cols-2 sm:gap-8">
+  {
+    resolved.map((card) => (
+      <li class="picture-card">
+        {card.image !== null ? (
+          <figure class="mb-4">
+            <div class="picture-card-mat">
+              <Image
+                src={card.image.src}
+                alt={card.image.alt}
+                widths={[360, 540, 720]}
+                sizes="(min-width: 76rem) 33rem, (min-width: 40rem) 42vw, 100vw"
+                class="picture-card-photo aspect-[4/3] w-full object-contain"
+                style={`object-position: ${card.image.objectPosition}`}
+                loading="lazy"
+              />
+            </div>
+            {card.photo !== null && card.photo.title !== "" ? (
+              <figcaption class="mt-2 text-[0.9375rem] text-muted">{card.photo.title}</figcaption>
+            ) : null}
+          </figure>
+        ) : null}
+        <h3>
+          <a href={card.href} class="picture-card-link">
+            {card.title}
+            <LineIcon name="chevron" />
+          </a>
+        </h3>
+        {card.lead !== null ? <p class="mt-1 text-muted">{card.lead}</p> : null}
+      </li>
+    ))
+  }
+</ul>
+
+<style>
+  .picture-card {
+    position: relative;
+  }
+
+  .picture-card-mat {
+    padding: 1rem;
+    background: var(--c-band);
+  }
+
+  .picture-card-photo {
+    mix-blend-mode: multiply;
+    transition: opacity 160ms var(--ease);
+  }
+
+  .picture-card-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    min-height: 2.75rem;
+    color: var(--c-ink);
+    text-decoration: underline;
+    text-decoration-color: var(--c-line);
+    text-underline-offset: 0.2em;
+    transition: text-decoration-color 150ms var(--ease);
+  }
+
+  /* The whole card is the link; the heading keeps the accessible name. */
+  .picture-card-link::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+  }
+
+  .picture-card:hover .picture-card-photo {
+    opacity: 0.88;
+  }
+
+  .picture-card:hover .picture-card-link,
+  .picture-card-link:focus-visible {
+    text-decoration-color: currentColor;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .picture-card-photo,
+    .picture-card-link {
+      transition: none;
+    }
+  }
+</style>

@@ -38,9 +38,9 @@ export const ui = {
   backToServices: "Zpět na všechny služby",
   breadcrumb: "Drobečková navigace",
   detailedSteps: "Podrobný postup",
-  prepareList: "Co si připravit",
+  guideList: "Krok za krokem",
   printHint:
-    "Postup si můžete vytisknout (Ctrl + P, na Macu Cmd + P). Tisková verze obsahuje všechny kroky rozbalené a seznamy k odškrtnutí.",
+    "Postup si můžete vytisknout (Ctrl + P, na Macu Cmd + P). Tisková verze obsahuje všechny kroky rozbalené.",
   phasesNav: "Fáze postupu",
   callEmergencyPrompt: "Potřebujete převoz nyní?",
   callOfficePrompt: "Domluvte se s kanceláří",
@@ -80,11 +80,15 @@ export const ui = {
   pickerAll: "Jiná situace – celý postup",
   filterShowing: "Zobrazený postup:",
   filterShowAll: "Zobrazit všechny kroky",
-  tickHint: "Hotové body si odškrtněte.",
-  nextStep: "Další krok",
-  lastStep: "To je poslední krok. S dalšími otázkami vám poradíme v kanceláři.",
+  nextStep: "Potom",
+  lastStep: "Tím máte to nejdůležitější za sebou.",
+  guideLead:
+    "Nemusíte všechno vyřešit najednou ani si nic pamatovat. Stačí jít krok za krokem – u každého najdete, co udělat a co přijde potom.",
+  guideClosingHeading: "Nic z toho nemusíte zvládnout sami",
+  guideClosing: "Když si nebudete jistí, co dál, zavolejte nám a poradíme vám.",
   serviceHelpHeading: "Nevíte, kterou službu potřebujete?",
   serviceHelpText: "Zavolejte nám. Poradíme vám, co je potřeba zařídit.",
+  officeClosedHint: "Mimo úřední hodiny volejte nonstop linku.",
 } as const;
 
 export const serviceCategoryLabels: Record<Service["category"], string> = {

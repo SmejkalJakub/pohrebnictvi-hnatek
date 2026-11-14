@@ -4,9 +4,15 @@
  * The two tiers are sibling blocks: office hours never sit inside the emergency block, and the office
  * tier is its own headed section (invariant 2: hours never share a container or heading with the
  * emergency CTA). The heading keeps the look of the former label line.
+ *
+ * Signature (design review 2026-11-13, §5.3): the office tier carries a live sign, "OTEVŘENO DO
+ * 15:30" filled or "ZAVŘENO · …" outlined, from core's OfficeStatus. While the office is closed its
+ * number steps back and one sentence points to the nonstop line, which stays the primary call.
+ * Without JavaScript the sign and the sentence are absent and the tier reads as before.
  */
 import EmergencyPhoneLink from "@core/components/EmergencyPhoneLink.astro";
 import PhoneLink from "@core/components/PhoneLink.astro";
+import OfficeStatus from "@core/components/OfficeStatus.astro";
 import type { SiteContext } from "@core/content/view-models.ts";
 import LineIcon from "./LineIcon.astro";
 import When from "./When.astro";
@@ -39,7 +45,10 @@ const emergency = site.emergency;
       </div>
   </When>
   <section class="cta-secondary border-t border-hair pt-4" aria-labelledby="cta-kancelar" data-office-hours>
-    <h2 id="cta-kancelar" class="cta-office-heading">{site.officeHours.label}</h2>
+    <div class="office-head">
+      <h2 id="cta-kancelar" class="cta-office-heading">{site.officeHours.label}</h2>
+      <OfficeStatus site={site} variant="short" class="office-sign" />
+    </div>
     <p class="mt-1 text-[0.9375rem]">
       {
         site.officeHoursRows.map((row, index) => (
@@ -51,14 +60,84 @@ const emergency = site.emergency;
         ))
       }
     </p>
-    <p class="mt-1">
+    <p class="office-line mt-1">
       <PhoneLink number={office.number} class="text-link num" />
       <span class="text-muted"> · {office.label}</span>
     </p>
   </section>
+  {/* Outside the office-hours section: office hours and the emergency line never share a container (invariant 2). */}
+  {emergency.enabled ? <p class="office-closed-hint">{ui.officeClosedHint}</p> : null}
 </div>
 
 <style>
+  .office-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 0.75rem;
+  }
+
+  /* The sign: a small plate like the "otevřeno" sign on an office door. Closed (the base) is an
+     ink plate with a hollow dot, break the same plate with a half-filled dot, open a filled plate.
+     Never muted: every state must read at a glance on the cream page. */
+  .office-head :global(.office-sign:not([hidden])) {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.25rem 0.625rem;
+    border: 2px solid var(--c-ink);
+    border-radius: 0.125rem;
+    background: var(--c-surface);
+    color: var(--c-ink);
+    font-size: 0.875rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    line-height: 1.3;
+    transition:
+      background-color 180ms var(--ease),
+      color 180ms var(--ease),
+      border-color 180ms var(--ease);
+  }
+
+  .office-head :global(.office-sign [data-office-status-dot]) {
+    width: 0.625rem;
+    height: 0.625rem;
+    border-radius: 50%;
+    border: 2px solid currentColor;
+    flex: none;
+  }
+
+  .office-head :global(.office-sign[data-state="open"]) {
+    background: var(--c-fill);
+    border-color: var(--c-fill);
+    color: var(--c-on-accent);
+  }
+
+  .office-head :global(.office-sign[data-state="open"] [data-office-status-dot]) {
+    background: currentColor;
+  }
+
+  .office-head :global(.office-sign[data-state="break"] [data-office-status-dot]) {
+    background: linear-gradient(90deg, currentColor 50%, transparent 50%);
+  }
+
+  .office-closed-hint {
+    display: none;
+    margin-top: 0.5rem;
+    font-size: 0.9375rem;
+    color: var(--c-ink);
+  }
+
+  .cta-secondary:has(:global(.office-sign[data-state="closed"])) + .office-closed-hint {
+    display: block;
+  }
+
+  .cta-secondary:has(:global(.office-sign[data-state="closed"])) .office-line :global(a) {
+    color: var(--c-muted);
+    font-weight: 400;
+  }
+
   .cta-office-heading {
     font-size: inherit;
     line-height: inherit;

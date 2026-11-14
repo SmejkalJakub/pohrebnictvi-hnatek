@@ -1,6 +1,6 @@
 /*
  * PrintStyles: every page prints as plain black-on-white text with the contact numbers
- * at the top. On /jak-postupovat/ all steps print expanded with empty checkboxes.
+ * at the top. On /jak-postupovat/ all steps print expanded, each with its numbered guided list.
  */
 @media print {
   @page {
@@ -87,8 +87,23 @@
     border-color: #999999 !important;
   }
 
-  .checklist-b li::before {
+  .guidance-entry {
+    margin-inline: 0 !important;
+    padding-inline: 0 !important;
+    box-shadow: none !important;
+    background: none !important;
+  }
+
+  .guide-lead,
+  .guide-last {
     border-color: #000000;
+  }
+
+  .guide-closing {
+    padding: 0.5rem 0 0 !important;
+    border-top: 1px solid #000000;
+    background: none;
+    break-inside: avoid;
   }
 
   [data-placeholder-label],

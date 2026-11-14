@@ -1,12 +1,18 @@
 ---
 /**
- * Phased checklist for /jak-postupovat/: guidance grouped under phase headings. It opens with
+ * Phased guide for /jak-postupovat/: guidance grouped under phase headings. It opens with
  * the "Kde blízký člověk zemřel?" picker; choosing a situation sets a fragment (#situace-…) and
  * CSS :has(:target) hides the steps that do not apply (no JavaScript; without :has() support the
  * full list shows). The default slot (page body) renders after the picker. Each entry is a
- * compact block: summary, situations, a <details> body, a checklist of real checkboxes, its
- * contact prompt and a "Další krok" link. Closed <details> do not print, so the body is
- * repeated in a print-only block.
+ * compact block: summary, situations, a <details> body, the step's short guided list ("Krok za
+ * krokem", numbered sentences, never tick boxes: design-differentiation §1.3), its contact prompt
+ * and a "Potom: …" link; the last step closes with a calm line instead. A reassurance lead opens
+ * the guide and a closing block with the office line ends it. Closed <details> do not print, so
+ * the body is repeated in a print-only block.
+ *
+ * With JavaScript (core SiteInteractions): choosing a situation animates the filter through a view
+ * transition (data-vt-anchor); a "Potom" link scrolls smoothly and the step it lands on gets a
+ * quiet arrival mark (:target).
  */
 import type { CollectionEntry } from "astro:content";
 import { render } from "@core/content/load.ts";
@@ -17,6 +23,7 @@ import {
   SITUATION_ANCHOR,
   SPECIFIC_SITUATIONS,
   chooserSituations,
+  guideSentence,
   nextGuidanceStep,
   situationsAttribute,
 } from "@core/content/guidance-flow.ts";
@@ -78,7 +85,7 @@ const filterCss = SPECIFIC_SITUATIONS.map((situation) => {
   return [
     `${target} [data-guide-step]${hidden} { display: none; }`,
     `${target} [data-filter-status="${situation}"] { display: flex; }`,
-    `${target} [data-situation-link="${situation}"] { background: var(--c-accent); border-color: var(--c-accent); color: var(--c-on-accent); }`,
+    `${target} [data-situation-link="${situation}"] { background: var(--c-fill); border-color: var(--c-fill); color: var(--c-on-accent); }`,
     `${target} [data-situation-link="${situation}"] .picker-chev { color: var(--c-on-accent); }`,
   ].join("\n");
 }).join("\n");
@@ -93,6 +100,8 @@ const filterCss = SPECIFIC_SITUATIONS.map((situation) => {
       </div>
     ) : null
   }
+
+  <p class="guide-lead mb-8 max-w-[42rem] text-[1.1875rem]">{ui.guideLead}</p>
 
   <div class="prose-b mb-8"><slot /></div>
 
@@ -109,7 +118,7 @@ const filterCss = SPECIFIC_SITUATIONS.map((situation) => {
         <span>
           {ui.filterShowing} <strong>{situationLabels[situation]}</strong>
         </span>
-        <a href={`#${ALL_ANCHOR}`} class="btn btn-quiet">
+        <a href={`#${ALL_ANCHOR}`} class="btn btn-quiet" data-vt-anchor>
           {ui.filterShowAll}
         </a>
       </p>
@@ -170,31 +179,27 @@ const filterCss = SPECIFIC_SITUATIONS.map((situation) => {
                         ) : null}
                         <p class="mt-3" data-no-print>
                           {next !== null ? (
-                            <a href={`#${next.id}`} class="text-link next-link">
+                            <a href={`#${next.id}`} class="text-link next-link" data-guide-next>
                               {ui.nextStep}: {next.data.title}
                               <LineIcon name="chevron" />
                             </a>
                           ) : (
-                            <span class="text-muted">{ui.lastStep}</span>
+                            <span class="guide-last font-semibold">{ui.lastStep}</span>
                           )}
                         </p>
                       </div>
                       <div class="space-y-4 md:col-span-5">
                         {entry.data.checklist.length > 0 ? (
-                          <fieldset class="tick-set">
-                            <legend class="font-semibold">{ui.prepareList}</legend>
-                            <p class="text-[0.9375rem] text-muted" data-no-print>{ui.tickHint}</p>
-                            <ul class="tick-list mt-2">
-                              {entry.data.checklist.map((item, itemIndex) => (
-                                <li>
-                                  <label class="tick" for={`${entry.id}-bod-${itemIndex + 1}`}>
-                                    <input type="checkbox" id={`${entry.id}-bod-${itemIndex + 1}`} class="tick-box" />
-                                    <span class="tick-text">{item}</span>
-                                  </label>
+                          <div class="guide-list-wrap">
+                            <p id={`${entry.id}-postup`} class="font-semibold">{ui.guideList}</p>
+                            <ol class="guide-list mt-2" aria-labelledby={`${entry.id}-postup`}>
+                              {entry.data.checklist.map((item) => (
+                                <li class="guide-item">
+                                  <span class="guide-item-text">{guideSentence(item)}</span>
                                 </li>
                               ))}
-                            </ul>
-                          </fieldset>
+                            </ol>
+                          </div>
                         ) : null}
                         {entry.data.contactPrompt === "emergency" && site.emergency.enabled ? (
                           <div data-emergency-block>
@@ -230,6 +235,16 @@ const filterCss = SPECIFIC_SITUATIONS.map((situation) => {
       ))
     }
   </div>
+
+  <section class="guide-closing mt-12" aria-labelledby="guide-closing">
+    <h2 id="guide-closing">{ui.guideClosingHeading}</h2>
+    <p class="mt-2 max-w-[42rem] text-[1.1875rem]">{ui.guideClosing}</p>
+    <PhoneLink number={office.number} class="btn btn-outline mt-4 flex-wrap justify-start text-left">
+      <LineIcon name="phone" />
+      <span>{office.label}</span>
+      <span class="num">{officeNumber.display}</span>
+    </PhoneLink>
+  </section>
 </div>
 
 <style>
@@ -265,39 +280,64 @@ const filterCss = SPECIFIC_SITUATIONS.map((situation) => {
     content: counter(phase) ".";
   }
 
-  .tick-set {
-    border: 0;
-    padding: 0;
-    margin: 0;
-    min-width: 0;
+  .guide-lead {
+    padding-left: 1rem;
+    border-left: 4px solid var(--c-fill);
   }
 
-  .tick-list {
+  /* The step's guided list: ruled rows with plain sans numerals, no boxes, nothing to tick. */
+  .guide-list {
+    counter-reset: guide-item;
     border-top: 1px solid var(--c-hair);
   }
 
-  .tick {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.75rem;
-    min-height: 3rem;
+  .guide-item {
+    counter-increment: guide-item;
+    display: grid;
+    grid-template-columns: 1.75rem 1fr;
+    gap: 0.5rem;
     padding-block: 0.625rem;
     border-bottom: 1px solid var(--c-hair);
-    cursor: pointer;
   }
 
-  .tick-box {
-    flex: none;
-    width: 1.5rem;
-    height: 1.5rem;
-    margin-top: 0.125rem;
-    accent-color: var(--c-accent);
-    cursor: pointer;
-  }
-
-  .tick-box:checked + .tick-text {
+  .guide-item::before {
+    content: counter(guide-item) ".";
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
     color: var(--c-muted);
-    text-decoration: line-through;
+  }
+
+  .guide-last {
+    display: inline-block;
+    padding-left: 0.75rem;
+    border-left: 3px solid var(--c-fill);
+  }
+
+  .guide-closing {
+    padding: 1.5rem 1.25rem;
+    border-top: 4px solid var(--c-fill);
+    background: var(--c-surface);
+  }
+
+  /* Arrival mark: the step a "Potom" link lands on gets a quiet band. The entry reaches a little
+     into the gutter so the band has room without moving the text. */
+  .guidance-entry {
+    margin-inline: -0.75rem;
+    padding-inline: 0.75rem;
+  }
+
+  .guidance-entry:target,
+  .guidance-entry[data-guide-arrived] {
+    background-color: var(--c-band);
+    box-shadow: inset 4px 0 0 var(--c-fill);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .guidance-entry {
+      transition:
+        background-color 180ms var(--ease),
+        box-shadow 180ms var(--ease);
+    }
   }
 
   .next-link {

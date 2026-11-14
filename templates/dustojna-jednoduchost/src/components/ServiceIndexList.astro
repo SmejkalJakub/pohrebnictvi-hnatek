@@ -1,8 +1,9 @@
 ---
 /**
- * Service index: category headings, each with a two-column <ul>. Every item is one large
- * tappable row (title, summary, chevron) linking to the detail page, so readers do not have to
- * aim at a small text link. No images. Used on the homepage (featured) and on /sluzby/ (all).
+ * Service index: category headings, each with a list of full-width ruled rows (signage, not
+ * cards). Every item is one large tappable row (title, summary, chevron) linking to the detail
+ * page, so readers do not have to aim at a small text link. No images, no empty grid cells.
+ * Used on the homepage (featured) and on /sluzby/ (all).
  */
 import type { CollectionEntry } from "astro:content";
 import PlaceholderMark from "@core/components/PlaceholderMark.astro";
@@ -20,21 +21,21 @@ const groups = groupServices(services);
 const Heading = headingLevel;
 const ItemHeading = headingLevel === "h2" ? "h3" : "h4";
 ---
-<div class="service-index space-y-8">
+<div class="service-index space-y-10">
   {
     groups.map((group) => (
-      <div class="service-group grid gap-3 border-t border-line pt-4 md:grid-cols-12 md:gap-x-8" id={`kategorie-${group.category}`}>
-        <Heading class="md:col-span-3 text-[1.125rem]">{group.label}</Heading>
-        <ul class="grid gap-x-4 gap-y-3 sm:grid-cols-2 md:col-span-9">
+      <div class="service-group grid gap-3 border-t-2 border-ink pt-4 md:grid-cols-12 md:gap-x-8" id={`kategorie-${group.category}`}>
+        <Heading class="service-group-label md:col-span-3">{group.label}</Heading>
+        <ul class="service-rows md:col-span-9">
           {group.services.map((service) => (
             <li data-service={service.id}>
               <PlaceholderMark active={service.data.placeholder} kind="content">
               <a href={serviceHref(service.id, true)} class="service-row">
                 <span class="service-row-text">
                   <ItemHeading class="service-row-title">{service.data.title}</ItemHeading>
-                  <span class="mt-1 block text-[1rem] text-muted">{service.data.summary}</span>
+                  <span class="service-row-summary">{service.data.summary}</span>
                 </span>
-                <LineIcon name="chevron" size={22} class="service-row-chev shrink-0" />
+                <LineIcon name="chevron" size={24} class="service-row-chev shrink-0" />
               </a>
               </PlaceholderMark>
             </li>
@@ -46,37 +47,71 @@ const ItemHeading = headingLevel === "h2" ? "h3" : "h4";
 </div>
 
 <style>
+  /* Signage, not cards: each service is one full-width ruled row, like a line on a building's
+     directory board. The whole row is the target; it tints and the arrow moves on hover. */
+  .service-group :global(.service-group-label) {
+    font-size: 1.125rem;
+    padding-top: 0.875rem;
+  }
+
+  .service-rows > li + li {
+    border-top: 1px solid var(--c-hair);
+  }
+
   .service-row {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 1rem;
-    height: 100%;
-    min-height: 4rem;
-    padding: 0.875rem 1rem;
-    border: 1px solid var(--c-line);
-    border-radius: 0.25rem;
-    background: var(--c-surface);
+    gap: 1.5rem;
+    min-height: 4.5rem;
+    padding: 1rem 0.75rem;
+    margin-inline: -0.75rem;
     color: var(--c-ink);
     text-decoration: none;
+    transition: background-color 150ms var(--ease);
   }
 
-  .service-row:hover {
-    border-color: var(--c-accent);
-  }
-
-  .service-row:hover .service-row-title {
-    text-decoration: underline;
-    text-underline-offset: 0.2em;
+  .service-row-text {
+    display: grid;
+    gap: 0.25rem;
+    max-width: 44rem;
   }
 
   .service-row-title {
-    font-size: 1.1875rem;
+    font-size: 1.25rem;
     font-weight: 600;
-    color: var(--c-accent-strong);
+    color: var(--c-ink);
+  }
+
+  .service-row-summary {
+    font-size: 1rem;
+    color: var(--c-muted);
   }
 
   .service-row :global(.service-row-chev) {
     color: var(--c-accent);
+    transition: translate 150ms var(--ease);
+  }
+
+  .service-row:hover {
+    background-color: var(--c-band);
+  }
+
+  .service-row:hover .service-row-title {
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 0.2em;
+  }
+
+  .service-row:hover :global(.service-row-chev) {
+    translate: 0.25rem 0;
+  }
+
+  @media (min-width: 48rem) {
+    .service-row-text {
+      grid-template-columns: minmax(12rem, 18rem) 1fr;
+      column-gap: 2rem;
+      align-items: baseline;
+    }
   }
 </style>

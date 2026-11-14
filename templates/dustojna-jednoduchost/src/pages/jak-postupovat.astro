@@ -2,7 +2,7 @@
 import { getGuidance, getPage, getSiteContext } from "@core/content/load.ts";
 import Site from "../layouts/Site.astro";
 import PageHeading from "../components/PageHeading.astro";
-import PhasedChecklist from "../components/PhasedChecklist.astro";
+import PhasedGuide from "../components/PhasedGuide.astro";
 import { ui } from "../i18n/cs.ts";
 import { seoTitle } from "../lib/site.ts";
 
@@ -17,9 +17,9 @@ const Body = page.Content;
   </PageHeading>
   <div class="band">
     <div class="container-b">
-      <PhasedChecklist site={site} guidance={guidance}>
+      <PhasedGuide site={site} guidance={guidance}>
         <Body />
-      </PhasedChecklist>
+      </PhasedGuide>
     </div>
   </div>
 </Site>

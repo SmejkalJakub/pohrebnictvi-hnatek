@@ -3,11 +3,17 @@
  * Page shell for Template B. Options become data attributes on <html>; the chrome is
  * header → mobile action bar → main → compact footer. Every page gets the emergency CTA
  * through the header (≥ 768 px) or the fixed bottom bar (< 768 px).
+ * A client brand profile (template-contract §8a) adds data-brand* attributes and <BrandStyle />;
+ * global.css maps the --brand-* roles onto B's tokens. <SiteInteractions /> adds the shared
+ * enhancements (office status, copy number on desktop).
  */
 import "../styles/global.css";
 import SeoHead from "@core/components/SeoHead.astro";
 import StructuredData from "@core/components/StructuredData.astro";
 import PrototypeBanner from "@core/components/PrototypeBanner.astro";
+import BrandStyle from "@core/components/BrandStyle.astro";
+import SiteInteractions from "@core/components/SiteInteractions.astro";
+import { brandAttributes } from "@core/brand/runtime.ts";
 import type { ImageMetadata } from "astro";
 import type { SiteContext } from "@core/content/view-models.ts";
 import StickyHeaderWithEmergency from "../components/StickyHeaderWithEmergency.astro";
@@ -37,6 +43,7 @@ const hasPrivacyPage = await pageExists("ochrana-osobnich-udaju");
   data-font={options.fontPair}
   data-hero={options.heroVariant}
   data-emphasis={options.emergencyEmphasis}
+  {...brandAttributes()}
 >
   <head>
     <SeoHead site={site} title={title} description={description} noindex={noindex} image={image} />
@@ -44,6 +51,7 @@ const hasPrivacyPage = await pageExists("ochrana-osobnich-udaju");
       document.documentElement.classList.replace("no-js", "js");
     </script>
     <StructuredData site={site} />
+    <BrandStyle />
   </head>
   <body class="font-sans text-ink">
     <PrototypeBanner />
@@ -54,5 +62,6 @@ const hasPrivacyPage = await pageExists("ochrana-osobnich-udaju");
       <slot />
     </main>
     <CompactFooter site={site} hasPrivacyPage={hasPrivacyPage} />
+    <SiteInteractions />
   </body>
 </html>

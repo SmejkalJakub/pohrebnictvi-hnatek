@@ -29,6 +29,7 @@
   --color-accent: var(--c-accent);
   --color-accent-strong: var(--c-accent-strong);
   --color-on-accent: var(--c-on-accent);
+  --color-fill: var(--c-fill);
   --font-sans: var(--f-body);
   --font-display: var(--f-h1);
   --breakpoint-nav: 80rem;
@@ -48,6 +49,9 @@
   --c-accent: #2f5446;
   --c-accent-strong: #213d32;
   --c-on-accent: #ffffff;
+  /* Filled buttons. Same as the accent in B's own palettes; a brand may use a lighter fill. */
+  --c-fill: var(--c-accent);
+  --c-fill-strong: var(--c-accent-strong);
   --c-flag-bg: #fbefcf;
   --c-flag-ink: #4d3a00;
   --c-flag-line: #8a6d1d;
@@ -75,11 +79,50 @@
   --h1-tracking: 0;
 }
 
+/* ---------- Client brand (template-contract §8a) ----------
+ * Core's --brand-* roles (contrast-checked) mapped onto B's tokens. Signage logic stays B's:
+ * a light ground, white panels, one filled colour for calls. The gold or second brand colour is
+ * not used for text. Without a brand profile none of this applies. */
+
+:root[data-brand] {
+  --c-bg: var(--brand-ground);
+  --c-surface: #ffffff;
+  --c-band: var(--brand-surface);
+  --c-ink: var(--brand-ink);
+  --c-muted: var(--brand-muted);
+  --c-line: var(--brand-rule);
+  --c-hair: color-mix(in oklab, var(--brand-rule) 40%, var(--brand-ground));
+  --c-accent: var(--brand-primary-text);
+  --c-accent-strong: var(--brand-ink);
+  --c-on-accent: var(--brand-on-primary);
+  --c-fill: var(--brand-primary);
+  --c-fill-strong: var(--brand-primary-hover);
+}
+
+:root[data-brand-display] {
+  --f-h1: var(--brand-font-display);
+  --f-heading: var(--brand-font-display);
+  --h1-weight: 600;
+  --h1-tracking: 0;
+}
+
+:root[data-brand-body] {
+  --f-body: var(--brand-font-body);
+}
+
 /* ---------- Chrome metrics ---------- */
 
 :root {
   --header-h: 4rem;
   --bar-h: 4.375rem;
+  /* Shared enhancements (core SiteInteractions): anchors clear the sticky header, the copy
+     toast clears the mobile bottom bar. */
+  --scroll-offset: calc(var(--header-h) + 1rem);
+  --toast-offset: calc(var(--bar-h) + env(safe-area-inset-bottom, 0px));
+  --toast-bg: var(--c-ink);
+  --toast-fg: var(--c-bg);
+  --toast-radius: 0.25rem;
+  --ease: cubic-bezier(0.2, 0, 0, 1);
 }
 
 :root[data-emphasis="high"] {
@@ -157,6 +200,7 @@
   }
 
   h2 {
+    font-family: var(--f-heading, var(--f-body));
     font-size: 1.5rem;
     line-height: 1.25;
   }
@@ -171,6 +215,13 @@
     text-decoration-line: underline;
     text-decoration-thickness: 1px;
     text-underline-offset: 0.2em;
+  }
+
+  a {
+    transition:
+      color 150ms var(--ease),
+      text-decoration-color 150ms var(--ease),
+      text-decoration-thickness 150ms var(--ease);
   }
 
   a:hover {
@@ -267,19 +318,38 @@
     text-decoration: none;
   }
 
+  .btn {
+    transition:
+      background-color 150ms var(--ease),
+      border-color 150ms var(--ease),
+      color 150ms var(--ease),
+      scale 120ms var(--ease);
+  }
+
   .btn:hover {
     text-decoration: none;
   }
 
+  /* Press feedback: a short, small dip. Off under reduced motion (base layer). */
+  .btn:active {
+    scale: 0.98;
+  }
+
   .btn-emergency {
-    background-color: var(--c-accent);
-    border-color: var(--c-accent);
+    background-color: var(--c-fill);
+    border-color: var(--c-fill);
     color: var(--c-on-accent);
   }
 
   .btn-emergency:hover {
-    background-color: var(--c-accent-strong);
-    border-color: var(--c-accent-strong);
+    background-color: var(--c-fill-strong);
+    border-color: var(--c-fill-strong);
+  }
+
+  /* Desktop: a tel: click copies the number (core); confirm on the button itself too. */
+  .btn[data-copied="true"] {
+    outline: 3px solid var(--c-accent);
+    outline-offset: 2px;
   }
 
   .btn-outline {
@@ -289,13 +359,18 @@
   }
 
   .btn-outline:hover {
-    background-color: var(--c-bg);
+    background-color: var(--c-band);
   }
 
   .btn-quiet {
     background-color: transparent;
     border-color: var(--c-line);
     color: var(--c-ink);
+  }
+
+  .btn-quiet:hover {
+    background-color: var(--c-band);
+    border-color: var(--c-ink);
   }
 
   .num {
@@ -309,6 +384,17 @@
     gap: 0.25rem;
     min-height: 2.75rem;
     font-weight: 600;
+  }
+
+  /* Chevrons move a few pixels towards where the link goes. */
+  .text-link > svg,
+  .next-link > svg {
+    transition: translate 150ms var(--ease);
+  }
+
+  .text-link:hover > svg,
+  .next-link:hover > svg {
+    translate: 0.25rem 0;
   }
 
   .label-b {
@@ -445,28 +531,6 @@
     font-weight: 600;
     padding-right: 1.5rem;
     white-space: nowrap;
-  }
-
-  /* Checklist boxes drawn in CSS: printable, and not falsely interactive. */
-  .checklist-b li {
-    position: relative;
-    padding-left: 1.75rem;
-  }
-
-  .checklist-b li::before {
-    content: "";
-    position: absolute;
-    left: 0;
-    top: 0.3em;
-    width: 1rem;
-    height: 1rem;
-    border: 1.5px solid var(--c-line);
-    border-radius: 0.125rem;
-    background: var(--c-surface);
-  }
-
-  .checklist-b li + li {
-    margin-top: 0.375rem;
   }
 
   .details-b > summary {

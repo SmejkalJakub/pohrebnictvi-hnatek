@@ -1,7 +1,9 @@
 ---
 /**
  * Practical hero: H1, one-sentence lead, then the CTA tier. `text-with-image` adds a modest
- * 3:2 image AFTER the CTA block (never before it); with no image it falls back to text-only.
+ * 3:2 image AFTER the CTA block in reading order (never before it). On wide screens the image
+ * sits under the lead while the CTA tier spans both rows on the right, so the hero has no empty
+ * quadrant; on phones it follows the CTA tier. With no image it falls back to text-only.
  */
 import PlaceholderMark from "@core/components/PlaceholderMark.astro";
 import type { SiteContext } from "@core/content/view-models.ts";
@@ -33,12 +35,12 @@ const high = options.emergencyEmphasis === "high";
         {page.lead !== null ? <p class="mt-4 max-w-[38rem] text-lg">{page.lead}</p> : null}
       </PlaceholderMark>
     </div>
-    <div class="md:col-span-5">
+    <div class="md:col-span-5 md:row-span-2">
       <CtaTier site={site} high={high} />
     </div>
     {
       image !== null ? (
-        <div class="md:col-span-7">
+        <div class="md:col-span-7 md:col-start-1 md:row-start-2">
           <HeroFigure image={image} />
         </div>
       ) : null
