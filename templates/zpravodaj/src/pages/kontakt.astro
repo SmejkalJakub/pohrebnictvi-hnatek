@@ -1,0 +1,93 @@
+---
+/**
+ * Kontakt: the headline (H1 + standfirst), then sections Kancelář (the office photo beside the
+ * address when `secondaryImage` is set), Úřední
+ * hodiny (data-office-hours, its own heading), Telefony, Převoz zesnulých (its own emergency
+ * block), and Kdo vás přijme
+ * (#lide) when people are on.
+ */
+import OfficeStatus from "@core/components/OfficeStatus.astro";
+import PhoneLink from "@core/components/PhoneLink.astro";
+import { getPage, getPeople, getSiteContext } from "@core/content/load.ts";
+import { formatAddressLines } from "@core/format/address.ts";
+import { formatPhone } from "@core/format/phone.ts";
+import GazetteLayout from "../layouts/GazetteLayout.astro";
+import PageHeadline from "../components/PageHeadline.astro";
+import ColumnSection from "../components/ColumnSection.astro";
+import OfficeHoursColumn from "../components/OfficeHoursColumn.astro";
+import TransportColumn from "../components/TransportColumn.astro";
+import PeopleColumns from "../components/PeopleColumns.astro";
+import ProseColumns from "../components/ProseColumns.astro";
+import PressPhoto from "../components/PressPhoto.astro";
+import { mainLocation, mapHref, seoDescription, seoTitle } from "../lib/site.ts";
+import { ui } from "../i18n/cs.ts";
+
+const site = await getSiteContext();
+const page = await getPage("kontakt");
+const people = await getPeople();
+const location = mainLocation(site);
+const [street, cityLine] = formatAddressLines(location.address);
+const map = mapHref(location);
+const phones = site.contact.phones.map((phone) => ({ ...phone, display: formatPhone(phone.number).display }));
+const Body = page.Content;
+/* The office as a press photo beside the address (image slot contact.office). */
+const officePhoto = page.data.secondaryImage;
+---
+<GazetteLayout site={site} title={seoTitle(page.data)} description={seoDescription(page.data)} officeOnPage>
+  <PageHeadline title={page.data.title} lead={page.data.lead} placeholder={page.data.placeholder} />
+  <ColumnSection id="kancelar" heading={ui.officeHeading}>
+    <p>{location.name}<br />{street}<br />{cityLine}</p>
+    {map !== null ? <p class="sans"><a href={map} class="go">{ui.mapLink}</a></p> : null}
+    {location.accessNote !== null ? <p class="muted">{location.accessNote}</p> : null}
+    {
+      officePhoto !== null ? (
+        <PressPhoto slot="aside" image={officePhoto} caption={location.name} maxWidth={420} />
+      ) : null
+    }
+  </ColumnSection>
+  <ColumnSection id="hodiny" heading={ui.hoursHeading} data-office-hours>
+    <OfficeStatus site={site} />
+    <OfficeHoursColumn site={site} id="hodiny-tabulka" withHeading={false} />
+  </ColumnSection>
+  <ColumnSection id="telefony" heading={ui.phonesHeading}>
+    <ul class="lines" role="list">
+      {
+        phones.map((phone) => (
+          <li>
+            <PhoneLink number={phone.number}>
+              {phone.label}{" "}<span class="nowrap">{phone.display}</span>
+            </PhoneLink>
+          </li>
+        ))
+      }
+      {
+        site.contact.emails.map((email) => (
+          <li>
+            <a href={`mailto:${email.address}`} class="go mail">{email.address}</a>
+          </li>
+        ))
+      }
+    </ul>
+  </ColumnSection>
+  <TransportColumn emergency={site.emergency} />
+  {
+    people.length > 0 ? (
+      <ColumnSection id="lide" heading={ui.peopleHeading}>
+        <PeopleColumns people={people} />
+      </ColumnSection>
+    ) : null
+  }
+  {page.hasBody ? <ProseColumns idPrefix="kontakt-text"><Body /></ProseColumns> : null}
+</GazetteLayout>
+
+<style>
+  .lines {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .mail {
+    overflow-wrap: anywhere;
+  }
+</style>

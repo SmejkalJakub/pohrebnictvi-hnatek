@@ -1,0 +1,27 @@
+---
+/** Ochrana osobních údajů (only when its page file exists): the opening and the body as passages. */
+import { getOptionalPage, getSiteContext } from "@core/content/load.ts";
+import GazetteLayout from "../../layouts/GazetteLayout.astro";
+import PageHeadline from "../../components/PageHeadline.astro";
+import ProseColumns from "../../components/ProseColumns.astro";
+import { seoDescription, seoTitle } from "../../lib/site.ts";
+
+export async function getStaticPaths() {
+  const page = await getOptionalPage("ochrana-osobnich-udaju");
+  if (page === null) {
+    return [];
+  }
+  return [{ params: { path: undefined } }];
+}
+
+const site = await getSiteContext();
+const page = await getOptionalPage("ochrana-osobnich-udaju");
+if (page === null) {
+  throw new Error("unreachable: page missing");
+}
+const Body = page.Content;
+---
+<GazetteLayout site={site} title={seoTitle(page.data)} description={seoDescription(page.data)}>
+  <PageHeadline title={page.data.title} lead={page.data.lead} placeholder={page.data.placeholder} />
+  {page.hasBody ? <ProseColumns idPrefix="soukromi"><Body /></ProseColumns> : null}
+</GazetteLayout>

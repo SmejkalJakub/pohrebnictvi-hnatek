@@ -1,0 +1,69 @@
+---
+/**
+ * The headline of every inner page (F): an optional kicker in small capitals, the H1 in the
+ * display face, the standfirst (the page lead) in italic, then anything the page adds (the VAT
+ * note on Ceník, the 404 sentence). No card and no photo here: the nonstop number stands in the
+ * dateline (desktop) and in the strip under the masthead (phones). The home uses FrontLead.
+ */
+import PlaceholderMark from "@core/components/PlaceholderMark.astro";
+
+interface Props {
+  title: string;
+  lead?: string | null;
+  placeholder?: boolean;
+  /** Small capitals above the H1 (e.g. "Chyba 404"). */
+  kicker?: string | null;
+  /** "standfirst" (italic) by default; "muted" on notice pages, which stay plain. */
+  leadClass?: string;
+}
+
+const { title, lead = null, placeholder = false, kicker = null, leadClass = "standfirst" } = Astro.props;
+---
+<div class="opening">
+  {kicker !== null ? <p class="kicker">{kicker}</p> : null}
+  <PlaceholderMark active={placeholder} as="div">
+    <h1 class="opening-title">{title}</h1>
+  </PlaceholderMark>
+  {lead !== null ? <p class={leadClass}>{lead}</p> : null}
+  <slot />
+</div>
+
+<style>
+  .opening {
+    width: 100%;
+    max-width: calc(var(--page) + 2 * var(--gutter));
+    margin-inline: auto;
+    padding: 1.75rem var(--gutter) 0;
+  }
+
+  .opening > * {
+    max-width: var(--measure);
+  }
+
+  .opening > * + * {
+    margin-top: 0.875rem;
+  }
+
+  .opening > .kicker + * {
+    margin-top: 0.375rem;
+  }
+
+  .opening-title {
+    font-size: var(--h1);
+    line-height: 1.1;
+  }
+
+  @media (min-width: 64rem) {
+    .opening {
+      padding-top: 2.75rem;
+    }
+
+    .opening > * {
+      max-width: 50rem;
+    }
+
+    .opening > * + * {
+      margin-top: 1.125rem;
+    }
+  }
+</style>

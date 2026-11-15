@@ -1,0 +1,25 @@
+---
+/**
+ * Jak postupovat: the opening, the place picker as a sentence of words, the whole guide (every
+ * step by phase, the guide's stops), then Časté otázky (#caste-otazky).
+ */
+import { getFaq, getGuidance, getPage, getSiteContext } from "@core/content/load.ts";
+import GazetteLayout from "../layouts/GazetteLayout.astro";
+import PageHeadline from "../components/PageHeadline.astro";
+import GuideArticle from "../components/GuideArticle.astro";
+import ProseColumns from "../components/ProseColumns.astro";
+import ReadersQuestions from "../components/ReadersQuestions.astro";
+import { seoDescription, seoTitle } from "../lib/site.ts";
+
+const site = await getSiteContext();
+const page = await getPage("jak-postupovat");
+const guidance = await getGuidance();
+const faq = await getFaq();
+const Body = page.Content;
+---
+<GazetteLayout site={site} title={seoTitle(page.data)} description={seoDescription(page.data)}>
+  <PageHeadline title={page.data.title} lead={page.data.lead} placeholder={page.data.placeholder} />
+  <GuideArticle site={site} guidance={guidance} />
+  {page.hasBody ? <ProseColumns idPrefix="postup-text"><Body /></ProseColumns> : null}
+  {faq.length > 0 ? <ReadersQuestions groups={faq} /> : null}
+</GazetteLayout>

@@ -1,0 +1,74 @@
+---
+/**
+ * Home `price-summary` (F), a side-column brief: "Kolik to bude stát", the first item of each price
+ * group (at most three; core has no group price, so the first item stands for it) on hairlines,
+ * the VAT note, the link to Ceník.
+ */
+import PriceValue from "@core/components/PriceValue.astro";
+import VatNote from "@core/components/VatNote.astro";
+import type { PriceItem } from "@core/content/schemas.ts";
+import type { PricingView } from "@core/content/view-models.ts";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  pricing: PricingView;
+}
+
+const { pricing } = Astro.props;
+const lines: { title: string; item: PriceItem }[] = [];
+for (const group of pricing.groups) {
+  const item = group.items[0];
+  if (item !== undefined && lines.length < 3) {
+    lines.push({ title: group.title, item });
+  }
+}
+---
+<section id="cena" class="brief" data-section="price-summary" aria-labelledby="cena-nadpis">
+  <h2 id="cena-nadpis" class="headline brief-heading">{ui.priceHeading}</h2>
+  <ul class="brief-lines" role="list">
+    {
+      lines.map((line) => (
+        <li>
+          {line.title}{" "}
+          <PriceValue item={line.item} class="brief-price" />
+        </li>
+      ))
+    }
+  </ul>
+  <VatNote pricing={pricing} class="brief-quiet" />
+  <p class="brief-more">
+    <a href="/cenik/" class="go">{ui.priceLink}</a>
+  </p>
+</section>
+
+<style>
+  .brief-heading {
+    font-size: 1.5rem;
+  }
+
+  .brief-lines {
+    margin: 0.5rem 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .brief-lines > li {
+    padding-block: 0.375rem;
+    border-bottom: 1px solid var(--rule-soft);
+  }
+
+  .brief-lines :global(.brief-price [data-price-amount]) {
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .brief :global(.brief-quiet) {
+    margin-top: 0.5rem;
+    color: var(--muted);
+    font-size: 0.9375rem;
+  }
+
+  .brief-more {
+    font-size: 1rem;
+  }
+</style>

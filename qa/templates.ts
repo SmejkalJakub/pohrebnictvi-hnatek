@@ -12,9 +12,10 @@ export interface TemplateUnderTest {
     | "nocni-linka"
     | "rodinny-rozhovor"
     | "krok-za-krokem"
-    | "lide-a-misto";
+    | "lide-a-misto"
+    | "zpravodaj";
   /** Short letter used in the design docs. */
-  letter: "A" | "B" | "C" | "D" | "E" | "G";
+  letter: "A" | "B" | "C" | "D" | "E" | "F" | "G";
   port: number;
   dir: string;
   dist: string;
@@ -38,6 +39,7 @@ export const templates: TemplateUnderTest[] = [
   template("rodinny-rozhovor", "D", 4416),
   template("krok-za-krokem", "E", 4417),
   template("lide-a-misto", "G", 4418),
+  template("zpravodaj", "F", 4414),
 ];
 
 /** Every unordered pair of templates (design-differentiation §6 applies to each pair). */

@@ -1,0 +1,190 @@
+---
+/**
+ * One notice, in plain sentences (research L1: nothing promotional, no columns, no nonstop box):
+ * back link, the family's photo uncropped (never cropped around a face), the name in the display face,
+ * the dates, the ceremony sentence, type, map link, livestream as a plain link (L14), the notice
+ * text, Od rodiny, Kondolence (an instruction, never a form), the parte, and the QR code.
+ */
+import { Image } from "astro:assets";
+import PlaceholderMark from "@core/components/PlaceholderMark.astro";
+import type { LoadedNotice } from "@core/content/load.ts";
+import { resolveOptionalImage } from "@core/media/resolve.ts";
+import NoticeQrBox from "./NoticeQrBox.astro";
+import { ceremonySentence } from "../lib/notice-list.ts";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  notice: LoadedNotice;
+}
+
+const { notice } = Astro.props;
+const view = notice.view;
+const ceremony = view.ceremony;
+const photo = resolveOptionalImage(view.photo);
+const parte = resolveOptionalImage(view.parteImage);
+const Body = notice.Content;
+const sentence = ceremonySentence(view, {
+  sentence: ui.ceremonySentence,
+  without: ui.withoutCeremony,
+  private: ui.privateCeremony,
+});
+let mapLabel: string | null = null;
+if (ceremony !== null && ceremony.mapUrl !== null) {
+  const where = [ceremony.placeName, ceremony.address].filter((part) => part !== null).join(", ");
+  mapLabel = `${ui.mapPrefix}: ${where}`;
+}
+---
+<article class="notice wrap" data-notice={view.id}>
+  <p class="sans no-print"><a href="/oznameni/" class="go">{ui.allNotices}</a></p>
+  <PlaceholderMark active={view.placeholder} as="div">
+    {
+      photo !== null ? (
+        <Image
+          src={photo.src}
+          alt={photo.alt}
+          widths={[360, 720]}
+          sizes="(min-width: 48rem) 22rem, 100vw"
+          class="notice-photo"
+          loading="eager"
+        />
+      ) : null
+    }
+    <h1 class="notice-name">{view.fullName}</h1>
+    <p class="muted notice-dates">
+      {
+        view.bornText !== null ? (
+          <>
+            <span aria-hidden="true">*</span>
+            <span class="visually-hidden">{ui.born}:</span> {view.bornText}{"   "}
+          </>
+        ) : null
+      }
+      <span aria-hidden="true">†</span>
+      <span class="visually-hidden">{ui.diedLabel}:</span> {view.diedText}
+    </p>
+    {sentence !== null ? <p class="notice-sentence">{sentence}</p> : null}
+    {ceremony !== null && ceremony.type !== "without-ceremony" ? <p class="label">{ceremony.typeLabel}</p> : null}
+    {
+      mapLabel !== null && ceremony !== null && ceremony.mapUrl !== null ? (
+        <p>
+          <a href={ceremony.mapUrl} class="go">{mapLabel}</a>
+        </p>
+      ) : null
+    }
+    {
+      view.livestreamUrl !== null ? (
+        <>
+          <p>
+            <a href={view.livestreamUrl} rel="nofollow noopener" class="go">{ui.livestream}</a>
+          </p>
+          <p class="label">{ui.livestreamNote}</p>
+        </>
+      ) : null
+    }
+    {notice.hasBody ? <div class="prose notice-body"><Body /></div> : null}
+  </PlaceholderMark>
+  {
+    view.familyNote !== null ? (
+      <section class="notice-part" aria-labelledby="od-rodiny">
+        <h2 id="od-rodiny" class="part-heading">{ui.familyNote}</h2>
+        <p>{view.familyNote}</p>
+      </section>
+    ) : null
+  }
+  {
+    view.condolencesEmail !== null ? (
+      <section class="notice-part" aria-labelledby="kondolence">
+        <h2 id="kondolence" class="part-heading">{ui.condolences}</h2>
+        <p>
+          {ui.condolencesText} <a href={`mailto:${view.condolencesEmail}`}>{view.condolencesEmail}</a>. {ui.condolencesAfter}
+        </p>
+      </section>
+    ) : null
+  }
+  {
+    parte !== null || view.partePdfHref !== null ? (
+      <section class="notice-part" aria-labelledby="parte">
+        <h2 id="parte" class="part-heading">{ui.parteImage}</h2>
+        {parte !== null ? (
+          <Image src={parte.src} alt={parte.alt} widths={[400, 800]} sizes="(min-width: 64rem) 32rem, 100vw" class="parte-image" />
+        ) : null}
+        {view.partePdfHref !== null ? (
+          <p>
+            <a href={view.partePdfHref} class="go">{ui.partePdf}</a>
+          </p>
+        ) : null}
+      </section>
+    ) : null
+  }
+  <NoticeQrBox view={view} />
+</article>
+
+<style>
+  .notice {
+    max-width: 46rem;
+    padding-top: 1rem;
+  }
+
+  .notice :global(.notice-photo) {
+    width: calc(100% + 2 * var(--gutter));
+    max-width: none;
+    height: auto;
+    max-height: 60vh;
+    margin: 0.5rem calc(-1 * var(--gutter)) 0;
+    object-fit: contain;
+    object-position: left top;
+  }
+
+  .notice-name {
+    margin-top: 1.375rem;
+    font-size: 2.625rem;
+    line-height: 1.08;
+  }
+
+  .notice-dates {
+    margin-top: 0.375rem;
+  }
+
+  .notice-sentence {
+    margin-top: 1.5rem;
+    font-size: 1.375rem;
+    line-height: 1.5;
+  }
+
+  .notice-body {
+    margin-top: 1.5rem;
+  }
+
+  .notice-part {
+    margin-top: 2.5rem;
+  }
+
+  .part-heading {
+    margin-bottom: 0.375rem;
+    font-size: 1.75rem;
+  }
+
+  .notice :global(.parte-image) {
+    width: 100%;
+    max-width: 32rem;
+    margin-top: 0.75rem;
+  }
+
+  @media (min-width: 48rem) {
+    .notice :global(.notice-photo) {
+      width: auto;
+      max-width: 22rem;
+      margin: 1rem 0 0;
+    }
+  }
+
+  @media (min-width: 64rem) {
+    .notice {
+      padding-top: 3rem;
+    }
+
+    .notice-name {
+      font-size: 3.5rem;
+    }
+  }
+</style>

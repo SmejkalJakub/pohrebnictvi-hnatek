@@ -1,0 +1,48 @@
+---
+/**
+ * Květiny: the opening, the body, the arrangements as a grid of whole photos on the content
+ * column, then where to call. Handles zero entries.
+ */
+import PhoneLink from "@core/components/PhoneLink.astro";
+import { getFlowers, getPage, getSiteContext } from "@core/content/load.ts";
+import { formatPhone } from "@core/format/phone.ts";
+import GazetteLayout from "../layouts/GazetteLayout.astro";
+import PageHeadline from "../components/PageHeadline.astro";
+import CataloguePlates from "../components/CataloguePlates.astro";
+import ColumnSection from "../components/ColumnSection.astro";
+import ProseColumns from "../components/ProseColumns.astro";
+import { flowerPhones, primaryOfficePhone, seoDescription, seoTitle } from "../lib/site.ts";
+import { flowerTypeLabels, ui } from "../i18n/cs.ts";
+
+const site = await getSiteContext();
+const page = await getPage("kvetiny");
+const flowers = await getFlowers();
+const items = flowers.map((entry) => ({
+  id: entry.id,
+  name: entry.data.title,
+  detail: flowerTypeLabels[entry.data.type],
+  summary: entry.data.summary,
+  image: entry.data.image,
+  placeholder: entry.data.placeholder,
+}));
+let phones = flowerPhones(site);
+if (phones.length === 0) {
+  phones = [primaryOfficePhone(site)];
+}
+const Body = page.Content;
+---
+<GazetteLayout site={site} title={seoTitle(page.data)} description={seoDescription(page.data)}>
+  <PageHeadline title={page.data.title} lead={page.data.lead} placeholder={page.data.placeholder} />
+  {page.hasBody ? <ProseColumns idPrefix="kvetiny-text"><Body /></ProseColumns> : null}
+  <CataloguePlates site={site} items={items} />
+  <ColumnSection id="objednavka" heading={ui.flowersOrder}>
+    <p>{ui.flowersOrderText}</p>
+    {
+      phones.map((phone) => (
+        <p>
+          <PhoneLink number={phone.number}>{phone.label}{" "}<span class="nowrap">{formatPhone(phone.number).display}</span></PhoneLink>
+        </p>
+      ))
+    }
+  </ColumnSection>
+</GazetteLayout>

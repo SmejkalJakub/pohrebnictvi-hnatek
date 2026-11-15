@@ -1,0 +1,200 @@
+---
+/**
+ * Home `contact-summary`, the front page's side column (F), behind the column rule:
+ *  - from 64 rem the nonstop box, the template's one filled box: the label in small capitals, the
+ *    number large in the display face, the short note (on phones the strip under the masthead
+ *    carries the number, so the box is left out there);
+ *  - "Kancelář dnes": the live office status (core; never muted), then in its own block
+ *    ([data-office-hours], never beside the nonstop line: contract §6) the hours, the address and
+ *    the office phone;
+ *  - "V tomto přehledu": the front page's own index, one hairline row per section below.
+ */
+import EmergencyPhoneLink from "@core/components/EmergencyPhoneLink.astro";
+import OfficeStatus from "@core/components/OfficeStatus.astro";
+import PhoneLink from "@core/components/PhoneLink.astro";
+import type { SiteContext } from "@core/content/view-models.ts";
+import { formatAddressInline } from "@core/format/address.ts";
+import { formatPhone } from "@core/format/phone.ts";
+import { mainLocation, mapHref, primaryOfficePhone } from "../lib/site.ts";
+import { ui } from "../i18n/cs.ts";
+
+export interface IndexEntry {
+  href: string;
+  label: string;
+}
+
+interface Props {
+  site: SiteContext;
+  index: IndexEntry[];
+}
+
+const { site, index } = Astro.props;
+const location = mainLocation(site);
+const map = mapHref(location);
+const office = primaryOfficePhone(site);
+const emergencyDisplay = formatPhone(site.emergency.phone).display;
+let emergencyNote: string = ui.emergencyAlways;
+if (site.emergency.shortNote !== null) {
+  emergencyNote = site.emergency.shortNote;
+}
+---
+<aside id="kancelar-dnes" class="desk" data-section="contact-summary" aria-labelledby="kancelar-dnes-nadpis">
+  {
+    site.emergency.enabled ? (
+      <div class="desk-nonstop" data-emergency-block>
+        <p class="desk-nonstop-label">{site.emergency.label}</p>
+        <EmergencyPhoneLink emergency={site.emergency} variant="custom" class="desk-nonstop-number">
+          <span class="nowrap">{emergencyDisplay}</span>
+        </EmergencyPhoneLink>
+        <p class="desk-nonstop-note">{emergencyNote}</p>
+      </div>
+    ) : null
+  }
+  <h2 id="kancelar-dnes-nadpis" class="desk-heading">{ui.deskHeading}</h2>
+  <OfficeStatus site={site} class="desk-status" />
+  <div class="desk-office" data-office-hours>
+    <ul class="desk-hours" role="list">
+      {
+        site.officeHoursRows.map((row) => (
+          <li>
+            <abbr title={row.daysLong}>{row.days}</abbr> <span class="nowrap">{row.text}</span>
+            {row.note !== null ? <span class="desk-quiet">, {row.note}</span> : null}
+          </li>
+        ))
+      }
+    </ul>
+    <p>{formatAddressInline(location.address)}</p>
+    {map !== null ? (
+      <p>
+        <a href={map} class="go">{ui.mapLink}</a>
+      </p>
+    ) : null}
+    <p>
+      <PhoneLink number={office.number}>
+        {office.label}{" "}<span class="nowrap">{formatPhone(office.number).display}</span>
+      </PhoneLink>
+    </p>
+  </div>
+  {
+    index.length > 0 ? (
+      <nav class="desk-index" aria-labelledby="v-prehledu">
+        <h2 id="v-prehledu" class="desk-heading">{ui.indexHeading}</h2>
+        <ul class="desk-index-list" role="list">
+          {index.map((entry) => (
+            <li>
+              <a href={entry.href} class="desk-index-link">{entry.label}</a>
+            </li>
+          ))}
+        </ul>
+      </nav>
+    ) : null
+  }
+</aside>
+
+<style>
+  .desk {
+    font-size: 1rem;
+    line-height: 1.55;
+  }
+
+  .desk-nonstop {
+    display: none;
+  }
+
+  .desk-heading {
+    font-family: var(--display);
+    font-size: 1.375rem;
+    font-weight: var(--display-weight);
+    line-height: 1.2;
+    color: var(--primary);
+  }
+
+  .desk :global(.desk-status) {
+    margin-top: 0.5rem;
+  }
+
+  .desk-office {
+    margin-top: 0.5rem;
+  }
+
+  .desk-hours {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .desk-quiet {
+    color: var(--muted);
+  }
+
+  .desk-index {
+    display: none;
+  }
+
+  .desk-index-list {
+    margin: 0.375rem 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .desk-index-list > li + li {
+    border-top: 1px solid var(--rule-soft);
+  }
+
+  .desk-index-link {
+    display: block;
+    padding-block: 0.5rem;
+    min-height: 2.75rem;
+  }
+
+  @media (min-width: 64rem) {
+    .desk-nonstop {
+      display: block;
+      margin-bottom: 1.5rem;
+      padding: 1.375rem 1.375rem 1.25rem;
+      background: var(--primary-fill);
+      color: var(--on-primary);
+    }
+
+    .desk-nonstop-label {
+      color: var(--muted-on-primary);
+      font-size: 0.8125rem;
+      font-weight: 600;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+
+    .desk-nonstop :global(.desk-nonstop-number) {
+      display: inline-block;
+      padding-block: 0.25rem;
+      color: var(--on-primary);
+      font-family: var(--display);
+      font-size: 2rem;
+      font-weight: var(--display-weight);
+      line-height: 1.15;
+      text-decoration: none;
+    }
+
+    .desk-nonstop :global(.desk-nonstop-number):hover {
+      text-decoration: underline;
+      text-decoration-thickness: 2px;
+    }
+
+    .desk-nonstop :global(.desk-nonstop-number):focus-visible {
+      outline-color: var(--on-primary);
+    }
+
+    .desk-nonstop-note {
+      margin-top: 0.25rem;
+      color: var(--muted-on-primary);
+      font-size: 0.9375rem;
+    }
+
+    .desk-index {
+      display: block;
+      margin-top: 1.5rem;
+      padding-top: 1.125rem;
+      border-top: 1px solid var(--rule);
+    }
+  }
+</style>

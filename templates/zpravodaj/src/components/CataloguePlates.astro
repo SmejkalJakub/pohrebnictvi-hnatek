@@ -1,0 +1,204 @@
+---
+/**
+ * Rakve and Květiny as a newspaper picture page (F): the whole page width, the items between
+ * column rules and row hairlines, two per row on phones, three from 48 rem, four from 64 rem.
+ * Every photo stands whole at its own proportions (never cropped; product photos on white are
+ * multiplied onto the paper); under it the name in the display face, the type, material or
+ * code as a kicker and the summary. Without any image the names run in columns; an item without
+ * an image gets no empty frame. Zero items: one sentence and the office phone.
+ */
+import { Image } from "astro:assets";
+import PhoneLink from "@core/components/PhoneLink.astro";
+import PlaceholderMark from "@core/components/PlaceholderMark.astro";
+import type { ImageRef } from "@core/content/schemas.ts";
+import type { SiteContext } from "@core/content/view-models.ts";
+import { formatPhone } from "@core/format/phone.ts";
+import { resolveOptionalImage } from "@core/media/resolve.ts";
+import { primaryOfficePhone } from "../lib/site.ts";
+import { ui } from "../i18n/cs.ts";
+
+export interface CatalogueItem {
+  id: string;
+  name: string;
+  detail: string | null;
+  summary: string | null;
+  image: ImageRef | null;
+  placeholder: boolean;
+}
+
+interface Props {
+  site: SiteContext;
+  items: CatalogueItem[];
+}
+
+const { site, items } = Astro.props;
+const rows = items.map((item) => ({ item, photo: resolveOptionalImage(item.image) }));
+const withImages = rows.some((row) => row.photo !== null);
+/* Display width of one photo at four per row on the 1120 px page. */
+const width = 280;
+const office = primaryOfficePhone(site);
+---
+{
+  rows.length === 0 ? (
+    <div class="passage">
+      <div class="passage-body">
+        <p>{ui.catalogueEmpty}</p>
+        <p>
+          <PhoneLink number={office.number}>{office.label}{" "}<span class="nowrap">{formatPhone(office.number).display}</span></PhoneLink>
+        </p>
+      </div>
+    </div>
+  ) : (
+    <div class="plates">
+      <ul class="items" role="list" data-layout={withImages ? "photos" : "names"}>
+          {rows.map(({ item, photo }) => (
+            <li id={item.id} class="item">
+              {photo !== null ? (
+                <PlaceholderMark active={photo.isPlaceholder} kind="image" as="div" class="item-image-wrap">
+                  <Image
+                    src={photo.src}
+                    alt={photo.alt}
+                    width={width}
+                    densities={[1, 2]}
+                    loading="lazy"
+                    class="item-image"
+                  />
+                </PlaceholderMark>
+              ) : null}
+              <PlaceholderMark active={item.placeholder} as="div" class="item-text">
+                <h2 class="item-name">{item.name}</h2>
+                {item.detail !== null ? <p class="label">{item.detail}</p> : null}
+                {item.summary !== null ? <p class="item-summary">{item.summary}</p> : null}
+              </PlaceholderMark>
+            </li>
+          ))}
+      </ul>
+    </div>
+  )
+}
+
+<style>
+  .plates {
+    width: 100%;
+    max-width: calc(var(--page) + 2 * var(--gutter));
+    margin-inline: auto;
+    padding: 2rem var(--gutter) 0;
+  }
+
+  .items {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin: 0;
+    padding: 0;
+    border-bottom: 1px solid var(--rule);
+    list-style: none;
+  }
+
+  .item {
+    min-width: 0;
+    padding: 1rem 0.875rem 1.25rem;
+    border-top: 1px solid var(--rule);
+    border-left: 1px solid var(--rule);
+    scroll-margin-top: var(--scroll-offset);
+  }
+
+  .item:nth-child(2n + 1) {
+    padding-left: 0;
+    border-left: 0;
+  }
+
+  .item:nth-child(2n) {
+    padding-right: 0;
+  }
+
+  .items:first-child .item:nth-child(-n + 2) {
+    border-top-color: var(--rule-strong);
+  }
+
+  .items[data-layout="names"] .item {
+    padding-top: 0.75rem;
+  }
+
+  /* Whole photos at their own proportions; product photos on white are multiplied onto the paper. */
+  .items :global(.item-image) {
+    width: 100%;
+    height: auto;
+    mix-blend-mode: multiply;
+  }
+
+  .items :global(.item-text) {
+    margin-top: 0.625rem;
+  }
+
+  .items :global(.item-text) > * + * {
+    margin-top: 0.25rem;
+  }
+
+  .item-name {
+    font-size: 1.0625rem;
+    line-height: 1.25;
+    hyphens: auto;
+  }
+
+  .item-summary {
+    font-size: 0.9375rem;
+  }
+
+  @media (min-width: 48rem) {
+    .items {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .item,
+    .item:nth-child(2n + 1),
+    .item:nth-child(2n) {
+      padding: 1.25rem 1.25rem 1.5rem;
+      border-left: 1px solid var(--rule);
+    }
+
+    .item:nth-child(3n + 1) {
+      padding-left: 0;
+      border-left: 0;
+    }
+
+    .item:nth-child(3n) {
+      padding-right: 0;
+    }
+
+    .items:first-child .item:nth-child(-n + 3) {
+      border-top-color: var(--rule-strong);
+    }
+
+    .item-name {
+      font-size: 1.25rem;
+    }
+  }
+
+  @media (min-width: 64rem) {
+    .items {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .item:nth-child(3n + 1) {
+      padding-left: 1.25rem;
+      border-left: 1px solid var(--rule);
+    }
+
+    .item:nth-child(3n) {
+      padding-right: 1.25rem;
+    }
+
+    .item:nth-child(4n + 1) {
+      padding-left: 0;
+      border-left: 0;
+    }
+
+    .item:nth-child(4n) {
+      padding-right: 0;
+    }
+
+    .items:first-child .item:nth-child(-n + 4) {
+      border-top-color: var(--rule-strong);
+    }
+  }
+</style>

@@ -1,0 +1,362 @@
+---
+/**
+ * The masthead (not sticky), F: a dateline row on a hairline ("Vyškov · sobota 15. listopadu 2026",
+ * the live office status, and from 64 rem the nonstop line on the right), then the title (the
+ * brand mark and the brand name in the display face, centred and large on the front page, smaller
+ * on inner pages), the tradition wording in italic, then the section names between a double rule
+ * and a hairline.
+ * The signature (design-differentiation §1.1): the dateline is live. The date is written in the
+ * browser for Europe/Prague and kept current (LiveDateline); the office status beside it comes
+ * from core and turns with the hours, its dot filling in 200 ms (off under reduced motion).
+ * Without JavaScript the dateline shows the place only.
+ * Below 64 rem a "Menu" word button sits at the dateline's right; it comes right before the
+ * navigation in the DOM, so Tab after opening enters the menu. Without JS the list is shown and
+ * the button hides. Notice pages leave out the nonstop line and the office status.
+ */
+import { Image } from "astro:assets";
+import { brandMark } from "@core/brand/runtime.ts";
+import EmergencyPhoneLink from "@core/components/EmergencyPhoneLink.astro";
+import OfficeStatus from "@core/components/OfficeStatus.astro";
+import type { SiteContext } from "@core/content/view-models.ts";
+import { formatPhone } from "@core/format/phone.ts";
+import { resolveOptionalImage } from "@core/media/resolve.ts";
+import SectionNav from "./SectionNav.astro";
+import { mainLocation, type ThreadLink } from "../lib/site.ts";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  site: SiteContext;
+  links: ThreadLink[];
+  neutral: boolean;
+  /** The front page: the large centred title. Inner pages get the compact masthead. */
+  front: boolean;
+}
+
+const { site, links, neutral, front } = Astro.props;
+const mark = brandMark();
+let logo = null;
+if (mark === null) {
+  logo = resolveOptionalImage(site.company.logo);
+}
+const place = mainLocation(site).address.city;
+const showNonstop = !neutral && site.emergency.enabled;
+const emergencyDisplay = formatPhone(site.emergency.phone).display;
+const tagline = site.company.tradition.publicWording;
+let markSize = 40;
+if (front) {
+  markSize = 60;
+}
+---
+<header class="masthead" data-front={front ? "true" : "false"}>
+  <div class="dateline">
+    <p class="dateline-place">
+      <span>{place}</span><span class="dateline-date" data-dateline hidden>
+        <span aria-hidden="true"> · </span><time data-dateline-time>
+          <span class="dateline-long" data-dateline-long></span><span class="dateline-short" data-dateline-short></span>
+        </time>
+      </span>
+    </p>
+    {neutral ? null : <OfficeStatus site={site} variant="short" as="p" class="dateline-status" />}
+    {
+      showNonstop ? (
+        <p class="dateline-nonstop">
+          <EmergencyPhoneLink emergency={site.emergency} variant="custom" class="dateline-nonstop-link">
+            {site.emergency.label}{" "}<span class="dateline-number nowrap">{emergencyDisplay}</span>
+          </EmergencyPhoneLink>
+        </p>
+      ) : null
+    }
+  </div>
+  <div class="title-block">
+    <a href="/" class="title-link">
+      {
+        mark !== null ? (
+          <>
+            <Image src={mark} alt="" width={markSize} densities={[1, 2]} class="title-mark" loading="eager" />
+            <span class="title-name">{site.company.brandName}</span>
+          </>
+        ) : null
+      }
+      {
+        mark === null && logo !== null ? (
+          <Image src={logo.src} alt={site.company.brandName} height={56} densities={[1, 2]} class="title-logo" loading="eager" />
+        ) : null
+      }
+      {mark === null && logo === null ? <span class="title-name">{site.company.brandName}</span> : null}
+    </a>
+    {tagline !== null && front ? <p class="title-tagline">{tagline}</p> : null}
+  </div>
+  <button type="button" class="menu-btn" aria-expanded="false" aria-controls="menu" data-menu-toggle>
+    {ui.menuOpen}
+  </button>
+  <SectionNav id="menu" links={links} />
+</header>
+
+<style>
+  .masthead {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "date menu"
+      "title title"
+      "nav nav";
+    width: 100%;
+    max-width: calc(var(--page) + 2 * var(--gutter));
+    margin-inline: auto;
+    padding-inline: var(--gutter);
+  }
+
+  /* The dateline row and its hairline (the menu button shares the row and the line). */
+  .dateline,
+  .menu-btn {
+    border-bottom: 1px solid var(--rule-strong);
+  }
+
+  .dateline {
+    grid-area: date;
+    display: flex;
+    flex-wrap: wrap;
+    column-gap: 1.25rem;
+    align-items: center;
+    min-width: 0;
+    padding-block: 0.375rem;
+    color: var(--muted);
+    font-size: 0.875rem;
+    line-height: 1.45;
+  }
+
+  .dateline-long {
+    display: none;
+  }
+
+  .dateline :global(.dateline-status) {
+    color: var(--ink);
+    font-size: 0.875rem;
+  }
+
+  /* The live part: when the office opens or closes, the dot fills or empties (≤ 200 ms). */
+  .dateline :global([data-office-status-dot]) {
+    width: 0.5625rem;
+    height: 0.5625rem;
+    transition:
+      background-color 200ms ease,
+      border-color 200ms ease;
+  }
+
+  .dateline-nonstop {
+    display: none;
+  }
+
+  .menu-btn {
+    grid-area: menu;
+    min-width: 2.75rem;
+    min-height: 2.75rem;
+    padding: 0 0 0 1rem;
+    border-top: 0;
+    border-right: 0;
+    border-left: 0;
+    background: transparent;
+    color: var(--primary);
+    font: 600 1rem/1 var(--serif);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.2em;
+    cursor: pointer;
+    transition: color 160ms ease;
+  }
+
+  .menu-btn:hover,
+  .menu-btn[aria-expanded="true"] {
+    color: var(--ink);
+    text-decoration-thickness: 2px;
+  }
+
+  :global(.no-js) .menu-btn {
+    display: none;
+  }
+
+  :global(.no-js) .dateline {
+    grid-column: 1 / -1;
+  }
+
+  /* Phones: the double rule closes the title (the nonstop strip follows it). */
+  .title-block {
+    grid-area: title;
+    padding: 1rem 0 0.75rem;
+    border-bottom: 3px double var(--rule-strong);
+    text-align: center;
+  }
+
+  .title-link {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.375rem;
+    color: var(--primary);
+    text-decoration: none;
+  }
+
+  .title-link:hover .title-name {
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 0.12em;
+  }
+
+  .title-name {
+    font-family: var(--display);
+    font-size: 2.125rem;
+    font-weight: var(--masthead-weight);
+    line-height: 1.05;
+    text-wrap: balance;
+  }
+
+  .title-link :global(.title-mark) {
+    width: 2.5rem;
+    height: auto;
+  }
+
+  .title-link :global(.title-logo) {
+    width: auto;
+    height: 3rem;
+  }
+
+  .title-tagline {
+    margin-top: 0.375rem;
+    color: var(--muted);
+    font-size: 0.9375rem;
+    font-style: italic;
+  }
+
+  /* The compact masthead of inner pages: the title on one line, left. */
+  .masthead[data-front="false"] .title-block {
+    padding: 0.75rem 0 0.625rem;
+    text-align: left;
+  }
+
+  .masthead[data-front="false"] .title-link {
+    flex-direction: row;
+    gap: 0.625rem;
+  }
+
+  .masthead[data-front="false"] .title-name {
+    font-size: 1.5rem;
+  }
+
+  .masthead[data-front="false"] .title-link :global(.title-mark) {
+    width: 2rem;
+  }
+
+  .masthead > :global(nav) {
+    grid-area: nav;
+  }
+
+  @media (min-width: 64rem) {
+    .masthead {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-areas:
+        "date"
+        "title"
+        "nav";
+    }
+
+    .menu-btn {
+      display: none;
+    }
+
+    .dateline {
+      column-gap: 1.5rem;
+      padding-block: 0;
+      font-size: 0.9375rem;
+    }
+
+    .dateline-long {
+      display: inline;
+    }
+
+    .dateline-short {
+      display: none;
+    }
+
+    .dateline :global(.dateline-status) {
+      font-size: 0.9375rem;
+    }
+
+    .dateline-nonstop {
+      display: block;
+      margin-left: auto;
+      color: var(--ink);
+    }
+
+    /* A 44 px target: the dateline row takes its height from this link. */
+    .dateline-nonstop :global(.dateline-nonstop-link) {
+      display: inline-block;
+      min-height: 2.75rem;
+      padding-block: 0.75rem;
+      color: var(--ink);
+      line-height: 1.35;
+      text-decoration: none;
+    }
+
+    .dateline-nonstop :global(.dateline-nonstop-link):hover .dateline-number {
+      text-decoration-thickness: 2px;
+    }
+
+    .dateline-number {
+      color: var(--primary);
+      font-weight: 600;
+      text-decoration: underline;
+      text-decoration-thickness: 1px;
+      text-underline-offset: 0.18em;
+    }
+
+    .title-block {
+      padding: 1.75rem 0 1.125rem;
+      border-bottom: 0;
+    }
+
+    .title-link {
+      flex-direction: row;
+      gap: 1.125rem;
+    }
+
+    .title-name {
+      font-size: 4.125rem;
+      line-height: 1;
+      letter-spacing: 0.005em;
+    }
+
+    .title-link :global(.title-mark) {
+      width: 3.625rem;
+    }
+
+    .title-link :global(.title-logo) {
+      height: 4rem;
+    }
+
+    .title-tagline {
+      margin-top: 0.625rem;
+      font-size: 1.0625rem;
+    }
+
+    .masthead[data-front="false"] .title-block {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      padding: 1rem 0 0.75rem;
+    }
+
+    .masthead[data-front="false"] .title-name {
+      font-size: 2.125rem;
+    }
+
+    .masthead[data-front="false"] .title-link :global(.title-mark) {
+      width: 2.5rem;
+    }
+
+    /* The section names between the double rule and a hairline. */
+    .masthead > :global(nav) {
+      border-top: 3px double var(--rule-strong);
+      border-bottom: 1px solid var(--rule-strong);
+    }
+  }
+</style>

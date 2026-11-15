@@ -1,0 +1,280 @@
+---
+/**
+ * Home (F): a front page. Every section is a direct child of <main>, in the client's order; from
+ * 64 rem <main> is a three-column newspaper grid (dense flow): wide sections (hero, next-steps,
+ * services, catalogue-links, people) take two columns, side sections (contact-summary,
+ * price-summary, family-story, notices) the third behind a column rule, and contact-summary runs
+ * down beside the first two wide sections. Rows are divided by hairlines in ink. Phones: one
+ * column in the client's order, the sections on hairlines.
+ * Default order: the lead article (hero) · the office column (contact-summary) · the first-steps
+ * story (next-steps) · "Jak se můžete rozloučit" (services) · the catalogue pictures
+ * (catalogue-links) · prices (price-summary) · the publisher's note (family-story).
+ */
+import {
+  getGuidance,
+  getHomeImagery,
+  getNoticeIndex,
+  getOptionalPage,
+  getPage,
+  getPeople,
+  getPricing,
+  getServices,
+  getSiteContext,
+} from "@core/content/load.ts";
+import type { HomepageSection } from "@core/content/config.ts";
+import GazetteLayout from "../layouts/GazetteLayout.astro";
+import FrontLead from "../components/FrontLead.astro";
+import DeskAside, { type IndexEntry } from "../components/DeskAside.astro";
+import FirstStepsStory from "../components/FirstStepsStory.astro";
+import FarewellNotes from "../components/FarewellNotes.astro";
+import CatalogueTeasers, { type CatalogueTeaser } from "../components/CatalogueTeasers.astro";
+import PriceBrief from "../components/PriceBrief.astro";
+import PublisherNote from "../components/PublisherNote.astro";
+import PeopleBrief from "../components/PeopleBrief.astro";
+import NoticesBrief from "../components/NoticesBrief.astro";
+import { seoDescription } from "../lib/site.ts";
+import { ui } from "../i18n/cs.ts";
+
+const site = await getSiteContext();
+const home = await getPage("home");
+const about = await getPage("o-nas");
+const services = await getServices();
+const guidance = await getGuidance();
+const people = await getPeople();
+const pricing = await getPricing();
+const noticesPage = await getOptionalPage("oznameni");
+const noticeIndex = await getNoticeIndex();
+const imagery = await getHomeImagery();
+const HomeBody = home.Content;
+
+let featured = services.filter((service) => service.data.featured);
+if (featured.length === 0) {
+  featured = services.slice(0, 1);
+}
+/* "Jak se můžete rozloučit": featured services that are not the transport, at most three. */
+let ceremonies = featured.filter((service) => service.data.category !== "transport").slice(0, 3);
+if (ceremonies.length === 0) {
+  ceremonies = featured.slice(0, 3);
+}
+let aboutText = about.data.lead;
+if (about.data.excerpt !== null) {
+  aboutText = about.data.excerpt;
+}
+
+/* The catalogue pictures: Květiny first (the flower leads), then Rakve. */
+const teasers: CatalogueTeaser[] = [];
+for (const id of ["kvetiny", "rakve"] as const) {
+  const nav = site.nav.find((item) => item.id === id);
+  if (nav === undefined) {
+    continue;
+  }
+  const page = await getOptionalPage(id);
+  let lead: string | null = null;
+  if (page !== null) {
+    lead = page.data.lead;
+  }
+  let photo = imagery.coffin;
+  if (id === "kvetiny") {
+    photo = imagery.flower;
+  }
+  teasers.push({ id, href: nav.href, label: nav.label, lead, photo });
+}
+let noticesTitle = "";
+if (noticesPage !== null) {
+  noticesTitle = noticesPage.data.title;
+}
+const hasPrices = pricing !== null && pricing.groups.some((group) => group.items.length > 0);
+
+/** Sections that have something to show, in the client's order. */
+function renders(section: HomepageSection): boolean {
+  if (section === "next-steps") {
+    return guidance.length > 0;
+  }
+  if (section === "services") {
+    return ceremonies.length > 0;
+  }
+  if (section === "people") {
+    return people.length > 0;
+  }
+  if (section === "catalogue-links") {
+    return teasers.length > 0;
+  }
+  if (section === "notices") {
+    return site.config.features.notices && noticesPage !== null;
+  }
+  if (section === "price-summary") {
+    return hasPrices;
+  }
+  if (section === "documents" || section === "faq") {
+    return false;
+  }
+  return true;
+}
+
+const content = site.config.homepage.sections.filter(renders);
+
+/* The office column's index: one row per section after it, in the page's order. */
+function indexEntry(section: HomepageSection): IndexEntry | null {
+  if (section === "next-steps") {
+    return { href: "#prvni-kroky", label: ui.firstStepsKicker };
+  }
+  if (section === "services") {
+    return { href: "#rozlouceni", label: ui.farewellHeading };
+  }
+  if (section === "catalogue-links") {
+    return { href: "#rakve-a-kvetiny", label: ui.catalogueHeading };
+  }
+  if (section === "price-summary") {
+    return { href: "#cena", label: ui.priceHeading };
+  }
+  if (section === "family-story") {
+    return { href: "#o-nas-domu", label: about.data.title };
+  }
+  if (section === "people") {
+    return { href: "#lide-domu", label: ui.peopleHeading };
+  }
+  if (section === "notices") {
+    return { href: "#oznameni-domu", label: noticesTitle };
+  }
+  return null;
+}
+
+const index: IndexEntry[] = [];
+for (const section of content) {
+  const entry = indexEntry(section);
+  if (entry !== null) {
+    index.push(entry);
+  }
+}
+---
+<GazetteLayout
+  site={site}
+  title={home.data.metaTitle}
+  description={seoDescription(home.data)}
+  front
+  officeOnPage={content.includes("contact-summary")}
+>
+  {
+    content.map((section) => (
+      <>
+        {section === "hero" ? (
+          <FrontLead
+            title={home.data.title}
+            lead={home.data.lead}
+            placeholder={home.data.placeholder}
+            hasBody={home.hasBody}
+          >
+            <HomeBody />
+          </FrontLead>
+        ) : null}
+        {section === "contact-summary" ? <DeskAside site={site} index={index} /> : null}
+        {section === "next-steps" ? <FirstStepsStory site={site} guidance={guidance} imagery={imagery} /> : null}
+        {section === "services" ? <FarewellNotes services={ceremonies} /> : null}
+        {section === "catalogue-links" ? <CatalogueTeasers teasers={teasers} /> : null}
+        {section === "price-summary" && pricing !== null ? <PriceBrief pricing={pricing} /> : null}
+        {section === "family-story" ? (
+          <PublisherNote
+            title={about.data.title}
+            text={aboutText}
+            tradition={site.company.tradition.publicWording}
+            placeholder={about.data.placeholder}
+          />
+        ) : null}
+        {section === "people" ? <PeopleBrief people={people} /> : null}
+        {section === "notices" ? <NoticesBrief title={noticesTitle} upcoming={noticeIndex.upcoming.length} /> : null}
+      </>
+    ))
+  }
+</GazetteLayout>
+
+<style>
+  /* The front page: the sections on hairlines (phones), the three-column grid (desktop). */
+  :global(main[data-front="true"]) {
+    width: 100%;
+    max-width: calc(var(--page) + 2 * var(--gutter));
+    margin-inline: auto;
+    padding-inline: var(--gutter);
+  }
+
+  :global(main[data-front="true"] > *) {
+    min-width: 0;
+    padding-block: 1.75rem;
+    border-top: 1px solid var(--rule-strong);
+  }
+
+  :global(main[data-front="true"] > [data-section="hero"]) {
+    padding-top: 1.5rem;
+    border-top: 0;
+  }
+
+  /* Home sections built from the inner pages' section (people, notices) lose its page frame. */
+  :global(main[data-front="true"] > .passage) {
+    display: block;
+    max-width: none;
+    margin: 0;
+    padding-inline: 0;
+  }
+
+  :global(main[data-front="true"] > .passage > .passage-head) {
+    padding-top: 0;
+    border-top: 0;
+  }
+
+  @media (min-width: 64rem) {
+    :global(main[data-front="true"]) {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-auto-flow: row dense;
+      align-items: stretch;
+    }
+
+    :global(main[data-front="true"] > *) {
+      padding-block: 2rem;
+    }
+
+    /* Wide: two of the three columns, the text up to the column rule. */
+    :global(
+        main[data-front="true"]
+          > :is(
+            [data-section="hero"],
+            [data-section="next-steps"],
+            [data-section="services"],
+            [data-section="catalogue-links"],
+            [data-section="people"]
+          )
+      ) {
+      grid-column: 1 / span 2;
+      padding-right: 2.25rem;
+    }
+
+    /* Side: the third column, behind the column rule in ink. */
+    :global(
+        main[data-front="true"]
+          > :is(
+            [data-section="contact-summary"],
+            [data-section="price-summary"],
+            [data-section="family-story"],
+            [data-section="notices"]
+          )
+      ) {
+      grid-column: 3;
+      padding-left: 2.25rem;
+      border-left: 1px solid var(--rule-strong);
+    }
+
+    /* The office column runs down beside the lead article and the first-steps story. */
+    :global(main[data-front="true"] > [data-section="contact-summary"]) {
+      grid-row: span 2;
+    }
+
+    :global(main[data-front="true"] > [data-section="hero"]) {
+      padding-top: 2.25rem;
+    }
+
+    /* The side section beside the lead article starts under the masthead, without a rule. */
+    :global(main[data-front="true"] > [data-section="hero"] + :is([data-section="contact-summary"], [data-section="price-summary"], [data-section="family-story"], [data-section="notices"])) {
+      padding-top: 2.25rem;
+      border-top: 0;
+    }
+  }
+</style>

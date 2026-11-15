@@ -1,0 +1,128 @@
+/*
+ * Print (A4): black on white, no photographs, no filled box. The masthead prints as a one-line
+ * title, the pages as plain articles with their rules; the Ceník keeps its tables with the legal
+ * imprint; notices print with their QR code; the guide prints as a plain list of steps.
+ */
+@media print {
+  @page {
+    size: A4;
+    margin: 16mm 18mm;
+  }
+
+  :root,
+  :root[data-palette],
+  :root[data-brand] {
+    --ground: #ffffff;
+    --ink: #1b1d1f;
+    --muted: #3d4144;
+    --primary: #1b1d1f;
+    --primary-fill: #ffffff;
+    --on-primary: #1b1d1f;
+    --muted-on-primary: #3d4144;
+    --kicker: #3d4144;
+    --rule: #7e8486;
+    --rule-soft: #b9bdbf;
+    --rule-strong: #1b1d1f;
+    --paper: #ffffff;
+    --gutter: 0;
+  }
+
+  body {
+    font-size: 11pt;
+    line-height: 1.5;
+  }
+
+  .skip-link,
+  .menu-btn,
+  .section-nav,
+  .strip-wrap,
+  .dateline,
+  .desk-nonstop,
+  .desk-index,
+  .stop-photo,
+  [data-prototype-banner],
+  [data-print-hide],
+  .no-print,
+  .colophon-columns,
+  .colophon-nonstop,
+  .colophon-mark {
+    display: none !important;
+  }
+
+  .print-only {
+    display: block;
+  }
+
+  .masthead {
+    display: block;
+    padding: 0;
+  }
+
+  .title-block {
+    padding: 0 0 3mm;
+    border-bottom: 3px double var(--rule-strong);
+    text-align: left;
+  }
+
+  .title-name {
+    font-size: 16pt;
+  }
+
+  .opening,
+  .passage,
+  .guide-phase {
+    display: block;
+    padding: 6mm 0 0;
+    break-inside: avoid;
+  }
+
+  .opening-title {
+    font-size: 22pt;
+  }
+
+  .passage-heading,
+  .phase-heading,
+  .entry-title {
+    font-size: 15pt;
+  }
+
+  .lead,
+  .standfirst {
+    font-size: 11pt;
+  }
+
+  .label,
+  .kicker,
+  .sans {
+    font-size: 9pt;
+  }
+
+  .two-columns {
+    column-count: 1;
+  }
+
+  .phase-entries {
+    display: block;
+  }
+
+  .phase-entries > .guide-entry + .guide-entry {
+    padding-left: 0;
+    border-left: 0;
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .colophon {
+    padding: 6mm 0 0;
+  }
+
+  .colophon-imprint {
+    margin-top: 0;
+    padding-top: 3mm;
+    border-top: 1px solid var(--rule);
+    font-size: 9pt;
+  }
+}

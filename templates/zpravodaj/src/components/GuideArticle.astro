@@ -1,0 +1,270 @@
+---
+/**
+ * Jak postupovat as a newsletter article (F): under the headline, the place picker as a sentence
+ * of words and the reassurance lead as the italic standfirst; then one section per guidance phase,
+ * the phase as a headline under a rule in ink, its steps as short articles side by side in two
+ * columns behind a column rule (one column on phones); then the closing line and the office phone.
+ * Picking a word filters the steps with core's :has(:target) mechanism (no JavaScript), hides a
+ * phase that has no step left for that place, and rewrites the picker into a sentence ("Blízký
+ * člověk zemřel doma. Ukazujeme 6 kroků ze 7. Zobrazit vše"); with JavaScript and view
+ * transitions the words carry data-vt-anchor, so the steps that stay slide into place (≤ 220 ms,
+ * off under prefers-reduced-motion). The step numbers are a CSS counter, so they stay in order.
+ * A guide, not a checklist (§1.3): nothing is ticked, counted down or remembered.
+ */
+import type { CollectionEntry } from "astro:content";
+import PhoneLink from "@core/components/PhoneLink.astro";
+import {
+  SITUATION_ANCHOR,
+  chooserSituations,
+  nextGuidanceStep,
+  showsFor,
+  type SpecificSituation,
+} from "@core/content/guidance-flow.ts";
+import { GUIDANCE_PHASES } from "@core/content/schemas.ts";
+import type { SiteContext } from "@core/content/view-models.ts";
+import { formatPhone } from "@core/format/phone.ts";
+import WherePicker from "./WherePicker.astro";
+import GuideEntry from "./GuideEntry.astro";
+import { guidancePhaseLabels, situationWords, ui } from "../i18n/cs.ts";
+import { primaryOfficePhone } from "../lib/site.ts";
+
+interface Props {
+  site: SiteContext;
+  guidance: CollectionEntry<"guidance">[];
+}
+
+const { site, guidance } = Astro.props;
+const ALL_ANCHOR = "postup";
+const BASE = "/jak-postupovat/";
+const situations = chooserSituations(guidance);
+const office = primaryOfficePhone(site);
+
+function nextOf(entry: CollectionEntry<"guidance">): CollectionEntry<"guidance"> | null {
+  return nextGuidanceStep(guidance, guidance.indexOf(entry));
+}
+
+const phases = GUIDANCE_PHASES.map((phase) => ({
+  phase,
+  entries: guidance.filter((entry) => entry.data.phase === phase),
+})).filter((block) => block.entries.length > 0);
+
+const total = guidance.length;
+const counts: Partial<Record<SpecificSituation, number>> = {};
+for (const situation of situations) {
+  counts[situation] = guidance.filter((entry) => showsFor(entry, situation)).length;
+}
+
+/* Filter rules, one block per offered situation (the selectors depend on the anchors). */
+const filterCss = situations
+  .map((situation) => {
+    const target = `[data-guide]:has(#${SITUATION_ANCHOR[situation]}:target)`;
+    const emptyPhases = phases
+      .filter((block) => !block.entries.some((entry) => showsFor(entry, situation)))
+      .map((block) => `${target} [data-phase-block="${block.phase}"] { display: none; }`);
+    return [
+      `${target} [data-guide-step]:not([data-situations~="any"]):not([data-situations~="${situation}"]) { display: none; }`,
+      `${target} [data-tally="${situation}"] { display: block; }`,
+      `${target} .pick-question { color: var(--muted); }`,
+      `${target} [data-place="${situation}"] { color: var(--ink); text-decoration-thickness: 3px; text-decoration-color: var(--primary); }`,
+      `${target} [data-place="${situation}"] .pick-mark { display: inline; }`,
+      ...emptyPhases,
+    ].join("\n");
+  })
+  .join("\n");
+---
+<div data-guide class="guide">
+  <style is:inline set:html={filterCss}></style>
+  {situations.map((situation) => <span id={SITUATION_ANCHOR[situation]} class="guide-target"></span>)}
+  <span id={ALL_ANCHOR} class="guide-target"></span>
+  <div class="guide-intro">
+    {
+      situations.length > 0 ? (
+        <div class="guide-pick">
+          <WherePicker situations={situations} base="" questionId="kde-zemrel" />
+          {situations.map((situation) => (
+            <p class="composed" data-tally={situation}>
+              <span class="composed-place">{ui.composedPlace(situationWords[situation])}</span>{" "}
+              <span class="composed-count">
+                {ui.composedCount(counts[situation] ?? 0, total)}{" "}
+                <a href={`#${ALL_ANCHOR}`} class="go" data-vt-anchor>{ui.showAll}</a>
+              </span>
+            </p>
+          ))}
+        </div>
+      ) : null
+    }
+    <p class="standfirst guide-lead">{ui.guideLead}</p>
+  </div>
+  {
+    phases.map((block) => (
+      <section
+        class="guide-phase"
+        data-phase-block={block.phase}
+        aria-labelledby={`faze-${block.phase}`}
+      >
+        <h2 id={`faze-${block.phase}`} class="headline phase-heading">{guidancePhaseLabels[block.phase]}</h2>
+        <div class="phase-entries">
+          {block.entries.map((entry) => (
+            <GuideEntry site={site} entry={entry} next={nextOf(entry)} base={BASE} />
+          ))}
+        </div>
+      </section>
+    ))
+  }
+  <div class="guide-close">
+    <p class="thread-close-line">{ui.guideClosing}</p>
+    <p>
+      {ui.guideClosingCall}:{" "}
+      <PhoneLink number={office.number}>
+        {office.label}{" "}<span class="nowrap">{formatPhone(office.number).display}</span>
+      </PhoneLink>
+    </p>
+  </div>
+</div>
+
+<style>
+  .guide {
+    width: 100%;
+    max-width: calc(var(--page) + 2 * var(--gutter));
+    margin-inline: auto;
+    padding: 1.25rem var(--gutter) 0;
+    counter-reset: guide-step;
+  }
+
+  .guide-target {
+    display: block;
+    scroll-margin-top: 1rem;
+  }
+
+  .guide-intro {
+    max-width: var(--measure);
+  }
+
+  .guide-intro > * + * {
+    margin-top: 1rem;
+  }
+
+  /* The rewritten sentence: the display face; the count and "Zobrazit vše" in the body serif. */
+  .composed {
+    display: none;
+    margin-top: 0.75rem;
+    view-transition-name: guide-sentence;
+  }
+
+  .composed-place {
+    display: block;
+    color: var(--primary);
+    font-family: var(--display);
+    font-size: 1.625rem;
+    font-weight: var(--display-weight);
+    line-height: 1.2;
+    text-wrap: balance;
+  }
+
+  .composed-count {
+    display: block;
+    margin-top: 0.25rem;
+    color: var(--muted);
+    font-size: 1rem;
+  }
+
+  .guide-phase {
+    margin-top: 2.25rem;
+    padding-top: 1rem;
+    border-top: 3px double var(--rule-strong);
+  }
+
+  .phase-heading {
+    font-size: var(--h2);
+  }
+
+  .phase-entries {
+    margin-top: 0.75rem;
+  }
+
+  .phase-entries > :global(.guide-entry + .guide-entry) {
+    margin-top: 1.25rem;
+    border-top: 1px solid var(--rule);
+  }
+
+  .guide-close {
+    max-width: var(--measure);
+    margin-top: 2.5rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--rule-strong);
+  }
+
+  .guide-close > * + * {
+    margin-top: 0.5rem;
+  }
+
+  @media (min-width: 64rem) {
+    .guide {
+      padding-top: 1.75rem;
+    }
+
+    .composed-place {
+      font-size: 2rem;
+    }
+
+    .guide-phase {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+      column-gap: 2.25rem;
+      margin-top: 3rem;
+      padding-top: 1.25rem;
+    }
+
+    /* The steps of a phase side by side in two columns behind a column rule. */
+    .phase-entries {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      align-items: start;
+      margin-top: 0;
+    }
+
+    .phase-entries > :global(.guide-entry) {
+      padding-right: 1.75rem;
+    }
+
+    .phase-entries > :global(.guide-entry + .guide-entry) {
+      margin-top: 0;
+      padding-right: 0;
+      padding-left: 1.75rem;
+      border-top: 0;
+      border-left: 1px solid var(--rule);
+    }
+
+    /* A phase with one step: the step on the article measure, no empty column. */
+    .phase-entries:has(> :global(.guide-entry:only-child)) {
+      grid-template-columns: minmax(0, var(--measure));
+    }
+
+    /* A third step starts a new row under a hairline. */
+    .phase-entries > :global(.guide-entry:nth-child(2n + 3)) {
+      margin-top: 1.5rem;
+      padding-left: 0;
+      padding-right: 1.75rem;
+      border-top: 1px solid var(--rule);
+      border-left: 0;
+    }
+
+    .phase-entries > :global(.guide-entry:nth-child(2n + 4)) {
+      margin-top: 1.5rem;
+      border-top: 1px solid var(--rule);
+    }
+  }
+
+  /* View transition of the picker (same-document, started by core's data-vt-anchor). */
+  @media (prefers-reduced-motion: no-preference) {
+    :global(::view-transition-old(guide-sentence)),
+    :global(::view-transition-new(guide-sentence)) {
+      animation-duration: 200ms;
+    }
+
+    :global(::view-transition-group(*.guide-step)) {
+      animation-duration: 220ms;
+      animation-timing-function: ease;
+    }
+  }
+</style>

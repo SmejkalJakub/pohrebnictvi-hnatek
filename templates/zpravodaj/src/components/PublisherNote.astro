@@ -1,0 +1,47 @@
+---
+/**
+ * Home `family-story` (F), a side-column note about the publisher: the O nás title as the
+ * headline, the tradition wording as the kicker, the excerpt (or lead), "Více o nás". No photo:
+ * the place photo already stands in the first-steps story (§1.4: never twice on one page).
+ */
+import PlaceholderMark from "@core/components/PlaceholderMark.astro";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  title: string;
+  text: string | null;
+  tradition: string | null;
+  placeholder: boolean;
+}
+
+const { title, text, tradition, placeholder } = Astro.props;
+---
+<section id="o-nas-domu" class="publisher-note" data-section="family-story" aria-labelledby="o-nas-domu-nadpis">
+  {tradition !== null ? <p class="kicker">{tradition}</p> : null}
+  <h2 id="o-nas-domu-nadpis" class="headline note-heading">{title}</h2>
+  <PlaceholderMark active={placeholder} as="div">
+    {text !== null ? <p class="note-text">{text}</p> : null}
+  </PlaceholderMark>
+  <p class="note-more">
+    <a href="/o-nas/" class="go">{ui.storyLink}</a>
+  </p>
+</section>
+
+<style>
+  .kicker + .note-heading {
+    margin-top: 0.25rem;
+  }
+
+  .note-heading {
+    font-size: 1.5rem;
+  }
+
+  .note-text {
+    margin-top: 0.5rem;
+    font-size: 1rem;
+  }
+
+  .note-more {
+    font-size: 1rem;
+  }
+</style>

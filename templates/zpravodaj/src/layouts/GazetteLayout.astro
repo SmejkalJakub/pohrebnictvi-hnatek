@@ -1,0 +1,321 @@
+---
+/**
+ * Page shell for Template F "Zpravodaj". Options become data attributes on <html>.
+ * The masthead (dateline, title, section names), then below 64 rem a full-width nonstop strip in
+ * the primary under the masthead's double rule (F phone board); from 64 rem the dateline carries
+ * the nonstop line instead, and the front page's office column the nonstop box. High emphasis
+ * keeps the strip on every width. Then the page and the colophon.
+ * `front`: the home's large centred masthead; inner pages get the compact one.
+ * `neutral` switches the chrome to its notice form (research L1): no strip, a muted publisher
+ * sentence with the nonstop link, reduced navigation, a colophon without the nonstop line.
+ */
+import "../styles/fonts.css";
+import "../styles/global.css";
+import "../styles/print.css";
+import SeoHead from "@core/components/SeoHead.astro";
+import StructuredData from "@core/components/StructuredData.astro";
+import PrototypeBanner from "@core/components/PrototypeBanner.astro";
+import BrandStyle from "@core/components/BrandStyle.astro";
+import SiteInteractions from "@core/components/SiteInteractions.astro";
+import EmergencyPhoneLink from "@core/components/EmergencyPhoneLink.astro";
+import { brandAttributes } from "@core/brand/runtime.ts";
+import type { ImageMetadata } from "astro";
+import { getDocuments, getFaq, getOptionalPage, getPeople, hasPage } from "@core/content/load.ts";
+import type { NavItem, SiteContext } from "@core/content/view-models.ts";
+import { formatPhone } from "@core/format/phone.ts";
+import spectralLatin from "@fontsource/spectral/files/spectral-latin-600-normal.woff2?url";
+import spectralLatinExt from "@fontsource/spectral/files/spectral-latin-ext-600-normal.woff2?url";
+import playfairLatin from "@fontsource/playfair-display/files/playfair-display-latin-600-normal.woff2?url";
+import playfairLatinExt from "@fontsource/playfair-display/files/playfair-display-latin-ext-600-normal.woff2?url";
+import Masthead from "../components/Masthead.astro";
+import Colophon from "../components/Colophon.astro";
+import NoticeImprint from "../components/NoticeImprint.astro";
+import { resolveOptions } from "../lib/options.ts";
+import { fullNav, neutralNav } from "../lib/site.ts";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  site: SiteContext;
+  /** Page title without the brand name; null on the homepage. */
+  title?: string | null;
+  description: string;
+  noindex?: boolean;
+  image?: ImageMetadata | null;
+  /** Notice list and notice pages: publisher line, reduced nav, no strip, neutral colophon. */
+  neutral?: boolean;
+  /** The home page: the front-page masthead. */
+  front?: boolean;
+  /**
+   * The page already shows the office (home with contact-summary): the colophon leaves out its
+   * own Kancelář column so the same address and hours do not repeat one screen apart.
+   */
+  officeOnPage?: boolean;
+}
+
+const {
+  site,
+  title = null,
+  description,
+  noindex = false,
+  image = null,
+  neutral = false,
+  front = false,
+  officeOnPage = false,
+} = Astro.props;
+const options = resolveOptions(site.config);
+const path = Astro.url.pathname;
+const brand = brandAttributes();
+
+async function optionalNavItem(id: "pro-ucastniky" | "pohreb-predem", enabled: boolean): Promise<NavItem | null> {
+  if (!enabled) {
+    return null;
+  }
+  const page = await getOptionalPage(id);
+  if (page === null) {
+    return null;
+  }
+  return { id, label: page.data.navLabel, href: `/${id}/` };
+}
+
+const documents = await getDocuments();
+const people = await getPeople();
+const faq = await getFaq();
+const hasLegalPage = await hasPage("pravni-informace");
+const hasPrivacyPage = await hasPage("ochrana-osobnich-udaju");
+let links = fullNav(site, path, {
+  guestInfo: await optionalNavItem("pro-ucastniky", site.config.features.guestInfo),
+  prePlanning: await optionalNavItem("pohreb-predem", site.config.features.prePlanning),
+  hasPeople: people.length > 0,
+  hasFaq: faq.length > 0,
+  hasDocuments: documents.length > 0 && hasLegalPage,
+});
+if (neutral) {
+  links = neutralNav(site, path);
+}
+const showStrip = !neutral && site.emergency.enabled;
+const emergencyDisplay = formatPhone(site.emergency.phone).display;
+
+/* Preload the display face at 600: the masthead and the H1 are text (Czech needs latin-ext). */
+let preloads: string[] = [spectralLatin, spectralLatinExt];
+if (options.fontPair === "playfair-source") {
+  preloads = [playfairLatin, playfairLatinExt];
+}
+if (brand["data-brand-display"] !== undefined) {
+  preloads = [];
+}
+const menuLabels = JSON.stringify({ open: ui.menuOpen, close: ui.menuClose });
+---
+<html
+  lang="cs"
+  class="no-js"
+  data-palette={options.palette}
+  data-font={options.fontPair}
+  data-emphasis={options.emergencyEmphasis}
+  {...brand}
+>
+  <head>
+    {preloads.map((href) => <link rel="preload" href={href} as="font" type="font/woff2" crossorigin />)}
+    <SeoHead site={site} title={title} description={description} noindex={noindex} image={image} />
+    <script is:inline>
+      document.documentElement.classList.replace("no-js", "js");
+    </script>
+    <StructuredData site={site} />
+    <BrandStyle />
+  </head>
+  <body>
+    <PrototypeBanner />
+    <a href="#obsah" class="skip-link">{ui.skipLink}</a>
+    <Masthead site={site} links={links} neutral={neutral} front={front} />
+    {
+      showStrip ? (
+        <div class="strip-wrap">
+          <EmergencyPhoneLink emergency={site.emergency} variant="custom" class="nonstop-strip">
+            <span class="strip-label">{site.emergency.label}</span>{" "}
+            <span class="strip-number nowrap">{emergencyDisplay}</span>
+          </EmergencyPhoneLink>
+        </div>
+      ) : null
+    }
+    {neutral ? <NoticeImprint site={site} /> : null}
+    <main id="obsah" tabindex="-1" data-neutral={neutral ? "true" : "false"} data-front={front ? "true" : "false"}>
+      <slot />
+    </main>
+    <Colophon
+      site={site}
+      neutral={neutral}
+      documents={documents}
+      hasPrivacyPage={hasPrivacyPage}
+      officeOnPage={officeOnPage}
+    />
+    <SiteInteractions />
+    <script is:inline define:vars={{ menuLabels }}>
+      const labels = JSON.parse(menuLabels);
+      const toggle = document.querySelector("[data-menu-toggle]");
+      let panel = null;
+      if (toggle !== null) {
+        panel = document.getElementById(toggle.getAttribute("aria-controls"));
+      }
+      if (toggle !== null && panel !== null) {
+        const setOpen = (open) => {
+          toggle.setAttribute("aria-expanded", String(open));
+          if (open) {
+            toggle.textContent = labels.close;
+          } else {
+            toggle.textContent = labels.open;
+          }
+          panel.toggleAttribute("data-open", open);
+        };
+        toggle.addEventListener("click", () => {
+          setOpen(toggle.getAttribute("aria-expanded") !== "true");
+        });
+        document.addEventListener("keydown", (event) => {
+          if (event.key === "Escape" && toggle.getAttribute("aria-expanded") === "true") {
+            setOpen(false);
+            toggle.focus();
+          }
+        });
+      }
+    </script>
+    <script is:inline>
+      /*
+       * The live dateline (the template's signature): today's date for Europe/Prague in the
+       * masthead, long from 64 rem ("sobota 15. listopadu 2026"), short on phones (15. 11. 2026),
+       * checked every minute so it turns over at midnight. Nothing moves; without JavaScript the
+       * dateline shows the place only.
+       */
+      const dateline = document.querySelector("[data-dateline]");
+      if (dateline !== null) {
+        const zone = "Europe/Prague";
+        const longFormat = new Intl.DateTimeFormat("cs-CZ", {
+          timeZone: zone,
+          weekday: "long",
+          day: "numeric",
+          month: "long",
+          year: "numeric",
+        });
+        const shortFormat = new Intl.DateTimeFormat("cs-CZ", {
+          timeZone: zone,
+          day: "numeric",
+          month: "numeric",
+          year: "numeric",
+        });
+        const isoFormat = new Intl.DateTimeFormat("en-CA", {
+          timeZone: zone,
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+        });
+        const time = dateline.querySelector("[data-dateline-time]");
+        const longSlot = dateline.querySelector("[data-dateline-long]");
+        const shortSlot = dateline.querySelector("[data-dateline-short]");
+        const write = () => {
+          const now = new Date();
+          const iso = isoFormat.format(now);
+          if (time !== null && time.getAttribute("datetime") === iso) {
+            return;
+          }
+          if (time !== null) {
+            time.setAttribute("datetime", iso);
+          }
+          if (longSlot !== null) {
+            longSlot.textContent = longFormat.format(now);
+          }
+          if (shortSlot !== null) {
+            shortSlot.textContent = shortFormat.format(now);
+          }
+          dateline.hidden = false;
+        };
+        write();
+        window.setInterval(write, 60000);
+      }
+    </script>
+  </body>
+</html>
+
+<style>
+  main {
+    display: block;
+    padding-bottom: 3.5rem;
+  }
+
+  main:focus {
+    outline: none;
+  }
+
+  /*
+   * The phone strip (F phone board): under the masthead's double rule, the whole line one link,
+   * the label in small capitals above the number, on the primary, centred, at least 44 px tall.
+   * From 64 rem the dateline carries the number instead, unless the client chose high emphasis.
+   */
+  .strip-wrap {
+    width: 100%;
+    max-width: calc(var(--page) + 2 * var(--gutter));
+    margin-inline: auto;
+    padding-inline: var(--gutter);
+  }
+
+  :global(.nonstop-strip) {
+    /* Block, never flex: a flex container drops the space before the number (QA test 9). */
+    display: block;
+    min-height: 2.75rem;
+    padding: 0.75rem 0.75rem 0.875rem;
+    border-bottom: 1px solid var(--rule-strong);
+    background: var(--primary-fill);
+    color: var(--on-primary);
+    line-height: 1.25;
+    text-align: center;
+    text-decoration: none;
+  }
+
+  :global(.nonstop-strip):hover {
+    color: var(--on-primary);
+  }
+
+  :global(.nonstop-strip):hover .strip-number {
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+  }
+
+  :global(.nonstop-strip):focus-visible {
+    outline-color: var(--primary);
+    outline-offset: 3px;
+  }
+
+  :global(.nonstop-strip) .strip-label {
+    display: block;
+    color: var(--muted-on-primary);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+
+  :global(.nonstop-strip) .strip-number {
+    display: block;
+    margin-top: 0.25rem;
+    font-family: var(--display);
+    font-size: 1.75rem;
+    font-weight: var(--display-weight);
+  }
+
+  @media (min-width: 64rem) {
+    :global(html:not([data-emphasis="high"])) .strip-wrap {
+      display: none;
+    }
+
+    :global(.nonstop-strip) {
+      display: flow-root;
+      padding-block: 0.625rem;
+    }
+
+    :global(.nonstop-strip) .strip-label,
+    :global(.nonstop-strip) .strip-number {
+      display: inline;
+    }
+
+    :global(.nonstop-strip) .strip-number {
+      margin-left: 0.5rem;
+      font-size: 1.375rem;
+    }
+  }
+</style>

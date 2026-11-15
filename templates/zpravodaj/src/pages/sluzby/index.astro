@@ -1,0 +1,20 @@
+---
+/** Služby: one newsletter page with anchors (supports.serviceDetailPages: false). */
+import { getPage, getPricing, getServices, getSiteContext } from "@core/content/load.ts";
+import GazetteLayout from "../../layouts/GazetteLayout.astro";
+import PageHeadline from "../../components/PageHeadline.astro";
+import ServiceArticles from "../../components/ServiceArticles.astro";
+import ProseColumns from "../../components/ProseColumns.astro";
+import { seoDescription, seoTitle } from "../../lib/site.ts";
+
+const site = await getSiteContext();
+const page = await getPage("sluzby");
+const services = await getServices();
+const pricing = await getPricing();
+const Body = page.Content;
+---
+<GazetteLayout site={site} title={seoTitle(page.data)} description={seoDescription(page.data)}>
+  <PageHeadline title={page.data.title} lead={page.data.lead} placeholder={page.data.placeholder} />
+  <ServiceArticles services={services} pricing={pricing} />
+  {page.hasBody ? <ProseColumns idPrefix="sluzby-text"><Body /></ProseColumns> : null}
+</GazetteLayout>

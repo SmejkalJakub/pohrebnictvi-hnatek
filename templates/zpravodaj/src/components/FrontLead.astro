@@ -1,0 +1,85 @@
+---
+/**
+ * Home `hero`, the front page's lead article (F): the H1 (the home title) in the display face, the
+ * home lead as the italic standfirst, then the home body set in two newspaper columns with a
+ * hairline between them and a drop cap on its first paragraph. Never a photo here: the photos
+ * stand in the first-steps story and the catalogue columns (§1.4).
+ */
+import PlaceholderMark from "@core/components/PlaceholderMark.astro";
+
+interface Props {
+  title: string;
+  lead: string | null;
+  placeholder: boolean;
+  hasBody: boolean;
+}
+
+const { title, lead, placeholder, hasBody } = Astro.props;
+---
+<article class="front-lead" data-section="hero" data-hero aria-labelledby="titulek">
+  <PlaceholderMark active={placeholder} as="div">
+    <h1 id="titulek" class="headline front-title">{title}</h1>
+  </PlaceholderMark>
+  {lead !== null ? <p class="standfirst front-standfirst">{lead}</p> : null}
+  {
+    hasBody ? (
+      <div class="prose two-columns drop-cap front-body">
+        <slot />
+      </div>
+    ) : null
+  }
+</article>
+
+<style>
+  .front-title {
+    font-size: 2rem;
+    line-height: 1.1;
+  }
+
+  .front-standfirst {
+    margin-top: 0.875rem;
+  }
+
+  .front-body {
+    margin-top: 1.25rem;
+  }
+
+  /* In the columns the body's subheads are small capitals, not a second headline. */
+  .front-body :global(h2),
+  .front-body :global(h3) {
+    margin-top: 0;
+    color: var(--muted);
+    font-family: var(--serif);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    line-height: 1.5;
+    text-transform: uppercase;
+    break-after: avoid;
+  }
+
+  .front-body :global(h2 + p),
+  .front-body :global(h3 + p) {
+    margin-top: 0.25rem;
+  }
+
+  @media (min-width: 48rem) {
+    .front-title {
+      font-size: 2.5rem;
+    }
+  }
+
+  @media (min-width: 64rem) {
+    .front-title {
+      font-size: 2.875rem;
+    }
+
+    .front-standfirst {
+      margin-top: 1rem;
+    }
+
+    .front-body {
+      margin-top: 1.5rem;
+    }
+  }
+</style>

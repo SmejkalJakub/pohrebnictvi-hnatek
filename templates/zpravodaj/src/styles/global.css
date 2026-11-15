@@ -1,0 +1,659 @@
+/*
+ * Template F "Zpravodaj": tokens, base, the newsletter columns, core hooks.
+ * Values from docs/designs/zpravodaj/html/*.dc.html (direction F). Plain CSS (no Tailwind).
+ *
+ * A calm local newsletter: a masthead with a live dateline, a double rule, letter-spaced section
+ * names, then columns separated by hairlines. The home is a front page on a three-column grid
+ * (wide sections take two columns, side sections the third); inner pages are articles with a
+ * kicker, a headline, an italic standfirst and sections under a hairline. A colophon closes every
+ * page. Guardrails: no shadows, no radius, no icons, no tinted bands; one filled box, the nonstop
+ * box, in the primary.
+ */
+
+:root,
+:root[data-palette="papir"] {
+  --ground: #f6f3ec;
+  --ink: #1b1d1f;
+  --muted: #45494d;
+  --primary: #22405c;
+  --primary-fill: #22405c;
+  --on-primary: #f6f3ec;
+  --muted-on-primary: #d5dde6;
+  --kicker: #84461f;
+  --rule-strong: #1b1d1f;
+  --rule: #cbc4b5;
+  --rule-soft: #e2ddd1;
+  --paper: #ffffff;
+}
+
+:root[data-palette="grafit"] {
+  --ground: #f4f4f1;
+  --ink: #18191a;
+  --muted: #44474a;
+  --primary: #2c3a31;
+  --primary-fill: #2c3a31;
+  --on-primary: #f4f4f1;
+  --muted-on-primary: #d3dbd5;
+  --kicker: #6a5424;
+  --rule-strong: #18191a;
+  --rule: #c9c9c2;
+  --rule-soft: #e0e0da;
+  --paper: #ffffff;
+}
+
+:root {
+  --display: "Spectral", Georgia, "Times New Roman", serif;
+  --serif: "Source Serif 4", Georgia, "Times New Roman", serif;
+  --display-weight: 600;
+  --masthead-weight: 700;
+  --gutter: 1rem;
+  --page: 70rem;
+  --measure: 44rem;
+  --h1: 2rem;
+  --h2: 1.5rem;
+  --h3: 1.25rem;
+  /* Aliases for the shared names the content components use. */
+  --sans: var(--serif);
+  --accent: var(--primary);
+  --ornament: var(--rule);
+  --photo: var(--paper);
+  --card: var(--paper);
+  --card-rule: var(--rule);
+  --deep: var(--primary-fill);
+  --on-deep: var(--on-primary);
+  --muted-on-deep: var(--muted-on-primary);
+  color-scheme: light;
+}
+
+:root[data-font="playfair-source"] {
+  --display: "Playfair Display", Georgia, "Times New Roman", serif;
+}
+
+/*
+ * Client brand (template-contract §8a), read as a newsletter: the board's ground is the paper,
+ * the ink stays the type and the column rules, the primary is the masthead, the headlines and the
+ * one filled box (nonstop), the second colour only at its text role in the kickers, the brand
+ * display font for the masthead and the headlines, the body font for the text.
+ */
+:root[data-brand] {
+  --ground: var(--brand-ground);
+  --ink: var(--brand-ink);
+  --muted: var(--brand-muted);
+  --primary: var(--brand-primary-text);
+  --primary-fill: var(--brand-primary);
+  --on-primary: var(--brand-on-primary);
+  --muted-on-primary: var(--brand-muted-on-primary);
+  --kicker: var(--brand-secondary-text);
+  --rule-strong: var(--brand-ink);
+  --rule: color-mix(in oklab, var(--brand-rule) 60%, var(--brand-ground));
+  --rule-soft: color-mix(in oklab, var(--brand-rule) 32%, var(--brand-ground));
+  --paper: color-mix(in oklab, #ffffff 70%, var(--brand-ground));
+}
+
+:root[data-brand-display] {
+  --display: var(--brand-font-display);
+}
+
+:root[data-brand-body] {
+  --serif: var(--brand-font-body);
+}
+
+/* Shared core hooks: the copy-number toast and the scroll offset for in-page links. */
+:root {
+  --toast-bg: var(--primary-fill);
+  --toast-fg: var(--on-primary);
+  --toast-radius: 0;
+  --scroll-offset: 1.5rem;
+}
+
+@media (min-width: 48rem) {
+  :root {
+    --gutter: 2rem;
+    --h1: 2.5rem;
+    --h2: 1.625rem;
+    --h3: 1.375rem;
+  }
+}
+
+@media (min-width: 64rem) {
+  :root {
+    --gutter: 2.5rem;
+    --h1: 2.875rem;
+    --h2: 1.75rem;
+    --h3: 1.5rem;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * Base
+ * ------------------------------------------------------------------------- */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--serif);
+  font-size: 1.0625rem;
+  font-weight: 400;
+  line-height: 1.6;
+  overflow-wrap: break-word;
+}
+
+@media (min-width: 64rem) {
+  body {
+    font-size: 1.125rem;
+  }
+}
+
+p,
+h1,
+h2,
+h3,
+h4,
+ul,
+ol,
+dl,
+dd,
+figure,
+blockquote {
+  margin: 0;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-weight: 600;
+  line-height: 1.15;
+  text-wrap: balance;
+}
+
+/* Headlines and names in the display face, in the primary. */
+.opening-title,
+.passage-heading,
+.stop-title,
+.item-name,
+.person-name,
+.notice-name,
+.band-heading,
+.headline {
+  font-family: var(--display);
+  font-weight: var(--display-weight);
+  color: var(--primary);
+}
+
+img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+a {
+  color: var(--primary);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.18em;
+  transition:
+    color 160ms ease,
+    text-decoration-thickness 160ms ease;
+}
+
+/* Feedback, never the only cue: links are always underlined; hover thickens the line. */
+a:hover {
+  color: var(--ink);
+  text-decoration-thickness: 2px;
+}
+
+a:active {
+  opacity: 0.7;
+}
+
+:focus-visible {
+  outline: 3px solid var(--primary);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.nowrap {
+  white-space: nowrap;
+}
+
+/* No sans in a newsletter: small practical text is the body serif, slightly smaller. */
+.sans {
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+/* The standfirst: italic, a size up, under every headline. */
+.lead,
+.standfirst {
+  color: var(--ink);
+  font-size: 1.1875rem;
+  font-style: italic;
+  line-height: 1.5;
+}
+
+@media (min-width: 64rem) {
+  .lead,
+  .standfirst {
+    font-size: 1.3125rem;
+  }
+}
+
+/* The kicker: small letter-spaced capitals in the second colour's text role. */
+.label,
+.kicker {
+  color: var(--kicker);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  line-height: 1.5;
+  text-transform: uppercase;
+}
+
+/* A list heading inside an article ("Postupně", "S sebou"): letter-spaced, in muted ink. */
+.list-label {
+  color: var(--muted);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.skip-link {
+  position: absolute;
+  left: var(--gutter);
+  top: -100vh;
+  z-index: 10;
+  padding: 0.75rem 1rem;
+  background: var(--primary-fill);
+  color: var(--on-primary);
+}
+
+.skip-link:focus {
+  top: var(--gutter);
+}
+
+/* Every text link that stands alone is a 44 px target (inline-block + padding, never flex). */
+.go {
+  display: inline-block;
+  padding-block: 0.625rem;
+}
+
+/* The drop cap of a lead article: the first paragraph's first letter, three lines deep. */
+.drop-cap > p:first-of-type::first-letter {
+  float: left;
+  padding: 0.3rem 0.5rem 0 0;
+  color: var(--primary);
+  font-family: var(--display);
+  font-size: 3.4em;
+  font-weight: var(--display-weight);
+  line-height: 0.8;
+}
+
+/* Two newspaper columns with a hairline between them (from 48 rem). */
+@media (min-width: 48rem) {
+  .two-columns {
+    column-count: 2;
+    column-gap: 2rem;
+    column-rule: 1px solid var(--rule);
+  }
+
+  .two-columns > * {
+    break-inside: avoid-column;
+  }
+
+  .two-columns > .list-label {
+    break-after: avoid;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * Core safety components (styled through their data hooks only; text stays)
+ * ------------------------------------------------------------------------- */
+
+[data-prototype-banner] {
+  padding: 0.5rem var(--gutter);
+  border-bottom: 1px solid var(--rule);
+  color: var(--muted);
+  font-size: 0.9375rem;
+  text-align: center;
+}
+
+[data-placeholder-label],
+[data-unreviewed-mark],
+[data-missing-fact],
+[data-demo-label] {
+  display: inline-block;
+  padding: 0 0.375rem;
+  border: 1px dashed var(--muted);
+  color: var(--muted);
+  font-size: 0.8125rem;
+  font-style: normal;
+  font-weight: 600;
+  line-height: 1.5;
+  letter-spacing: 0.06em;
+  vertical-align: middle;
+}
+
+[data-placeholder="content"] > [data-placeholder-label],
+[data-placeholder="image"] > [data-placeholder-label] {
+  margin-bottom: 0.5rem;
+}
+
+[data-demo-label] {
+  margin-left: 0.25rem;
+}
+
+/*
+ * Live office status: never muted (design review 2026-11-14). The sentence in full ink at 600;
+ * the dot's form says the state: filled when open, half when on a break, an outline when closed.
+ */
+[data-office-status] {
+  display: flex;
+  gap: 0.625rem;
+  align-items: baseline;
+  color: var(--ink);
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+[data-office-status-dot] {
+  flex: none;
+  width: 0.625rem;
+  height: 0.625rem;
+  border: 2px solid currentColor;
+  border-radius: 50%;
+  translate: 0 -0.05em;
+}
+
+[data-office-status][data-state="open"] [data-office-status-dot] {
+  border-color: var(--primary-fill);
+  background: var(--primary-fill);
+}
+
+[data-office-status][data-state="break"] [data-office-status-dot] {
+  background: linear-gradient(90deg, currentColor 50%, transparent 50%);
+}
+
+[data-notice-qr] svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/*
+ * Phone numbers never wrap; a label before the number may. Phone links are 44 px targets:
+ * inline-block + padding, never flex (a flex container drops the space between a label text run
+ * and the number span: QA test 9).
+ */
+[data-part="number"],
+[data-phone-link]:not(:has(span)) {
+  white-space: nowrap;
+}
+
+[data-phone-link] {
+  display: inline-block;
+  padding-block: 0.625rem;
+}
+
+/* ---------------------------------------------------------------------------
+ * The page
+ * ------------------------------------------------------------------------- */
+
+.page-width,
+.wrap {
+  width: 100%;
+  max-width: calc(var(--page) + 2 * var(--gutter));
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+/*
+ * A section of an inner page: a hairline in ink across the page, the heading (an optional kicker
+ * above it), then the text on the article measure. From 64 rem the "aside" slot stands in the
+ * third column beside the text, behind a hairline.
+ */
+.passage {
+  width: 100%;
+  max-width: calc(var(--page) + 2 * var(--gutter));
+  margin-inline: auto;
+  padding: 2rem var(--gutter) 0;
+  scroll-margin-top: var(--scroll-offset);
+}
+
+.passage-head {
+  padding-top: 1.125rem;
+  border-top: 1px solid var(--rule-strong);
+}
+
+.passage-head > .label + * {
+  margin-top: 0.25rem;
+}
+
+.passage-heading {
+  font-size: var(--h2);
+  line-height: 1.15;
+}
+
+.passage-body {
+  max-width: var(--measure);
+  margin-top: 0.875rem;
+}
+
+.passage-body > * + * {
+  margin-top: 0.875rem;
+}
+
+.passage > .passage-full {
+  margin-top: 0.875rem;
+}
+
+.passage-aside {
+  margin-top: 1.5rem;
+}
+
+/* A passage without a heading (text before a body's first ##): the text only. */
+.passage:not(:has(.passage-head)) > .passage-body {
+  margin-top: 0;
+}
+
+@media (min-width: 64rem) {
+  .passage {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+    column-gap: 2.25rem;
+    padding-top: 2.75rem;
+  }
+
+  .passage-head,
+  .passage > .passage-full {
+    grid-column: 1 / -1;
+  }
+
+  .passage > .passage-body {
+    grid-column: 1;
+  }
+
+  .passage-aside {
+    grid-column: 2;
+    margin-top: 0.875rem;
+    padding-left: 2.25rem;
+    border-left: 1px solid var(--rule);
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * Prose (Markdown bodies)
+ * ------------------------------------------------------------------------- */
+
+.prose > * + * {
+  margin-top: 0.875rem;
+}
+
+.prose h2,
+.prose h3 {
+  margin-top: 1.75rem;
+  font-family: var(--display);
+  font-size: 1.3125rem;
+  font-weight: var(--display-weight);
+  line-height: 1.25;
+  color: var(--primary);
+}
+
+.prose h2 + *,
+.prose h3 + * {
+  margin-top: 0.5rem;
+}
+
+.prose ul,
+.prose ol {
+  padding-left: 1.375rem;
+}
+
+.prose li + li {
+  margin-top: 0.375rem;
+}
+
+.dot-list {
+  padding-left: 1.375rem;
+}
+
+.dot-list li + li {
+  margin-top: 0.25rem;
+}
+
+/* ---------------------------------------------------------------------------
+ * Hairline tables (prices, office hours)
+ * ------------------------------------------------------------------------- */
+
+.hairlines {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.hairlines th,
+.hairlines td {
+  padding: 0.625rem 0;
+  border-top: 1px solid var(--rule);
+  vertical-align: top;
+  text-align: left;
+  font-weight: 400;
+}
+
+.hairlines tr:first-child > * {
+  border-top-color: var(--rule-strong);
+}
+
+.hairlines .num {
+  padding-left: 1.5rem;
+  text-align: right;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* ---------------------------------------------------------------------------
+ * Details (FAQ, step bodies)
+ * ------------------------------------------------------------------------- */
+
+details > summary {
+  cursor: pointer;
+}
+
+.more > summary {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  color: var(--primary);
+  font-size: 1rem;
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+}
+
+.print-only {
+  display: none;
+}
+
+/* ---------------------------------------------------------------------------
+ * The guided list (design-differentiation §1.3): plain numbered sentences, never tick boxes.
+ * ------------------------------------------------------------------------- */
+
+.stop-list-label {
+  color: var(--muted);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.stop-list {
+  padding-left: 1.4em;
+}
+
+.stop-list > li + li {
+  margin-top: 0.25rem;
+}
+
+.stop-list > li::marker {
+  color: var(--primary);
+  font-family: var(--display);
+  font-weight: var(--display-weight);
+}
+
+* + .stop-list-label {
+  margin-top: 1rem;
+}
+
+.stop-list-label + .stop-list {
+  margin-top: 0.25rem;
+}
+
+/* The italic closing line of a guide or the home's first steps. */
+.thread-close-line {
+  color: var(--primary);
+  font-size: 1.1875rem;
+  font-style: italic;
+  line-height: 1.4;
+}
+
+@media (min-width: 64rem) {
+  .thread-close-line {
+    font-size: 1.3125rem;
+  }
+}

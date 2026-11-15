@@ -20,6 +20,7 @@ const TEMPLATES = [
   "nocni-linka",
   "rodinny-rozhovor",
   "krok-za-krokem",
+  "zpravodaj",
   "lide-a-misto",
 ] as const;
 

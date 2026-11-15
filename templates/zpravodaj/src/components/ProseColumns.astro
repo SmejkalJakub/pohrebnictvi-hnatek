@@ -1,0 +1,61 @@
+---
+/**
+ * A page's Markdown body as newsletter sections: each `##` heading opens a section (the heading
+ * under a rule in ink, its text on the article measure); text before the first heading becomes an
+ * untitled passage.
+ * The body is rendered by core (restricted Markdown); this component only splits the HTML.
+ */
+
+interface Props {
+  idPrefix: string;
+}
+
+const { idPrefix } = Astro.props;
+const html = (await Astro.slots.render("default")).trim();
+
+interface Part {
+  id: string;
+  headingHtml: string | null;
+  bodyHtml: string;
+}
+
+const parts: Part[] = [];
+const chunks = html.split(/(?=<h2[\s>])/);
+chunks.forEach((chunk, index) => {
+  const trimmed = chunk.trim();
+  if (trimmed === "") {
+    return;
+  }
+  const match = /^<h2([^>]*)>([\s\S]*?)<\/h2>/.exec(trimmed);
+  if (match === null) {
+    parts.push({ id: `${idPrefix}-${index}`, headingHtml: null, bodyHtml: trimmed });
+    return;
+  }
+  const attributes = match[1] ?? "";
+  const idMatch = /\sid="([^"]+)"/.exec(attributes);
+  let id = `${idPrefix}-${index}`;
+  if (idMatch !== null && idMatch[1] !== undefined) {
+    id = idMatch[1];
+  }
+  parts.push({ id, headingHtml: match[2] ?? "", bodyHtml: trimmed.slice(match[0].length).trim() });
+});
+
+---
+{
+  parts.map((part) => (
+    <>
+      {part.headingHtml !== null ? (
+        <section id={part.id} class="passage" aria-labelledby={`${part.id}-nadpis`}>
+          <div class="passage-head">
+            <h2 id={`${part.id}-nadpis`} class="passage-heading" set:html={part.headingHtml} />
+          </div>
+          <div class="passage-body prose" set:html={part.bodyHtml} />
+        </section>
+      ) : (
+        <div class="passage">
+          <div class="passage-body prose" set:html={part.bodyHtml} />
+        </div>
+      )}
+    </>
+  ))
+}

@@ -1,0 +1,40 @@
+---
+/**
+ * One section of an inner page (F): a hairline in ink across the page, the heading (an optional
+ * kicker above it, the "head" slot under it), then the text on the article measure. The "aside"
+ * slot, when filled, stands in the third column beside the text from 64 rem, behind a hairline
+ * (a photo, a short list, a phone); below 64 rem it follows the text.
+ */
+import type { HTMLAttributes } from "astro/types";
+
+interface Props extends HTMLAttributes<"section"> {
+  id: string;
+  heading: string;
+  level?: 2 | 3;
+  /** Kicker above the heading (price group name, phase). */
+  label?: string | null;
+  headingClass?: string;
+}
+
+const { id, heading, level = 2, label = null, headingClass, class: className, ...rest } = Astro.props;
+const Heading = `h${level}` as "h2" | "h3";
+const headingId = `${id}-nadpis`;
+const hasAside = Astro.slots.has("aside");
+---
+<section id={id} class:list={["passage", className]} aria-labelledby={headingId} {...rest}>
+  <div class="passage-head">
+    {label !== null ? <p class="label">{label}</p> : null}
+    <Heading id={headingId} class:list={["passage-heading", headingClass]}>{heading}</Heading>
+    <slot name="head" />
+  </div>
+  <div class="passage-body">
+    <slot />
+  </div>
+  {
+    hasAside ? (
+      <aside class="passage-aside" aria-labelledby={headingId}>
+        <slot name="aside" />
+      </aside>
+    ) : null
+  }
+</section>

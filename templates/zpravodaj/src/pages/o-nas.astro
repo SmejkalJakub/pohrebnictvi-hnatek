@@ -1,0 +1,35 @@
+---
+/**
+ * O nás: the opening, the firm's own photo (heroImage, slot about.story) on the content column,
+ * then the body as sections under rules. The same photo stands in the home's first-steps story.
+ */
+import { getPage, getSiteContext } from "@core/content/load.ts";
+import GazetteLayout from "../layouts/GazetteLayout.astro";
+import PageHeadline from "../components/PageHeadline.astro";
+import ProseColumns from "../components/ProseColumns.astro";
+import PressPhoto from "../components/PressPhoto.astro";
+import { seoDescription, seoTitle } from "../lib/site.ts";
+
+const site = await getSiteContext();
+const page = await getPage("o-nas");
+const Body = page.Content;
+---
+<GazetteLayout site={site} title={seoTitle(page.data)} description={seoDescription(page.data)}>
+  <PageHeadline title={page.data.title} lead={page.data.lead} placeholder={page.data.placeholder} />
+  {
+    page.data.heroImage !== null ? (
+      <div class="passage">
+        <div class="passage-body">
+          <PressPhoto image={page.data.heroImage} maxWidth={722} />
+        </div>
+      </div>
+    ) : null
+  }
+  {
+    page.hasBody ? (
+      <ProseColumns idPrefix="o-nas-text">
+        <Body />
+      </ProseColumns>
+    ) : null
+  }
+</GazetteLayout>

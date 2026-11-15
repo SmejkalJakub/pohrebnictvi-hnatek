@@ -1,0 +1,114 @@
+---
+/**
+ * Home `catalogue-links` (F): the two catalogues as picture columns side by side behind a column
+ * rule (design-differentiation §1.4): the first real flower photo leads, the coffin photo is shown
+ * whole on the paper ground; under each the catalogue's name as a headline link and its page
+ * lead. Without a real photo a column is text only, never a grey frame.
+ */
+import PressPhoto from "./PressPhoto.astro";
+import type { HomePhoto } from "@core/content/view-models.ts";
+
+export interface CatalogueTeaser {
+  id: "kvetiny" | "rakve";
+  href: string;
+  label: string;
+  lead: string | null;
+  photo: HomePhoto | null;
+}
+
+interface Props {
+  teasers: CatalogueTeaser[];
+}
+
+const { teasers } = Astro.props;
+---
+<section id="rakve-a-kvetiny" class="teasers" data-section="catalogue-links" aria-label={teasers.map((teaser) => teaser.label).join(", ")}>
+  {
+    teasers.map((teaser) => (
+      <article class="teaser" data-catalogue={teaser.id} aria-labelledby={`domu-${teaser.id}`}>
+        {teaser.photo !== null ? (
+          <PressPhoto image={teaser.photo.image} href={teaser.href} maxWidth={420} class="teaser-photo" />
+        ) : null}
+        <h2 id={`domu-${teaser.id}`} class="headline teaser-title">
+          <a href={teaser.href}>{teaser.label}</a>
+        </h2>
+        {teaser.lead !== null ? <p class="teaser-text">{teaser.lead}</p> : null}
+      </article>
+    ))
+  }
+</section>
+
+<style>
+  .teasers {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 0;
+  }
+
+  .teaser {
+    min-width: 0;
+    padding-right: 0.75rem;
+  }
+
+  .teaser + .teaser {
+    padding: 0 0 0 0.75rem;
+    border-left: 1px solid var(--rule);
+  }
+
+  .teaser :global(.teaser-photo) {
+    margin-bottom: 0.625rem;
+  }
+
+  .teaser[data-catalogue="rakve"] :global(.stop-photo-img) {
+    aspect-ratio: 1 / 1;
+    object-fit: contain;
+  }
+
+  .teaser[data-catalogue="kvetiny"] :global(.stop-photo-img) {
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+  }
+
+  .teaser-title {
+    font-size: 1.1875rem;
+    line-height: 1.2;
+  }
+
+  .teaser-title a {
+    color: inherit;
+    text-decoration-color: var(--rule);
+  }
+
+  .teaser-title a:hover {
+    text-decoration-color: currentColor;
+  }
+
+  .teaser-text {
+    display: none;
+    margin-top: 0.375rem;
+    font-size: 1rem;
+  }
+
+  @media (min-width: 48rem) {
+    .teaser {
+      padding-right: 1.75rem;
+    }
+
+    .teaser + .teaser {
+      padding-left: 1.75rem;
+    }
+
+    .teaser[data-catalogue="rakve"] :global(.stop-photo-img),
+    .teaser[data-catalogue="kvetiny"] :global(.stop-photo-img) {
+      aspect-ratio: 4 / 3;
+    }
+
+    .teaser-title {
+      font-size: 1.5rem;
+    }
+
+    .teaser-text {
+      display: block;
+    }
+  }
+</style>

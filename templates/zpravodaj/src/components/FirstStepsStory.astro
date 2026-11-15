@@ -1,0 +1,285 @@
+---
+/**
+ * Home `next-steps`, the front page's main story (F): "První kroky" as the kicker, "Když zemře
+ * blízký člověk: co udělat v prvních hodinách" as the headline, the reassurance lead as the italic
+ * standfirst (design-differentiation §1.3), then:
+ *  - the first-hours steps in two newspaper columns with a drop cap: each step a paragraph led by
+ *    its title as a run-in head, its guided list ("Postupně", plain numbered sentences via
+ *    guideSentence, never tick boxes), the nonstop line where the step asks for it, and the link
+ *    "Celý postup podle místa úmrtí";
+ *  - under a hairline the photo feature: the firm's own place photo (core getHomeImagery(), never a
+ *    placeholder) beside the first step of "V následujících dnech" with its list;
+ *  - "Dál v průvodci": the first step of each later phase as a short brief linking into the guide;
+ *  - the closing line "Tím máte to nejdůležitější za sebou."
+ */
+import type { CollectionEntry } from "astro:content";
+import EmergencyPhoneLink from "@core/components/EmergencyPhoneLink.astro";
+import PhoneLink from "@core/components/PhoneLink.astro";
+import PlaceholderMark from "@core/components/PlaceholderMark.astro";
+import { guideSentence } from "@core/content/guidance-flow.ts";
+import type { HomeImagery, SiteContext } from "@core/content/view-models.ts";
+import { formatAddressInline } from "@core/format/address.ts";
+import { formatPhone } from "@core/format/phone.ts";
+import PressPhoto from "./PressPhoto.astro";
+import { mainLocation, primaryOfficePhone } from "../lib/site.ts";
+import { guidancePhaseLabels, ui } from "../i18n/cs.ts";
+
+interface Props {
+  site: SiteContext;
+  guidance: CollectionEntry<"guidance">[];
+  imagery: HomeImagery;
+}
+
+const { site, guidance, imagery } = Astro.props;
+const GUIDE = "/jak-postupovat/";
+const location = mainLocation(site);
+const office = primaryOfficePhone(site);
+const firstHours = guidance.filter((entry) => entry.data.phase === "first-hours");
+const feature = guidance.find((entry) => entry.data.phase === "first-days") ?? null;
+const later: CollectionEntry<"guidance">[] = [];
+for (const phase of ["arrangements", "after-funeral"] as const) {
+  const entry = guidance.find((item) => item.data.phase === phase);
+  if (entry !== undefined) {
+    later.push(entry);
+  }
+}
+const place = imagery.place;
+---
+<section id="prvni-kroky" class="first-steps" data-section="next-steps" aria-labelledby="prvni-kroky-nadpis">
+  <p class="kicker">{ui.firstStepsKicker}</p>
+  <h2 id="prvni-kroky-nadpis" class="headline story-title">{ui.firstStepsHeading}</h2>
+  <p class="standfirst story-standfirst">{ui.guideLead}</p>
+  {
+    firstHours.length > 0 ? (
+      <div class="story-text two-columns drop-cap">
+        {firstHours.map((entry) => {
+          const data = entry.data;
+          const listId = `domu-${entry.id}-postup`;
+          return (
+            <>
+              <PlaceholderMark active={data.placeholder} as="div">
+                <p>
+                  <strong class="run-in">{data.title}.</strong> {data.summary}
+                </p>
+              </PlaceholderMark>
+              {data.checklist.length > 0 ? (
+                <div class="story-list">
+                  <p id={listId} class="stop-list-label">{ui.guideListLabel}</p>
+                  <ol class="stop-list" aria-labelledby={listId}>
+                    {data.checklist.map((item) => (
+                      <li>{guideSentence(item)}</li>
+                    ))}
+                  </ol>
+                </div>
+              ) : null}
+              {data.contactPrompt === "emergency" && site.emergency.enabled ? (
+                <p class="story-call">
+                  <EmergencyPhoneLink emergency={site.emergency} variant="custom" class="story-call-link">
+                    {site.emergency.label}{" "}<span class="nowrap">{formatPhone(site.emergency.phone).display}</span>
+                  </EmergencyPhoneLink>
+                </p>
+              ) : null}
+            </>
+          );
+        })}
+        <p class="story-more">
+          <a href={GUIDE} class="go">{ui.fullGuideByPlace}</a>
+        </p>
+      </div>
+    ) : null
+  }
+  {
+    feature !== null ? (
+      <div class="story-feature" data-with-photo={place !== null ? "true" : undefined}>
+        {place !== null ? (
+          <PressPhoto image={place.image} caption={formatAddressInline(location.address)} maxWidth={480} class="feature-photo" />
+        ) : null}
+        <div class="feature-text">
+          <p class="kicker">{guidancePhaseLabels[feature.data.phase]}</p>
+          <h3 class="headline feature-title">
+            <a href={`${GUIDE}#${feature.id}`}>{feature.data.title}</a>
+          </h3>
+          <PlaceholderMark active={feature.data.placeholder} as="div">
+            <p>{feature.data.summary}</p>
+          </PlaceholderMark>
+          {feature.data.checklist.length > 0 ? (
+            <div class="story-list">
+              <p id={`domu-${feature.id}-postup`} class="stop-list-label">{ui.guideListLabel}</p>
+              <ol class="stop-list" aria-labelledby={`domu-${feature.id}-postup`}>
+                {feature.data.checklist.map((item) => (
+                  <li>{guideSentence(item)}</li>
+                ))}
+              </ol>
+            </div>
+          ) : null}
+          {feature.data.contactPrompt === "office" ? (
+            <p class="story-office">
+              {ui.officePrompt}:{" "}
+              <PhoneLink number={office.number}>
+                {office.label}{" "}<span class="nowrap">{formatPhone(office.number).display}</span>
+              </PhoneLink>
+            </p>
+          ) : null}
+        </div>
+      </div>
+    ) : null
+  }
+  {
+    later.length > 0 ? (
+      <div class="story-later">
+        <p id="dal-v-pruvodci" class="list-label">{ui.laterInGuide}</p>
+        <ul class="later-list" role="list" aria-labelledby="dal-v-pruvodci">
+          {later.map((entry) => (
+            <li>
+              <p class="kicker">{guidancePhaseLabels[entry.data.phase]}</p>
+              <h3 class="later-title">
+                <a href={`${GUIDE}#${entry.id}`}>{entry.data.title}</a>
+              </h3>
+              <p class="later-text">{entry.data.summary}</p>
+            </li>
+          ))}
+        </ul>
+      </div>
+    ) : null
+  }
+  <p class="thread-close-line story-close">{ui.guideClosing}</p>
+</section>
+
+<style>
+  .story-title {
+    margin-top: 0.375rem;
+    font-size: 1.75rem;
+    line-height: 1.12;
+  }
+
+  .story-standfirst {
+    margin-top: 0.75rem;
+  }
+
+  .story-text {
+    margin-top: 1.25rem;
+  }
+
+  .story-text > * + * {
+    margin-top: 0.75rem;
+  }
+
+  .run-in {
+    font-weight: 600;
+  }
+
+  .story-list {
+    font-size: 1rem;
+  }
+
+  .story-list > .stop-list-label + .stop-list {
+    margin-top: 0.25rem;
+  }
+
+  .story-call :global(.story-call-link) {
+    display: inline-block;
+    padding-block: 0.625rem;
+    font-weight: 600;
+  }
+
+  .story-more {
+    font-size: 1rem;
+  }
+
+  .story-feature {
+    display: grid;
+    gap: 1.25rem;
+    margin-top: 1.75rem;
+    padding-top: 1.75rem;
+    border-top: 1px solid var(--rule);
+  }
+
+  .feature-text > * + * {
+    margin-top: 0.625rem;
+  }
+
+  .feature-text > .kicker + * {
+    margin-top: 0.25rem;
+  }
+
+  .feature-title {
+    font-size: var(--h3);
+    line-height: 1.15;
+  }
+
+  .feature-title a,
+  .later-title a {
+    color: inherit;
+    text-decoration-color: var(--rule);
+  }
+
+  .feature-title a:hover,
+  .later-title a:hover {
+    text-decoration-color: currentColor;
+  }
+
+  .story-office {
+    font-size: 1rem;
+  }
+
+  .story-later {
+    margin-top: 1.75rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--rule);
+  }
+
+  .later-list {
+    display: grid;
+    gap: 1rem;
+    margin: 0.5rem 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .later-title {
+    margin-top: 0.125rem;
+    font-family: var(--display);
+    font-size: 1.1875rem;
+    font-weight: var(--display-weight);
+    line-height: 1.25;
+    color: var(--primary);
+  }
+
+  .later-text {
+    margin-top: 0.25rem;
+    color: var(--ink);
+    font-size: 1rem;
+  }
+
+  .story-close {
+    margin-top: 1.5rem;
+  }
+
+  @media (min-width: 48rem) {
+    .story-title {
+      font-size: 2.125rem;
+    }
+
+    .story-feature[data-with-photo] {
+      grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+      column-gap: 2rem;
+      align-items: start;
+    }
+
+    .later-list {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      column-gap: 2rem;
+    }
+
+    .later-list > li + li {
+      padding-left: 2rem;
+      border-left: 1px solid var(--rule);
+    }
+  }
+
+  @media (min-width: 64rem) {
+    .story-title {
+      font-size: 2.375rem;
+    }
+  }
+</style>

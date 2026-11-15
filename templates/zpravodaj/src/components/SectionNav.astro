@@ -1,0 +1,152 @@
+---
+/**
+ * The section names of the newsletter under the masthead's double rule. From 64 rem one centred
+ * row of letter-spaced capitals (wrapping when long); the current page in ink with a rule under
+ * it. Below 64 rem the panel the "Menu" button opens: the names one per line on hairlines, then
+ * the in-page items (Lidé, Časté otázky, Dokumenty) as a second, quieter list. The <nav> landmark
+ * is always present; only the panel inside it hides. The in-page items are phone-menu only.
+ */
+import type { ThreadLink } from "../lib/site.ts";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  id: string;
+  links: ThreadLink[];
+}
+
+const { id, links } = Astro.props;
+const pages = links.filter((link) => link.anchor !== true);
+const anchors = links.filter((link) => link.anchor === true);
+---
+<nav aria-label={ui.mainNav} class="section-nav">
+  <div id={id} class="menu-panel">
+    <ul class="section-list" role="list">
+      {
+        pages.map((link) => (
+          <li>
+            <a href={link.href} class="section-link" aria-current={link.current ? "page" : undefined}>
+              {link.label}
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+    {
+      anchors.length > 0 ? (
+        <ul class="section-extra" role="list">
+          {anchors.map((link) => (
+            <li>
+              <a href={link.href} class="section-extra-link">
+                {link.label}
+              </a>
+            </li>
+          ))}
+        </ul>
+      ) : null
+    }
+  </div>
+</nav>
+
+<style>
+  .section-list,
+  .section-extra {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .menu-panel {
+    padding: 0.5rem 0 1rem;
+  }
+
+  :global(.js) .menu-panel:not([data-open]) {
+    display: none;
+  }
+
+  .section-list > li {
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .section-link {
+    display: block;
+    padding: 0.625rem 0;
+    color: var(--primary);
+    font-family: var(--display);
+    font-size: 1.3125rem;
+    font-weight: var(--display-weight);
+    line-height: 1.35;
+    text-decoration: none;
+  }
+
+  .section-link:hover {
+    color: var(--ink);
+    text-decoration: underline;
+  }
+
+  .section-link[aria-current="page"] {
+    color: var(--ink);
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+  }
+
+  .section-extra {
+    display: flex;
+    flex-wrap: wrap;
+    column-gap: 1.25rem;
+    margin-top: 0.5rem;
+  }
+
+  .section-extra-link {
+    display: inline-block;
+    padding-block: 0.625rem;
+    font-size: 1rem;
+  }
+
+  @media (min-width: 64rem) {
+    :global(.js) .menu-panel:not([data-open]),
+    .menu-panel {
+      display: block;
+      padding: 0;
+    }
+
+    .section-list {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      column-gap: 1.75rem;
+    }
+
+    .section-list > li {
+      border: 0;
+    }
+
+    .section-extra {
+      display: none;
+    }
+
+    .section-link {
+      display: inline-block;
+      padding: 0.6875rem 0 0.5625rem;
+      border-bottom: 2px solid transparent;
+      color: var(--ink);
+      font-family: var(--serif);
+      font-size: 0.875rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      line-height: 1.4;
+      text-transform: uppercase;
+      transition: border-color 160ms ease;
+    }
+
+    .section-link:hover {
+      border-bottom-color: var(--rule);
+      text-decoration: none;
+    }
+
+    .section-link[aria-current="page"] {
+      border-bottom-color: var(--rule-strong);
+      color: var(--primary);
+      text-decoration: none;
+    }
+  }
+</style>
