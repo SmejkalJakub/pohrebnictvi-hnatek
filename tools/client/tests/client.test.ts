@@ -22,6 +22,7 @@ const TEMPLATES = [
   "krok-za-krokem",
   "zpravodaj",
   "lide-a-misto",
+  "v-kapse",
 ] as const;
 
 let clientsDir: string;

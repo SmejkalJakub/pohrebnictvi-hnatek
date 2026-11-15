@@ -1,0 +1,194 @@
+---
+/**
+ * Jak postupovat: a panel with the place picker as chips and the reassurance lead, then one row
+ * per published step in order (numeral, title, phase), the first open; then the closing line and
+ * the office phone in a panel. Picking a place filters the steps with core's :has(:target)
+ * mechanism (no JavaScript) and rewrites the panel's top into a sentence ("Blízký člověk zemřel
+ * doma. Ukazujeme 6 kroků ze 7. Zobrazit vše"); with JavaScript and view transitions the chips
+ * carry data-vt-anchor, so the steps that stay slide into place (≤ 220 ms, off under reduced
+ * motion). A guide, not a checklist (§1.3): nothing is ticked, counted or remembered.
+ */
+import type { CollectionEntry } from "astro:content";
+import PhoneLink from "@core/components/PhoneLink.astro";
+import {
+  SITUATION_ANCHOR,
+  chooserSituations,
+  nextGuidanceStep,
+  showsFor,
+  type SpecificSituation,
+} from "@core/content/guidance-flow.ts";
+import type { SiteContext } from "@core/content/view-models.ts";
+import { formatPhone } from "@core/format/phone.ts";
+import PocketPlacePicker from "./PocketPlacePicker.astro";
+import PocketStep from "./PocketStep.astro";
+import { situationWords, ui } from "../i18n/cs.ts";
+import { primaryOfficePhone } from "../lib/site.ts";
+
+interface Props {
+  site: SiteContext;
+  guidance: CollectionEntry<"guidance">[];
+}
+
+const { site, guidance } = Astro.props;
+const ALL_ANCHOR = "postup";
+const BASE = "/jak-postupovat/";
+const situations = chooserSituations(guidance);
+const office = primaryOfficePhone(site);
+
+function nextOf(entry: CollectionEntry<"guidance">): CollectionEntry<"guidance"> | null {
+  return nextGuidanceStep(guidance, guidance.indexOf(entry));
+}
+
+const total = guidance.length;
+const counts: Partial<Record<SpecificSituation, number>> = {};
+for (const situation of situations) {
+  counts[situation] = guidance.filter((entry) => showsFor(entry, situation)).length;
+}
+
+/* Filter rules, one block per offered situation (the selectors depend on the anchors). */
+const filterCss = situations
+  .map((situation) => {
+    const target = `[data-guide]:has(#${SITUATION_ANCHOR[situation]}:target)`;
+    return [
+      `${target} [data-guide-step]:not([data-situations~="any"]):not([data-situations~="${situation}"]) { display: none; }`,
+      `${target} [data-tally="${situation}"] { display: block; }`,
+      `${target} .pick-question { color: var(--muted); }`,
+      `${target} [data-place="${situation}"] { border-color: var(--primary-fill); background: var(--primary-fill); color: var(--on-primary); }`,
+      `${target} [data-place="${situation}"] .pick-mark { display: inline; }`,
+    ].join("\n");
+  })
+  .join("\n");
+---
+<div data-guide class="guide">
+  <style is:inline set:html={filterCss}></style>
+  {situations.map((situation) => <span id={SITUATION_ANCHOR[situation]} class="guide-target"></span>)}
+  <span id={ALL_ANCHOR} class="guide-target"></span>
+  <div class="panel guide-intro">
+    {
+      situations.length > 0 ? (
+        <div class="guide-pick">
+          <PocketPlacePicker situations={situations} base="" questionId="kde-zemrel" />
+          {situations.map((situation) => (
+            <p class="composed" data-tally={situation}>
+              <span class="composed-place">{ui.composedPlace(situationWords[situation])}</span>{" "}
+              <span class="composed-count">
+                {ui.composedCount(counts[situation] ?? 0, total)}{" "}
+                <a href={`#${ALL_ANCHOR}`} class="go" data-vt-anchor>{ui.showAll}</a>
+              </span>
+            </p>
+          ))}
+        </div>
+      ) : null
+    }
+    <p class="guide-lead">{ui.guideLead}</p>
+  </div>
+  <ol class="guide-steps" role="list">
+    {
+      guidance.map((entry, index) => (
+        <PocketStep
+          site={site}
+          entry={entry}
+          next={nextOf(entry)}
+          base={BASE}
+          index={index + 1}
+          open={index === 0}
+        />
+      ))
+    }
+  </ol>
+  <div class="panel guide-close">
+    <p class="guide-close-line">{ui.guideClosing}</p>
+    <p>
+      {ui.guideClosingCall}:{" "}
+      <PhoneLink number={office.number}>
+        {office.label}{" "}<span class="nowrap">{formatPhone(office.number).display}</span>
+      </PhoneLink>
+    </p>
+  </div>
+</div>
+
+<style>
+  .guide > * + * {
+    margin-top: 0.75rem;
+  }
+
+  .guide-target {
+    display: block;
+    height: 0;
+    scroll-margin-top: 1rem;
+  }
+
+  .guide > .guide-target + .guide-target,
+  .guide > .guide-target + .guide-intro {
+    margin-top: 0;
+  }
+
+  .guide-intro > * + * {
+    margin-top: 1rem;
+  }
+
+  /* The rewritten sentence: the display face; the count and "Zobrazit vše" in the body face. */
+  .composed {
+    display: none;
+    margin-top: 1rem;
+    view-transition-name: guide-sentence;
+  }
+
+  .composed-place {
+    display: block;
+    color: var(--primary);
+    font-family: var(--display);
+    font-size: 1.5rem;
+    font-weight: var(--display-weight);
+    line-height: 1.2;
+    text-wrap: balance;
+  }
+
+  .composed-count {
+    display: block;
+    margin-top: 0.25rem;
+    color: var(--muted);
+  }
+
+  .guide-lead {
+    color: var(--muted);
+    text-wrap: pretty;
+  }
+
+  .guide-steps {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .guide-close-line {
+    color: var(--primary);
+    font-family: var(--display);
+    font-size: 1.375rem;
+    font-weight: var(--display-weight);
+    line-height: 1.25;
+  }
+
+  .guide-close > * + * {
+    margin-top: 0.375rem;
+  }
+
+  @media (min-width: 64rem) {
+    .composed-place {
+      font-size: 2rem;
+    }
+  }
+
+  /* View transition of the picker (same-document, started by core's data-vt-anchor). */
+  @media (prefers-reduced-motion: no-preference) {
+    :global(::view-transition-old(guide-sentence)),
+    :global(::view-transition-new(guide-sentence)) {
+      animation-duration: 200ms;
+    }
+
+    :global(::view-transition-group(*.guide-step)) {
+      animation-duration: 220ms;
+      animation-timing-function: ease;
+    }
+  }
+</style>

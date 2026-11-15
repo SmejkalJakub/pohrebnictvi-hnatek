@@ -17,6 +17,7 @@ Source canvas (private, owner’s account): https://claude.ai/artifact/SAzhHqwcH
 | I | [rodinny-rozhovor/](rodinny-rozhovor/README.md) · Rodinný rozhovor | questions and answers on warm colour fields; pen drawings. Built (as F) 2026-11-13; **template D since 2026-11-14**, replacing Dvě cesty |
 | E1 | [krok-za-krokem/](krok-za-krokem/README.md) · Krok za krokem | the home page is the guide: one vertical thread with gold rings, photos at the stops; sage band for prices and family. **Template E since 2026-11-14**, replacing Tichá krajina (canvas https://claude.ai/artifact/VJYiee9aetpkbigX355zYF) |
 | F (round 3) | [zpravodaj/](zpravodaj/README.md) · Zpravodaj | a calm local newsletter: masthead with a live dateline, double rule, columns between ink rules, one green nonstop box. **Template F since 2026-11-15** |
+| V kapse | [v-kapse/](v-kapse/README.md) · V kapse | the home asks one question; large rounded rows open their short answer beside the rows (desktop) or under the row (phone), one at a time; the nonstop pill in the header. **Template H since 2026-11-15** (round F–I canvas, chosen with Zpravodaj) |
 
 Board letters F–I are canvas labels only. Assign the template letter when a direction is built.
 

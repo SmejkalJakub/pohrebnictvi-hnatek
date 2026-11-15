@@ -1,0 +1,81 @@
+---
+/**
+ * Answer "Chci sjednat pohřeb" (home next-steps, second row): the firm's own place photo (the
+ * real office from getHomeImagery(), shown whole, never upscaled), the arranging step's title and
+ * summary, its guided list ("Postupně", plain sentences), then the live office status, the
+ * address and the office phone. No hours table here: "Kde vás najdeme" holds it.
+ */
+import type { CollectionEntry } from "astro:content";
+import OfficeStatus from "@core/components/OfficeStatus.astro";
+import PhoneLink from "@core/components/PhoneLink.astro";
+import PlaceholderMark from "@core/components/PlaceholderMark.astro";
+import { guideSentence } from "@core/content/guidance-flow.ts";
+import type { HomeImagery, SiteContext } from "@core/content/view-models.ts";
+import { formatAddressInline } from "@core/format/address.ts";
+import { formatPhone } from "@core/format/phone.ts";
+import PocketPhoto from "./PocketPhoto.astro";
+import { mainLocation, primaryOfficePhone } from "../lib/site.ts";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  site: SiteContext;
+  entry: CollectionEntry<"guidance">;
+  imagery: HomeImagery;
+}
+
+const { site, entry, imagery } = Astro.props;
+const data = entry.data;
+const location = mainLocation(site);
+const office = primaryOfficePhone(site);
+const listId = `domu-${entry.id}-postupne`;
+---
+{imagery.place !== null ? <PocketPhoto image={imagery.place.image} maxWidth={560} class="visit-photo" /> : null}
+<p class="label">{ui.visitLabel}</p>
+<h2 class="answer-heading">{data.title}</h2>
+<PlaceholderMark active={data.placeholder} as="div">
+  <p>{data.summary}</p>
+  {
+    data.checklist.length > 0 ? (
+      <>
+        <p id={listId} class="steps-label visit-list-label">{ui.guideListLabel}</p>
+        <ol class="steps-list" aria-labelledby={listId}>
+          {data.checklist.map((item) => (
+            <li>{guideSentence(item)}</li>
+          ))}
+        </ol>
+      </>
+    ) : null
+  }
+</PlaceholderMark>
+<div class="visit-office">
+  <OfficeStatus site={site} />
+  <p>
+    {formatAddressInline(location.address)}
+    <br />
+    <PhoneLink number={office.number}>
+      {office.label}{" "}<span class="nowrap">{formatPhone(office.number).display}</span>
+    </PhoneLink>
+  </p>
+</div>
+<p><a href={`/jak-postupovat/#${entry.id}`} class="go">{ui.fullGuide}</a></p>
+
+<style>
+  :global(.visit-photo) {
+    margin-bottom: 1.25rem;
+  }
+
+  .visit-list-label {
+    margin-top: 1.125rem;
+    margin-bottom: 0.625rem;
+  }
+
+  .visit-office {
+    margin-top: 1.25rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--card-rule);
+  }
+
+  .visit-office > * + * {
+    margin-top: 0.375rem;
+  }
+</style>

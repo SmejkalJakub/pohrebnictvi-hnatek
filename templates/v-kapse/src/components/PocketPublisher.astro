@@ -1,0 +1,51 @@
+---
+/**
+ * Neutral nonstop form for notice pages (research L1, ⚖ pending a lawyer's view): one muted
+ * sentence naming the publisher, and an ink "Telefon nonstop <number>" link. No rules, no accent,
+ * no service word on screen. The accessible name still comes from core (label + number).
+ */
+import EmergencyPhoneLink from "@core/components/EmergencyPhoneLink.astro";
+import type { SiteContext } from "@core/content/view-models.ts";
+import { formatPhone } from "@core/format/phone.ts";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  site: SiteContext;
+}
+
+const { site } = Astro.props;
+const phone = formatPhone(site.emergency.phone);
+---
+<p class="publisher" data-neutral-emergency>
+  {ui.neutralPublisher(site.company.brandName)}{" "}
+  {
+    site.emergency.enabled ? (
+      <EmergencyPhoneLink emergency={site.emergency} variant="custom" class="publisher-link">
+        {ui.neutralPhone}{" "}<span class="nowrap">{phone.display}</span>
+      </EmergencyPhoneLink>
+    ) : null
+  }
+</p>
+
+<style>
+  .publisher {
+    padding: 0.25rem var(--gutter) 0;
+    color: var(--muted);
+    font-family: var(--sans);
+    font-size: 1.125rem;
+    font-weight: 500;
+    line-height: 1.5;
+  }
+
+  .publisher :global(.publisher-link) {
+    display: inline-block;
+    padding-block: 0.625rem;
+    color: var(--ink);
+  }
+
+  @media (min-width: 64rem) {
+    .publisher {
+      padding-top: 0.5rem;
+    }
+  }
+</style>

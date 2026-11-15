@@ -45,6 +45,7 @@ const CLIENTS: { id: string; template: string; optional: string[]; singletons: s
   { id: "hnatek-e", template: "krok-za-krokem", optional: [], singletons: [] },
   { id: "hnatek-f", template: "zpravodaj", optional: [], singletons: [] },
   { id: "hnatek-g", template: "lide-a-misto", optional: [], singletons: ["places"] },
+  { id: "hnatek-h", template: "v-kapse", optional: [], singletons: [] },
 ];
 
 const SITE_ID = "7b0c6a52-1f39-4c55-9a7e-2d1f0b8f4e11";

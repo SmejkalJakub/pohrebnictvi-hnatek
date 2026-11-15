@@ -1,0 +1,123 @@
+---
+/**
+ * Answer "Květiny a rakve" (home catalogue-links): pictures, not a list (design-differentiation
+ * §1.4). The first real flower photo leads, the first real coffin photo beside it, both square,
+ * each a link with its name under it; product shots are shown whole on the panel's ground. A
+ * catalogue without a real photo is a plain link instead.
+ */
+import { Image } from "astro:assets";
+import type { HomeImagery, NavItem } from "@core/content/view-models.ts";
+import { resolveImage } from "@core/media/resolve.ts";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  imagery: HomeImagery;
+  flowersNav: NavItem | null;
+  coffinsNav: NavItem | null;
+}
+
+const { imagery, flowersNav, coffinsNav } = Astro.props;
+
+interface Tile {
+  href: string;
+  label: string;
+  photo: ReturnType<typeof resolveImage> | null;
+  whole: boolean;
+}
+
+/** Responsive widths up to the file width (never upscaled). */
+function widthsFor(photo: ReturnType<typeof resolveImage>): number[] {
+  const fileWidth = photo.src.width;
+  const widths = [240, 360, 480].filter((width) => width < fileWidth);
+  widths.push(Math.min(fileWidth, 560));
+  return widths;
+}
+
+const tiles: Tile[] = [];
+if (flowersNav !== null) {
+  let photo = null;
+  if (imagery.flower !== null) {
+    photo = resolveImage(imagery.flower.image);
+  }
+  tiles.push({ href: flowersNav.href, label: flowersNav.label, photo, whole: false });
+}
+if (coffinsNav !== null) {
+  let photo = null;
+  if (imagery.coffin !== null) {
+    photo = resolveImage(imagery.coffin.image);
+  }
+  tiles.push({ href: coffinsNav.href, label: coffinsNav.label, photo, whole: true });
+}
+---
+<p class="label">{ui.goodsLabel}</p>
+<h2 class="answer-heading echo">{ui.rowGoods}</h2>
+<ul class="goods" role="list">
+  {
+    tiles.map((tile) => (
+      <li>
+        <a href={tile.href} class="goods-link">
+          {tile.photo !== null ? (
+            <Image
+              src={tile.photo.src}
+              alt={tile.photo.alt}
+              widths={widthsFor(tile.photo)}
+              sizes="(min-width: 64rem) 16rem, 45vw"
+              loading="lazy"
+              decoding="async"
+              class:list={["goods-img", { whole: tile.whole }]}
+            />
+          ) : null}
+          <span class="goods-name">{tile.label}</span>
+        </a>
+      </li>
+    ))
+  }
+</ul>
+
+<style>
+  .goods {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+    margin-top: 1rem;
+    padding: 0;
+    list-style: none;
+  }
+
+  .goods-link {
+    display: block;
+    color: var(--ink);
+    text-decoration: none;
+  }
+
+  .goods-link:hover .goods-name {
+    text-decoration-thickness: 2px;
+  }
+
+  .goods-img {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+    border-radius: 0.75rem;
+    background: var(--photo);
+    transition: opacity 160ms ease;
+  }
+
+  .goods-img.whole {
+    object-fit: contain;
+    background: var(--ground);
+  }
+
+  .goods-link:hover .goods-img {
+    opacity: 0.88;
+  }
+
+  .goods-name {
+    display: inline-block;
+    padding-block: 0.5rem;
+    color: var(--primary);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.18em;
+  }
+</style>

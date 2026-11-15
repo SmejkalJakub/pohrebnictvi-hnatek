@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<title>V kapse – domů</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&amp;family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#0B3D2C;text-underline-offset:0.18em;text-decoration-thickness:1px}
+a:hover{color:#14261E;text-decoration-thickness:2px}
+button{font:inherit}
+</style>
+</helmet>
+<div style="background: #F4F1EA; color: #14261E; font-family: 'Source Serif 4', Georgia, serif; font-size: 18px; line-height: 1.6; min-height: 2200px;">
+
+  <header style="max-width: 1160px; margin: 0 auto; padding: 20px 32px; display: flex; flex-wrap: wrap; align-items: center; gap: 12px 32px;">
+    <a href="#" style="display: flex; align-items: center; gap: 12px; text-decoration: none; color: #0B3D2C; margin-right: auto;">
+      <img src="/_blob/fcae724294ae390ec72ea79875cbef8f" alt="" style="width: 40px; height: 41px;">
+      <span style="display: flex; flex-direction: column; line-height: 1.1;">
+        <span style="font-size: 10px; letter-spacing: 0.28em;">POHŘEBNICTVÍ</span>
+        <span style="font-family: 'Playfair Display', serif; font-size: 24px; letter-spacing: 0.08em;">HNÁTEK</span>
+      </span>
+    </a>
+    <nav aria-label="Hlavní" style="display: flex; flex-wrap: wrap; gap: 6px 22px; font-size: 16px;">
+      <a href="#">Jak postupovat</a>
+      <a href="#">Služby</a>
+      <a href="#">Ceník</a>
+      <a href="#">Oznámení</a>
+      <a href="#">Kontakt</a>
+    </nav>
+  </header>
+
+  <main style="max-width: 1160px; margin: 0 auto; padding: 24px 32px 64px; display: flex; flex-wrap: wrap; gap: 32px; align-items: flex-start;">
+
+    <div style="flex: 1 1 420px; max-width: 460px;">
+      <p style="margin: 0; font-size: 15px; color: #4F5F57;">Pohřební služba ve Vyškově</p>
+      <h1 style="margin: 6px 0 0; font-family: 'Playfair Display', serif; font-weight: 500; font-size: 44px; line-height: 1.1; color: #0B3D2C;">S čím vám můžeme pomoct?</h1>
+      <p style="margin: 14px 0 0; color: #3A4A42;">Vyberte, co právě řešíte. Odpověď je krátká a na jednom místě.</p>
+
+      <div style="margin-top: 28px; display: flex; flex-direction: column; gap: 10px;">
+        <button type="button" aria-pressed="{{pressNow}}" onClick="{{pickNow}}" style="{{rowNow}}">
+          <span style="display: flex; flex-direction: column; text-align: left;"><span style="font-size: 20px; font-weight: 600;">Někdo právě zemřel</span><span style="font-size: 15px; opacity: 0.85;">Co udělat teď · nonstop linka</span></span>
+          <span aria-hidden="true" style="font-size: 22px;">›</span>
+        </button>
+        <button type="button" aria-pressed="{{pressSjednani}}" onClick="{{pickSjednani}}" style="{{rowSjednani}}">
+          <span style="display: flex; flex-direction: column; text-align: left;"><span style="font-size: 20px; font-weight: 600;">Chci sjednat pohřeb</span><span style="font-size: 15px; opacity: 0.85;">Kancelář, co si přinést</span></span>
+          <span aria-hidden="true" style="font-size: 22px;">›</span>
+        </button>
+        <button type="button" aria-pressed="{{pressRozlouceni}}" onClick="{{pickRozlouceni}}" style="{{rowRozlouceni}}">
+          <span style="display: flex; flex-direction: column; text-align: left;"><span style="font-size: 20px; font-weight: 600;">Jak se můžeme rozloučit</span><span style="font-size: 15px; opacity: 0.85;">Obřadní síň, kostel, bez obřadu</span></span>
+          <span aria-hidden="true" style="font-size: 22px;">›</span>
+        </button>
+        <button type="button" aria-pressed="{{pressCena}}" onClick="{{pickCena}}" style="{{rowCena}}">
+          <span style="display: flex; flex-direction: column; text-align: left;"><span style="font-size: 20px; font-weight: 600;">Kolik to bude stát</span><span style="font-size: 15px; opacity: 0.85;">Od 18 900 Kč · co je v ceně</span></span>
+          <span aria-hidden="true" style="font-size: 22px;">›</span>
+        </button>
+        <button type="button" aria-pressed="{{pressKvetiny}}" onClick="{{pickKvetiny}}" style="{{rowKvetiny}}">
+          <span style="display: flex; flex-direction: column; text-align: left;"><span style="font-size: 20px; font-weight: 600;">Květiny a rakve</span><span style="font-size: 15px; opacity: 0.85;">Z naší vazárny · MOSER LEGNO</span></span>
+          <span aria-hidden="true" style="font-size: 22px;">›</span>
+        </button>
+        <button type="button" aria-pressed="{{pressKontakt}}" onClick="{{pickKontakt}}" style="{{rowKontakt}}">
+          <span style="display: flex; flex-direction: column; text-align: left;"><span style="font-size: 20px; font-weight: 600;">Kde vás najdeme</span><span style="font-size: 15px; opacity: 0.85;">Dědická 38/22 · teď zavřeno</span></span>
+          <span aria-hidden="true" style="font-size: 22px;">›</span>
+        </button>
+      </div>
+
+      <p style="margin: 28px 0 0; font-size: 16px; color: #3A4A42;">Rodinná pohřební služba ve Vyškově, dnes ji vede vnučka zakladatele. <a href="#">O nás</a></p>
+    </div>
+
+    <section aria-live="polite" style="flex: 1 1 520px; min-width: 0; background: #FFFFFF; border-radius: 24px; padding: 36px 40px; border: 1px solid #E3DDCF;">
+
+      <sc-if value="{{showNow}}" hint-placeholder-val="{{ true }}">
+        <p style="margin: 0; font-size: 14px; letter-spacing: 0.14em; color: #7D6220;">TEĎ HNED</p>
+        <h2 style="margin: 8px 0 0; font-family: 'Playfair Display', serif; font-weight: 500; font-size: 34px; line-height: 1.15; color: #0B3D2C;">Nemusíte všechno vyřešit najednou.</h2>
+        <p style="margin: 12px 0 0;">Stačí tyto tři kroky. S ostatním vám pomůžeme.</p>
+        <ol style="margin: 20px 0 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 14px;">
+          <li style="display: flex; gap: 16px; align-items: baseline;"><span aria-hidden="true" style="flex: none; width: 32px; height: 32px; border-radius: 50%; background: #E6ECE6; display: inline-flex; align-items: center; justify-content: center; font-weight: 600; color: #0B3D2C;">1</span><span>Doma přivolejte lékaře na čísle 155 nebo 112. Vystaví List o prohlídce zemřelého. V nemocnici vás zařízení vyrozumí samo.</span></li>
+          <li style="display: flex; gap: 16px; align-items: baseline;"><span aria-hidden="true" style="flex: none; width: 32px; height: 32px; border-radius: 50%; background: #E6ECE6; display: inline-flex; align-items: center; justify-content: center; font-weight: 600; color: #0B3D2C;">2</span><span>Zavolejte nám a objednejte převoz. Jezdíme kdykoli, i o víkendech a svátcích.</span></li>
+          <li style="display: flex; gap: 16px; align-items: baseline;"><span aria-hidden="true" style="flex: none; width: 32px; height: 32px; border-radius: 50%; background: #E6ECE6; display: inline-flex; align-items: center; justify-content: center; font-weight: 600; color: #0B3D2C;">3</span><span>V následujících dnech spolu v kanceláři sjednáme pohřeb.</span></li>
+        </ol>
+        <a href="#" style="margin-top: 28px; display: flex; flex-direction: column; background: #0B3D2C; color: #F2EEE4; text-decoration: none; border-radius: 16px; padding: 20px 24px;">
+          <span style="font-size: 15px; color: #C9D3CC;">Nonstop převoz zesnulých</span>
+          <span style="font-family: 'Playfair Display', serif; font-size: 36px; line-height: 1.15;">+420 720 283 499</span>
+        </a>
+        <p style="margin: 18px 0 0; font-size: 16px;"><a href="#">Postup podle místa úmrtí</a></p>
+      </sc-if>
+
+      <sc-if value="{{showSjednani}}" hint-placeholder-val="{{ false }}">
+        <img src="/_blob/28a1dc73179b0cfdd211b84cbfc66ba6" alt="Budova kanceláře Pohřebnictví Hnátek s nápisem na průčelí" style="display: block; width: 100%; max-width: 560px; aspect-ratio: 16 / 9; object-fit: cover; border-radius: 14px;">
+        <h2 style="margin: 22px 0 0; font-family: 'Playfair Display', serif; font-weight: 500; font-size: 32px; color: #0B3D2C;">Sjednání pohřbu v kanceláři</h2>
+        <p style="margin: 10px 0 0;">Domluvíme spolu, jak má rozloučení vypadat, a vyřídíme doklady. Kancelář je nutné navštívit do 14:00 hodin.</p>
+        <p style="margin: 16px 0 4px; font-size: 14px; letter-spacing: 0.12em; color: #4F5F57;">S SEBOU</p>
+        <ol style="margin: 0; padding: 0 0 0 1.3em;">
+          <li>Občanský průkaz zemřelého.</li>
+          <li>Občanský průkaz objednavatele pohřbu.</li>
+          <li>Oblečení pro zemřelého (při úmrtí doma).</li>
+        </ol>
+        <p style="margin: 16px 0 0;">Dědická 38/22, Vyškov · Po–Pá 7:00–15:30 · <a href="#">+420 517 352 020</a></p>
+      </sc-if>
+
+      <sc-if value="{{showRozlouceni}}" hint-placeholder-val="{{ false }}">
+        <h2 style="margin: 0; font-family: 'Playfair Display', serif; font-weight: 500; font-size: 32px; color: #0B3D2C;">Jak se můžeme rozloučit</h2>
+        <div style="margin-top: 18px; display: flex; flex-direction: column; gap: 14px;">
+          <div style="background: #F4F1EA; border-radius: 14px; padding: 16px 20px;"><h3 style="margin: 0; font-size: 19px;">V obřadní síni</h3><p style="margin: 2px 0 0; font-size: 17px; color: #3A4A42;">S hudbou a civilním řečníkem, poté zpopelnění nebo uložení do hrobu.</p></div>
+          <div style="background: #F4F1EA; border-radius: 14px; padding: 16px 20px;"><h3 style="margin: 0; font-size: 19px;">V kostele</h3><p style="margin: 2px 0 0; font-size: 17px; color: #3A4A42;">V kostele nebo kapli s farářem, poté zpopelnění nebo uložení do hrobu.</p></div>
+          <div style="background: #F4F1EA; border-radius: 14px; padding: 16px 20px;"><h3 style="margin: 0; font-size: 19px;">Bez obřadu</h3><p style="margin: 2px 0 0; font-size: 17px; color: #3A4A42;">Zpopelnění bez účasti pozůstalých. Urnu si vyzvednete v naší kanceláři.</p></div>
+        </div>
+        <p style="margin: 16px 0 0;"><a href="#">Všechny služby</a></p>
+      </sc-if>
+
+      <sc-if value="{{showCena}}" hint-placeholder-val="{{ false }}">
+        <h2 style="margin: 0; font-family: 'Playfair Display', serif; font-weight: 500; font-size: 32px; color: #0B3D2C;">Kolik to bude stát</h2>
+        <p style="margin: 14px 0 0;">Pohřeb a rozloučení</p>
+        <p style="margin: 0; font-family: 'Playfair Display', serif; font-size: 44px; color: #0B3D2C;">od 18 900 Kč <span style="font-family: 'Source Serif 4', serif; font-size: 13px; letter-spacing: 0.08em; border: 1px dashed #7C6A2E; padding: 1px 6px; color: #5E4D16; vertical-align: middle;">UKÁZKA</span></p>
+        <p style="margin: 10px 0 0;">Převoz zesnulých 38 Kč za km. Co je v ceně a co si vybíráte zvlášť, najdete v ceníku.</p>
+        <p style="margin: 12px 0 0;"><a href="#">Ceník a co je v ceně</a></p>
+      </sc-if>
+
+      <sc-if value="{{showKvetiny}}" hint-placeholder-val="{{ false }}">
+        <h2 style="margin: 0; font-family: 'Playfair Display', serif; font-weight: 500; font-size: 32px; color: #0B3D2C;">Květiny a rakve</h2>
+        <div style="margin-top: 18px; display: flex; gap: 16px;">
+          <a href="#" style="flex: 1 1 0; min-width: 0; text-decoration: none;"><img src="/_blob/f4f23ca4c38b8862990d930361dfd76c" alt="Smuteční vazba v červených tónech" style="display: block; width: 100%; aspect-ratio: 1 / 1; object-fit: cover; border-radius: 14px;"><span style="display: block; margin-top: 8px; text-decoration: underline;">Smuteční květiny</span></a>
+          <a href="#" style="flex: 1 1 0; min-width: 0; text-decoration: none;"><img src="/_blob/3a9a4783e1e934470455ca2de7a4fa30" alt="Rakev PA 2097" style="display: block; width: 100%; aspect-ratio: 1 / 1; object-fit: contain; background: #FBFAF6; border-radius: 14px;"><span style="display: block; margin-top: 8px; text-decoration: underline;">Rakve</span></a>
+        </div>
+        <p style="margin: 14px 0 0; font-size: 17px; color: #3A4A42;">Vazby a kytice na rakev připravuje naše vazárna ve stejné budově jako kancelář. Rakve nabízíme od výrobce MOSER LEGNO a vybereme je spolu při sjednání.</p>
+      </sc-if>
+
+      <sc-if value="{{showKontakt}}" hint-placeholder-val="{{ false }}">
+        <h2 style="margin: 0; font-family: 'Playfair Display', serif; font-weight: 500; font-size: 32px; color: #0B3D2C;">Kde vás najdeme</h2>
+        <p style="margin: 12px 0 0; display: flex; gap: 10px; align-items: baseline; font-weight: 600;"><span aria-hidden="true" style="flex: none; width: 10px; height: 10px; border-radius: 50%; border: 2px solid #14261E; box-sizing: border-box;"></span>Kancelář je teď zavřená. Otevíráme v pondělí v 7:00.</p>
+        <p style="margin: 10px 0 0;">Dědická 38/22, 682 01 Vyškov · <a href="#">Mapa a příjezd</a></p>
+        <p style="margin: 6px 0 0;">Po–Pá 7:00–15:30, přestávka 12:00–12:30 · So–Ne zavřeno</p>
+        <p style="margin: 6px 0 0;">Kancelář <a href="#">+420 517 352 020</a> · Vazárna květin <a href="#">+420 731 175 835</a> · <a href="#">pohrebnictvi@vyskov.cz</a></p>
+      </sc-if>
+    </section>
+  </main>
+
+  <footer style="max-width: 1160px; margin: 0 auto; padding: 0 32px 36px; font-size: 15px; color: #3A4A42;">
+    <p style="margin: 0; padding-top: 18px; border-top: 1px solid #DDD6C6;">Nonstop <a href="#">+420 720 283 499</a> · POHŘEBNICTVÍ HNÁTEK s.r.o., Dědická 38/22, Vyškov · <a href="#">Ochrana osobních údajů</a></p>
+  </footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":2200}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { open: 'now' };
+  }
+  renderVals() {
+    const open = this.state.open;
+    const base = 'display: flex; justify-content: space-between; align-items: center; gap: 16px; width: 100%; min-height: 72px; padding: 14px 22px; border-radius: 16px; cursor: pointer; ';
+    const row = (id) => {
+      if (open === id) {
+        return base + 'background: #0B3D2C; color: #F2EEE4; border: 1px solid #0B3D2C;';
+      }
+      return base + 'background: #FFFFFF; color: #14261E; border: 1px solid #DDD6C6;';
+    };
+    const pick = (id) => () => this.setState({ open: id });
+    return {
+      rowNow: row('now'), rowSjednani: row('sjednani'), rowRozlouceni: row('rozlouceni'), rowCena: row('cena'), rowKvetiny: row('kvetiny'), rowKontakt: row('kontakt'),
+      pressNow: String(open === 'now'), pressSjednani: String(open === 'sjednani'), pressRozlouceni: String(open === 'rozlouceni'), pressCena: String(open === 'cena'), pressKvetiny: String(open === 'kvetiny'), pressKontakt: String(open === 'kontakt'),
+      showNow: open === 'now', showSjednani: open === 'sjednani', showRozlouceni: open === 'rozlouceni', showCena: open === 'cena', showKvetiny: open === 'kvetiny', showKontakt: open === 'kontakt',
+      pickNow: pick('now'), pickSjednani: pick('sjednani'), pickRozlouceni: pick('rozlouceni'), pickCena: pick('cena'), pickKvetiny: pick('kvetiny'), pickKontakt: pick('kontakt')
+    };
+  }
+}
+</script>
+</body>
+</html>

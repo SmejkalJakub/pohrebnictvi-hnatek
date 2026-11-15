@@ -1,0 +1,41 @@
+---
+/** Rakve: the opening, the body, the coffins as a grid of whole photos; handles zero entries. */
+import { getCoffins, getPage, getSiteContext } from "@core/content/load.ts";
+import PocketLayout from "../layouts/PocketLayout.astro";
+import PocketTitle from "../components/PocketTitle.astro";
+import PocketCatalogue from "../components/PocketCatalogue.astro";
+import PocketProse from "../components/PocketProse.astro";
+import { seoDescription, seoTitle } from "../lib/site.ts";
+import { ui } from "../i18n/cs.ts";
+
+const site = await getSiteContext();
+const page = await getPage("rakve");
+const coffins = await getCoffins();
+const items = coffins.map((entry) => {
+  const parts: string[] = [];
+  if (entry.data.material !== null) {
+    parts.push(entry.data.material);
+  }
+  if (entry.data.code !== null) {
+    parts.push(`${ui.code} ${entry.data.code}`);
+  }
+  let detail: string | null = null;
+  if (parts.length > 0) {
+    detail = parts.join(" · ");
+  }
+  return {
+    id: entry.id,
+    name: entry.data.name,
+    detail,
+    summary: entry.data.summary,
+    image: entry.data.image,
+    placeholder: entry.data.placeholder,
+  };
+});
+const Body = page.Content;
+---
+<PocketLayout site={site} title={seoTitle(page.data)} description={seoDescription(page.data)}>
+  <PocketTitle title={page.data.title} lead={page.data.lead} placeholder={page.data.placeholder} />
+  {page.hasBody ? <PocketProse idPrefix="rakve-text"><Body /></PocketProse> : null}
+  <PocketCatalogue site={site} items={items} />
+</PocketLayout>

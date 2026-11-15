@@ -1,0 +1,134 @@
+---
+/**
+ * Ceník (conditional route: no file while pricing is hidden). The opening (H1 and the VAT note
+ * in bold, research L9), the lead, validity, print instruction and the demo notice as a muted line, then
+ * the groups with inclusion lists (price as the heading, two lists), then "Jednotlivé
+ * položky" as a hairline table with the VAT note again. Prints on A4 with a letterhead and the legal identification (styles/print.css).
+ */
+import DemoPricingNotice from "@core/components/DemoPricingNotice.astro";
+import VatNote from "@core/components/VatNote.astro";
+import { getPage, getPricing, getSiteContext } from "@core/content/load.ts";
+import { formatAddressInline } from "@core/format/address.ts";
+import { formatCzechDate } from "@core/format/date.ts";
+import { formatPhone } from "@core/format/phone.ts";
+import PocketLayout from "../../layouts/PocketLayout.astro";
+import PocketTitle from "../../components/PocketTitle.astro";
+import PocketPriceGroup from "../../components/PocketPriceGroup.astro";
+import PocketPriceRows from "../../components/PocketPriceRows.astro";
+import PocketProse from "../../components/PocketProse.astro";
+import { mainLocation, primaryOfficePhone, seoDescription, seoTitle } from "../../lib/site.ts";
+import { ui } from "../../i18n/cs.ts";
+
+export async function getStaticPaths() {
+  const pricing = await getPricing();
+  if (pricing === null) {
+    return [];
+  }
+  return [{ params: { path: undefined } }];
+}
+
+const site = await getSiteContext();
+const page = await getPage("cenik");
+const pricing = await getPricing();
+if (pricing === null) {
+  throw new Error("unreachable: pricing hidden");
+}
+const packages = pricing.groups.filter((group) => group.includes.length > 0 || group.excludes.length > 0);
+const plain = pricing.groups.filter((group) => !packages.includes(group));
+const office = primaryOfficePhone(site);
+const printUrl = `${site.config.siteUrl.replace(/^https?:\/\//, "").replace(/\/$/, "")}/cenik/`;
+const Body = page.Content;
+---
+<PocketLayout
+  site={site}
+  title={seoTitle(page.data)}
+  description={seoDescription(page.data)}
+  noindex={pricing.hasDemo}
+>
+  <p class="print-only letterhead">
+    {formatAddressInline(mainLocation(site).address)} · {office.label}{" "}{formatPhone(office.number).display} ·{" "}
+    {site.emergency.label}{" "}{formatPhone(site.emergency.phone).display}
+  </p>
+  <PocketTitle title={page.data.title} placeholder={page.data.placeholder}>
+    <VatNote pricing={pricing} class="vat-strong" />
+  </PocketTitle>
+  <div class="panel intro">
+    <div class="panel-body">
+      {page.data.lead !== null ? <p class="intro-lead">{page.data.lead}</p> : null}
+      {pricing.generalNote !== null ? <p>{pricing.generalNote}</p> : null}
+      {pricing.validFrom !== null ? <p class="label">{ui.priceValidFrom(formatCzechDate(pricing.validFrom))}</p> : null}
+      <p class="label no-print">{ui.printHint}</p>
+      <DemoPricingNotice pricing={pricing} brandName={site.company.brandName} class="demo-line" />
+    </div>
+  </div>
+  {packages.map((group) => <PocketPriceGroup group={group} />)}
+  {
+    plain.length > 0 ? (
+      <section id="polozky" class="panel" aria-labelledby="polozky-nadpis">
+        <div class="panel-head">
+          <h2 id="polozky-nadpis" class="panel-heading">{ui.otherItems}</h2>
+        </div>
+        <div class="panel-body">
+          {plain.map((group) => (
+            <div id={group.id} class="plain-group">
+              <h3 class="label">{group.title}</h3>
+              {group.description !== null ? <p class="muted">{group.description}</p> : null}
+              <PocketPriceRows items={group.items} caption={group.title} />
+            </div>
+          ))}
+          <VatNote pricing={pricing} class="label vat-after" />
+        </div>
+      </section>
+    ) : null
+  }
+  {page.hasBody ? <PocketProse idPrefix="cenik-text"><Body /></PocketProse> : null}
+  <p class="print-only printed-from">{ui.printedFrom} {printUrl}</p>
+</PocketLayout>
+
+<style>
+  .intro p + :global(p) {
+    margin-top: 0.75rem;
+  }
+
+  .intro-lead {
+    font-size: 1.3125rem;
+  }
+
+  :global(.demo-line) {
+    color: var(--muted);
+    font-family: var(--sans);
+    font-size: 1.125rem;
+    font-weight: 500;
+    line-height: 1.5;
+  }
+
+  :global(.vat-strong) {
+    font-weight: 600;
+  }
+
+  .plain-group + .plain-group {
+    margin-top: 2rem;
+  }
+
+  .plain-group :global(.price-items) {
+    margin-top: 0.5rem;
+  }
+
+  :global(.vat-after) {
+    display: block;
+    margin-top: 1rem;
+  }
+
+  @media print {
+    .letterhead {
+      font-family: var(--sans);
+      font-size: 9pt;
+    }
+
+    .printed-from {
+      margin-top: 6mm;
+      font-family: var(--sans);
+      font-size: 9pt;
+    }
+  }
+</style>

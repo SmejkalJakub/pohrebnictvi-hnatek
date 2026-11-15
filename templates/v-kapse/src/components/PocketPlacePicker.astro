@@ -1,0 +1,95 @@
+---
+/**
+ * "Kde blízký člověk zemřel?" with the places as rounded chips, each a ≥ 44 px link to the
+ * filtered guide (/jak-postupovat/#situace-…, CSS :has(:target), no JavaScript). On the guide the
+ * picked chip fills with the primary and says "(vybráno)" (rules in PocketGuide's filter CSS) and
+ * the chips carry data-vt-anchor, so core animates the filter as a view transition. On the home's
+ * first answer the same chips lead into the guide.
+ */
+import { SITUATION_ANCHOR, type SpecificSituation } from "@core/content/guidance-flow.ts";
+import { situationWords, ui } from "../i18n/cs.ts";
+
+interface Props {
+  situations: SpecificSituation[];
+  /** "" on the guide itself, "/jak-postupovat/" elsewhere. */
+  base: string;
+  questionId: string;
+  /** Home: the question as a small line above the chips. */
+  inline?: boolean;
+  question?: string;
+}
+
+const { situations, base, questionId, inline = false, question = ui.pickerQuestion } = Astro.props;
+const onGuide = base === "";
+---
+<div class="pick" data-inline={inline ? "true" : "false"}>
+  <p id={questionId} class="pick-question">{question}</p>
+  <ul class="pick-words" role="list" aria-labelledby={questionId}>
+    {
+      situations.map((situation) => (
+        <li>
+          <a
+            href={`${base}#${SITUATION_ANCHOR[situation]}`}
+            class="pick-word"
+            data-place={situation}
+            data-vt-anchor={onGuide ? "" : undefined}
+          >
+            <span>{situationWords[situation]}</span>
+            <span class="pick-mark"> {ui.picked}</span>
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+</div>
+
+<style>
+  .pick-question {
+    font-weight: 600;
+    transition: color 200ms ease;
+  }
+
+  .pick[data-inline="true"] .pick-question {
+    color: var(--muted);
+    font-size: 0.9375rem;
+  }
+
+  .pick-words {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin: 0.5rem 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .pick-word {
+    display: inline-block;
+    min-height: 2.75rem;
+    padding: 0.625rem 1rem;
+    border: 1px solid var(--rule);
+    border-radius: 1.375rem;
+    background: var(--card);
+    color: var(--ink);
+    line-height: 1.4;
+    text-decoration: none;
+    transition:
+      background-color 200ms ease,
+      border-color 200ms ease,
+      color 200ms ease;
+  }
+
+  .pick-word:hover {
+    border-color: var(--primary);
+    color: var(--ink);
+    text-decoration: underline;
+  }
+
+  .pick-word:active {
+    opacity: 0.85;
+  }
+
+  .pick-mark {
+    display: none;
+  }
+</style>

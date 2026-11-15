@@ -1,0 +1,20 @@
+---
+/** Služby: one long page with anchors on the thread's axis (supports.serviceDetailPages: false). */
+import { getPage, getPricing, getServices, getSiteContext } from "@core/content/load.ts";
+import PocketLayout from "../../layouts/PocketLayout.astro";
+import PocketTitle from "../../components/PocketTitle.astro";
+import PocketServices from "../../components/PocketServices.astro";
+import PocketProse from "../../components/PocketProse.astro";
+import { seoDescription, seoTitle } from "../../lib/site.ts";
+
+const site = await getSiteContext();
+const page = await getPage("sluzby");
+const services = await getServices();
+const pricing = await getPricing();
+const Body = page.Content;
+---
+<PocketLayout site={site} title={seoTitle(page.data)} description={seoDescription(page.data)}>
+  <PocketTitle title={page.data.title} lead={page.data.lead} placeholder={page.data.placeholder} />
+  <PocketServices services={services} pricing={pricing} />
+  {page.hasBody ? <PocketProse idPrefix="sluzby-text"><Body /></PocketProse> : null}
+</PocketLayout>

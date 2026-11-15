@@ -1,0 +1,35 @@
+---
+/**
+ * O nás: the opening, the firm's own photo (heroImage, slot about.story) on the content column,
+ * then the body as axis passages. The same photo stands at the home thread's "Sjednání" stop.
+ */
+import { getPage, getSiteContext } from "@core/content/load.ts";
+import PocketLayout from "../layouts/PocketLayout.astro";
+import PocketTitle from "../components/PocketTitle.astro";
+import PocketProse from "../components/PocketProse.astro";
+import PocketPhoto from "../components/PocketPhoto.astro";
+import { seoDescription, seoTitle } from "../lib/site.ts";
+
+const site = await getSiteContext();
+const page = await getPage("o-nas");
+const Body = page.Content;
+---
+<PocketLayout site={site} title={seoTitle(page.data)} description={seoDescription(page.data)}>
+  <PocketTitle title={page.data.title} lead={page.data.lead} placeholder={page.data.placeholder} />
+  {
+    page.data.heroImage !== null ? (
+      <div class="panel">
+        <div class="panel-body">
+          <PocketPhoto image={page.data.heroImage} maxWidth={722} />
+        </div>
+      </div>
+    ) : null
+  }
+  {
+    page.hasBody ? (
+      <PocketProse idPrefix="o-nas-text">
+        <Body />
+      </PocketProse>
+    ) : null
+  }
+</PocketLayout>

@@ -1,0 +1,71 @@
+---
+/**
+ * Časté otázky (#caste-otazky): the heading, then per topic its name and one row per question;
+ * a row opens its Markdown answer in a panel under it. The questions of one topic form an
+ * exclusive group (opening one closes the other), with no JavaScript.
+ */
+import type { CollectionEntry } from "astro:content";
+import PlaceholderMark from "@core/components/PlaceholderMark.astro";
+import { render } from "@core/content/load.ts";
+import type { FaqGroup } from "@core/content/view-models.ts";
+import PocketRow from "./PocketRow.astro";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  groups: FaqGroup<CollectionEntry<"faq">>[];
+}
+
+const { groups } = Astro.props;
+const answers = new Map<string, Awaited<ReturnType<typeof render>>["Content"]>();
+for (const group of groups) {
+  for (const entry of group.entries) {
+    answers.set(entry.id, (await render(entry)).Content);
+  }
+}
+---
+<section id="caste-otazky" class="questions" aria-labelledby="caste-otazky-nadpis">
+  <h2 id="caste-otazky-nadpis" class="section-heading">{ui.faqHeading}</h2>
+  {
+    groups.map((group, index) => (
+      <div class="topic">
+        <h3 class="topic-title">{group.label}</h3>
+        <div class="topic-rows">
+          {group.entries.map((entry) => {
+            const Answer = answers.get(entry.id);
+            return (
+              <PocketRow id={`otazka-${entry.id}`} title={entry.data.question} group={`otazky-${index}`} class="question">
+                <PlaceholderMark active={entry.data.placeholder} as="div" class="panel prose question-answer">
+                  {Answer !== undefined ? <Answer /> : null}
+                </PlaceholderMark>
+              </PocketRow>
+            );
+          })}
+        </div>
+      </div>
+    ))
+  }
+</section>
+
+<style>
+  .questions {
+    padding-top: 1.25rem;
+    scroll-margin-top: var(--scroll-offset);
+  }
+
+  .topic {
+    margin-top: 1rem;
+  }
+
+  .topic-title {
+    margin-bottom: 0.5rem;
+    color: var(--muted);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .topic-rows > :global(.question + .question) {
+    margin-top: 0.5rem;
+  }
+</style>

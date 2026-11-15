@@ -1,0 +1,274 @@
+---
+/**
+ * Home: one question, large rows, the answer opens beside or under its row.
+ * <main> is the grid (layout `home`): the question (hero) first, then one <details> row per
+ * section in the client's order (next-steps gives two: "Někdo právě zemřel", open on arrival, and
+ * "Chci sjednat pohřeb"), then the family line. The rows share name="kapsa", so opening one
+ * closes the other with no JavaScript. From 64 rem the open answer stands in the white panel
+ * beside the rows (CSS grid; the <details> and their content box are display: contents there);
+ * on phones, and in browsers without ::details-content, it opens under its row. A row whose
+ * section has no content for this client is left out. Row titles are template copy; every fact
+ * in a hint or an answer comes from content.
+ */
+import {
+  getGuidance,
+  getHomeImagery,
+  getNoticeIndex,
+  getOptionalPage,
+  getPage,
+  getPeople,
+  getPricing,
+  getServices,
+  getSiteContext,
+} from "@core/content/load.ts";
+import type { HomepageSection } from "@core/content/config.ts";
+import OfficeStatus from "@core/components/OfficeStatus.astro";
+import PlaceholderMark from "@core/components/PlaceholderMark.astro";
+import { formatAddressLines } from "@core/format/address.ts";
+import PocketLayout from "../layouts/PocketLayout.astro";
+import PocketRow from "../components/PocketRow.astro";
+import PocketNow from "../components/PocketNow.astro";
+import PocketVisit from "../components/PocketVisit.astro";
+import PocketFarewell from "../components/PocketFarewell.astro";
+import PocketPrice from "../components/PocketPrice.astro";
+import PocketGoods from "../components/PocketGoods.astro";
+import PocketWhere from "../components/PocketWhere.astro";
+import PocketPeople from "../components/PocketPeople.astro";
+import { mainLocation, seoDescription } from "../lib/site.ts";
+import { ui } from "../i18n/cs.ts";
+
+const site = await getSiteContext();
+const home = await getPage("home");
+const about = await getPage("o-nas");
+const services = await getServices();
+const guidance = await getGuidance();
+const people = await getPeople();
+const pricing = await getPricing();
+const noticesPage = await getOptionalPage("oznameni");
+const noticeIndex = await getNoticeIndex();
+const imagery = await getHomeImagery();
+
+let featured = services.filter((service) => service.data.featured && service.data.category !== "transport");
+if (featured.length === 0) {
+  featured = services.filter((service) => service.data.category !== "transport");
+}
+featured = featured.slice(0, 4);
+const flowersNav = site.nav.find((item) => item.id === "kvetiny") ?? null;
+const coffinsNav = site.nav.find((item) => item.id === "rakve") ?? null;
+const firstHours = guidance.find((entry) => entry.data.phase === "first-hours") ?? guidance[0] ?? null;
+let visitStep = guidance.find((entry) => entry.data.phase === "first-days") ?? null;
+if (visitStep === null) {
+  visitStep = guidance.find((entry) => entry.data.phase === "arrangements") ?? null;
+}
+if (visitStep === firstHours) {
+  visitStep = null;
+}
+let storyText = about.data.lead;
+if (about.data.excerpt !== null) {
+  storyText = about.data.excerpt;
+}
+const [street] = formatAddressLines(mainLocation(site).address);
+let noticesTitle = "";
+if (noticesPage !== null) {
+  noticesTitle = noticesPage.data.title;
+}
+
+/** Sections after the hero that have something to show, in the client's order. */
+function renders(section: HomepageSection): boolean {
+  if (section === "hero") {
+    return false;
+  }
+  if (section === "next-steps") {
+    return firstHours !== null;
+  }
+  if (section === "services") {
+    return featured.length > 0;
+  }
+  if (section === "price-summary") {
+    return pricing !== null && pricing.groups.some((group) => group.items.length > 0);
+  }
+  if (section === "catalogue-links") {
+    return flowersNav !== null || coffinsNav !== null;
+  }
+  if (section === "people") {
+    return people.length > 0;
+  }
+  if (section === "notices") {
+    return site.config.features.notices && noticesPage !== null;
+  }
+  if (section === "documents" || section === "faq") {
+    return false;
+  }
+  return true;
+}
+
+const order = site.config.homepage.sections;
+const content = order.filter(renders);
+const rowSections = content.filter((section) => section !== "family-story");
+/* Grid rows before the answer's spare row: the question, each row (next-steps has two), the family line. */
+let rows = 1 + rowSections.length;
+if (rowSections.includes("next-steps") && visitStep !== null) {
+  rows += 1;
+}
+if (content.includes("family-story")) {
+  rows += 1;
+}
+/* The first row is open on arrival: "Někdo právě zemřel" when next-steps leads, else the first row. */
+const firstRow = rowSections[0] ?? null;
+const GROUP = "kapsa";
+---
+<PocketLayout
+  site={site}
+  title={home.data.metaTitle}
+  description={seoDescription(home.data)}
+  officeOnPage={content.includes("contact-summary")}
+  home={{ rows }}
+>
+  {
+    order.includes("hero") ? (
+      <div class="ask" data-hero>
+        <PlaceholderMark active={home.data.placeholder} as="div">
+          <p class="ask-kicker">{home.data.title}</p>
+        </PlaceholderMark>
+        <h1 class="ask-title">{ui.askTitle}</h1>
+        <p class="ask-intro">{ui.askIntro}</p>
+      </div>
+    ) : null
+  }
+  {
+    content.map((section) => (
+      <>
+        {section === "next-steps" && firstHours !== null ? (
+          <PocketRow
+            id="ted"
+            title={ui.rowNow}
+            hint={ui.rowNowHint}
+            group={GROUP}
+            open={firstRow === "next-steps"}
+            class="ask-row"
+            answerClass="ask-answer"
+            data-section="next-steps"
+          >
+            <PocketNow site={site} guidance={guidance} entry={firstHours} />
+          </PocketRow>
+        ) : null}
+        {section === "next-steps" && visitStep !== null ? (
+          <PocketRow
+            id="sjednani"
+            title={ui.rowVisit}
+            hint={ui.rowVisitHint}
+            group={GROUP}
+            class="ask-row"
+            answerClass="ask-answer"
+            data-section="next-steps"
+          >
+            <PocketVisit site={site} entry={visitStep} imagery={imagery} />
+          </PocketRow>
+        ) : null}
+        {section === "services" ? (
+          <PocketRow
+            id="rozlouceni"
+            title={ui.rowFarewell}
+            hint={ui.rowFarewellHint}
+            group={GROUP}
+            open={firstRow === "services"}
+            class="ask-row"
+            answerClass="ask-answer"
+            data-section="services"
+          >
+            <PocketFarewell services={featured} />
+          </PocketRow>
+        ) : null}
+        {section === "price-summary" && pricing !== null ? (
+          <PocketRow
+            id="cena"
+            title={ui.rowPrice}
+            hint={ui.rowPriceHint}
+            group={GROUP}
+            open={firstRow === "price-summary"}
+            class="ask-row"
+            answerClass="ask-answer"
+            data-section="price-summary"
+          >
+            <PocketPrice pricing={pricing} />
+          </PocketRow>
+        ) : null}
+        {section === "catalogue-links" ? (
+          <PocketRow
+            id="nabidka"
+            title={ui.rowGoods}
+            hint={ui.rowGoodsHint}
+            group={GROUP}
+            open={firstRow === "catalogue-links"}
+            class="ask-row"
+            answerClass="ask-answer"
+            data-section="catalogue-links"
+          >
+            <PocketGoods imagery={imagery} flowersNav={flowersNav} coffinsNav={coffinsNav} />
+          </PocketRow>
+        ) : null}
+        {section === "contact-summary" ? (
+          <PocketRow
+            id="kde"
+            title={ui.rowWhere}
+            hint={street}
+            group={GROUP}
+            open={firstRow === "contact-summary"}
+            class="ask-row"
+            answerClass="ask-answer"
+            data-section="contact-summary"
+          >
+            <OfficeStatus site={site} variant="short" as="span" class="hint-status" slot="hint" />
+            <PocketWhere site={site} />
+          </PocketRow>
+        ) : null}
+        {section === "people" ? (
+          <PocketRow
+            id="lide-domu"
+            title={ui.rowPeople}
+            hint={ui.rowPeopleHint}
+            group={GROUP}
+            open={firstRow === "people"}
+            class="ask-row"
+            answerClass="ask-answer"
+            data-section="people"
+          >
+            <p class="label">{ui.peopleLabel}</p>
+            <h2 class="answer-heading echo">{ui.rowPeople}</h2>
+            <PocketPeople people={people} />
+            <p><a href="/kontakt/#lide" class="go">{ui.officeLink}</a></p>
+          </PocketRow>
+        ) : null}
+        {section === "notices" ? (
+          <PocketRow
+            id="oznameni-domu"
+            title={noticesTitle}
+            hint={ui.rowNoticesHint}
+            group={GROUP}
+            open={firstRow === "notices"}
+            class="ask-row"
+            answerClass="ask-answer"
+            data-section="notices"
+          >
+            <p class="label">{ui.noticesLabel}</p>
+            <h2 class="answer-heading echo">{noticesTitle}</h2>
+            <p>{ui.noticesCount(noticeIndex.upcoming.length)}</p>
+            <p><a href="/oznameni/" class="go">{ui.allNotices}</a></p>
+          </PocketRow>
+        ) : null}
+        {section === "family-story" ? (
+          <div class="story" data-section="family-story">
+            <PlaceholderMark active={about.data.placeholder} as="div">
+              {site.company.tradition.publicWording !== null ? (
+                <p class="story-tradition">{site.company.tradition.publicWording}</p>
+              ) : null}
+              {storyText !== null ? <p>{storyText}</p> : null}
+            </PlaceholderMark>
+            <p><a href="/o-nas/" class="go">{ui.storyLink}</a></p>
+          </div>
+        ) : null}
+      </>
+    ))
+  }
+  <p class="ask-idle" data-interlude>{ui.askIdle}</p>
+</PocketLayout>

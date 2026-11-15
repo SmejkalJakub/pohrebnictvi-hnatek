@@ -1,0 +1,1016 @@
+/*
+ * Template H "V kapse": tokens, base, rows, panels, core hooks.
+ * Values from docs/designs/v-kapse/html/*.dc.html. Plain CSS (no Tailwind).
+ *
+ * The whole site is one app-like language: large rounded rows you open, and white rounded panels
+ * that hold the answer. On the home the rows stand on the left and the open answer in a panel on
+ * the right (desktop, from 64 rem); on phones the answer opens under its row. Inner pages use the
+ * same rows (guide steps, services, questions) and panels (contact, prices, catalogues).
+ * Guardrails: no shadows, no icons, no gradients, no full-bleed photos; the ground stays calm and
+ * the primary fills only the open row, the nonstop pill and the nonstop number.
+ */
+
+:root,
+:root[data-palette="mech"] {
+  --ground: #f4f2ec;
+  --ink: #18231e;
+  --muted: #475550;
+  --primary: #23463a;
+  --primary-fill: #23463a;
+  --on-primary: #f4f2ec;
+  --on-primary-soft: #cbd6cf;
+  --label: #6f5826;
+  --soft: #e3e9e3;
+  --deep: #1d3329;
+  --on-deep: #eef0ea;
+  --muted-on-deep: #c3cec7;
+  --rule: #ddd7ca;
+  --card: #ffffff;
+  --card-rule: #e3ded2;
+}
+
+:root[data-palette="bridlice"] {
+  --ground: #f3f4f2;
+  --ink: #1a2128;
+  --muted: #4a5560;
+  --primary: #2b4558;
+  --primary-fill: #2b4558;
+  --on-primary: #f3f4f2;
+  --on-primary-soft: #c9d3db;
+  --label: #6a5630;
+  --soft: #e2e7eb;
+  --deep: #1e2e3a;
+  --on-deep: #eef1f3;
+  --muted-on-deep: #c3ccd4;
+  --rule: #d7dadb;
+  --card: #ffffff;
+  --card-rule: #dfe2e2;
+}
+
+:root {
+  --display: "Figtree", system-ui, "Segoe UI", sans-serif;
+  --text: "Figtree", system-ui, "Segoe UI", sans-serif;
+  --display-weight: 600;
+  --gutter: 1rem;
+  --page: 72.5rem;
+  --ask: 28.75rem;
+  --row-radius: 1rem;
+  --panel-radius: 1rem;
+  --h1: 2rem;
+  --h2: 1.625rem;
+  --h3: 1.25rem;
+  /* Aliases for components that speak of the serif or sans by name. */
+  --serif: var(--text);
+  --sans: var(--text);
+  --photo: var(--soft);
+  color-scheme: light;
+}
+
+:root[data-font="spectral-figtree"] {
+  --display: "Spectral", Georgia, "Times New Roman", serif;
+  --display-weight: 500;
+}
+
+/*
+ * Client brand (template-contract §8a), read the V kapse way: the ground is the page, the primary
+ * fills the open row, the nonstop pill and the number box; the second brand colour (text role)
+ * writes the small capital labels only; the brand's second surface tints the step numerals and
+ * the blocks inside a panel; the panels stay near-white; the deep colour is the footer. The brand
+ * display font sets the H1, the panel headings and the big number; the body font everything else.
+ */
+:root[data-brand] {
+  --ground: var(--brand-ground);
+  --ink: var(--brand-ink);
+  --muted: var(--brand-muted);
+  --primary: var(--brand-primary-text);
+  --primary-fill: var(--brand-primary);
+  --on-primary: var(--brand-on-primary);
+  --on-primary-soft: color-mix(in oklab, var(--brand-on-primary) 78%, var(--brand-primary));
+  --label: var(--brand-secondary-text);
+  --soft: var(--brand-surface-2);
+  --deep: var(--brand-deep);
+  --on-deep: var(--brand-on-deep);
+  --muted-on-deep: var(--brand-muted-on-deep);
+  --rule: color-mix(in oklab, var(--brand-rule) 55%, var(--brand-ground));
+  --card: color-mix(in oklab, #ffffff 88%, var(--brand-ground));
+  --card-rule: color-mix(in oklab, var(--brand-rule) 40%, var(--brand-ground));
+}
+
+:root[data-brand-display] {
+  --display: var(--brand-font-display);
+  --display-weight: 500;
+}
+
+:root[data-brand-body] {
+  --text: var(--brand-font-body);
+}
+
+/* Shared core hooks: the copy-number toast and the scroll offset for in-page links. */
+:root {
+  --toast-bg: var(--deep);
+  --toast-fg: var(--on-deep);
+  --toast-radius: 0.75rem;
+  --scroll-offset: 1rem;
+}
+
+:root[data-emphasis="high"] {
+  --scroll-offset: 5.5rem;
+}
+
+@media (min-width: 48rem) {
+  :root {
+    --gutter: 2rem;
+    --h1: 2.5rem;
+    --h2: 1.875rem;
+  }
+}
+
+@media (min-width: 64rem) {
+  :root {
+    --h1: 2.75rem;
+    --h2: 2rem;
+    --panel-radius: 1.5rem;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * Base
+ * ------------------------------------------------------------------------- */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--text);
+  font-size: 1.0625rem;
+  font-weight: 400;
+  line-height: 1.55;
+  overflow-wrap: break-word;
+}
+
+@media (min-width: 64rem) {
+  body {
+    font-size: 1.125rem;
+    line-height: 1.6;
+  }
+}
+
+p,
+h1,
+h2,
+h3,
+h4,
+ul,
+ol,
+dl,
+dd,
+figure,
+blockquote {
+  margin: 0;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-weight: 600;
+  line-height: 1.2;
+  text-wrap: balance;
+}
+
+/* Headings and names in the display face, in the primary colour. */
+.page-title,
+.section-heading,
+.panel-heading,
+.answer-heading,
+.item-name,
+.person-name,
+.notice-name {
+  font-family: var(--display);
+  font-weight: var(--display-weight);
+  color: var(--primary);
+}
+
+img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+a {
+  color: var(--primary);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.18em;
+  transition:
+    color 160ms ease,
+    text-decoration-thickness 160ms ease;
+}
+
+/* Feedback, never the only cue: links are always underlined; hover thickens the line. */
+a:hover {
+  color: var(--ink);
+  text-decoration-thickness: 2px;
+}
+
+a:active {
+  opacity: 0.7;
+}
+
+:focus-visible {
+  outline: 3px solid var(--primary);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.nowrap {
+  white-space: nowrap;
+}
+
+.sans {
+  font-size: 1rem;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.lead {
+  color: var(--muted);
+  font-size: 1.0625rem;
+}
+
+@media (min-width: 64rem) {
+  .lead {
+    font-size: 1.1875rem;
+  }
+}
+
+/* Small letter-spaced capitals (text role of the second colour): answer and section labels. */
+.label {
+  color: var(--label);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  line-height: 1.4;
+  text-transform: uppercase;
+}
+
+.skip-link {
+  position: absolute;
+  top: -10rem;
+  left: 1rem;
+  z-index: 50;
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  background: var(--deep);
+  color: var(--on-deep);
+}
+
+.skip-link:focus {
+  top: 1rem;
+}
+
+/* Every text link that stands alone is a 44 px target (inline-block + padding, never flex). */
+.go {
+  display: inline-block;
+  padding-block: 0.6875rem;
+}
+
+/* ---------------------------------------------------------------------------
+ * Core safety components (styled through their data hooks only; text stays)
+ * ------------------------------------------------------------------------- */
+
+[data-prototype-banner] {
+  padding: 0.5rem var(--gutter);
+  background: #fff4c2;
+  color: #3d3000;
+  font-size: 0.9375rem;
+  line-height: 1.4;
+  text-align: center;
+}
+
+[data-demo-label] {
+  display: inline-block;
+  margin-inline-start: 0.375rem;
+  padding: 0 0.375rem;
+  border: 1px dashed #7c6a2e;
+  border-radius: 0.25rem;
+  color: #5e4d16;
+  font-family: var(--text);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  line-height: 1.5;
+  vertical-align: middle;
+}
+
+[data-placeholder="image"] > [data-placeholder-label] {
+  color: var(--muted);
+}
+
+/* Live office status: one sentence in full ink; the dot's form says the state (contract §6). */
+[data-office-status] {
+  display: flex;
+  gap: 0.625rem;
+  align-items: baseline;
+  color: var(--ink);
+  font-weight: 600;
+}
+
+[data-office-status-dot] {
+  flex: none;
+  width: 0.625rem;
+  height: 0.625rem;
+  border: 2px solid currentColor;
+  border-radius: 50%;
+}
+
+[data-office-status][data-state="open"] [data-office-status-dot] {
+  background: var(--primary-fill);
+  border-color: var(--primary-fill);
+}
+
+[data-office-status][data-state="break"] [data-office-status-dot] {
+  background: linear-gradient(90deg, currentColor 50%, transparent 50%);
+}
+
+[data-notice-qr] svg {
+  display: block;
+  width: 8rem;
+  height: auto;
+}
+
+/*
+ * Phone numbers never wrap; a label before the number may. Phone links are 44 px targets:
+ * inline-block + padding, never flex (a flex container drops the space between a label text run
+ * and the number span: QA test 9).
+ */
+[data-phone-link]:not(:has(span)) {
+  white-space: nowrap;
+}
+
+[data-phone-link] {
+  display: inline-block;
+  padding-block: 0.6875rem;
+}
+
+/* ---------------------------------------------------------------------------
+ * The page
+ * ------------------------------------------------------------------------- */
+
+.page-width {
+  width: 100%;
+  max-width: calc(var(--page) + 2 * var(--gutter));
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+/* Inner pages: one column of rows and panels, read like an app screen. */
+.stack {
+  width: 100%;
+  max-width: calc(48rem + 2 * var(--gutter));
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+.stack > * + * {
+  margin-top: 0.75rem;
+}
+
+@media (min-width: 64rem) {
+  .stack {
+    max-width: calc(52rem + 2 * var(--gutter));
+  }
+
+  .stack > * + * {
+    margin-top: 1rem;
+  }
+}
+
+/* The page title block (every inner page): small label, H1, lead. */
+.title-block {
+  padding-block: 1.25rem 1.5rem;
+}
+
+.page-title {
+  font-size: var(--h1);
+  line-height: 1.12;
+}
+
+.title-block > * + * {
+  margin-top: 0.625rem;
+}
+
+@media (min-width: 64rem) {
+  .title-block {
+    padding-block: 2rem 2rem;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * Panels: a white rounded surface holding one answer or one topic.
+ * ------------------------------------------------------------------------- */
+
+.panel {
+  padding: 1.125rem;
+  border: 1px solid var(--card-rule);
+  border-radius: var(--panel-radius);
+  background: var(--card);
+  scroll-margin-top: var(--scroll-offset);
+}
+
+@media (min-width: 48rem) {
+  .panel {
+    padding: 1.75rem 2rem;
+  }
+}
+
+.panel-head {
+  margin-bottom: 0.875rem;
+}
+
+.panel-head > * + * {
+  margin-top: 0.375rem;
+}
+
+.panel-heading,
+.section-heading {
+  font-size: var(--h2);
+  line-height: 1.15;
+}
+
+.panel-body > * + * {
+  margin-top: 0.75rem;
+}
+
+/* A panel without a heading (text before a body's first ##). */
+.panel:not(:has(.panel-head)) > .panel-body {
+  margin: 0;
+}
+
+/* Notice pages: the same panels, nothing else (research L1). */
+main[data-neutral="true"] .panel {
+  background: transparent;
+}
+
+/* A tinted block inside a panel (a ceremony, a price group line). */
+.tint {
+  padding: 0.875rem 1.125rem;
+  border-radius: 0.875rem;
+  background: var(--ground);
+}
+
+/* ---------------------------------------------------------------------------
+ * Rows: a <details> whose <summary> is a large rounded button (home, guide, services, FAQ).
+ * Closed: white with a hairline; open: filled with the primary. The answer opens in place in
+ * 200 ms (the signature, off under reduced motion); a row open when the page loads never moves.
+ * ------------------------------------------------------------------------- */
+
+.row > summary {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 4rem;
+  padding: 0.75rem 1.125rem;
+  border: 1px solid var(--rule);
+  border-radius: var(--row-radius);
+  background: var(--card);
+  color: var(--ink);
+  cursor: pointer;
+  list-style: none;
+  transition:
+    background-color 200ms ease,
+    color 200ms ease,
+    border-color 200ms ease;
+}
+
+.row > summary::-webkit-details-marker {
+  display: none;
+}
+
+.row > summary:hover {
+  border-color: var(--primary);
+}
+
+.row > summary:active {
+  opacity: 0.85;
+}
+
+.row[open] > summary {
+  border-color: var(--primary-fill);
+  background: var(--primary-fill);
+  color: var(--on-primary);
+}
+
+.row-words {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  text-align: left;
+}
+
+.row-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.row-hint {
+  color: var(--muted);
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+
+.row[open] .row-hint {
+  color: var(--on-primary-soft);
+}
+
+/* The chevron: drawn, aria-hidden, turns when the row opens. */
+.row-chevron {
+  flex: none;
+  width: 0.625rem;
+  height: 0.625rem;
+  margin-inline-end: 0.25rem;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  rotate: 45deg;
+  translate: 0 -0.125rem;
+  transition: rotate 200ms ease;
+}
+
+.row[open] .row-chevron {
+  rotate: 225deg;
+  translate: 0 0.125rem;
+}
+
+.row > .answer {
+  margin-top: 0.5rem;
+}
+
+/* An anchor at the top of an answer: fragment navigation to it opens its row; the margin keeps
+   the row's title in view. */
+.row-anchor {
+  display: block;
+  height: 0;
+  scroll-margin-top: 6rem;
+}
+
+.answer > .row-anchor + * {
+  margin-top: 0;
+}
+
+@media (min-width: 64rem) {
+  .row > summary {
+    min-height: 4.5rem;
+    padding: 0.875rem 1.375rem;
+  }
+
+  .row-title {
+    font-size: 1.25rem;
+  }
+
+  .row-hint {
+    font-size: 0.9375rem;
+  }
+}
+
+/* The signature: the answer settles in place when a row is opened by the reader. */
+@keyframes pocket-open {
+  from {
+    opacity: 0;
+    translate: 0 0.375rem;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .row[open]:not([data-start]) > .answer {
+    animation: pocket-open 200ms ease-out;
+  }
+
+  .row::details-content {
+    transition-duration: 200ms;
+  }
+}
+
+/* The guided list (design-differentiation §1.3): numbered sentences beside soft round numerals. */
+.steps-list {
+  display: grid;
+  gap: 0.75rem;
+  padding: 0;
+  list-style: none;
+  counter-reset: step;
+}
+
+.steps-list > li {
+  display: grid;
+  grid-template-columns: 2rem minmax(0, 1fr);
+  gap: 0.875rem;
+  align-items: baseline;
+  counter-increment: step;
+}
+
+.steps-list > li::before {
+  content: counter(step);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background: var(--soft);
+  color: var(--primary);
+  font-weight: 600;
+  line-height: 1;
+  translate: 0 0.5rem;
+}
+
+.steps-label {
+  color: var(--muted);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+/* The nonstop number box: the primary filled, the label small, the number large. */
+.call-box {
+  display: block;
+  padding: 1rem 1.25rem;
+  border-radius: 0.875rem;
+  background: var(--primary-fill);
+  color: var(--on-primary);
+  text-decoration: none;
+}
+
+.call-box:hover {
+  color: var(--on-primary);
+  text-decoration: underline;
+}
+
+.call-box:focus-visible {
+  outline-color: var(--primary-fill);
+}
+
+.call-box-label {
+  display: block;
+  color: var(--on-primary-soft);
+  font-size: 0.9375rem;
+}
+
+.call-box-number {
+  display: block;
+  font-family: var(--display);
+  font-size: 1.625rem;
+  font-weight: var(--display-weight);
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+@media (min-width: 64rem) {
+  .call-box {
+    padding: 1.25rem 1.5rem;
+    border-radius: 1rem;
+  }
+
+  .call-box-number {
+    font-size: 2.25rem;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * Prose (Markdown bodies)
+ * ------------------------------------------------------------------------- */
+
+.prose > * + * {
+  margin-top: 0.875rem;
+}
+
+.prose h3 {
+  margin-top: 1.5rem;
+  font-size: var(--h3);
+}
+
+.prose h3 + * {
+  margin-top: 0.5rem;
+}
+
+.prose ul,
+.prose ol {
+  padding-left: 1.25rem;
+}
+
+.prose li + li {
+  margin-top: 0.375rem;
+}
+
+.dot-list {
+  padding-left: 1.25rem;
+}
+
+.dot-list li + li {
+  margin-top: 0.375rem;
+}
+
+/* ---------------------------------------------------------------------------
+ * Hairline tables (prices, office hours)
+ * ------------------------------------------------------------------------- */
+
+.hairlines {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.hairlines th,
+.hairlines td {
+  padding: 0.625rem 0;
+  border-top: 1px solid var(--card-rule);
+  text-align: left;
+  vertical-align: baseline;
+}
+
+.hairlines th {
+  padding-right: 1rem;
+  font-weight: 400;
+}
+
+.hairlines .num {
+  font-weight: 600;
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* ---------------------------------------------------------------------------
+ * Small details (a step's longer text)
+ * ------------------------------------------------------------------------- */
+
+.more > summary {
+  display: inline-block;
+  padding-block: 0.6875rem;
+  color: var(--primary);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+}
+
+.print-only {
+  display: none;
+}
+
+/* ---------------------------------------------------------------------------
+ * The home: the question, the rows, the answer.
+ * Phone: one column, each answer a panel under its row. From 64 rem (where ::details-content
+ * exists): <main> is a two-column grid; the question, the summaries and the family line run down
+ * the left column, and the open answer spans every row of the right column as the white panel
+ * (the rows and their content boxes are display: contents, so summary and answer become grid
+ * items). The spare last row (1fr) takes the answer's extra height, so the rows never stretch.
+ * ------------------------------------------------------------------------- */
+
+.home-grid {
+  width: 100%;
+  max-width: calc(var(--page) + 2 * var(--gutter));
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+.ask {
+  padding-block: 0.75rem 1.25rem;
+}
+
+.ask-kicker {
+  color: var(--muted);
+  font-size: 0.9375rem;
+}
+
+.ask-title {
+  margin-top: 0.25rem;
+  color: var(--primary);
+  font-family: var(--display);
+  font-size: var(--h1);
+  font-weight: var(--display-weight);
+  line-height: 1.12;
+}
+
+.ask-intro {
+  margin-top: 0.5rem;
+  color: var(--muted);
+}
+
+.home-grid > .ask-row + .ask-row {
+  margin-top: 0.5rem;
+}
+
+.ask-answer {
+  padding: 1.125rem;
+  border: 1px solid var(--card-rule);
+  border-radius: var(--panel-radius);
+  background: var(--card);
+}
+
+.answer > * + * {
+  margin-top: 0.75rem;
+}
+
+.answer > .label + .answer-heading {
+  margin-top: 0.375rem;
+}
+
+.answer-heading {
+  font-size: var(--h2);
+  line-height: 1.15;
+}
+
+.answer-lead {
+  color: var(--muted);
+}
+
+/* On phones the row above already names the answer: its heading is for screen readers only. */
+.answer-heading.echo,
+.answer > .label:has(+ .answer-heading.echo) {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.answer-heading.echo + * {
+  margin-top: 0;
+}
+
+/* The street and the live status in the "Kde vás najdeme" hint; the status in full colour. */
+.hint-status[data-office-status] {
+  display: inline;
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.hint-status [data-office-status-dot] {
+  display: none;
+}
+
+.hint-status::before {
+  content: " · ";
+  font-weight: 400;
+}
+
+.row[open] .hint-status {
+  color: var(--on-primary);
+}
+
+.story {
+  margin-top: 1.5rem;
+  color: var(--muted);
+}
+
+.story-tradition {
+  color: var(--label);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.story > * + * {
+  margin-top: 0.25rem;
+}
+
+.ask-idle {
+  display: none;
+}
+
+@media (min-width: 64rem) {
+  .ask {
+    padding-block: 1.5rem 1.25rem;
+  }
+
+  .ask-intro {
+    margin-top: 0.875rem;
+  }
+
+  .ask-answer {
+    padding: 2.25rem 2.5rem;
+  }
+
+  @supports selector(::details-content) {
+    .home-grid {
+      display: grid;
+      grid-template-columns: minmax(0, var(--ask)) minmax(0, 1fr);
+      grid-template-rows: repeat(var(--rows), auto) 1fr;
+      column-gap: 2.5rem;
+      row-gap: 0.625rem;
+      align-items: start;
+    }
+
+    .home-grid > * {
+      grid-column: 1;
+    }
+
+    .home-grid > .ask-row,
+    .home-grid > .ask-row::details-content {
+      display: contents;
+    }
+
+    .home-grid > .ask-row > summary {
+      grid-column: 1;
+    }
+
+    .home-grid > .ask-row + .ask-row {
+      margin-top: 0;
+    }
+
+    .home-grid > .ask-row > .ask-answer {
+      grid-column: 2;
+      grid-row: 1 / -1;
+      margin: 0;
+      margin-top: 1.5rem;
+    }
+
+    .home-grid > .ask-row:not([open]) > .ask-answer {
+      display: none;
+    }
+
+    /* The chevron points to the panel. */
+    .home-grid .row-chevron,
+    .home-grid .row[open] .row-chevron {
+      rotate: -45deg;
+      translate: 0 0;
+    }
+
+    .home-grid .answer-heading.echo,
+    .home-grid .answer > .label:has(+ .answer-heading.echo) {
+      position: static;
+      width: auto;
+      height: auto;
+      margin: 0;
+      overflow: visible;
+      clip: auto;
+      white-space: normal;
+    }
+
+    .home-grid .answer > .label + .answer-heading.echo {
+      margin-top: 0.375rem;
+    }
+
+    .home-grid .answer-heading.echo + * {
+      margin-top: 0.75rem;
+    }
+
+    .home-grid > .story {
+      margin-top: 1rem;
+    }
+
+    /* Nothing open (the reader closed the open row): a quiet line where the panel stands. */
+    .home-grid > .ask-idle {
+      display: block;
+      grid-column: 2;
+      grid-row: 1 / -1;
+      margin-top: 1.5rem;
+      padding: 2.25rem 2.5rem;
+      border: 1px dashed var(--rule);
+      border-radius: var(--panel-radius);
+      color: var(--muted);
+    }
+
+    .home-grid:has(> .ask-row[open]) > .ask-idle {
+      display: none;
+    }
+  }
+}

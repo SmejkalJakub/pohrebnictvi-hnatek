@@ -1,0 +1,44 @@
+---
+/**
+ * Právní informace (research L10), built from Kontakt: passages Mimosoudní řešení sporů,
+ * Reklamace and Dokumenty (#dokumenty), then the page body. Emitted only when the page
+ * exists (the manifest declares pageFields["pravni-informace"]).
+ */
+import { getDocuments, getOptionalPage, getSiteContext } from "@core/content/load.ts";
+import PocketLayout from "../../layouts/PocketLayout.astro";
+import PocketTitle from "../../components/PocketTitle.astro";
+import PocketPanel from "../../components/PocketPanel.astro";
+import PocketAdr from "../../components/PocketAdr.astro";
+import PocketDocuments from "../../components/PocketDocuments.astro";
+import PocketProse from "../../components/PocketProse.astro";
+import { seoDescription, seoTitle } from "../../lib/site.ts";
+import { ui } from "../../i18n/cs.ts";
+
+export async function getStaticPaths() {
+  const page = await getOptionalPage("pravni-informace");
+  if (page === null) {
+    return [];
+  }
+  return [{ params: { path: undefined } }];
+}
+
+const site = await getSiteContext();
+const page = await getOptionalPage("pravni-informace");
+if (page === null) {
+  throw new Error("unreachable: page missing");
+}
+const documents = await getDocuments();
+const Body = page.Content;
+---
+<PocketLayout site={site} title={seoTitle(page.data)} description={seoDescription(page.data)}>
+  <PocketTitle title={page.data.title} lead={page.data.lead} placeholder={page.data.placeholder} />
+  {site.legal !== null ? <PocketAdr legal={site.legal} /> : null}
+  {
+    documents.length > 0 ? (
+      <PocketPanel id="dokumenty" heading={ui.documentsHeading}>
+        <PocketDocuments documents={documents} />
+      </PocketPanel>
+    ) : null
+  }
+  {page.hasBody ? <PocketProse idPrefix="pravni-text"><Body /></PocketProse> : null}
+</PocketLayout>

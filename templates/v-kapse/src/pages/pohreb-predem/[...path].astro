@@ -1,0 +1,37 @@
+---
+/**
+ * Pohřeb předem, built from the Pro účastníky page (only while features.prePlanning is on). The opening, then the body as
+ * axis passages.
+ */
+import { getOptionalPage, getSiteContext } from "@core/content/load.ts";
+import PocketLayout from "../../layouts/PocketLayout.astro";
+import PocketTitle from "../../components/PocketTitle.astro";
+import PocketProse from "../../components/PocketProse.astro";
+import { seoDescription, seoTitle } from "../../lib/site.ts";
+
+export async function getStaticPaths() {
+  const site = await getSiteContext();
+  const page = await getOptionalPage("pohreb-predem");
+  if (!site.config.features.prePlanning || page === null) {
+    return [];
+  }
+  return [{ params: { path: undefined } }];
+}
+
+const site = await getSiteContext();
+const page = await getOptionalPage("pohreb-predem");
+if (page === null) {
+  throw new Error("unreachable: page missing");
+}
+const Body = page.Content;
+---
+<PocketLayout site={site} title={seoTitle(page.data)} description={seoDescription(page.data)}>
+  <PocketTitle title={page.data.title} lead={page.data.lead} placeholder={page.data.placeholder} />
+  {
+    page.hasBody ? (
+      <PocketProse idPrefix="pohreb-predem-text">
+        <Body />
+      </PocketProse>
+    ) : null
+  }
+</PocketLayout>
