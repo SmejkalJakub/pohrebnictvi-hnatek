@@ -1,0 +1,30 @@
+---
+/**
+ * Převoz zesnulých on Kontakt: its own panel and emergency block (data-emergency-block), the
+ * service note and area, and the nonstop number in the primary box (as in the home's first
+ * answer). Office hours never share it.
+ */
+import EmergencyPhoneLink from "@core/components/EmergencyPhoneLink.astro";
+import type { EmergencyTransport } from "@core/content/schemas.ts";
+import { formatPhone } from "@core/format/phone.ts";
+import PocketPanel from "./PocketPanel.astro";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  emergency: EmergencyTransport;
+}
+
+const { emergency } = Astro.props;
+---
+{
+  emergency.enabled ? (
+    <PocketPanel id="prevoz" heading={ui.transportHeading} data-emergency-block>
+      {emergency.shortNote !== null ? <p>{emergency.shortNote}</p> : null}
+      {emergency.serviceArea !== null ? <p class="muted">{emergency.serviceArea}</p> : null}
+      <EmergencyPhoneLink emergency={emergency} variant="custom" class="call-box">
+        <span class="call-box-label">{emergency.label}</span>{" "}
+        <span class="call-box-number">{formatPhone(emergency.phone).display}</span>
+      </EmergencyPhoneLink>
+    </PocketPanel>
+  ) : null
+}

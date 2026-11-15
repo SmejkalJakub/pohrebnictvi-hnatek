@@ -1,0 +1,26 @@
+---
+/**
+ * The title of every inner page, like an app screen's top: an optional small label, the H1 in the
+ * display face and the lead, on the page's single column. The nonstop pill in the header stays
+ * the way to the number; no card, no photo here.
+ */
+import PlaceholderMark from "@core/components/PlaceholderMark.astro";
+
+interface Props {
+  title: string;
+  lead?: string | null;
+  placeholder?: boolean;
+  /** Small label above the H1 (e.g. "Chyba 404"). */
+  kicker?: string | null;
+}
+
+const { title, lead = null, placeholder = false, kicker = null } = Astro.props;
+---
+<div class="title-block">
+  {kicker !== null ? <p class="label">{kicker}</p> : null}
+  <PlaceholderMark active={placeholder} as="div">
+    <h1 class="page-title">{title}</h1>
+  </PlaceholderMark>
+  {lead !== null ? <p class="lead">{lead}</p> : null}
+  <slot />
+</div>

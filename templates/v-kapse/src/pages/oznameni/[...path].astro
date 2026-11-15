@@ -1,0 +1,100 @@
+---
+/**
+ * Oznámení a obřady (only while features.notices is on): the calm list and one page per live
+ * notice. Both use the neutral chrome (research L1, ⚖ pending a lawyer's view): the publisher
+ * sentence, reduced navigation, no thread, no sage band, no service links or prices.
+ */
+import { buildDate, getNoticeIndex, getNotices, getOptionalPage, getSiteContext, type LoadedNotice } from "@core/content/load.ts";
+import PocketLayout from "../../layouts/PocketLayout.astro";
+import PocketTitle from "../../components/PocketTitle.astro";
+import PocketNoticeList from "../../components/PocketNoticeList.astro";
+import PocketNoticeDetail from "../../components/PocketNoticeDetail.astro";
+import PocketProse from "../../components/PocketProse.astro";
+import { buildNoticeList } from "../../lib/notice-list.ts";
+import { ui } from "../../i18n/cs.ts";
+
+export async function getStaticPaths() {
+  const site = await getSiteContext();
+  const page = await getOptionalPage("oznameni");
+  if (!site.config.features.notices || page === null) {
+    return [];
+  }
+  const notices = await getNotices();
+  return [
+    { params: { path: undefined }, props: { notice: null } },
+    ...notices.map((notice) => ({ params: { path: notice.view.id }, props: { notice } })),
+  ];
+}
+
+interface Props {
+  notice: LoadedNotice | null;
+}
+
+const { notice } = Astro.props;
+const site = await getSiteContext();
+const page = await getOptionalPage("oznameni");
+const list = buildNoticeList(await getNoticeIndex(), buildDate);
+let title: string = ui.noticesUpcoming;
+let description: string = ui.noticesUpcoming;
+let lead: string | null = null;
+let hasBody = false;
+let placeholder = false;
+if (page !== null) {
+  title = page.data.title;
+  description = page.data.metaDescription ?? page.data.title;
+  lead = page.data.lead;
+  hasBody = page.hasBody;
+  placeholder = page.data.placeholder;
+}
+const Body = page?.Content;
+const isEmpty = list.upcoming.length === 0 && list.recent.length === 0;
+---
+{
+  notice === null ? (
+    <PocketLayout site={site} title={title} description={description} neutral>
+      <PocketTitle title={title} lead={lead} placeholder={placeholder} />
+      {isEmpty ? (
+        <div class="panel">
+          <p class="panel-body">{ui.noticesEmpty}</p>
+        </div>
+      ) : null}
+      {list.upcoming.length > 0 ? (
+        <section class="panel" aria-labelledby="nadchazejici">
+          <div class="panel-head">
+            <h2 id="nadchazejici" class="label part-label">{ui.noticesUpcoming}</h2>
+          </div>
+          <div class="panel-body">
+            <PocketNoticeList notices={list.upcoming} kind="upcoming" />
+          </div>
+        </section>
+      ) : null}
+      {list.recent.length > 0 ? (
+        <section class="panel" aria-labelledby="nedavna">
+          <div class="panel-head">
+            <h2 id="nedavna" class="label part-label">{ui.noticesRecent}</h2>
+          </div>
+          <div class="panel-body">
+            <PocketNoticeList notices={list.recent} kind="recent" />
+          </div>
+        </section>
+      ) : null}
+      {Body !== undefined && hasBody ? <PocketProse idPrefix="oznameni-text"><Body /></PocketProse> : null}
+    </PocketLayout>
+  ) : (
+    <PocketLayout
+      site={site}
+      title={notice.view.fullName}
+      description={`${title}: ${notice.view.fullName}`}
+      noindex={notice.view.noindex}
+      neutral
+    >
+      <PocketNoticeDetail notice={notice} />
+    </PocketLayout>
+  )
+}
+
+<style>
+  .part-label {
+    font-weight: 500;
+  }
+</style>

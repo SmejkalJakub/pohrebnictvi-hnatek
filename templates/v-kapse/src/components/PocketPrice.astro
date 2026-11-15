@@ -1,0 +1,96 @@
+---
+/**
+ * Answer "Kolik to bude stát" (home price-summary): the first price group's first item large
+ * (core has no group price, so the first item stands for it), up to two more groups as hairline
+ * rows, the VAT note and the link to Ceník. Every amount goes through <PriceValue>, so a demo
+ * price keeps its UKÁZKA mark.
+ */
+import PriceValue from "@core/components/PriceValue.astro";
+import VatNote from "@core/components/VatNote.astro";
+import type { PriceItem } from "@core/content/schemas.ts";
+import type { PricingView } from "@core/content/view-models.ts";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  pricing: PricingView;
+}
+
+const { pricing } = Astro.props;
+const lines: { title: string; item: PriceItem }[] = [];
+for (const group of pricing.groups) {
+  const item = group.items[0];
+  if (item !== undefined && lines.length < 3) {
+    lines.push({ title: group.title, item });
+  }
+}
+const [first, ...rest] = lines;
+---
+<p class="label">{ui.priceLabel}</p>
+<h2 class="answer-heading echo">{ui.rowPrice}</h2>
+{
+  first !== undefined ? (
+    <div class="price-lead">
+      <p class="price-lead-title">{first.title}</p>
+      <p class="price-lead-value">
+        <PriceValue item={first.item} />
+      </p>
+    </div>
+  ) : null
+}
+{
+  rest.length > 0 ? (
+    <table class="hairlines">
+      <caption class="visually-hidden">{ui.priceHeading}</caption>
+      <tbody>
+        {rest.map((line) => (
+          <tr>
+            <th scope="row">{line.title}</th>
+            <td class="num">
+              <PriceValue item={line.item} />
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  ) : null
+}
+<VatNote pricing={pricing} class="price-vat" />
+<p><a href="/cenik/" class="go">{ui.priceLink}</a></p>
+
+<style>
+  .price-lead {
+    margin-top: 0.75rem;
+  }
+
+  .price-lead-title {
+    color: var(--muted);
+  }
+
+  .price-lead-value {
+    color: var(--primary);
+    font-family: var(--display);
+    font-size: 2rem;
+    font-weight: var(--display-weight);
+    line-height: 1.2;
+  }
+
+  .price-lead-value :global([data-price-amount]) {
+    white-space: nowrap;
+  }
+
+  table {
+    margin-top: 1rem;
+  }
+
+  .price-vat {
+    margin-top: 0.75rem;
+    color: var(--muted);
+    font-size: 0.9375rem;
+  }
+
+  @media (min-width: 64rem) {
+    .price-lead-value {
+      font-size: 2.75rem;
+    }
+  }
+</style>

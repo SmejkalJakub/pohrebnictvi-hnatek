@@ -1,7 +1,7 @@
 /**
  * Scaffold a new client site (docs/client-workflow.md).
  *
- *   npm run client:new -- <id> --template <rodinna-tradice|dustojna-jednoduchost|nocni-linka|rodinny-rozhovor|krok-za-krokem|lide-a-misto>
+ *   npm run client:new -- <id> --template <rodinna-tradice|dustojna-jednoduchost|nocni-linka|rodinny-rozhovor|krok-za-krokem|lide-a-misto|v-kapse>
  *
  * Creates clients/<id>/ from the neutral fixture: content in src/content (every entry still
  * placeholder, every price demo), the placeholder graphics in src/assets/media, a site.config.ts
@@ -251,7 +251,7 @@ async function main(): Promise<void> {
   const id = args.positional[0];
   if (id === undefined) {
     throw new Error(
-      "Usage: npm run client:new -- <id> --template <rodinna-tradice|dustojna-jednoduchost|nocni-linka|rodinny-rozhovor|krok-za-krokem|lide-a-misto>",
+      "Usage: npm run client:new -- <id> --template <rodinna-tradice|dustojna-jednoduchost|nocni-linka|rodinny-rozhovor|krok-za-krokem|lide-a-misto|v-kapse>",
     );
   }
   const result = await scaffoldClient({ id, templateId: requiredFlag(args, "template") });

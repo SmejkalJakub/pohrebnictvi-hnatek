@@ -1,0 +1,53 @@
+---
+/**
+ * One row: a native <details> whose <summary> is the large rounded row (title, one-line hint,
+ * a drawn chevron) and whose answer opens in place. Rows that share a `name` form an exclusive
+ * accordion (opening one closes the other), with no JavaScript. On the home, from 64 rem, the
+ * grid places the open answer in the panel beside the rows (global.css, .home-grid); everywhere
+ * else it opens under its row.
+ * The row open when the page loads carries data-start, so only a row the reader opens plays the
+ * 200 ms settle (the signature; never on load, off under reduced motion).
+ * `hint` is plain text; the "hint" slot adds live parts after it (the office status).
+ */
+import type { HTMLAttributes } from "astro/types";
+
+interface Props extends HTMLAttributes<"details"> {
+  id: string;
+  title: string;
+  hint?: string | null;
+  /** Exclusive group: rows with the same name close each other. */
+  group?: string | null;
+  open?: boolean;
+  /** Extra class on the answer (the panel). */
+  answerClass?: string;
+}
+
+const { id, title, hint = null, group = null, open = false, answerClass, class: className, ...rest } = Astro.props;
+const hasHintSlot = Astro.slots.has("hint");
+---
+<details
+  id={id}
+  class:list={["row", className]}
+  name={group ?? undefined}
+  open={open}
+  data-start={open ? "" : undefined}
+  {...rest}
+>
+  <summary>
+    <span class="row-words">
+      <span class="row-title">{title}</span>
+      {
+        hint !== null || hasHintSlot ? (
+          <span class="row-hint">
+            {hint}
+            <slot name="hint" />
+          </span>
+        ) : null
+      }
+    </span>
+    <span class="row-chevron" aria-hidden="true"></span>
+  </summary>
+  <div class:list={["answer", answerClass]}>
+    <slot />
+  </div>
+</details>

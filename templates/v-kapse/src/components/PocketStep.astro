@@ -1,0 +1,201 @@
+---
+/**
+ * One step of the guide (Jak postupovat) as a row: the summary is the large rounded row with the
+ * step's numeral in a soft circle, its title and the phase as the hint; opening it shows, in a
+ * panel under the row, when it applies (only for steps tied to a place), the summary, the guided
+ * list ("Postupně": plain numbered sentences, never tick boxes: design-differentiation §1.3), the
+ * longer text behind "Podrobnosti", the contact prompt and "Potom: …" to the step that follows.
+ * The <li> carries the step's id, data-guide-step and data-situations (core's filter). "Potom"
+ * links carry the full path and data-guide-next: with JavaScript core moves to the next step
+ * without clearing the place filter, marks it data-guide-arrived and opens its row; without
+ * JavaScript it is a plain link (:target). Either way the arrived row gets a quiet tint.
+ * Steps are not an exclusive group: a reader may keep several open.
+ */
+import type { CollectionEntry } from "astro:content";
+import EmergencyPhoneLink from "@core/components/EmergencyPhoneLink.astro";
+import PhoneLink from "@core/components/PhoneLink.astro";
+import PlaceholderMark from "@core/components/PlaceholderMark.astro";
+import UnreviewedMark from "@core/components/UnreviewedMark.astro";
+import { render } from "@core/content/load.ts";
+import { guideSentence, situationsAttribute, type SpecificSituation } from "@core/content/guidance-flow.ts";
+import type { SiteContext } from "@core/content/view-models.ts";
+import { formatPhone } from "@core/format/phone.ts";
+import { primaryOfficePhone } from "../lib/site.ts";
+import { guidancePhaseLabels, situationWords, ui } from "../i18n/cs.ts";
+
+interface Props {
+  site: SiteContext;
+  entry: CollectionEntry<"guidance">;
+  /** The step that follows (nextGuidanceStep), or null for the last one. */
+  next: CollectionEntry<"guidance"> | null;
+  /** Path of the guide page, for the full-path "Potom" links. */
+  base: string;
+  /** 1-based position in the guide. */
+  index: number;
+  open?: boolean;
+}
+
+const { site, entry, next, base, index, open = false } = Astro.props;
+const data = entry.data;
+const office = primaryOfficePhone(site);
+const named = data.situations.filter((situation) => situation !== "any") as SpecificSituation[];
+let applies: string | null = null;
+if (named.length > 0) {
+  applies = `${ui.appliesWhen} ${named.map((situation) => situationWords[situation]).join(", ")}`;
+}
+const { Content } = await render(entry);
+const hasBody = (entry.body ?? "").trim() !== "";
+const listLabelId = `${entry.id}-postupne`;
+const titleId = `${entry.id}-nazev`;
+---
+<li id={entry.id} class="step" data-guide-step data-situations={situationsAttribute(entry)}>
+  <details class="row step-row" open={open} data-start={open ? "" : undefined}>
+    <summary>
+      <span class="step-num" aria-hidden="true">{index}</span>
+      <span class="row-words">
+        <span class="row-title" id={titleId}>{data.title}</span>
+        <span class="row-hint">{guidancePhaseLabels[data.phase]}</span>
+      </span>
+      <span class="row-chevron" aria-hidden="true"></span>
+    </summary>
+    <div class="answer step-answer" role="group" aria-labelledby={titleId}>
+      {applies !== null ? <p class="step-when">{applies}</p> : null}
+      <PlaceholderMark active={data.placeholder} as="div">
+        <p class="step-text">{data.summary}</p>
+        <UnreviewedMark reviewedAt={data.review.reviewedAt} />
+      </PlaceholderMark>
+      {
+        data.checklist.length > 0 ? (
+          <div class="step-guide">
+            <p id={listLabelId} class="steps-label">{ui.guideListLabel}</p>
+            <ol class="steps-list" aria-labelledby={listLabelId}>
+              {data.checklist.map((item) => (
+                <li>{guideSentence(item)}</li>
+              ))}
+            </ol>
+          </div>
+        ) : null
+      }
+      {
+        hasBody ? (
+          <details class="more">
+            <summary>{ui.readMore}</summary>
+            <div class="prose step-body">
+              <Content />
+            </div>
+          </details>
+        ) : null
+      }
+      {
+        data.contactPrompt === "emergency" && site.emergency.enabled ? (
+          <EmergencyPhoneLink emergency={site.emergency} variant="custom" class="call-box step-call">
+            <span class="call-box-label">{site.emergency.label}</span>{" "}
+            <span class="call-box-number">{formatPhone(site.emergency.phone).display}</span>
+          </EmergencyPhoneLink>
+        ) : null
+      }
+      {
+        data.contactPrompt === "office" ? (
+          <p class="step-office">
+            {ui.officePrompt}:{" "}
+            <PhoneLink number={office.number}>
+              {office.label}{" "}<span class="nowrap">{formatPhone(office.number).display}</span>
+            </PhoneLink>
+          </p>
+        ) : null
+      }
+      {
+        next !== null ? (
+          <p class="step-next">
+            <a href={`${base}#${next.id}`} class="go" data-guide-next>{ui.nextStep(next.data.title)}</a>
+          </p>
+        ) : null
+      }
+    </div>
+  </details>
+</li>
+
+<style>
+  .step {
+    scroll-margin-top: var(--scroll-offset);
+  }
+
+  .step + .step {
+    margin-top: 0.5rem;
+  }
+
+  .step-num {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 50%;
+    background: var(--soft);
+    color: var(--primary);
+    font-weight: 600;
+    transition:
+      background-color 200ms ease,
+      color 200ms ease;
+  }
+
+  .step-row[open] .step-num {
+    background: var(--on-primary);
+    color: var(--primary);
+  }
+
+  .step-row > summary .row-words {
+    flex: 1 1 auto;
+  }
+
+  .step-answer {
+    padding: 1.125rem;
+    border: 1px solid var(--card-rule);
+    border-radius: var(--panel-radius);
+    background: var(--card);
+  }
+
+  .step-when {
+    color: var(--label);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .step-guide > .steps-label {
+    margin-bottom: 0.625rem;
+  }
+
+  .step-body {
+    padding-top: 0.25rem;
+  }
+
+  /* The arrived step: a quiet tint on its row (≤ 200 ms, off under reduced motion). */
+  .step:target > .step-row > summary,
+  .step[data-guide-arrived] > .step-row > summary {
+    box-shadow: 0 0 0 3px var(--soft);
+  }
+
+  .step:target > .step-row > .answer,
+  .step[data-guide-arrived] > .step-row > .answer {
+    border-color: var(--primary);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .step-row > summary {
+      transition:
+        background-color 200ms ease,
+        color 200ms ease,
+        border-color 200ms ease,
+        box-shadow 200ms ease;
+    }
+  }
+
+  @media (min-width: 48rem) {
+    .step-answer {
+      padding: 1.5rem 1.75rem;
+    }
+  }
+</style>

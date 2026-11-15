@@ -1,0 +1,325 @@
+---
+/**
+ * Footer, every page: the deep colour (E1). Columns: the nonstop line again (its own section and
+ * heading, large number, the short note) · Úřední hodiny (its own section with
+ * [data-office-hours], never next to the nonstop link: contract §6) · Kontakt (address, map,
+ * office and flower phones, e-mail) · Dokumenty (when documents are on) · Právní informace. Then
+ * a hairline and the legal row (research L8, L10): legal name, sídlo, IČO, register entry and the
+ * ADR body, with the brand mark as a quiet signature when there is one (not on notices).
+ * Neutral form (notice pages): no nonstop column and no Dokumenty; hours, contact, legal stay.
+ * `officeOnPage` (home with contact-summary): hours and contact columns are left out.
+ */
+import { Image } from "astro:assets";
+import { brandMark } from "@core/brand/runtime.ts";
+import EmergencyPhoneLink from "@core/components/EmergencyPhoneLink.astro";
+import MissingFact from "@core/components/MissingFact.astro";
+import PhoneLink from "@core/components/PhoneLink.astro";
+import type { DocumentView, SiteContext } from "@core/content/view-models.ts";
+import { formatAddressInline, formatAddressLines } from "@core/format/address.ts";
+import { formatPhone } from "@core/format/phone.ts";
+import { flowerPhones, mainLocation, mapHref, officePhones } from "../lib/site.ts";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  site: SiteContext;
+  neutral: boolean;
+  documents: DocumentView[];
+  hasPrivacyPage: boolean;
+  officeOnPage?: boolean;
+}
+
+const { site, neutral, documents, hasPrivacyPage, officeOnPage = false } = Astro.props;
+const showOffice = neutral || !officeOnPage;
+let mark = null;
+if (!neutral) {
+  mark = brandMark();
+}
+const location = mainLocation(site);
+const [street, cityLine] = formatAddressLines(location.address);
+const map = mapHref(location);
+/* Notice pages list the office only: no flower orders next to a notice (research L1). */
+let phones = [...officePhones(site), ...flowerPhones(site)];
+if (neutral) {
+  phones = officePhones(site);
+}
+const emails = site.contact.emails;
+const ids = site.company.legalIds;
+const showEmergency = !neutral && site.emergency.enabled;
+const emergencyDisplay = formatPhone(site.emergency.phone).display;
+let emergencyNote: string = ui.emergencyAlways;
+if (site.emergency.shortNote !== null) {
+  emergencyNote = site.emergency.shortNote;
+}
+const showDocuments = !neutral && documents.length > 0;
+const showLegal = site.legalLink !== null || hasPrivacyPage;
+---
+<footer class="foot" data-neutral={neutral ? "true" : "false"}>
+  <div class="foot-inner">
+    <div class="foot-cols">
+      {
+        showEmergency ? (
+          <section class="foot-col foot-emergency" aria-labelledby="pata-nonstop" data-emergency-block>
+            <h2 id="pata-nonstop" class="foot-small">{site.emergency.label}</h2>
+            <EmergencyPhoneLink emergency={site.emergency} variant="custom" class="foot-nonstop">
+              <span class="nowrap">{emergencyDisplay}</span>
+            </EmergencyPhoneLink>
+            <p class="foot-small">{emergencyNote}</p>
+          </section>
+        ) : null
+      }
+      {
+        showOffice ? (
+          <section class="foot-col" aria-labelledby="pata-hodiny">
+            <h2 id="pata-hodiny" class="foot-heading">{ui.officeHoursHeading}</h2>
+            <div data-office-hours>
+              <ul class="foot-list">
+                {site.officeHoursRows.map((row) => (
+                  <li>
+                    <abbr title={row.daysLong}>{row.days}</abbr> <span class="nowrap">{row.text}</span>
+                    {row.note !== null ? <span class="foot-quiet">, {row.note}</span> : null}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </section>
+        ) : null
+      }
+      {
+        showOffice ? (
+          <section class="foot-col" aria-labelledby="pata-kontakt">
+            <h2 id="pata-kontakt" class="foot-heading">{ui.contactHeading}</h2>
+            <p>
+              {street}
+              <br />
+              {cityLine}
+            </p>
+            {map !== null ? (
+              <p>
+                <a href={map} class="go">{ui.mapLink}</a>
+              </p>
+            ) : null}
+            <ul class="foot-list">
+              {phones.map((phone) => (
+                <li>
+                  <PhoneLink number={phone.number}>
+                    {phone.label}{" "}<span class="nowrap">{formatPhone(phone.number).display}</span>
+                  </PhoneLink>
+                </li>
+              ))}
+              {emails.map((email) => (
+                <li>
+                  <a href={`mailto:${email.address}`} class="go">{email.address}</a>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ) : null
+      }
+      {
+        showDocuments ? (
+          <section class="foot-col" aria-labelledby="pata-dokumenty">
+            <h2 id="pata-dokumenty" class="foot-heading">{ui.documentsHeading}</h2>
+            <ul class="foot-list">
+              {documents.map((document) => (
+                <li>
+                  <a href={document.href} class="go">{document.title}</a> ({ui.pdf})
+                </li>
+              ))}
+            </ul>
+          </section>
+        ) : null
+      }
+      {
+        showLegal ? (
+          <section class="foot-col" aria-labelledby="pata-pravni">
+            <h2 id="pata-pravni" class="foot-heading">{ui.legalHeading}</h2>
+            <ul class="foot-list">
+              {site.legalLink !== null ? (
+                <li>
+                  <a href={site.legalLink.href} class="go">{site.legalLink.label}</a>
+                </li>
+              ) : null}
+              {hasPrivacyPage ? (
+                <li>
+                  <a href="/ochrana-osobnich-udaju/" class="go">{ui.privacy}</a>
+                </li>
+              ) : null}
+            </ul>
+          </section>
+        ) : null
+      }
+    </div>
+    <div class="foot-end">
+      {mark !== null ? <Image src={mark} alt="" width={48} densities={[1, 2]} class="foot-mark" /> : null}
+      <p class="foot-legal" data-legal-identification>
+        {site.company.legalName}
+        {", "}
+        {
+          ids.registeredOffice !== null ? (
+            formatAddressInline(ids.registeredOffice)
+          ) : (
+            <MissingFact name="sídlo společnosti" />
+          )
+        }
+        {". "}
+        {ui.ico}{" "}
+        {ids.ico !== null ? <span class="nowrap">{ids.ico}</span> : <MissingFact name="IČO" />}
+        {". "}
+        {ids.registryEntry !== null ? ids.registryEntry : <MissingFact name="zápis v obchodním rejstříku" />}
+        {". "}
+        {
+          site.legal !== null ? (
+            <>
+              {ui.adrFooter} {site.legal.adr.name},{" "}
+              <a href={site.legal.adr.url} class="go">{site.legal.adr.url.replace(/^https?:\/\//, "")}</a>
+            </>
+          ) : null
+        }
+      </p>
+    </div>
+  </div>
+</footer>
+
+<style>
+  .foot {
+    background: var(--deep);
+    color: var(--on-deep);
+    font-size: 1.0625rem;
+    line-height: 1.55;
+  }
+
+  .foot-inner {
+    width: 100%;
+    max-width: calc(var(--page) + 2 * var(--gutter));
+    margin-inline: auto;
+    padding: 2.5rem var(--gutter) 1.75rem;
+  }
+
+  /* Links come from core components too (PhoneLink, EmergencyPhoneLink): styled globally here. */
+  .foot :global(a),
+  .foot :global(a:hover) {
+    color: var(--on-deep);
+  }
+
+  .foot :global(:focus-visible) {
+    outline-color: var(--on-deep);
+  }
+
+  /* Core's markers sit on the deep ground here: light text, light dashes. */
+  .foot :global([data-missing-fact]) {
+    border-color: var(--muted-on-deep);
+    color: var(--on-deep);
+  }
+
+  .foot-cols {
+    display: grid;
+    gap: 2rem;
+  }
+
+  .foot-col > * + * {
+    margin-top: 0.375rem;
+  }
+
+  .foot-heading {
+    font-size: 1.0625rem;
+    font-weight: 600;
+    line-height: 1.4;
+  }
+
+  .foot-small {
+    color: var(--muted-on-deep);
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.45;
+  }
+
+  .foot :global(.foot-nonstop) {
+    display: inline-block;
+    padding-block: 0.25rem;
+    font-family: var(--display);
+    font-size: 1.75rem;
+    font-weight: var(--display-weight);
+    line-height: 1.25;
+    text-decoration: none;
+  }
+
+  .foot :global(.foot-nonstop):hover {
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+  }
+
+  .foot-emergency > .foot-small:last-child {
+    margin-top: 0.125rem;
+  }
+
+  .foot-list {
+    padding: 0;
+    list-style: none;
+  }
+
+  .foot-list abbr {
+    text-decoration: none;
+  }
+
+  .foot-quiet {
+    color: var(--muted-on-deep);
+  }
+
+  .foot-end {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+    margin-top: 2.25rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid color-mix(in oklab, var(--on-deep) 22%, var(--deep));
+  }
+
+  .foot :global(.foot-mark) {
+    flex: none;
+    width: 2.5rem;
+    height: auto;
+  }
+
+  .foot-legal {
+    color: var(--muted-on-deep);
+    font-size: 0.9375rem;
+    line-height: 1.5;
+  }
+
+  @media (min-width: 48rem) {
+    .foot-cols {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      column-gap: 2.5rem;
+    }
+  }
+
+  @media (min-width: 64rem) {
+    .foot {
+      font-size: 1.0625rem;
+    }
+
+    .foot-inner {
+      padding-top: 3.5rem;
+      padding-bottom: 2rem;
+    }
+
+    /* Flex, not grid: the nonstop column takes the room its large number needs. */
+    .foot-cols {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 2rem 2.5rem;
+    }
+
+    .foot-col {
+      flex: 1 1 10.5rem;
+    }
+
+    .foot-emergency {
+      flex: 1.3 1 15.5rem;
+    }
+
+    .foot :global(.foot-nonstop) {
+      font-size: 2rem;
+    }
+  }
+</style>

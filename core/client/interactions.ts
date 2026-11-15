@@ -290,8 +290,9 @@ function setupSmoothAnchors(): void {
 /**
  * The guide's situation filter lives in the URL fragment (:target), so a plain "#next-step" link
  * would clear it. With JavaScript, a[data-guide-next] scrolls to and focuses the next step instead
- * and marks it data-guide-arrived (templates style it together with :target). Without JavaScript
- * the link still works; the filter then shows all steps.
+ * and marks it data-guide-arrived (templates style it together with :target). A step drawn as a
+ * row that opens (the step is a <details>, or its first child is one) is opened on arrival.
+ * Without JavaScript the link still works; the filter then shows all steps.
  */
 function setupGuideNext(): void {
   document.addEventListener("click", (event) => {
@@ -312,6 +313,13 @@ function setupGuideNext(): void {
       previous.removeAttribute("data-guide-arrived");
     }
     step.setAttribute("data-guide-arrived", "");
+    let row: Element | null = step;
+    if (!(row instanceof HTMLDetailsElement)) {
+      row = step.firstElementChild;
+    }
+    if (row instanceof HTMLDetailsElement) {
+      row.open = true;
+    }
     if (!step.hasAttribute("tabindex")) {
       step.setAttribute("tabindex", "-1");
     }

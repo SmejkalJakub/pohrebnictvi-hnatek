@@ -1,0 +1,61 @@
+---
+/**
+ * A page's Markdown body as panels: each `##` heading opens a white rounded panel (the heading in
+ * the display face, its text under it); text before the first heading becomes a panel without a
+ * heading.
+ * The body is rendered by core (restricted Markdown); this component only splits the HTML.
+ */
+
+interface Props {
+  idPrefix: string;
+}
+
+const { idPrefix } = Astro.props;
+const html = (await Astro.slots.render("default")).trim();
+
+interface Part {
+  id: string;
+  headingHtml: string | null;
+  bodyHtml: string;
+}
+
+const parts: Part[] = [];
+const chunks = html.split(/(?=<h2[\s>])/);
+chunks.forEach((chunk, index) => {
+  const trimmed = chunk.trim();
+  if (trimmed === "") {
+    return;
+  }
+  const match = /^<h2([^>]*)>([\s\S]*?)<\/h2>/.exec(trimmed);
+  if (match === null) {
+    parts.push({ id: `${idPrefix}-${index}`, headingHtml: null, bodyHtml: trimmed });
+    return;
+  }
+  const attributes = match[1] ?? "";
+  const idMatch = /\sid="([^"]+)"/.exec(attributes);
+  let id = `${idPrefix}-${index}`;
+  if (idMatch !== null && idMatch[1] !== undefined) {
+    id = idMatch[1];
+  }
+  parts.push({ id, headingHtml: match[2] ?? "", bodyHtml: trimmed.slice(match[0].length).trim() });
+});
+
+---
+{
+  parts.map((part) => (
+    <>
+      {part.headingHtml !== null ? (
+        <section id={part.id} class="panel" aria-labelledby={`${part.id}-nadpis`}>
+          <div class="panel-head">
+            <h2 id={`${part.id}-nadpis`} class="panel-heading" set:html={part.headingHtml} />
+          </div>
+          <div class="panel-body prose" set:html={part.bodyHtml} />
+        </section>
+      ) : (
+        <div class="panel">
+          <div class="panel-body prose" set:html={part.bodyHtml} />
+        </div>
+      )}
+    </>
+  ))
+}

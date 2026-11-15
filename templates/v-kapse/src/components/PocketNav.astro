@@ -1,0 +1,125 @@
+---
+/**
+ * "Všechny stránky": every page as a large rounded row at the end of every page, before the
+ * footer. On phones this is the whole navigation (the header holds only the mark and the nonstop
+ * pill), so nothing is hidden behind a button; from 48 rem the rows sit two or three abreast and
+ * the header's short row of words covers the main pages as well. The current page is the filled
+ * row (aria-current).
+ */
+import type { PocketLink } from "../lib/site.ts";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  links: PocketLink[];
+}
+
+const { links } = Astro.props;
+---
+<nav aria-labelledby="stranky-nadpis" class="pages">
+  <div class="pages-inner">
+    <h2 id="stranky-nadpis" class="pages-heading">{ui.pagesNav}</h2>
+    <ul role="list" class="pages-list">
+      {
+        links.map((link) => (
+          <li>
+            <a href={link.href} class="page-row" aria-current={link.current ? "page" : undefined}>
+              {link.label}
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</nav>
+
+<style>
+  .pages {
+    padding-block: 0 2.5rem;
+  }
+
+  .pages-inner {
+    width: 100%;
+    max-width: calc(var(--page) + 2 * var(--gutter));
+    margin-inline: auto;
+    padding-inline: var(--gutter);
+  }
+
+  .pages-heading {
+    margin-bottom: 0.75rem;
+    color: var(--muted);
+    font-family: var(--text);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  .pages-list {
+    display: grid;
+    gap: 0.5rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .page-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 3.25rem;
+    padding: 0.625rem 1.125rem;
+    border: 1px solid var(--rule);
+    border-radius: 0.875rem;
+    background: var(--card);
+    color: var(--ink);
+    font-size: 1.0625rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition:
+      border-color 160ms ease,
+      background-color 160ms ease;
+  }
+
+  /* A drawn arrow, aria-hidden by being a pseudo-element. */
+  .page-row::after {
+    content: "";
+    flex: none;
+    width: 0.5rem;
+    height: 0.5rem;
+    border-top: 2px solid currentColor;
+    border-right: 2px solid currentColor;
+    rotate: 45deg;
+  }
+
+  .page-row:hover {
+    border-color: var(--primary);
+    color: var(--ink);
+    text-decoration: underline;
+  }
+
+  .page-row:active {
+    opacity: 0.85;
+  }
+
+  .page-row[aria-current="page"] {
+    border-color: var(--primary-fill);
+    background: var(--primary-fill);
+    color: var(--on-primary);
+  }
+
+  @media (min-width: 48rem) {
+    .pages-list {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (min-width: 64rem) {
+    .pages {
+      padding-bottom: 3.5rem;
+    }
+
+    .pages-list {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+</style>

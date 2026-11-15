@@ -1,0 +1,84 @@
+---
+/**
+ * Kontakt: the opening (H1 + one sentence), then passages Kancelář, Úřední
+ * hodiny (data-office-hours, its own heading), Telefony, Převoz zesnulých (its own emergency
+ * block), and Kdo vás přijme
+ * (#lide) when people are on.
+ */
+import OfficeStatus from "@core/components/OfficeStatus.astro";
+import PhoneLink from "@core/components/PhoneLink.astro";
+import { getPage, getPeople, getSiteContext } from "@core/content/load.ts";
+import { formatAddressLines } from "@core/format/address.ts";
+import { formatPhone } from "@core/format/phone.ts";
+import PocketLayout from "../layouts/PocketLayout.astro";
+import PocketTitle from "../components/PocketTitle.astro";
+import PocketPanel from "../components/PocketPanel.astro";
+import PocketHours from "../components/PocketHours.astro";
+import PocketTransport from "../components/PocketTransport.astro";
+import PocketPeople from "../components/PocketPeople.astro";
+import PocketProse from "../components/PocketProse.astro";
+import { mainLocation, mapHref, seoDescription, seoTitle } from "../lib/site.ts";
+import { ui } from "../i18n/cs.ts";
+
+const site = await getSiteContext();
+const page = await getPage("kontakt");
+const people = await getPeople();
+const location = mainLocation(site);
+const [street, cityLine] = formatAddressLines(location.address);
+const map = mapHref(location);
+const phones = site.contact.phones.map((phone) => ({ ...phone, display: formatPhone(phone.number).display }));
+const Body = page.Content;
+---
+<PocketLayout site={site} title={seoTitle(page.data)} description={seoDescription(page.data)}>
+  <PocketTitle title={page.data.title} lead={page.data.lead} placeholder={page.data.placeholder} />
+  <PocketPanel id="kancelar" heading={ui.officeHeading}>
+    <p>{location.name}<br />{street}<br />{cityLine}</p>
+    {map !== null ? <p class="sans"><a href={map} class="go">{ui.mapLink}</a></p> : null}
+    {location.accessNote !== null ? <p class="muted">{location.accessNote}</p> : null}
+  </PocketPanel>
+  <PocketPanel id="hodiny" heading={ui.hoursHeading} data-office-hours>
+    <OfficeStatus site={site} />
+    <PocketHours site={site} id="hodiny-tabulka" withHeading={false} />
+  </PocketPanel>
+  <PocketPanel id="telefony" heading={ui.phonesHeading}>
+    <ul class="lines" role="list">
+      {
+        phones.map((phone) => (
+          <li>
+            <PhoneLink number={phone.number}>
+              {phone.label}{" "}<span class="nowrap">{phone.display}</span>
+            </PhoneLink>
+          </li>
+        ))
+      }
+      {
+        site.contact.emails.map((email) => (
+          <li>
+            <a href={`mailto:${email.address}`} class="go mail">{email.address}</a>
+          </li>
+        ))
+      }
+    </ul>
+  </PocketPanel>
+  <PocketTransport emergency={site.emergency} />
+  {
+    people.length > 0 ? (
+      <PocketPanel id="lide" heading={ui.peopleHeading}>
+        <PocketPeople people={people} />
+      </PocketPanel>
+    ) : null
+  }
+  {page.hasBody ? <PocketProse idPrefix="kontakt-text"><Body /></PocketProse> : null}
+</PocketLayout>
+
+<style>
+  .lines {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .mail {
+    overflow-wrap: anywhere;
+  }
+</style>

@@ -1,0 +1,71 @@
+---
+/**
+ * Answer "Někdo právě zemřel" (home next-steps, the row open on arrival): "Teď hned", a calm
+ * heading and lead, the first step of the first hours as a guided list of plain sentences
+ * (design-differentiation §1.3, numerals in soft circles, never tick boxes), the nonstop number
+ * in the primary box, then the place picker into the filtered guide and the full guide link.
+ */
+import type { CollectionEntry } from "astro:content";
+import EmergencyPhoneLink from "@core/components/EmergencyPhoneLink.astro";
+import PlaceholderMark from "@core/components/PlaceholderMark.astro";
+import { chooserSituations, guideSentence } from "@core/content/guidance-flow.ts";
+import type { SiteContext } from "@core/content/view-models.ts";
+import { formatPhone } from "@core/format/phone.ts";
+import PocketPlacePicker from "./PocketPlacePicker.astro";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  site: SiteContext;
+  guidance: CollectionEntry<"guidance">[];
+  /** The step that stands for the first hours. */
+  entry: CollectionEntry<"guidance">;
+}
+
+const { site, guidance, entry } = Astro.props;
+const situations = chooserSituations(guidance);
+const data = entry.data;
+let sentences = data.checklist.map((item) => guideSentence(item));
+if (sentences.length === 0) {
+  sentences = [data.summary];
+}
+---
+<p class="label">{ui.nowLabel}</p>
+<h2 class="answer-heading">{ui.nowTitle}</h2>
+<p class="answer-lead">{ui.nowLead}</p>
+<PlaceholderMark active={data.placeholder} as="div">
+  <p class="now-step">{data.title}</p>
+  <ol class="steps-list now-steps" aria-label={data.title}>
+    {sentences.map((sentence) => <li>{sentence}</li>)}
+  </ol>
+</PlaceholderMark>
+{
+  site.emergency.enabled ? (
+    <EmergencyPhoneLink emergency={site.emergency} variant="custom" class="call-box now-call">
+      <span class="call-box-label">{site.emergency.label}</span>{" "}
+      <span class="call-box-number">{formatPhone(site.emergency.phone).display}</span>
+    </EmergencyPhoneLink>
+  ) : null
+}
+{
+  situations.length > 0 ? (
+    <PocketPlacePicker situations={situations} base="/jak-postupovat/" questionId="doma-kde" inline />
+  ) : null
+}
+<p><a href="/jak-postupovat/" class="go">{ui.fullGuide}</a></p>
+
+<style>
+  .now-step {
+    margin-top: 1.25rem;
+    color: var(--muted);
+    font-size: 0.9375rem;
+    font-weight: 600;
+  }
+
+  .now-steps {
+    margin-top: 0.75rem;
+  }
+
+  :global(.now-call) {
+    margin-top: 1.5rem;
+  }
+</style>

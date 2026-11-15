@@ -1,0 +1,241 @@
+---
+/**
+ * The header: the mark and wordmark (or the client's logo) on the left, the nonstop pill on the
+ * right on every width (one link, the primary filled, at least 44 px tall). From 48 rem a short
+ * row of words sits between them (guide, services, prices, notices, contact); on phones the
+ * header is only the mark and the pill, as drawn, and every page ends with all pages as rows.
+ * Notice pages leave the pill out (PocketPublisher carries the nonstop line there).
+ * With emergencyEmphasis "high" the header stays pinned to the top while scrolling.
+ */
+import { Image } from "astro:assets";
+import { brandMark } from "@core/brand/runtime.ts";
+import EmergencyPhoneLink from "@core/components/EmergencyPhoneLink.astro";
+import type { SiteContext } from "@core/content/view-models.ts";
+import { formatPhone } from "@core/format/phone.ts";
+import { resolveOptionalImage } from "@core/media/resolve.ts";
+import { shortNav, type PocketLink } from "../lib/site.ts";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  site: SiteContext;
+  links: PocketLink[];
+  neutral: boolean;
+}
+
+const { site, links, neutral } = Astro.props;
+const logo = resolveOptionalImage(site.company.logo);
+const mark = brandMark();
+/* The brand mark with the name as words is the drawn wordmark; a full logo stands alone only without a mark. */
+const showLogo = mark === null && logo !== null;
+const showPill = !neutral && site.emergency.enabled;
+const emergencyDisplay = formatPhone(site.emergency.phone).display;
+let words = shortNav(links);
+if (neutral) {
+  words = links;
+}
+---
+<header class="top" data-neutral={neutral ? "true" : "false"}>
+  <div class="top-inner">
+    <a href="/" class="wordmark" data-with-mark={mark !== null ? "" : undefined}>
+      {mark !== null ? <Image src={mark} alt="" width={40} densities={[1, 2]} class="mark" loading="eager" /> : null}
+      {
+        showLogo && logo !== null ? (
+          <Image src={logo.src} alt={site.company.brandName} height={44} densities={[1, 2]} class="logo" loading="eager" />
+        ) : (
+          <span class="wordmark-name">{site.company.brandName}</span>
+        )
+      }
+    </a>
+    <nav aria-label={ui.mainNav} class="top-nav">
+      <ul role="list">
+        {
+          words.map((link) => (
+            <li>
+              <a href={link.href} aria-current={link.current ? "page" : undefined}>
+                <span class="top-word">{link.label}</span>
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+    {
+      showPill ? (
+        <EmergencyPhoneLink emergency={site.emergency} variant="custom" class="pill">
+          <span class="pill-word">{ui.pillWord}</span>{" "}<span class="nowrap">{emergencyDisplay}</span>
+        </EmergencyPhoneLink>
+      ) : null
+    }
+  </div>
+</header>
+
+<style>
+  .top {
+    background: var(--ground);
+  }
+
+  :global(html[data-emphasis="high"]) .top {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .top-inner {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1rem;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    max-width: calc(var(--page) + 2 * var(--gutter));
+    margin-inline: auto;
+    padding: 0.75rem var(--gutter);
+  }
+
+  .wordmark {
+    display: inline-flex;
+    gap: 0.625rem;
+    align-items: center;
+    min-height: 2.75rem;
+    color: var(--primary);
+    text-decoration: none;
+  }
+
+  .wordmark:hover {
+    color: var(--primary);
+  }
+
+  .wordmark :global(.mark) {
+    width: 2rem;
+    height: auto;
+  }
+
+  .wordmark :global(.logo) {
+    width: auto;
+    height: 2.5rem;
+  }
+
+  .wordmark-name {
+    font-family: var(--display);
+    font-size: 1.125rem;
+    font-weight: var(--display-weight);
+    letter-spacing: 0.04em;
+    line-height: 1.15;
+  }
+
+  /*
+   * Narrow phones: with a brand mark, the mark alone stands for the name (kept for screen readers),
+   * so the mark and the pill share one line as drawn. Without a mark the name stays and the pill
+   * may wrap under it.
+   */
+  @media (max-width: 29.99rem) {
+    .wordmark[data-with-mark] .wordmark-name {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+      white-space: nowrap;
+    }
+  }
+
+  /* Phones: the header is the mark and the pill; the words are the rows at the page's end. */
+  .top-nav {
+    display: none;
+  }
+
+  .top-nav ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 1.375rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .top-nav a {
+    display: inline-block;
+    padding-block: 0.6875rem;
+    color: var(--ink);
+    font-size: 1rem;
+    text-decoration-color: var(--rule);
+  }
+
+  .top-nav a:hover {
+    color: var(--primary);
+    text-decoration-color: currentColor;
+  }
+
+  .top-nav a[aria-current="page"] {
+    color: var(--primary);
+    font-weight: 600;
+    text-decoration-color: currentColor;
+    text-decoration-thickness: 2px;
+  }
+
+  /* Block, never flex: a flex container drops the space before the number (QA test 9). */
+  .top :global(.pill) {
+    display: inline-block;
+    min-height: 2.75rem;
+    padding: 0.6875rem 1rem;
+    border-radius: 1.375rem;
+    background: var(--primary-fill);
+    color: var(--on-primary);
+    font-size: 0.9375rem;
+    font-weight: 600;
+    line-height: 1.4;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: opacity 160ms ease;
+  }
+
+  .top :global(.pill):hover {
+    color: var(--on-primary);
+    text-decoration: underline;
+  }
+
+  .top :global(.pill):active {
+    opacity: 0.85;
+  }
+
+  .top :global(.pill):focus-visible {
+    outline-color: var(--primary-fill);
+  }
+
+  .pill-word {
+    font-weight: 400;
+  }
+
+  /* Notice pages: the reduced words stay visible on every width (no pill there). */
+  .top[data-neutral="true"] .top-nav {
+    display: block;
+  }
+
+  @media (min-width: 48rem) {
+    .top-inner {
+      flex-wrap: nowrap;
+      gap: 1.5rem;
+      padding-block: 1.125rem;
+    }
+
+    .top-nav {
+      display: block;
+      margin-left: auto;
+    }
+
+    .wordmark :global(.mark) {
+      width: 2.5rem;
+    }
+
+    .wordmark-name {
+      font-size: 1.375rem;
+    }
+  }
+
+  @media (min-width: 64rem) {
+    .top :global(.pill) {
+      font-size: 1rem;
+    }
+  }
+</style>

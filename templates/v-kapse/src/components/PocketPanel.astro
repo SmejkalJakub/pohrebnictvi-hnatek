@@ -1,0 +1,31 @@
+---
+/**
+ * One topic as a white rounded panel: an optional small label, the heading in the display face,
+ * an optional "head" slot under it, then the text. Panels stack in the page's single column
+ * (global .stack), like the cards of an app screen; no shadows, a hairline only.
+ */
+import type { HTMLAttributes } from "astro/types";
+
+interface Props extends HTMLAttributes<"section"> {
+  id: string;
+  heading: string;
+  level?: 2 | 3;
+  /** Small label above the heading (price group name, phase). */
+  label?: string | null;
+  headingClass?: string;
+}
+
+const { id, heading, level = 2, label = null, headingClass, class: className, ...rest } = Astro.props;
+const Heading = `h${level}` as "h2" | "h3";
+const headingId = `${id}-nadpis`;
+---
+<section id={id} class:list={["panel", className]} aria-labelledby={headingId} {...rest}>
+  <div class="panel-head">
+    {label !== null ? <p class="label">{label}</p> : null}
+    <Heading id={headingId} class:list={["panel-heading", headingClass]}>{heading}</Heading>
+    <slot name="head" />
+  </div>
+  <div class="panel-body">
+    <slot />
+  </div>
+</section>

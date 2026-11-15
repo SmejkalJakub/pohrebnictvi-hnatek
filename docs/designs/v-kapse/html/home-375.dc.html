@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<title>V kapse – telefon</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&amp;family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#0B3D2C;text-underline-offset:0.18em}
+a:hover{color:#14261E}
+button{font:inherit}
+</style>
+</helmet>
+<div style="background: #F4F1EA; color: #14261E; font-family: 'Source Serif 4', Georgia, serif; font-size: 17px; line-height: 1.55; min-height: 2600px;">
+
+  <header style="padding: 14px 16px; display: flex; align-items: center; justify-content: space-between;">
+    <a href="#" style="display: flex; align-items: center; gap: 10px; text-decoration: none; color: #0B3D2C;">
+      <img src="/_blob/fcae724294ae390ec72ea79875cbef8f" alt="" style="width: 32px; height: 33px;">
+      <span style="font-family: 'Playfair Display', serif; font-size: 20px; letter-spacing: 0.08em;">HNÁTEK</span>
+    </a>
+    <a href="#" style="min-height: 44px; display: inline-flex; align-items: center; padding: 0 16px; background: #0B3D2C; color: #F2EEE4; border-radius: 22px; text-decoration: none; font-size: 15px;">Nonstop +420 720 283 499</a>
+  </header>
+
+  <main style="padding: 12px 16px 32px;">
+    <h1 style="margin: 0; font-family: 'Playfair Display', serif; font-weight: 500; font-size: 32px; line-height: 1.12; color: #0B3D2C;">S čím vám můžeme pomoct?</h1>
+    <p style="margin: 8px 0 0; font-size: 16px; color: #3A4A42;">Vyberte, co právě řešíte.</p>
+
+    <div style="margin-top: 20px; display: flex; flex-direction: column; gap: 8px;">
+      <button type="button" aria-expanded="{{expNow}}" onClick="{{pickNow}}" style="{{rowNow}}"><span style="display: flex; flex-direction: column; text-align: left;"><span style="font-size: 18px; font-weight: 600;">Někdo právě zemřel</span><span style="font-size: 14px; opacity: 0.85;">Co udělat teď</span></span><span aria-hidden="true">{{chevNow}}</span></button>
+      <sc-if value="{{showNow}}" hint-placeholder-val="{{ true }}">
+        <div style="background: #FFFFFF; border-radius: 16px; padding: 18px; border: 1px solid #E3DDCF;">
+          <ol style="margin: 0; padding: 0 0 0 1.3em; font-size: 16px;">
+            <li>Doma přivolejte lékaře na 155 nebo 112. V nemocnici vás zařízení vyrozumí samo.</li>
+            <li style="margin-top: 6px;">Zavolejte nám a objednejte převoz, kdykoli.</li>
+            <li style="margin-top: 6px;">V dalších dnech spolu sjednáme pohřeb.</li>
+          </ol>
+          <a href="#" style="margin-top: 14px; display: block; background: #0B3D2C; color: #F2EEE4; text-decoration: none; border-radius: 14px; padding: 14px 16px; font-family: 'Playfair Display', serif; font-size: 26px; text-align: center;">+420 720 283 499</a>
+        </div>
+      </sc-if>
+      <button type="button" aria-expanded="{{expSjednani}}" onClick="{{pickSjednani}}" style="{{rowSjednani}}"><span style="display: flex; flex-direction: column; text-align: left;"><span style="font-size: 18px; font-weight: 600;">Chci sjednat pohřeb</span><span style="font-size: 14px; opacity: 0.85;">Kancelář, co si přinést</span></span><span aria-hidden="true">{{chevSjednani}}</span></button>
+      <sc-if value="{{showSjednani}}" hint-placeholder-val="{{ false }}">
+        <div style="background: #FFFFFF; border-radius: 16px; padding: 10px 10px 18px; border: 1px solid #E3DDCF;">
+          <img src="/_blob/28a1dc73179b0cfdd211b84cbfc66ba6" alt="Budova kanceláře Pohřebnictví Hnátek s nápisem na průčelí" style="display: block; width: 100%; aspect-ratio: 16 / 9; object-fit: cover; border-radius: 12px;">
+          <p style="margin: 12px 8px 0; font-size: 16px;">Dědická 38/22, Vyškov. S sebou občanské průkazy a oblečení pro zemřelého.</p>
+        </div>
+      </sc-if>
+      <button type="button" aria-expanded="{{expRozlouceni}}" onClick="{{pickRozlouceni}}" style="{{rowRozlouceni}}"><span style="display: flex; flex-direction: column; text-align: left;"><span style="font-size: 18px; font-weight: 600;">Jak se můžeme rozloučit</span><span style="font-size: 14px; opacity: 0.85;">Síň, kostel, bez obřadu</span></span><span aria-hidden="true">{{chevRozlouceni}}</span></button>
+      <sc-if value="{{showRozlouceni}}" hint-placeholder-val="{{ false }}">
+        <div style="background: #FFFFFF; border-radius: 16px; padding: 18px; border: 1px solid #E3DDCF; font-size: 16px;">V obřadní síni s hudbou a řečníkem, v kostele s farářem, nebo zpopelnění bez obřadu. <a href="#">Všechny služby</a></div>
+      </sc-if>
+      <button type="button" aria-expanded="{{expCena}}" onClick="{{pickCena}}" style="{{rowCena}}"><span style="display: flex; flex-direction: column; text-align: left;"><span style="font-size: 18px; font-weight: 600;">Kolik to bude stát</span><span style="font-size: 14px; opacity: 0.85;">Od 18 900 Kč</span></span><span aria-hidden="true">{{chevCena}}</span></button>
+      <sc-if value="{{showCena}}" hint-placeholder-val="{{ false }}">
+        <div style="background: #FFFFFF; border-radius: 16px; padding: 18px; border: 1px solid #E3DDCF; font-size: 16px;">Pohřeb a rozloučení od 18 900 Kč <span style="font-size: 11px; border: 1px dashed #7C6A2E; padding: 1px 4px; color: #5E4D16;">UKÁZKA</span>. <a href="#">Ceník a co je v ceně</a></div>
+      </sc-if>
+      <button type="button" aria-expanded="{{expKvetiny}}" onClick="{{pickKvetiny}}" style="{{rowKvetiny}}"><span style="display: flex; flex-direction: column; text-align: left;"><span style="font-size: 18px; font-weight: 600;">Květiny a rakve</span><span style="font-size: 14px; opacity: 0.85;">Z naší vazárny</span></span><span aria-hidden="true">{{chevKvetiny}}</span></button>
+      <sc-if value="{{showKvetiny}}" hint-placeholder-val="{{ false }}">
+        <div style="background: #FFFFFF; border-radius: 16px; padding: 10px; border: 1px solid #E3DDCF; display: flex; gap: 10px;">
+          <img src="/_blob/f4f23ca4c38b8862990d930361dfd76c" alt="Smuteční vazba v červených tónech" style="flex: 1 1 0; min-width: 0; aspect-ratio: 1 / 1; object-fit: cover; border-radius: 12px;">
+          <img src="/_blob/3a9a4783e1e934470455ca2de7a4fa30" alt="Rakev PA 2097" style="flex: 1 1 0; min-width: 0; aspect-ratio: 1 / 1; object-fit: contain; background: #FBFAF6; border-radius: 12px;">
+        </div>
+      </sc-if>
+      <button type="button" aria-expanded="{{expKontakt}}" onClick="{{pickKontakt}}" style="{{rowKontakt}}"><span style="display: flex; flex-direction: column; text-align: left;"><span style="font-size: 18px; font-weight: 600;">Kde vás najdeme</span><span style="font-size: 14px; opacity: 0.85;">Teď zavřeno · v pondělí od 7:00</span></span><span aria-hidden="true">{{chevKontakt}}</span></button>
+      <sc-if value="{{showKontakt}}" hint-placeholder-val="{{ false }}">
+        <div style="background: #FFFFFF; border-radius: 16px; padding: 18px; border: 1px solid #E3DDCF; font-size: 16px;">Dědická 38/22, 682 01 Vyškov<br>Po–Pá 7:00–15:30, přestávka 12:00–12:30<br><a href="#">+420 517 352 020</a></div>
+      </sc-if>
+    </div>
+
+    <p style="margin: 24px 0 0; font-size: 15px; color: #3A4A42;">Rodinná pohřební služba ve Vyškově. <a href="#">O nás</a></p>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":375,"height":2600}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { open: 'now' };
+  }
+  renderVals() {
+    const open = this.state.open;
+    const base = 'display: flex; justify-content: space-between; align-items: center; gap: 12px; width: 100%; min-height: 64px; padding: 12px 18px; border-radius: 16px; cursor: pointer; font-size: 20px; ';
+    const row = (id) => {
+      if (open === id) {
+        return base + 'background: #0B3D2C; color: #F2EEE4; border: 1px solid #0B3D2C;';
+      }
+      return base + 'background: #FFFFFF; color: #14261E; border: 1px solid #DDD6C6;';
+    };
+    const chev = (id) => {
+      if (open === id) {
+        return '⌃';
+      }
+      return '⌄';
+    };
+    const pick = (id) => () => {
+      if (this.state.open === id) {
+        this.setState({ open: '' });
+      } else {
+        this.setState({ open: id });
+      }
+    };
+    const ids = ['now', 'sjednani', 'rozlouceni', 'cena', 'kvetiny', 'kontakt'];
+    const names = { now: 'Now', sjednani: 'Sjednani', rozlouceni: 'Rozlouceni', cena: 'Cena', kvetiny: 'Kvetiny', kontakt: 'Kontakt' };
+    const vals = {};
+    for (const id of ids) {
+      const n = names[id];
+      vals['row' + n] = row(id);
+      vals['chev' + n] = chev(id);
+      vals['show' + n] = open === id;
+      vals['exp' + n] = String(open === id);
+      vals['pick' + n] = pick(id);
+    }
+    return vals;
+  }
+}
+</script>
+</body>
+</html>

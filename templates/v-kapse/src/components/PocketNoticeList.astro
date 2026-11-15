@@ -1,0 +1,123 @@
+---
+/**
+ * The calm notice list: each notice reads as a sentence, not a card. The name as a 34 px serif
+ * link, the life dates muted, then the ceremony sentence; the family's photo, when given, as a
+ * small 3:4 portrait beside the name. Recent notices: the name and the dates only.
+ */
+import { Image } from "astro:assets";
+import PlaceholderMark from "@core/components/PlaceholderMark.astro";
+import type { NoticeView } from "@core/content/view-models.ts";
+import { resolveOptionalImage } from "@core/media/resolve.ts";
+import { ceremonySentence } from "../lib/notice-list.ts";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  notices: NoticeView[];
+  kind: "upcoming" | "recent";
+}
+
+const { notices, kind } = Astro.props;
+const rows = notices.map((view) => ({
+  view,
+  photo: kind === "upcoming" ? resolveOptionalImage(view.photo) : null,
+  sentence: ceremonySentence(view, {
+    sentence: ui.ceremonySentence,
+    without: ui.withoutCeremony,
+    private: ui.privateCeremony,
+  }),
+}));
+---
+<ul class="notices" role="list">
+  {
+    rows.map(({ view, photo, sentence }) => (
+      <li class="notice-row" data-notice={view.id} data-photo={photo !== null ? "true" : "false"}>
+        {photo !== null ? (
+          <Image
+            src={photo.src}
+            alt={photo.alt}
+            width={120}
+            height={160}
+            densities={[1, 2]}
+            class="notice-thumb"
+            style={`object-position: ${photo.objectPosition}`}
+          />
+        ) : null}
+        <PlaceholderMark active={view.placeholder} as="div" class="notice-text">
+          <p class="notice-name">
+            <a href={view.href}>{view.fullName}</a>
+          </p>
+          <p class="muted notice-dates">
+            {view.bornText !== null ? (
+              <>
+                <span aria-hidden="true">*</span>
+                <span class="visually-hidden">{ui.born}:</span> {view.bornText}{"   "}
+              </>
+            ) : null}
+            <span aria-hidden="true">†</span>
+            <span class="visually-hidden">{ui.diedLabel}:</span> {view.diedText}
+            {kind === "recent" && view.ceremony !== null && view.ceremony.dateText !== null ? (
+              <>
+                {" · "}
+                {ui.ceremonyHeld} {view.ceremony.dateText}
+              </>
+            ) : null}
+          </p>
+          {kind === "upcoming" && sentence !== null ? <p class="notice-sentence">{sentence}</p> : null}
+        </PlaceholderMark>
+      </li>
+    ))
+  }
+</ul>
+
+<style>
+  .notices {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .notice-row + .notice-row {
+    margin-top: 2.25rem;
+  }
+
+  .notice-row[data-photo="true"] {
+    display: grid;
+    grid-template-columns: 5rem minmax(0, 1fr);
+    column-gap: 1rem;
+    align-items: start;
+  }
+
+  .notices :global(.notice-thumb) {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 3 / 4;
+    object-fit: cover;
+    background: var(--photo);
+  }
+
+  .notice-name {
+    font-size: 1.75rem;
+    line-height: 1.2;
+  }
+
+  .notice-name a {
+    display: inline-block;
+    padding-block: 0.25rem;
+    text-underline-offset: 0.18em;
+  }
+
+  .notice-sentence {
+    margin-top: 0.5rem;
+  }
+
+  @media (min-width: 64rem) {
+    .notice-row[data-photo="true"] {
+      grid-template-columns: 7.5rem minmax(0, 1fr);
+      column-gap: 1.75rem;
+    }
+
+    .notice-name {
+      font-size: 2.125rem;
+    }
+  }
+</style>

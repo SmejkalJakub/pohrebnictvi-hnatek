@@ -1,0 +1,167 @@
+---
+/**
+ * Page shell for Template H "V kapse". Options become data attributes on <html>.
+ * The header carries the nonstop pill on every width (invariant 1); from 48 rem it also carries a
+ * short row of words (guide, services, prices, notices, contact). Every page ends with all pages
+ * as large rows ("Všechny stránky"), which is the whole navigation on phones: no menu button,
+ * no drawer, nothing hidden. Then the deep footer.
+ * `neutral` switches the chrome to its notice form (research L1): a muted publisher sentence with
+ * the nonstop link instead of the pill, reduced navigation, a footer without the nonstop block.
+ * `home` makes <main> the home's grid (the question, the rows and the answer panel).
+ */
+import "../styles/fonts.css";
+import "../styles/global.css";
+import "../styles/print.css";
+import SeoHead from "@core/components/SeoHead.astro";
+import StructuredData from "@core/components/StructuredData.astro";
+import PrototypeBanner from "@core/components/PrototypeBanner.astro";
+import BrandStyle from "@core/components/BrandStyle.astro";
+import SiteInteractions from "@core/components/SiteInteractions.astro";
+import { brandAttributes } from "@core/brand/runtime.ts";
+import type { ImageMetadata } from "astro";
+import { getDocuments, getFaq, getOptionalPage, getPeople, hasPage } from "@core/content/load.ts";
+import type { NavItem, SiteContext } from "@core/content/view-models.ts";
+import figtreeLatin from "@fontsource/figtree/files/figtree-latin-600-normal.woff2?url";
+import figtreeLatinExt from "@fontsource/figtree/files/figtree-latin-ext-600-normal.woff2?url";
+import spectralLatin from "@fontsource/spectral/files/spectral-latin-500-normal.woff2?url";
+import spectralLatinExt from "@fontsource/spectral/files/spectral-latin-ext-500-normal.woff2?url";
+import PocketHeader from "../components/PocketHeader.astro";
+import PocketNav from "../components/PocketNav.astro";
+import PocketFooter from "../components/PocketFooter.astro";
+import PocketPublisher from "../components/PocketPublisher.astro";
+import { resolveOptions } from "../lib/options.ts";
+import { fullNav, neutralNav } from "../lib/site.ts";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  site: SiteContext;
+  /** Page title without the brand name; null on the homepage. */
+  title?: string | null;
+  description: string;
+  noindex?: boolean;
+  image?: ImageMetadata | null;
+  /** Notice list and notice pages: publisher line, reduced nav, no pill, neutral footer. */
+  neutral?: boolean;
+  /** The page already shows the office (home with contact-summary): the footer leaves out its own office column. */
+  officeOnPage?: boolean;
+  /** Home: <main> becomes the question-and-answer grid; `rows` is the number of grid rows before the answer's spare row. */
+  home?: { rows: number } | null;
+}
+
+const {
+  site,
+  title = null,
+  description,
+  noindex = false,
+  image = null,
+  neutral = false,
+  officeOnPage = false,
+  home = null,
+} = Astro.props;
+const options = resolveOptions(site.config);
+const path = Astro.url.pathname;
+const brand = brandAttributes();
+
+async function optionalNavItem(id: "pro-ucastniky" | "pohreb-predem", enabled: boolean): Promise<NavItem | null> {
+  if (!enabled) {
+    return null;
+  }
+  const page = await getOptionalPage(id);
+  if (page === null) {
+    return null;
+  }
+  return { id, label: page.data.navLabel, href: `/${id}/` };
+}
+
+const documents = await getDocuments();
+const people = await getPeople();
+const faq = await getFaq();
+const hasLegalPage = await hasPage("pravni-informace");
+const hasPrivacyPage = await hasPage("ochrana-osobnich-udaju");
+let links = fullNav(site, path, {
+  guestInfo: await optionalNavItem("pro-ucastniky", site.config.features.guestInfo),
+  prePlanning: await optionalNavItem("pohreb-predem", site.config.features.prePlanning),
+  hasPeople: people.length > 0,
+  hasFaq: faq.length > 0,
+  hasDocuments: documents.length > 0 && hasLegalPage,
+});
+if (neutral) {
+  links = neutralNav(site, path);
+}
+
+/* Preload the display face: the H1, the largest paint, is text (Czech needs latin-ext). */
+let preloads: string[] = [figtreeLatin, figtreeLatinExt];
+if (options.fontPair === "spectral-figtree") {
+  preloads = [spectralLatin, spectralLatinExt];
+}
+if (brand["data-brand-display"] !== undefined) {
+  preloads = [];
+}
+let mainClass: string | undefined = undefined;
+let mainStyle: string | undefined = undefined;
+if (home !== null) {
+  mainClass = "home-grid";
+  mainStyle = `--rows: ${home.rows}`;
+}
+---
+<html
+  lang="cs"
+  class="no-js"
+  data-palette={options.palette}
+  data-font={options.fontPair}
+  data-emphasis={options.emergencyEmphasis}
+  {...brand}
+>
+  <head>
+    {preloads.map((href) => <link rel="preload" href={href} as="font" type="font/woff2" crossorigin />)}
+    <SeoHead site={site} title={title} description={description} noindex={noindex} image={image} />
+    <script is:inline>
+      document.documentElement.classList.replace("no-js", "js");
+    </script>
+    <StructuredData site={site} />
+    <BrandStyle />
+  </head>
+  <body>
+    <PrototypeBanner />
+    <a href="#obsah" class="skip-link">{ui.skipLink}</a>
+    <PocketHeader site={site} links={links} neutral={neutral} />
+    {neutral ? <PocketPublisher site={site} /> : null}
+    <main id="obsah" tabindex="-1" class={mainClass} style={mainStyle} data-neutral={neutral ? "true" : "false"}>
+      {
+        home !== null ? (
+          <slot />
+        ) : (
+          <div class="stack">
+            <slot />
+          </div>
+        )
+      }
+    </main>
+    <PocketNav links={links} />
+    <PocketFooter
+      site={site}
+      neutral={neutral}
+      documents={documents}
+      hasPrivacyPage={hasPrivacyPage}
+      officeOnPage={officeOnPage}
+    />
+    <SiteInteractions />
+  </body>
+</html>
+
+<style>
+  /* No display here: on the home, global .home-grid makes <main> the grid. */
+  main {
+    padding-bottom: 3rem;
+  }
+
+  main:focus {
+    outline: none;
+  }
+
+  @media (min-width: 64rem) {
+    main {
+      padding-bottom: 4.5rem;
+    }
+  }
+</style>

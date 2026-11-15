@@ -1,0 +1,79 @@
+---
+/**
+ * A price group with inclusion lists as one axis section: the group name as a small gold label
+ * and the first item's price as the large headline in the label column (core has no group price,
+ * so the first item stands for it, as approved for C); "V ceně je zahrnuto" and "Není zahrnuto"
+ * side by side in the content column, any further items in a hairline table under them.
+ * Prices only through <PriceValue>. Space between groups, never a box.
+ */
+import PriceValue from "@core/components/PriceValue.astro";
+import type { PriceGroup } from "@core/content/schemas.ts";
+import PocketPriceRows from "./PocketPriceRows.astro";
+import PocketInclusions from "./PocketInclusions.astro";
+
+interface Props {
+  group: PriceGroup;
+}
+
+const { group } = Astro.props;
+const headline = group.items[0] ?? null;
+const rest = group.items.slice(1);
+const headingId = `${group.id}-nadpis`;
+---
+<section id={group.id} class="panel price-group" aria-labelledby={headingId} data-price-group={group.id}>
+  <div class="panel-head">
+    <h2 id={headingId} class="label group-name">{group.title}</h2>
+    {
+      headline !== null ? (
+        <p class="headline">
+          {headline.label !== group.title ? <span class="headline-label">{headline.label}</span> : null}
+          <PriceValue item={headline} class="headline-price" />
+        </p>
+      ) : null
+    }
+    {headline !== null && headline.description !== null ? <p class="muted">{headline.description}</p> : null}
+    {group.description !== null ? <p class="muted group-desc">{group.description}</p> : null}
+  </div>
+  <div class="panel-body">
+    <PocketInclusions includes={group.includes} excludes={group.excludes} />
+    {rest.length > 0 ? <PocketPriceRows items={rest} caption={group.title} /> : null}
+  </div>
+</section>
+
+<style>
+  .group-name {
+    font-weight: 500;
+  }
+
+  .headline-label {
+    display: block;
+    margin-top: 0.25rem;
+    font-size: 1.375rem;
+    line-height: 1.3;
+  }
+
+  .price-group :global(.headline-price) {
+    display: block;
+    margin-top: 0.25rem;
+    font-size: var(--h2);
+    line-height: 1.1;
+  }
+
+  .price-group :global(.headline-price [data-price-amount]) {
+    white-space: nowrap;
+  }
+
+  .group-desc {
+    margin-top: 0.5rem;
+  }
+
+  .price-group :global(.price-items) {
+    margin-top: 1.5rem;
+  }
+
+  @media (min-width: 64rem) {
+    .price-group {
+      padding-top: var(--s4);
+    }
+  }
+</style>

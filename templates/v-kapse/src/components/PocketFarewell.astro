@@ -1,0 +1,65 @@
+---
+/**
+ * Answer "Jak se můžeme rozloučit" (home services): the featured ceremonies (at most four, never
+ * the whole list) as soft tinted blocks, each its name and one-line summary linking to its anchor
+ * on /sluzby/, then "Všechny služby".
+ */
+import type { CollectionEntry } from "astro:content";
+import PlaceholderMark from "@core/components/PlaceholderMark.astro";
+import { serviceHref } from "@core/content/view-models.ts";
+import { nbsp } from "../lib/site.ts";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  services: CollectionEntry<"services">[];
+}
+
+const { services } = Astro.props;
+---
+<p class="label">{ui.farewellLabel}</p>
+<h2 class="answer-heading echo">{ui.rowFarewell}</h2>
+<ul class="farewell-list" role="list">
+  {
+    services.map((service) => (
+      <li class="tint">
+        <PlaceholderMark active={service.data.placeholder} as="div">
+          <h3 class="farewell-title">
+            <a href={serviceHref(service.id, false)}>{service.data.title}</a>
+          </h3>
+          <p class="farewell-text">{nbsp(service.data.summary)}</p>
+        </PlaceholderMark>
+      </li>
+    ))
+  }
+</ul>
+<p><a href="/sluzby/" class="go">{ui.allServices}</a></p>
+
+<style>
+  .farewell-list {
+    display: grid;
+    gap: 0.75rem;
+    margin-top: 1rem;
+    padding: 0;
+    list-style: none;
+  }
+
+  .farewell-title {
+    font-size: 1.125rem;
+  }
+
+  .farewell-title a {
+    color: var(--ink);
+    text-decoration-color: var(--rule);
+  }
+
+  .farewell-title a:hover {
+    color: var(--primary);
+    text-decoration-color: currentColor;
+  }
+
+  .farewell-text {
+    margin-top: 0.25rem;
+    color: var(--muted);
+    font-size: 1rem;
+  }
+</style>

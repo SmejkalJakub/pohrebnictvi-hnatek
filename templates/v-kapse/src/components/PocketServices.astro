@@ -1,0 +1,87 @@
+---
+/**
+ * Služby as one page of rows (no detail pages): featured services first, then the others, each a
+ * row whose answer opens under it: the summary, the body, the inclusion lists of its price group
+ * and a "Co je v ceně" link to the price list; no prices on this page. The rows are one exclusive
+ * group; the first is open on arrival.
+ * /sluzby/#<id> (the home's links) targets an anchor at the top of the service's answer, so the
+ * browser opens that row by itself (details revealing on fragment navigation, no JavaScript); the
+ * anchor's scroll margin keeps the row's title in view above it.
+ */
+import type { CollectionEntry } from "astro:content";
+import PlaceholderMark from "@core/components/PlaceholderMark.astro";
+import { render } from "@core/content/load.ts";
+import type { PricingView } from "@core/content/view-models.ts";
+import PocketRow from "./PocketRow.astro";
+import PocketInclusions from "./PocketInclusions.astro";
+import { priceGroupFor } from "../lib/site.ts";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  services: CollectionEntry<"services">[];
+  pricing: PricingView | null;
+}
+
+const { services, pricing } = Astro.props;
+const featured = services.filter((service) => service.data.featured);
+const ordered = [...featured, ...services.filter((service) => !featured.includes(service))];
+
+const items = [];
+for (const service of ordered) {
+  const { Content } = await render(service);
+  items.push({
+    service,
+    Content,
+    hasBody: (service.body ?? "").trim() !== "",
+    group: priceGroupFor(pricing, service.data.priceGroupId),
+  });
+}
+---
+<div class="services">
+  {
+    items.map((item, index) => {
+      const Body = item.Content;
+      const service = item.service;
+      return (
+        <PocketRow
+          id={`sluzba-${service.id}`}
+          title={service.data.title}
+          group="sluzby"
+          open={index === 0}
+          class="service"
+          answerClass="panel service-answer"
+        >
+          <span id={service.id} class="row-anchor"></span>
+          <PlaceholderMark active={service.data.placeholder} as="div">
+            <p class="service-summary">{service.data.summary}</p>
+            {item.hasBody ? (
+              <div class="prose service-body">
+                <Body />
+              </div>
+            ) : null}
+          </PlaceholderMark>
+          {item.group !== null ? <PocketInclusions includes={item.group.includes} excludes={item.group.excludes} /> : null}
+          {item.group !== null ? (
+            <p>
+              <a href={`/cenik/#${item.group.id}`} class="go">{ui.includesLink}</a>
+            </p>
+          ) : null}
+        </PocketRow>
+      );
+    })
+  }
+</div>
+
+<style>
+  .services > :global(.service + .service) {
+    margin-top: 0.5rem;
+  }
+
+  .service-summary {
+    font-size: 1.125rem;
+  }
+
+  .service-body {
+    margin-top: 0.75rem;
+  }
+</style>

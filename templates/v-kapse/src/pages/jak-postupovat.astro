@@ -1,0 +1,25 @@
+---
+/**
+ * Jak postupovat: the title, the place picker and lead in a panel, one row per step (the first
+ * open), the closing panel, then the page body and Časté otázky (#caste-otazky) as rows.
+ */
+import { getFaq, getGuidance, getPage, getSiteContext } from "@core/content/load.ts";
+import PocketLayout from "../layouts/PocketLayout.astro";
+import PocketTitle from "../components/PocketTitle.astro";
+import PocketGuide from "../components/PocketGuide.astro";
+import PocketProse from "../components/PocketProse.astro";
+import PocketQuestions from "../components/PocketQuestions.astro";
+import { seoDescription, seoTitle } from "../lib/site.ts";
+
+const site = await getSiteContext();
+const page = await getPage("jak-postupovat");
+const guidance = await getGuidance();
+const faq = await getFaq();
+const Body = page.Content;
+---
+<PocketLayout site={site} title={seoTitle(page.data)} description={seoDescription(page.data)}>
+  <PocketTitle title={page.data.title} lead={page.data.lead} placeholder={page.data.placeholder} />
+  <PocketGuide site={site} guidance={guidance} />
+  {page.hasBody ? <PocketProse idPrefix="postup-text"><Body /></PocketProse> : null}
+  {faq.length > 0 ? <PocketQuestions groups={faq} /> : null}
+</PocketLayout>

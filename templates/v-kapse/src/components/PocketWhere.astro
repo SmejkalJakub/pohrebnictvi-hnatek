@@ -1,0 +1,105 @@
+---
+/**
+ * Answer "Kde vás najdeme" (home contact-summary): the live office status in full ink (never
+ * muted), the address with the map link, the office hours as their own block
+ * ([data-office-hours], never next to the nonstop link: contract §6), then the office and flower
+ * phones and e-mail. The row's hint carries the street and the short live status.
+ */
+import OfficeStatus from "@core/components/OfficeStatus.astro";
+import PhoneLink from "@core/components/PhoneLink.astro";
+import type { SiteContext } from "@core/content/view-models.ts";
+import { formatAddressInline } from "@core/format/address.ts";
+import { formatPhone } from "@core/format/phone.ts";
+import { flowerPhones, mainLocation, mapHref, officePhones } from "../lib/site.ts";
+import { ui } from "../i18n/cs.ts";
+
+interface Props {
+  site: SiteContext;
+}
+
+const { site } = Astro.props;
+const location = mainLocation(site);
+const map = mapHref(location);
+const phones = [...officePhones(site), ...flowerPhones(site)];
+---
+<p class="label">{ui.whereLabel}</p>
+<h2 class="answer-heading echo">{ui.rowWhere}</h2>
+<OfficeStatus site={site} class="where-status" />
+<p class="where-address">
+  {formatAddressInline(location.address)}
+  {
+    map !== null ? (
+      <>
+        <span aria-hidden="true"> · </span>
+        <a href={map} class="go">{ui.mapLink}</a>
+      </>
+    ) : null
+  }
+</p>
+<div class="where-hours" data-office-hours>
+  <p class="steps-label">{ui.hoursHeading}</p>
+  <ul class="where-list" role="list">
+    {
+      site.officeHoursRows.map((row) => (
+        <li>
+          <abbr title={row.daysLong}>{row.days}</abbr> <span class="nowrap">{row.text}</span>
+          {row.note !== null ? <span class="muted">, {row.note}</span> : null}
+        </li>
+      ))
+    }
+  </ul>
+</div>
+<ul class="where-list where-phones" role="list">
+  {
+    phones.map((phone) => (
+      <li>
+        <PhoneLink number={phone.number}>
+          {phone.label}{" "}<span class="nowrap">{formatPhone(phone.number).display}</span>
+        </PhoneLink>
+      </li>
+    ))
+  }
+  {
+    site.contact.emails.map((email) => (
+      <li>
+        <a href={`mailto:${email.address}`} class="go where-mail">{email.address}</a>
+      </li>
+    ))
+  }
+</ul>
+<p><a href="/kontakt/" class="go">{ui.officeLink}</a></p>
+
+<style>
+  :global(.where-status) {
+    margin-top: 0.75rem;
+  }
+
+  .where-hours {
+    margin-top: 1rem;
+    padding: 0.875rem 1.125rem;
+    border-radius: 0.875rem;
+    background: var(--ground);
+  }
+
+  .where-hours .steps-label {
+    margin-bottom: 0.25rem;
+  }
+
+  .where-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .where-phones {
+    margin-top: 0.5rem;
+  }
+
+  .where-mail {
+    overflow-wrap: anywhere;
+  }
+
+  abbr {
+    text-decoration: none;
+  }
+</style>
