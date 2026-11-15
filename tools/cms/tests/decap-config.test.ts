@@ -43,6 +43,7 @@ const CLIENTS: { id: string; template: string; optional: string[]; singletons: s
   { id: "hnatek-c", template: "nocni-linka", optional: [], singletons: [] },
   { id: "hnatek-d", template: "rodinny-rozhovor", optional: [], singletons: [] },
   { id: "hnatek-e", template: "krok-za-krokem", optional: [], singletons: [] },
+  { id: "hnatek-f", template: "zpravodaj", optional: [], singletons: [] },
   { id: "hnatek-g", template: "lide-a-misto", optional: [], singletons: ["places"] },
 ];
 
